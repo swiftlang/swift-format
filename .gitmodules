@@ -1,0 +1,3 @@
+[submodule "Sources/CCommonMark/cmark"]
+	path = Sources/CCommonMark/cmark
+	url = https://github.com/apple/swift-cmark

@@ -1,0 +1,4 @@
+module CCommonMark {
+    header "../cmark/src/cmark.h"
+    export *
+}
