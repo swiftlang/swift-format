@@ -233,6 +233,7 @@ func formatCodeblocks(_ codeblocks: inout [Line]) {
 func joinLines(_ inputLineLists: [Line]...) -> [Line] {
   var lineLists = inputLineLists
   lineLists.removeAll { $0.isEmpty }
+  guard lineLists.count > 0 else { return [] }
   var output: [Line] = lineLists.first ?? []
   for i in 1..<lineLists.count {
     let list = lineLists[i]

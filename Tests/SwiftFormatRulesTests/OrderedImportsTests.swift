@@ -315,4 +315,14 @@ public class OrderedImportsTests: DiagnosingTestCase {
     // import D
     XCTAssertDiagnosed(.placeAtTopOfFile)
   }
+
+  public func testEmptyFile() {
+    XCTAssertFormatting(
+      OrderedImports.self, input: "", expected: "", checkForUnassertedDiagnostics: true
+    )
+    XCTAssertFormatting(
+      OrderedImports.self, input: "// test", expected: "// test",
+      checkForUnassertedDiagnostics: true
+    )
+  }
 }

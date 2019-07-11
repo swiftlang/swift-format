@@ -285,6 +285,7 @@ extension OrderedImportsTests {
     static let __allTests__OrderedImportsTests = [
         ("testDisableOrderedImports", testDisableOrderedImports),
         ("testDisableOrderedImportsMovingComments", testDisableOrderedImportsMovingComments),
+        ("testEmptyFile", testEmptyFile),
         ("testImportsOrderWithDocComment", testImportsOrderWithDocComment),
         ("testImportsOrderWithoutModuleType", testImportsOrderWithoutModuleType),
         ("testInvalidImportsOrder", testInvalidImportsOrder),
