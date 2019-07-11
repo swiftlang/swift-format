@@ -249,4 +249,70 @@ public class OrderedImportsTests: DiagnosingTestCase {
     // import Aimport
     XCTAssertDiagnosed(.sortImports)
   }
+
+  public func testDisableOrderedImports() {
+    let input =
+      """
+      import C
+      import B
+      // swift-format-disable: OrderedImports
+      import A
+      // swift-format-enable: OrderedImports
+      let a = 123
+      import func Darwin.C.isatty
+      """
+
+    let expected =
+      """
+      import B
+      import C
+
+      import func Darwin.C.isatty
+
+      // swift-format-disable: OrderedImports
+      import A
+      // swift-format-enable: OrderedImports
+      let a = 123
+      """
+
+    XCTAssertFormatting(
+      OrderedImports.self, input: input, expected: expected, checkForUnassertedDiagnostics: true
+    )
+
+    // import Aimport
+    XCTAssertDiagnosed(.sortImports)
+
+    // import func Darwin.C.isatty
+    XCTAssertDiagnosed(.placeAtTopOfFile)
+  }
+
+  public func testDisableOrderedImportsMovingComments() {
+    let input =
+      """
+      import B
+      import C
+      // swift-format-disable: OrderedImports
+      import A
+      // swift-format-enable: OrderedImports
+      import D
+      """
+
+    let expected =
+      """
+      import B
+      import C
+      // swift-format-enable: OrderedImports
+      import D
+
+      // swift-format-disable: OrderedImports
+      import A
+      """
+
+    XCTAssertFormatting(
+      OrderedImports.self, input: input, expected: expected, checkForUnassertedDiagnostics: true
+    )
+
+    // import D
+    XCTAssertDiagnosed(.placeAtTopOfFile)
+  }
 }

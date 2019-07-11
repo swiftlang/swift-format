@@ -283,6 +283,8 @@ extension OrderedImportsTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__OrderedImportsTests = [
+        ("testDisableOrderedImports", testDisableOrderedImports),
+        ("testDisableOrderedImportsMovingComments", testDisableOrderedImportsMovingComments),
         ("testImportsOrderWithDocComment", testImportsOrderWithDocComment),
         ("testImportsOrderWithoutModuleType", testImportsOrderWithoutModuleType),
         ("testInvalidImportsOrder", testInvalidImportsOrder),

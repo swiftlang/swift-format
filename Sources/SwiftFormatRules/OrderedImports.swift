@@ -61,8 +61,19 @@ public final class OrderedImports: SyntaxFormatRule {
         }
       }
 
+      var lineType = line.type
+
+      // Set the line type to codeBlock if the rule is disabled.
+      if let codeblock = line.codeBlock, context.isRuleDisabled(self.ruleName, node: codeblock) {
+        switch lineType {
+        case .comment: ()
+        default:
+          lineType = .codeBlock
+        }
+      }
+
       // Separate lines into different categories along with any associated comments.
-      switch line.type {
+      switch lineType {
       case .regularImport:
         regularImports.append(contentsOf: commentBuffer)
         regularImports.append(line)
@@ -116,7 +127,18 @@ public final class OrderedImports: SyntaxFormatRule {
     var codeGroup = false
 
     for line in lines {
-      switch line.type {
+      var lineType = line.type
+
+      // Set the line type to codeBlock if the rule is disabled.
+      if let codeblock = line.codeBlock, context.isRuleDisabled(self.ruleName, node: codeblock) {
+        switch lineType {
+        case .comment: ()
+        default:
+          lineType = .codeBlock
+        }
+      }
+
+      switch lineType {
       case .declImport:
         declGroup = true
       case .testableImport:
@@ -127,7 +149,7 @@ public final class OrderedImports: SyntaxFormatRule {
       }
 
       if codeGroup {
-        switch line.type {
+        switch lineType {
         case .regularImport, .declImport, .testableImport:
           diagnose(.placeAtTopOfFile, on: line.codeBlock?.firstToken)
         default: ()
@@ -135,10 +157,10 @@ public final class OrderedImports: SyntaxFormatRule {
       }
 
       if testableGroup {
-        switch line.type {
+        switch lineType {
         case .regularImport, .declImport:
           diagnose(
-            .groupImports(before: line.type, after: LineType.testableImport),
+            .groupImports(before: lineType, after: LineType.testableImport),
             on: line.codeBlock?.firstToken
           )
         default: ()
@@ -146,10 +168,10 @@ public final class OrderedImports: SyntaxFormatRule {
       }
 
       if declGroup {
-        switch line.type {
+        switch lineType {
         case .regularImport:
           diagnose(
-            .groupImports(before: line.type, after: LineType.declImport),
+            .groupImports(before: lineType, after: LineType.declImport),
             on: line.codeBlock?.firstToken
           )
         default: ()
