@@ -547,7 +547,7 @@ the length of the `comment`.
 
 ### Verbatim Tokens
 
-When we encounter a `verbatim` token, we simply print it's contents and apply a
+When we encounter a `verbatim` token, we simply print its contents and apply a
 global indentation according to `lastBreakValue`. We reset the `lastBreak`
 variables, and adjust `spaceRemaining` according to the token's length, which is
 equivalent to the maximum line width.
