@@ -1,19 +1,5 @@
 # Developing `swift-format`
 
-## Check Out the Submodules
-
-The `CCommonMark` target is a Git submodule that pulls the C code in
-[apple/swift-cmark](https://github.com/apple/swift-cmark) into this
-project.
-
-After you clone this repository, remember to run the following commands
-to make sure those sources are available to the compiler:
-
-```shell
-git submodule init
-git submodule update
-```
-
 ## Command Line Options for Debugging
 
 `swift-format` provides some hidden command line options to facilitate
