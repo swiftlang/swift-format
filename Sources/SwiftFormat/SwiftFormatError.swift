@@ -10,7 +10,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+/// Errors that can be thrown by the `SwiftFormatter` and `SwiftLinter` APIs.
 public enum SwiftFormatError: Error {
+
+  /// The requested file was not readable or it did not exist.
   case fileNotReadable
+
+  /// The requested file was a directory.
   case isDirectory
 }
