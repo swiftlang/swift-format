@@ -27,12 +27,11 @@ private struct ImportsXCTestVisitor: SyntaxVisitor {
       guard let importDecl = statement.item as? ImportDeclSyntax else { continue }
       for component in importDecl.path {
         guard component.name.text == "XCTest" else { continue }
-        context.importsXCTest = true
-        context.didSetImportsXCTest = true
+        context.importsXCTest = .importsXCTest
         return .skipChildren
       }
     }
-    context.didSetImportsXCTest = true
+    context.importsXCTest = .doesNotImportXCTest
     return .skipChildren
   }
 }
@@ -47,7 +46,7 @@ private struct ImportsXCTestVisitor: SyntaxVisitor {
 ///   - context: The context information of the target source file.
 ///   - sourceFile: The file to be visited.
 func setImportsXCTest(context: Context, sourceFile: SourceFileSyntax) {
-  guard !context.didSetImportsXCTest else { return }
+  guard context.importsXCTest == .notDetermined else { return }
   var visitor = ImportsXCTestVisitor(context: context)
   sourceFile.walk(&visitor)
 }

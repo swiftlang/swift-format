@@ -41,7 +41,7 @@ public struct NeverUseImplicitlyUnwrappedOptionals: SyntaxLintRule {
   }
 
   public func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
-    guard !context.importsXCTest else { return .skipChildren }
+    guard context.importsXCTest == .doesNotImportXCTest else { return .skipChildren }
     // Ignores IBOutlet variables
     if let attributes = node.attributes {
       for attribute in attributes {

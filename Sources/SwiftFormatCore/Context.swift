@@ -19,6 +19,21 @@ import SwiftSyntax
 /// Specifically, it is the container for the shared configuration, diagnostic engine, and URL of
 /// the current file.
 public class Context {
+
+  /// Tracks whether `XCTest` has been imported so that certain logic can be modified for files that
+  /// are known to be tests.
+  public enum XCTestImportState {
+
+    /// Whether `XCTest` is imported or not has not yet been determined.
+    case notDetermined
+
+    /// The file is known to import `XCTest`.
+    case importsXCTest
+
+    /// The file is known to not import `XCTest`.
+    case doesNotImportXCTest
+  }
+
   /// The configuration for this run of the pipeline, provided by a configuration JSON file.
   public let configuration: Configuration
 
@@ -28,11 +43,8 @@ public class Context {
   /// The URL of the file being linted or formatted.
   public let fileURL: URL
 
-  /// Indicates whether the file imports XCTest, and is test code
-  public var importsXCTest: Bool
-
-  /// Indicates whether the visitor has already determined a value for importsXCTest
-  public var didSetImportsXCTest: Bool
+  /// Indicates whether the file is known to import XCTest.
+  public var importsXCTest: XCTestImportState
 
   /// An object that converts `AbsolutePosition` values to `SourceLocation` values.
   public let sourceLocationConverter: SourceLocationConverter
@@ -50,8 +62,7 @@ public class Context {
     self.configuration = configuration
     self.diagnosticEngine = diagnosticEngine
     self.fileURL = fileURL
-    self.importsXCTest = false
-    self.didSetImportsXCTest = false
+    self.importsXCTest = .notDetermined
     self.sourceLocationConverter = SourceLocationConverter(
       file: fileURL.path, tree: sourceFileSyntax)
     self.ruleMask = RuleMask(

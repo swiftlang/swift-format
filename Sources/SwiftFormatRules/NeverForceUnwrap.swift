@@ -34,7 +34,7 @@ public struct NeverForceUnwrap: SyntaxLintRule {
   }
 
   public func visit(_ node: ForcedValueExprSyntax) -> SyntaxVisitorContinueKind {
-    guard !context.importsXCTest else { return .skipChildren }
+    guard context.importsXCTest == .doesNotImportXCTest else { return .skipChildren }
     diagnose(.doNotForceUnwrap(name: node.expression.description), on: node)
     return .skipChildren
   }
@@ -42,7 +42,7 @@ public struct NeverForceUnwrap: SyntaxLintRule {
   public func visit(_ node: AsExprSyntax) -> SyntaxVisitorContinueKind {
     // Only fire if we're not in a test file and if there is an exclamation mark following the `as`
     // keyword.
-    guard !context.importsXCTest else { return .skipChildren }
+    guard context.importsXCTest == .doesNotImportXCTest else { return .skipChildren }
     guard let questionOrExclamation = node.questionOrExclamationMark else { return .skipChildren }
     guard questionOrExclamation.tokenKind == .exclamationMark else { return .skipChildren }
     diagnose(.doNotForceCast(name: node.typeName.description), on: node)

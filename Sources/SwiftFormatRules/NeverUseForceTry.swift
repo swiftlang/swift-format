@@ -41,7 +41,7 @@ public struct NeverUseForceTry: SyntaxLintRule {
     // TODO: Generalize the `isRuleDisabled` check so it doesn't need to be performed manually for
     // each rule.
     guard !context.isRuleDisabled(self.ruleName, node: node) else { return .visitChildren }
-    guard !context.importsXCTest else { return .skipChildren }
+    guard context.importsXCTest == .doesNotImportXCTest else { return .skipChildren }
     guard let mark = node.questionOrExclamationMark else { return .visitChildren }
     if mark.tokenKind == .exclamationMark {
       diagnose(.doNotForceTry, on: node.tryKeyword)
