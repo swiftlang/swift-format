@@ -17,6 +17,8 @@ import SwiftSyntax
 
 private let rangeOperators: Set = ["...", "..<"]
 
+/// Visits the nodes of a syntax tree and constructs a linear stream of formatting tokens that
+/// tell the pretty printer how the source text should be laid out.
 private final class TokenStreamCreator: SyntaxVisitor {
   private var tokens = [Token]()
   private var beforeMap = [TokenSyntax: [Token]]()
@@ -40,10 +42,14 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   var openings = 0
 
+  /// If the syntax token is non-nil, enqueue the given list of formatting tokens before it in the
+  /// token stream.
   func before(_ token: TokenSyntax?, tokens: Token...) {
     before(token, tokens: tokens)
   }
 
+  /// If the syntax token is non-nil, enqueue the given list of formatting tokens before it in the
+  /// token stream.
   func before(_ token: TokenSyntax?, tokens: [Token]) {
     guard let tok = token else { return }
     for preToken in tokens {
@@ -57,10 +63,14 @@ private final class TokenStreamCreator: SyntaxVisitor {
     beforeMap[tok, default: []] += tokens
   }
 
+  /// If the syntax token is non-nil, enqueue the given list of formatting tokens after it in the
+  /// token stream.
   func after(_ token: TokenSyntax?, tokens: Token...) {
     after(token, tokens: tokens)
   }
 
+  /// If the syntax token is non-nil, enqueue the given list of formatting tokens after it in the
+  /// token stream.
   func after(_ token: TokenSyntax?, tokens: [Token]) {
     guard let tok = token else { return }
     for postToken in tokens {
@@ -74,6 +84,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
     afterMap[tok, default: []].append(tokens)
   }
 
+  /// Enqueues the given list of formatting tokens between each element of the given syntax
+  /// collection (but not before the first one nor after the last one).
   private func insertTokens<Node: SyntaxCollection>(
     _ tokens: Token...,
     betweenElementsOf collectionNode: Node
@@ -83,6 +95,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
     }
   }
 
+  /// Enqueues the given list of formatting tokens between each element of the given syntax
+  /// collection (but not before the first one nor after the last one).
   private func insertTokens<Node: SyntaxCollection>(
     _ tokens: Token...,
     betweenElementsOf collectionNode: Node
@@ -92,6 +106,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
     }
   }
 
+  /// Enqueues the given list of formatting tokens between each element of the given syntax
+  /// collection (but not before the first one nor after the last one).
   private func insertTokens<Node: SyntaxCollection>(
     _ tokens: Token...,
     betweenElementsOf collectionNode: Node
