@@ -10,6 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import SwiftFormatConfiguration
 import SwiftFormatCore
 import SwiftSyntax
@@ -751,7 +752,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     after(node.colon, tokens: .break)
     before(node.secondName, tokens: .break)
 
-    if let trailingComma = node.trailingCommaWorkaround {
+    if let trailingComma = node.trailingComma {
       after(trailingComma, tokens: .close, .break(.same))
     } else {
       after(node.lastToken, tokens: .close)
@@ -880,9 +881,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
   func visit(_ node: TupleTypeElementSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
     after(node.colon, tokens: .break)
-    before(node.secondNameWorkaround, tokens: .break)
+    before(node.secondName, tokens: .break)
 
-    if let trailingComma = node.trailingCommaWorkaround {
+    if let trailingComma = node.trailingComma {
       after(trailingComma, tokens: .close, .break(.same))
     } else {
       after(node.lastToken, tokens: .close)
