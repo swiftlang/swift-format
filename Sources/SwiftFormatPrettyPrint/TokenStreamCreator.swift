@@ -689,9 +689,16 @@ private final class TokenStreamCreator: SyntaxVisitor {
     }
 
     before(node.firstToken, tokens: .open)
-    after(node.capture?.rightSquare, tokens: .break(.same))
-    before(node.input?.firstToken, tokens: .open(consistency))
-    after(node.input?.lastToken, tokens: .close)
+
+    if let input = node.input {
+      // We unconditionally put a break before the `in` keyword below, so we should only put a break
+      // after the capture list's right bracket if there are arguments following it or we'll end up
+      // with an extra space if the line doesn't wrap.
+      after(node.capture?.rightSquare, tokens: .break(.same))
+      before(input.firstToken, tokens: .open(consistency))
+      after(input.lastToken, tokens: .close)
+    }
+
     before(node.throwsTok, tokens: .break)
     before(node.output?.arrow, tokens: .break)
     after(node.lastToken, tokens: .close)

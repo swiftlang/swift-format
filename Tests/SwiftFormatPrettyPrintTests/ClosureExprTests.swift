@@ -233,6 +233,23 @@ public class ClosureExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
   }
 
+  public func testClosureCaptureWithoutArguments() {
+    let input =
+      """
+      let a = { [weak self] in return foo }
+      """
+
+    let expected =
+      """
+      let a = { [weak self] in
+        return foo
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
+  }
+
   public func testBodilessClosure() {
     let input =
       """
