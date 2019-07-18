@@ -403,6 +403,7 @@ extension SwitchStmtTests {
         ("testSwitchCases", testSwitchCases),
         ("testSwitchCompoundCases", testSwitchCompoundCases),
         ("testSwitchValueBinding", testSwitchValueBinding),
+        ("testUnknownDefault", testUnknownDefault),
     ]
 }
 
