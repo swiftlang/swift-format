@@ -7,33 +7,34 @@ import XCTest
 public class DontRepeatTypeInStaticPropertiesTests: DiagnosingTestCase {
   public func testRepetitiveProperties() {
     let input =
-    """
-    public class UIColor {
-      static let redColor: UIColor
-      public class var blueColor: UIColor
-      var yellowColor: UIColor
-      static let green: UIColor
-      public class var purple: UIColor
-    }
-    enum Sandwich {
-      static let bolognaSandwich: Sandwich
-      static var hamSandwich: Sandwich
-      static var turkey: Sandwich
-    }
-    protocol RANDPerson {
-      var oldPerson: Person
-      static let youngPerson: Person
-    }
-    struct TVGame {
-      static var basketballGame: TVGame
-      static var baseballGame: TVGame
-      static let soccer: TVGame
-      let hockey: TVGame
-    }
-    extension URLSession {
-      class var sharedSession: URLSession
-    }
-    """
+      """
+      public class UIColor {
+        static let redColor: UIColor
+        public class var blueColor: UIColor
+        var yellowColor: UIColor
+        static let green: UIColor
+        public class var purple: UIColor
+      }
+      enum Sandwich {
+        static let bolognaSandwich: Sandwich
+        static var hamSandwich: Sandwich
+        static var turkey: Sandwich
+      }
+      protocol RANDPerson {
+        var oldPerson: Person
+        static let youngPerson: Person
+      }
+      struct TVGame {
+        static var basketballGame: TVGame
+        static var baseballGame: TVGame
+        static let soccer: TVGame
+        let hockey: TVGame
+      }
+      extension URLSession {
+        class var sharedSession: URLSession
+      }
+      """
+
     performLint(DontRepeatTypeInStaticProperties.self, input: input)
     XCTAssertDiagnosed(.removeTypeFromName(name: "redColor", type: "Color"))
     XCTAssertDiagnosed(.removeTypeFromName(name: "blueColor", type: "Color"))
@@ -54,5 +55,29 @@ public class DontRepeatTypeInStaticPropertiesTests: DiagnosingTestCase {
     XCTAssertNotDiagnosed(.removeTypeFromName(name: "hockey", type: "Game"))
     
     XCTAssertDiagnosed(.removeTypeFromName(name: "sharedSession", type: "Session"))
+  }
+
+  public func testSR11123() {
+    let input =
+      """
+      extension A {
+        static let b = C()
+      }
+      """
+
+    performLint(DontRepeatTypeInStaticProperties.self, input: input)
+    XCTAssertNotDiagnosed(.removeTypeFromName(name: "b", type: "A"))
+  }
+
+  public func testDottedExtendedType() {
+    let input =
+      """
+      extension Dotted.Thing {
+        static let defaultThing: Dotted.Thing
+      }
+      """
+
+    performLint(DontRepeatTypeInStaticProperties.self, input: input)
+    XCTAssertDiagnosed(.removeTypeFromName(name: "defaultThing", type: "Thing"))
   }
 }

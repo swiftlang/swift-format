@@ -76,7 +76,9 @@ extension DontRepeatTypeInStaticPropertiesTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__DontRepeatTypeInStaticPropertiesTests = [
+        ("testDottedExtendedType", testDottedExtendedType),
         ("testRepetitiveProperties", testRepetitiveProperties),
+        ("testSR11123", testSR11123),
     ]
 }
 
