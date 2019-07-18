@@ -28,12 +28,9 @@ extension Rule {
     on node: Syntax?,
     actions: ((inout Diagnostic.Builder) -> Void)? = nil
   ) {
-    // TODO: node?.startLocation should be returning the position ignoring leading trivia. It isn't
-    // working properly, so we are using this workaround until it is fixed.
-    let loc = node.map { $0.startLocation(converter: context.sourceLocationConverter) }
     context.diagnosticEngine?.diagnose(
       message.withRule(self),
-      location: loc,
+      location: node?.startLocation(converter: context.sourceLocationConverter),
       actions: actions
     )
   }

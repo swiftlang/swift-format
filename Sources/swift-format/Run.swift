@@ -83,13 +83,6 @@ func formatMain(
     stderrStream.flush()
     return 1
   } catch {
-    // Workaround: we're unable to directly catch unknownTokenKind errors due to access
-    // restrictions. TODO: this can be removed when we update to Swift 5.0.
-    if "\(error)" == "unknownTokenKind(\"pound_error\")" {
-      stderrStream.write("Unable to format \(path): unknownTokenKind(\"pound_error\")\n")
-      stderrStream.flush()
-      return 1
-    }
     stderrStream.write("Unable to format \(path): \(error)\n")
     stderrStream.flush()
     exit(1)
