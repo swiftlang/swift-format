@@ -13,13 +13,14 @@
 import SwiftSyntax
 
 extension Trivia {
-  /// Returns the number of whitespace characters in this trivia.
+  /// Returns the number of non-newline whitespace characters in this trivia.
   public var numberOfSpaces: Int {
     var count = 0
     for piece in self {
-      if case .tabs = piece { count += 1 }
-      guard case .spaces(let n) = piece else { continue }
-      count += n
+      switch piece {
+      case .tabs(let n), .spaces(let n): count += n
+      default: continue
+      }
     }
     return count
   }
@@ -105,8 +106,8 @@ extension Trivia {
     return Trivia(pieces: pieces).condensed()
   }
 
-  /// Returns this set of trivia, without any trailing whitespace characters.
-  public func withoutLeadingNewLines() -> Trivia {
+  /// Returns this set of trivia, without any leading newline characters.
+  public func withoutLeadingNewlines() -> Trivia {
     let triviaCondensed = self.condensed()
     guard let firstPieceOfTrivia = triviaCondensed.first else { return self }
     if case .newlines(_) = firstPieceOfTrivia {

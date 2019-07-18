@@ -89,6 +89,9 @@ extension SyntaxCollection {
   }
 
   /// The last element in the syntax collection, or nil if it is empty.
+  ///
+  /// TODO: This is currently O(n). We should make the syntax collections `BidirectionalCollection`
+  /// instead of `Sequence` so that we can provide these operations more efficiently.
   public var last: Element? {
     var last: Element? = nil
     var iterator = makeIterator()
