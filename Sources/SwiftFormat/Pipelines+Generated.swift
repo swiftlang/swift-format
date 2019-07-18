@@ -73,11 +73,6 @@ extension LintPipeline {
     return .visitChildren
   }
 
-  func visit(_ node: EnumCaseDeclSyntax) -> SyntaxVisitorContinueKind {
-    _ = NoEmptyAssociatedValues(context: context).visit(node)
-    return .visitChildren
-  }
-
   func visit(_ node: EnumCaseElementSyntax) -> SyntaxVisitorContinueKind {
     _ = AlwaysUseLowerCamelCase(context: context).visit(node)
     _ = NoLeadingUnderscores(context: context).visit(node)
@@ -107,7 +102,6 @@ extension LintPipeline {
   }
 
   func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
-    _ = AvoidInitializersForLiterals(context: context).visit(node)
     _ = NoEmptyTrailingClosureParentheses(context: context).visit(node)
     _ = OnlyOneTrailingClosureArgument(context: context).visit(node)
     return .visitChildren
@@ -289,7 +283,6 @@ extension FormatPipeline {
     node = NoAccessLevelOnExtensionDeclaration(context: context).visit(node)
     node = NoBlockComments(context: context).visit(node)
     node = NoCasesWithOnlyFallthrough(context: context).visit(node)
-    node = NoEmptyAssociatedValues(context: context).visit(node)
     node = NoEmptyTrailingClosureParentheses(context: context).visit(node)
     node = NoLabelsInCasePatterns(context: context).visit(node)
     node = NoParensAroundConditions(context: context).visit(node)
