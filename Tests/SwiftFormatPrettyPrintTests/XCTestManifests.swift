@@ -91,6 +91,7 @@ extension ClosureExprTests {
         ("testBasicFunctionClosures_packArguments", testBasicFunctionClosures_packArguments),
         ("testBodilessClosure", testBodilessClosure),
         ("testClosureCapture", testClosureCapture),
+        ("testClosureCaptureWithoutArguments", testClosureCaptureWithoutArguments),
         ("testClosuresWithIfs", testClosuresWithIfs),
         ("testTrailingClosure", testTrailingClosure),
     ]
