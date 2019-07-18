@@ -36,9 +36,20 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
     // Public, private, or fileprivate keywords need to be moved to members
     case .publicKeyword, .privateKeyword, .fileprivateKeyword:
       diagnose(.moveAccessKeyword(keyword: accessKeyword.name.text), on: accessKeyword)
+
+      // The effective access level of the members of a `private` extension is `fileprivate`, so
+      // we have to update the keyword to ensure that the result is correct.
+      let accessKeywordToAdd: DeclModifierSyntax
+      if keywordKind == .privateKeyword {
+        accessKeywordToAdd
+          = accessKeyword.withName(accessKeyword.name.withKind(.fileprivateKeyword))
+      } else {
+        accessKeywordToAdd = accessKeyword
+      }
+
       let newMembers = SyntaxFactory.makeMemberDeclBlock(
         leftBrace: node.members.leftBrace,
-        members: addMemberAccessKeywords(memDeclBlock: node.members, keyword: accessKeyword),
+        members: addMemberAccessKeywords(memDeclBlock: node.members, keyword: accessKeywordToAdd),
         rightBrace: node.members.rightBrace)
       let newKeyword = replaceTrivia(
         on: node.extensionKeyword,
@@ -47,6 +58,7 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
       return node.withMembers(newMembers)
         .withModifiers(modifiers.remove(name: accessKeyword.name.text))
         .withExtensionKeyword(newKeyword)
+
     // Internal keyword redundant, delete
     case .internalKeyword:
       diagnose(
@@ -58,6 +70,7 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
         leadingTrivia: accessKeyword.leadingTrivia) as! TokenSyntax
       return node.withModifiers(modifiers.remove(name: accessKeyword.name.text))
         .withExtensionKeyword(newKeyword)
+
     default:
       break
     }

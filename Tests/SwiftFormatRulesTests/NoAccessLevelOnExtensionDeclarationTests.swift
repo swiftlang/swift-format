@@ -84,4 +84,20 @@ public class NoAccessLevelOnExtensionDeclarationTests: DiagnosingTestCase {
         """
     )
   }
+
+  public func testPrivateIsEffectivelyFileprivate() {
+    XCTAssertFormatting(
+      NoAccessLevelOnExtensionDeclaration.self,
+      input: """
+        private extension Foo {
+          func f() {}
+        }
+        """,
+      expected: """
+        extension Foo {
+          fileprivate func f() {}
+        }
+        """
+    )
+  }
 }
