@@ -163,4 +163,27 @@ public class ForInStmtTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
+
+  public func testForCase() {
+    let input =
+      """
+      for case let a as String in [] {
+        let a = 123
+        print(i)
+      }
+      """
+
+    let expected =
+      """
+      for case let a
+        as String in []
+      {
+        let a = 123
+        print(i)
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
+  }
 }

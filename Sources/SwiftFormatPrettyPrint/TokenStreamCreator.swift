@@ -422,6 +422,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
   func visit(_ node: ForInStmtSyntax) -> SyntaxVisitorContinueKind {
     after(node.labelColon, tokens: .space)
     after(node.forKeyword, tokens: .space)
+    after(node.caseKeyword, tokens: .space)
     before(node.inKeyword, tokens: .break)
     after(node.inKeyword, tokens: .space)
 
