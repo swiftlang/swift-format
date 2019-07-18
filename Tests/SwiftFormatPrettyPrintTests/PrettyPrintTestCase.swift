@@ -17,14 +17,8 @@ public class PrettyPrintTestCase: XCTestCase {
   ) {
     configuration.lineLength = linelength
 
-    let context = Context(
-      configuration: configuration,
-      diagnosticEngine: nil,
-      fileURL: URL(fileURLWithPath: "/tmp/file.swift"),
-      sourceText: input)
-
     // Assert that the input, when formatted, is what we expected.
-    if let formatted = prettyPrintedSource(input, context: context) {
+    if let formatted = prettyPrintedSource(input, configuration: configuration) {
       XCTAssertEqual(
         expected, formatted,
         "Pretty-printed result was not what was expected",
@@ -32,7 +26,7 @@ public class PrettyPrintTestCase: XCTestCase {
 
       // Idempotency check: Running the formatter multiple times should not change the outcome.
       // Assert that running the formatter again on the previous result keeps it the same.
-      if let reformatted = prettyPrintedSource(formatted, context: context) {
+      if let reformatted = prettyPrintedSource(formatted, configuration: configuration) {
         XCTAssertEqual(
           formatted, reformatted, "Pretty printer is not idempotent", file: file, line: line)
       }
@@ -40,14 +34,23 @@ public class PrettyPrintTestCase: XCTestCase {
   }
 
   /// Returns the given source code reformatted with the pretty printer.
-  private func prettyPrintedSource(_ original: String, context: Context) -> String? {
+  private func prettyPrintedSource(_ source: String, configuration: Configuration) -> String?
+  {
+    let sourceFileSyntax: SourceFileSyntax
     do {
-      let syntax = try SyntaxParser.parse(source: original)
-      let printer = PrettyPrinter(context: context, node: syntax, printTokenStream: false)
-      return printer.prettyPrint()
+      sourceFileSyntax = try SyntaxParser.parse(source: source)
     } catch {
       XCTFail("Parsing failed with error: \(error)")
       return nil
     }
+
+    let context = Context(
+      configuration: configuration,
+      diagnosticEngine: nil,
+      fileURL: URL(fileURLWithPath: "/tmp/file.swift"),
+      sourceFileSyntax: sourceFileSyntax)
+
+    let printer = PrettyPrinter(context: context, node: sourceFileSyntax, printTokenStream: false)
+    return printer.prettyPrint()
   }
 }

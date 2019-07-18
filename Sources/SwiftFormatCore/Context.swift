@@ -60,23 +60,6 @@ public class Context {
     )
   }
 
-  /// Creates a new Context with the provided configuration, diagnostic engine, and source text.
-  public init(
-    configuration: Configuration,
-    diagnosticEngine: DiagnosticEngine?,
-    fileURL: URL,
-    sourceText: String
-  ) {
-    self.configuration = configuration
-    self.diagnosticEngine = diagnosticEngine
-    self.fileURL = fileURL
-    self.importsXCTest = false
-    self.didSetImportsXCTest = false
-    self.sourceLocationConverter = SourceLocationConverter(file: fileURL.path, source: sourceText)
-    let syntax = try! SyntaxParser.parse(source: sourceText)
-    self.ruleMask = RuleMask(syntaxNode: syntax, sourceLocationConverter: sourceLocationConverter)
-  }
-
   /// Given a rule's name and the node it is examining, determine if the rule is disabled at this
   /// location or not.
   public func isRuleDisabled(_ ruleName: String, node: Syntax) -> Bool {

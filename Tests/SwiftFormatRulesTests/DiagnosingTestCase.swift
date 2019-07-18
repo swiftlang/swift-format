@@ -37,13 +37,13 @@ public class DiagnosingTestCase: XCTestCase {
     }
   }
 
-  /// Creates and returns a new `Context` from the given source text.
-  private func makeContext(sourceText: String) -> Context {
+  /// Creates and returns a new `Context` from the given syntax tree.
+  private func makeContext(sourceFileSyntax: SourceFileSyntax) -> Context {
     let context = Context(
       configuration: Configuration(),
       diagnosticEngine: DiagnosticEngine(),
       fileURL: URL(fileURLWithPath: "/tmp/test.swift"),
-      sourceText: sourceText)
+      sourceFileSyntax: sourceFileSyntax)
     consumer = DiagnosticTrackingConsumer()
     context.diagnosticEngine?.addConsumer(consumer)
     return context
@@ -62,19 +62,22 @@ public class DiagnosingTestCase: XCTestCase {
     file: StaticString = #file,
     line: UInt = #line
   ) {
-    context = makeContext(sourceText: input)
+    let sourceFileSyntax: SourceFileSyntax
+    do {
+      sourceFileSyntax = try SyntaxParser.parse(source: input)
+    } catch {
+      XCTFail("\(error)", file: file, line: line)
+      return
+    }
+
+    self.context = makeContext(sourceFileSyntax: sourceFileSyntax)
 
     // If we're linting, then indicate that we want to fail for unasserted diagnostics when the test
     // is torn down.
     shouldCheckForUnassertedDiagnostics = true
 
-    do {
-      let syntax = try SyntaxParser.parse(source: input)
-      var linter = type.init(context: context!)
-      syntax.walk(&linter)
-    } catch {
-      XCTFail("\(error)", file: file, line: line)
-    }
+    var linter = type.init(context: context!)
+    sourceFileSyntax.walk(&linter)
   }
 
   /// Asserts that the result of applying a formatter to the provided input code yields the output.
@@ -97,17 +100,20 @@ public class DiagnosingTestCase: XCTestCase {
     line: UInt = #line,
     checkForUnassertedDiagnostics: Bool = false
   ) {
-    context = makeContext(sourceText: input)
-
+    let sourceFileSyntax: SourceFileSyntax
     do {
-      shouldCheckForUnassertedDiagnostics = checkForUnassertedDiagnostics
-      let syntax = try SyntaxParser.parse(source: input)
-      let formatter = formatType.init(context: context!)
-      let result = formatter.visit(syntax)
-      XCTAssertDiff(result: result.description, expected: expected, file: file, line: line)
+      sourceFileSyntax = try SyntaxParser.parse(source: input)
     } catch {
       XCTFail("\(error)", file: file, line: line)
+      return
     }
+
+    context = makeContext(sourceFileSyntax: sourceFileSyntax)
+
+    shouldCheckForUnassertedDiagnostics = checkForUnassertedDiagnostics
+    let formatter = formatType.init(context: context!)
+    let result = formatter.visit(sourceFileSyntax)
+    XCTAssertDiff(result: result.description, expected: expected, file: file, line: line)
   }
 
   /// Asserts that the two expressions have the same value, and provides a detailed

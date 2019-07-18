@@ -50,11 +50,19 @@ public class WhitespaceTestCase: XCTestCase {
     expected: String,
     linelength: Int? = nil
   ) {
+    let sourceFileSyntax: SourceFileSyntax
+    do {
+      sourceFileSyntax = try SyntaxParser.parse(source: input)
+    } catch {
+      XCTFail("Parsing failed with error: \(error)")
+      return
+    }
+
     context = Context(
       configuration: Configuration(),
       diagnosticEngine: DiagnosticEngine(),
       fileURL: URL(fileURLWithPath: "/tmp/test.swift"),
-      sourceText: input
+      sourceFileSyntax: sourceFileSyntax
     )
     if let linelength = linelength {
       context?.configuration.lineLength = linelength
