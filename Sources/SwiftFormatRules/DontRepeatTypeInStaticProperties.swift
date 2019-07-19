@@ -32,69 +32,87 @@ public struct DontRepeatTypeInStaticProperties: SyntaxLintRule {
   }
 
   public func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
-    determinePropertyNameViolations(members: node.members.members, nodeId: node.identifier.text)
+    diagnoseStaticMembers(node.members.members, endingWith: node.identifier.text)
     return .skipChildren
   }
 
   public func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
-    determinePropertyNameViolations(members: node.members.members, nodeId: node.identifier.text)
+    diagnoseStaticMembers(node.members.members, endingWith: node.identifier.text)
     return .skipChildren
   }
 
   public func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
-    determinePropertyNameViolations(members: node.members.members, nodeId: node.identifier.text)
+    diagnoseStaticMembers(node.members.members, endingWith: node.identifier.text)
     return .skipChildren
   }
 
   public func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
-    determinePropertyNameViolations(members: node.members.members, nodeId: node.identifier.text)
+    diagnoseStaticMembers(node.members.members, endingWith: node.identifier.text)
     return .skipChildren
   }
 
   public func visit(_ node: ExtensionDeclSyntax) -> SyntaxVisitorContinueKind {
-    determinePropertyNameViolations(
-      members: node.members.members,
-      nodeId: node.extendedType.description)
+    let members = node.members.members
+
+    switch node.extendedType {
+    case let simpleType as SimpleTypeIdentifierSyntax:
+      diagnoseStaticMembers(members, endingWith: simpleType.name.text)
+    case let memberType as MemberTypeIdentifierSyntax:
+      // We don't need to drill recursively into this structure because types with more than two
+      // components are constructed left-heavy; that is, `A.B.C.D` is structured as `((A.B).C).D`,
+      // and the final component of the top type is what we want.
+      diagnoseStaticMembers(members, endingWith: memberType.name.text)
+    default:
+      // Do nothing for non-nominal types. If Swift adds support for extensions on non-nominals,
+      // we'll need to update this if we need to support some subset of those.
+      break
+    }
+
     return .skipChildren
   }
 
-  func determinePropertyNameViolations(members: MemberDeclListSyntax, nodeId: String) {
+  /// Iterates over the static/class properties in the given member list and diagnoses any where the
+  /// name has the containing type name (excluding possible namespace prefixes, like `NS` or `UI`)
+  /// as a suffix.
+  private func diagnoseStaticMembers(_ members: MemberDeclListSyntax, endingWith typeName: String) {
     for member in members {
-      guard let decl = member.decl as? VariableDeclSyntax else { continue }
-      guard let modifiers = decl.modifiers else { continue }
-      guard modifiers.has(modifier: "static") || modifiers.has(modifier: "class") else { continue }
+      guard
+        let varDecl = member.decl as? VariableDeclSyntax,
+        let modifiers = varDecl.modifiers,
+        modifiers.has(modifier: "static") || modifiers.has(modifier: "class")
+      else { continue }
 
-      let typeName = withoutPrefix(name: nodeId)
+      let bareTypeName = removingPossibleNamespacePrefix(from: typeName)
 
-      for id in decl.identifiers {
-        let varName = id.identifier.text
-        guard varName.contains(typeName) else { continue }
-        diagnose(.removeTypeFromName(name: varName, type: typeName), on: decl)
+      for pattern in varDecl.identifiers {
+        let varName = pattern.identifier.text
+        if varName.contains(bareTypeName) {
+          diagnose(.removeTypeFromName(name: varName, type: bareTypeName), on: varDecl)
+        }
       }
     }
   }
 
-  // Returns the given string without capitalized prefix in the beginning
-  func withoutPrefix(name: String) -> String {
-    let formattedName = name.trimmingCharacters(in: CharacterSet.whitespaces)
-    let upperCase = Array(formattedName.uppercased())
-    let original = Array(formattedName)
-    guard original[0] == upperCase[0] else { return name }
+  /// Returns the portion of the given string that excludes a possible Objective-C-style capitalized
+  /// namespace prefix (a leading sequence of more than one uppercase letter).
+  ///
+  /// If the name has zero or one leading uppercase letters, the entire name is returned.
+  private func removingPossibleNamespacePrefix(from name: String) -> Substring {
+    guard let first = name.first, first.isUppercase else { return name[...] }
 
-    var prefixEndsAt = 0
-    var idx = 0
-    while idx <= name.count - 2 {
-      if original[idx] == upperCase[idx] && original[idx + 1] != upperCase[idx + 1] {
-        prefixEndsAt = idx
+    for index in name.indices.dropLast() {
+      let nextIndex = name.index(after: index)
+      if name[index].isUppercase && !name[nextIndex].isUppercase {
+        return name[index...]
       }
-      idx += 1
     }
-    return String(formattedName.dropFirst(prefixEndsAt))
+
+    return name[...]
   }
 }
 
 extension Diagnostic.Message {
-  static func removeTypeFromName(name: String, type: String) -> Diagnostic.Message {
+  static func removeTypeFromName(name: String, type: Substring) -> Diagnostic.Message {
     return .init(.warning, "remove '\(type)' from '\(name)'")
   }
 }
