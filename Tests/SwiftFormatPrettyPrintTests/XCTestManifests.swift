@@ -103,6 +103,7 @@ extension CommentTests {
     // to regenerate.
     static let __allTests__CommentTests = [
         ("testBlockComments", testBlockComments),
+        ("testCommentOnContinuationLine", testCommentOnContinuationLine),
         ("testContainerLineComments", testContainerLineComments),
         ("testDocumentationBlockComments", testDocumentationBlockComments),
         ("testDocumentationComments", testDocumentationComments),
