@@ -196,4 +196,24 @@ public class SwitchStmtTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
+
+  public func testUnknownDefault() {
+    let input =
+      """
+      switch foo {
+      @unknown default: bar()
+      }
+      """
+
+    let expected =
+      """
+      switch foo {
+      @unknown default:
+        bar()
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
+  }
 }

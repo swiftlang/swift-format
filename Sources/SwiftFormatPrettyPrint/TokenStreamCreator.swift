@@ -509,6 +509,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   func visit(_ node: SwitchCaseSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .newline)
+    after(node.unknownAttr?.lastToken, tokens: .space)
     after(node.label.lastToken, tokens: .break(.reset, size: 0), .break(.open), .open)
     after(node.lastToken, tokens: .break(.close, size: 0), .close)
     return .visitChildren
