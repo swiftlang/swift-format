@@ -55,4 +55,29 @@ public class IfConfigTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
+
+  public func testPoundIfAroundMembers() {
+    let input =
+      """
+      class Foo {
+      #if DEBUG
+        var bar: String
+        var baz: String
+      #endif
+      }
+      """
+
+    let expected =
+      """
+      class Foo {
+        #if DEBUG
+          var bar: String
+          var baz: String
+        #endif
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
+  }
 }
