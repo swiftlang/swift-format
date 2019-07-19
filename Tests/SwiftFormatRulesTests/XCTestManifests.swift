@@ -157,6 +157,7 @@ extension NoAccessLevelOnExtensionDeclarationTests {
     static let __allTests__NoAccessLevelOnExtensionDeclarationTests = [
         ("testExtensionDeclarationAccessLevel", testExtensionDeclarationAccessLevel),
         ("testPreservesCommentOnRemovedModifier", testPreservesCommentOnRemovedModifier),
+        ("testPrivateIsEffectivelyFileprivate", testPrivateIsEffectivelyFileprivate),
     ]
 }
 
