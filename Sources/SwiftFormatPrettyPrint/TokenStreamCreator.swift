@@ -1190,6 +1190,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
+  func visit(_ node: SomeTypeSyntax) -> SyntaxVisitorContinueKind {
+    after(node.someSpecifier, tokens: .space)
+    return .visitChildren
+  }
+
   func visit(_ node: CompositionTypeSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
