@@ -57,13 +57,22 @@ public final class SwiftLinter {
     try lint(syntax: sourceFile, assumingFileURL: url)
   }
 
+  /// Lints the given Swift source code.
+  ///
+  /// - Parameters:
+  ///   - source: The Swift source code to be linted.
+  ///   - url: A file URL denoting the filename/path that should be assumed for this source code.
+  /// - Throws: If an unrecoverable error occurs when formatting the code.
+  public func lint(source: String, assumingFileURL url: URL) throws {
+    let sourceFile = try SyntaxParser.parse(url)
+    try lint(syntax: sourceFile, assumingFileURL: url)
+  }
+
   /// Lints the given Swift syntax tree.
   ///
   /// - Parameters:
   ///   - syntax: The Swift syntax tree to be converted to be linted.
   ///   - url: A file URL denoting the filename/path that should be assumed for this syntax tree.
-  ///   - outputStream: A value conforming to `TextOutputStream` to which the formatted output will
-  ///     be written.
   /// - Throws: If an unrecoverable error occurs when formatting the code.
   public func lint(syntax: SourceFileSyntax, assumingFileURL url: URL) throws {
     let context = Context(
@@ -82,6 +91,4 @@ public final class SwiftLinter {
     let ws = WhitespaceLinter(user: syntax.description, formatted: formatted, context: context)
     ws.lint()
   }
-
-  // TODO: Add an overload of `lint` that takes the source text directly.
 }

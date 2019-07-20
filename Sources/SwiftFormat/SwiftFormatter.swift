@@ -61,6 +61,21 @@ public final class SwiftFormatter {
     try format(syntax: sourceFile, assumingFileURL: url, to: &outputStream)
   }
 
+  /// Formats the given Swift source code and writes the result to an output stream.
+  ///
+  /// - Parameters:
+  ///   - source: The Swift source code to be formatted.
+  ///   - url: A file URL denoting the filename/path that should be assumed for this source code.
+  ///   - outputStream: A value conforming to `TextOutputStream` to which the formatted output will
+  ///     be written.
+  /// - Throws: If an unrecoverable error occurs when formatting the code.
+  public func format<Output: TextOutputStream>(
+    source: String, assumingFileURL url: URL, to outputStream: inout Output
+  ) throws {
+    let sourceFile = try SyntaxParser.parse(source: source)
+    try format(syntax: sourceFile, assumingFileURL: url, to: &outputStream)
+  }
+
   /// Formats the given Swift syntax tree and writes the result to an output stream.
   ///
   /// - Parameters:
@@ -89,6 +104,4 @@ public final class SwiftFormatter {
       printTokenStream: debugOptions.contains(.dumpTokenStream))
     outputStream.write(printer.prettyPrint())
   }
-
-  // TODO: Add an overload of `format` that takes the source text directly.
 }
