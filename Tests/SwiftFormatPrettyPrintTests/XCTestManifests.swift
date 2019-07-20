@@ -248,6 +248,7 @@ extension IfConfigTests {
     // to regenerate.
     static let __allTests__IfConfigTests = [
         ("testBasicIfConfig", testBasicIfConfig),
+        ("testPoundIfAroundMembers", testPoundIfAroundMembers),
     ]
 }
 
