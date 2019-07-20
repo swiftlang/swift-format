@@ -54,8 +54,14 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
       // The first binding corresponds to the original `var`/`let`
       // declaration, so it should not have its trivia replaced.
       var isFirst = true
+      // The last binding only has type annotation when multiple
+      // declarations in one line, so make a new binding with its type
+      let typeAnnotation = varDecl.bindings.last?.typeAnnotation
       for binding in varDecl.bindings {
-        let newBinding = binding.withTrailingComma(nil)
+        var newBinding = binding.withTrailingComma(nil)
+        if typeAnnotation != nil && binding.typeAnnotation == nil {
+            newBinding = newBinding.withTypeAnnotation(typeAnnotation)
+        }
         let newDecl = varDecl.withBindings(
           SyntaxFactory.makePatternBindingList([newBinding]))
         var finalDecl: Syntax = newDecl

@@ -12,6 +12,7 @@ public class OneVariableDeclarationPerLineTests: DiagnosingTestCase {
              var a = 0, b = 2, (c, d) = (0, "h")
              let e = 0, f = 2, (g, h) = (0, "h")
              var x: Int { return 3 }
+             let a, b, c: Int
              """,
       expected: """
                 var a = 0
@@ -21,6 +22,9 @@ public class OneVariableDeclarationPerLineTests: DiagnosingTestCase {
                 let f = 2
                 let (g, h) = (0, "h")
                 var x: Int { return 3 }
+                let a: Int
+                let b: Int
+                let c: Int
                 """)
   }
 
