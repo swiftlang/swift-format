@@ -416,4 +416,17 @@ public class CommentTests: PrettyPrintTestCase {
     
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
   }
+
+  public func testCommentOnContinuationLine() {
+    let input =
+      """
+      func foo() {
+        return true
+          // comment
+          && false
+      }
+      """
+
+    assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 60)
+  }
 }

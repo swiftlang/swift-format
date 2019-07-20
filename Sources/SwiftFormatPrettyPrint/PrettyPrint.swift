@@ -313,7 +313,6 @@ public class PrettyPrinter {
       spaceRemaining -= text.count
 
     case .comment(let comment, let wasEndOfLine):
-      currentLineIsContinuation = false
       lastBreak = false
 
       write(comment.print(indent: currentIndentation))
