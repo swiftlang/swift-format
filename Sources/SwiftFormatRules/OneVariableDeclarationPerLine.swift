@@ -60,7 +60,7 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
       for binding in varDecl.bindings {
         var newBinding = binding.withTrailingComma(nil)
         if typeAnnotation != nil && binding.typeAnnotation == nil {
-            newBinding = newBinding.withTypeAnnotation(typeAnnotation)
+          newBinding = newBinding.withTypeAnnotation(typeAnnotation)
         }
         let newDecl = varDecl.withBindings(
           SyntaxFactory.makePatternBindingList([newBinding]))
