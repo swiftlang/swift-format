@@ -46,9 +46,18 @@ public final class OneCasePerLine: SyntaxFormatRule {
             let newRemovedDecl = createAssociateOrRawCaseDecl(
               fullDecl: caseMember,
               removedElement: element)
-            otherDecl = removeAssociateOrRawCaseDecl(fullDecl: otherDecl)
             newMembers.append(member.withDecl(newRemovedDecl))
             numNewMembers += 1
+            otherDecl = removeAssociateOrRawCaseDecl(element, from: otherDecl)
+          } else if isIncrementalRawValueCompatibleEnumType(for: node),
+            let previousMember = newMembers.last,
+            let previousCaseDecl = previousMember.decl as? EnumCaseDeclSyntax,
+            isIncrementalRawCase(element, with: previousCaseDecl) {
+            // Move all eligible cases to have incremental raw values to previous case declaration
+            let newDecl = createIncrementalRawCaseDecl(element, with: previousCaseDecl)
+            let lastIndex = newMembers.count - 1
+            newMembers[lastIndex] = previousMember.withDecl(newDecl)
+            otherDecl = removeAssociateOrRawCaseDecl(element, from: otherDecl)
           }
         }
         // Add case declaration of remaining elements without associated/raw values, if any
@@ -87,20 +96,58 @@ public final class OneCasePerLine: SyntaxFormatRule {
 
   // Returns formatted declaration of cases without associated/raw values, or nil if all cases had
   // a raw or associate value
-  func removeAssociateOrRawCaseDecl(fullDecl: EnumCaseDeclSyntax?) -> EnumCaseDeclSyntax? {
-    guard let fullDecl = fullDecl else { return nil }
-    var newList: [EnumCaseElementSyntax] = []
+  func removeAssociateOrRawCaseDecl(
+    _ element: EnumCaseElementSyntax,
+    from fullDecl: EnumCaseDeclSyntax?
+  ) -> EnumCaseDeclSyntax? {
+    guard let fullDecl = fullDecl,
+      let index = fullDecl.elements.first(where: { $0.identifier.text == element.identifier.text})?.indexInParent else { return nil }
 
-    for element in fullDecl.elements {
-      if element.associatedValue == nil && element.rawValue == nil { newList.append(element) }
-    }
-
+    var newList = fullDecl.elements.removing(childAt: index)
     guard newList.count > 0 else { return nil }
-    let (last, indx) = (newList[newList.count - 1], newList.count - 1)
-    if last.trailingComma != nil {
-      newList[indx] = last.withTrailingComma(nil)
+    if let lastElement = newList.last, lastElement.trailingComma != nil {
+      newList = newList.replacing(
+        childAt: lastElement.indexInParent,
+        with: lastElement.withTrailingComma(nil)
+      )
     }
-    return fullDecl.withElements(SyntaxFactory.makeEnumCaseElementList(newList))
+    return fullDecl.withElements(newList)
+  }
+
+  // `Int` or `Float` are the only types that can have cases with incremental raw value
+  func isIncrementalRawValueCompatibleEnumType(for enumDecl: EnumDeclSyntax) -> Bool {
+    guard let inheritedType = enumDecl.inheritanceClause?.inheritedTypeCollection.firstAndOnly,
+      let type = inheritedType.typeName.firstToken else { return false }
+    // Other types can have raw values, but not incremental values
+    let incrementableRawValueTypes = ["Int", "Float"]
+    return incrementableRawValueTypes.contains(type.text)
+  }
+
+  //
+  func isIncrementalRawCase(
+    _ element: EnumCaseElementSyntax,
+    with previousCaseDecl: EnumCaseDeclSyntax
+  ) -> Bool {
+    // Consider if element can have incremental raw value
+    // when first case of previous declaration has raw value, but the element doesn't
+    guard element.rawValue == nil,
+      previousCaseDecl.elements.first?.rawValue != nil else { return false }
+    return true
+  }
+
+  // Returns formatted declaration of cases with incremental raw values,
+  // or nil if previous case didn't have a raw value
+  func createIncrementalRawCaseDecl(
+    _ element: EnumCaseElementSyntax,
+    with previousCaseDecl: EnumCaseDeclSyntax?
+  ) -> EnumCaseDeclSyntax? {
+    guard let previousElement = previousCaseDecl?.elements.last else { return nil }
+    let trailingComma = SyntaxFactory.makeCommaToken(trailingTrivia: .spaces(1))
+    let previousElementWithComma = previousElement.withTrailingComma(trailingComma)
+    let newElements = previousCaseDecl?.elements
+      .replacing(childAt: previousElement.indexInParent, with: previousElementWithComma)
+      .appending(element.withTrailingComma(nil))
+    return previousCaseDecl?.withElements(newElements)
   }
 }
 

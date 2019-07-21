@@ -17,6 +17,16 @@ public class OneCasePerLineTests: DiagnosingTestCase {
                                  var x: Bool
                                  case leftParen, rightParen = ")", leftBrace, rightBrace = "}"
                                }
+                               public enum Token: Int {
+                                 case a, b, c
+                                 case a = 0, b, c = 5, d
+                                 case a = 0, b = 10, c, d
+                               }
+                               public enum Token: Float {
+                                 case a, b, c
+                                 case a = 0, b, c = 5, d
+                                 case a = 0, b = 10, c, d
+                               }
                                """,
                         expected: """
                                   public enum Token {
@@ -33,6 +43,20 @@ public class OneCasePerLineTests: DiagnosingTestCase {
                                     case leftParen, leftBrace
                                     case rightParen = ")"
                                     case rightBrace = "}"
+                                  }
+                                  public enum Token: Int {
+                                    case a, b, c
+                                    case a = 0, b
+                                    case c = 5, d
+                                    case a = 0
+                                    case b = 10, c, d
+                                  }
+                                  public enum Token: Float {
+                                    case a, b, c
+                                    case a = 0, b
+                                    case c = 5, d
+                                    case a = 0
+                                    case b = 10, c, d
                                   }
                                   """)
   }
