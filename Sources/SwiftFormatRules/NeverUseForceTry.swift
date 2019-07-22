@@ -32,9 +32,6 @@ public final class NeverUseForceTry: SyntaxLintRule {
   }
 
   public override func visit(_ node: TryExprSyntax) -> SyntaxVisitorContinueKind {
-    // TODO: Generalize the `isRuleDisabled` check so it doesn't need to be performed manually for
-    // each rule.
-    guard !context.isRuleDisabled(self.ruleName, node: node) else { return .visitChildren }
     guard context.importsXCTest == .doesNotImportXCTest else { return .skipChildren }
     guard let mark = node.questionOrExclamationMark else { return .visitChildren }
     if mark.tokenKind == .exclamationMark {

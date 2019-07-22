@@ -17,6 +17,6 @@ extension Diagnostic.Message {
   /// - parameter rule: The rule whose name will be prepended to the diagnostic.
   /// - returns: A new `Diagnostic.Message` with the name of the provided rule prepended.
   public func withRule(_ rule: Rule) -> Diagnostic.Message {
-    return .init(severity, "[\(rule.ruleName)]: \(text)")
+    return .init(severity, "[\(type(of: rule).ruleName)]: \(text)")
   }
 }
