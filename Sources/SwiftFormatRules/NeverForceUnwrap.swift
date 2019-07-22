@@ -19,27 +19,21 @@ import SwiftSyntax
 ///       TODO(abl): consider having documentation (e.g. a comment) cancel the warning?
 ///
 /// - SeeAlso: https://google.github.io/swift#force-unwrapping-and-force-casts
-public struct NeverForceUnwrap: SyntaxLintRule {
+public final class NeverForceUnwrap: SyntaxLintRule {
 
-  public let context: Context
-
-  public init(context: Context) {
-    self.context = context
-  }
-
-  public func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
     // Tracks whether "XCTest" is imported in the source file before processing the individual
     setImportsXCTest(context: context, sourceFile: node)
     return .visitChildren
   }
 
-  public func visit(_ node: ForcedValueExprSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: ForcedValueExprSyntax) -> SyntaxVisitorContinueKind {
     guard context.importsXCTest == .doesNotImportXCTest else { return .skipChildren }
     diagnose(.doNotForceUnwrap(name: node.expression.description), on: node)
     return .skipChildren
   }
 
-  public func visit(_ node: AsExprSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: AsExprSyntax) -> SyntaxVisitorContinueKind {
     // Only fire if we're not in a test file and if there is an exclamation mark following the `as`
     // keyword.
     guard context.importsXCTest == .doesNotImportXCTest else { return .skipChildren }

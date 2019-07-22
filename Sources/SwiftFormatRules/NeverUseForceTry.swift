@@ -24,20 +24,14 @@ import SwiftSyntax
 /// TODO: Create exception for NSRegularExpression
 ///
 /// - SeeAlso: https://google.github.io/swift#error-types
-public struct NeverUseForceTry: SyntaxLintRule {
+public final class NeverUseForceTry: SyntaxLintRule {
 
-  public let context: Context
-
-  public init(context: Context) {
-    self.context = context
-  }
-
-  public func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
     setImportsXCTest(context: context, sourceFile: node)
     return .visitChildren
   }
 
-  public func visit(_ node: TryExprSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: TryExprSyntax) -> SyntaxVisitorContinueKind {
     // TODO: Generalize the `isRuleDisabled` check so it doesn't need to be performed manually for
     // each rule.
     guard !context.isRuleDisabled(self.ruleName, node: node) else { return .visitChildren }
