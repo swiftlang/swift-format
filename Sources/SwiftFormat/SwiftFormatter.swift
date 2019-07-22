@@ -61,19 +61,40 @@ public final class SwiftFormatter {
     try format(syntax: sourceFile, assumingFileURL: url, to: &outputStream)
   }
 
-  /// Formats the given Swift syntax tree and writes the result to an output stream.
+  /// Formats the given Swift source code and writes the result to an output stream.
   ///
   /// - Parameters:
-  ///   - syntax: The Swift syntax tree to be converted to source code and formatted.
-  ///   - url: A file URL denoting the filename/path that should be assumed for this syntax tree.
+  ///   - source: The Swift source code to be formatted.
+  ///   - url: A file URL denoting the filename/path that should be assumed for this syntax tree,
+  ///     which is associated with any diagnostics emitted during formatting. If this is nil, a
+  ///     dummy value will be used.
   ///   - outputStream: A value conforming to `TextOutputStream` to which the formatted output will
   ///     be written.
   /// - Throws: If an unrecoverable error occurs when formatting the code.
   public func format<Output: TextOutputStream>(
-    syntax: SourceFileSyntax, assumingFileURL url: URL, to outputStream: inout Output
+    source: String, assumingFileURL url: URL?, to outputStream: inout Output
   ) throws {
+    let sourceFile = try SyntaxParser.parse(source: source)
+    try format(syntax: sourceFile, assumingFileURL: url, to: &outputStream)
+  }
+
+  /// Formats the given Swift syntax tree and writes the result to an output stream.
+  ///
+  /// - Parameters:
+  ///   - syntax: The Swift syntax tree to be converted to source code and formatted.
+  ///   - url: A file URL denoting the filename/path that should be assumed for this syntax tree,
+  ///     which is associated with any diagnostics emitted during formatting. If this is nil, a
+  ///     dummy value will be used.
+  ///   - outputStream: A value conforming to `TextOutputStream` to which the formatted output will
+  ///     be written.
+  /// - Throws: If an unrecoverable error occurs when formatting the code.
+  public func format<Output: TextOutputStream>(
+    syntax: SourceFileSyntax, assumingFileURL url: URL?, to outputStream: inout Output
+  ) throws {
+    let assumedURL = url ?? URL(fileURLWithPath: "source")
+
     let context = Context(
-      configuration: configuration, diagnosticEngine: diagnosticEngine, fileURL: url,
+      configuration: configuration, diagnosticEngine: diagnosticEngine, fileURL: assumedURL,
       sourceFileSyntax: syntax)
     let pipeline = FormatPipeline(context: context)
     let transformedSyntax = pipeline.visit(syntax)
@@ -89,6 +110,4 @@ public final class SwiftFormatter {
       printTokenStream: debugOptions.contains(.dumpTokenStream))
     outputStream.write(printer.prettyPrint())
   }
-
-  // TODO: Add an overload of `format` that takes the source text directly.
 }
