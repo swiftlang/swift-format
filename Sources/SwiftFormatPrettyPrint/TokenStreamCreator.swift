@@ -834,6 +834,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   func visit(_ node: EnumCaseDeclSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
+
+    arrangeAttributeList(node.attributes)
+
     after(node.caseKeyword, tokens: .break)
     after(node.lastToken, tokens: .close)
     return .visitChildren

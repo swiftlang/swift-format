@@ -240,6 +240,9 @@ extension OneCasePerLineTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__OneCasePerLineTests = [
+        ("testAttributesArePropagated", testAttributesArePropagated),
+        ("testCommentsAreNotRepeated", testCommentsAreNotRepeated),
+        ("testElementOrderIsPreserved", testElementOrderIsPreserved),
         ("testInvalidCasesOnLine", testInvalidCasesOnLine),
     ]
 }
