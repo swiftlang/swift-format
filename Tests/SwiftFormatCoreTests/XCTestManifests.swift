@@ -7,11 +7,11 @@ extension RuleMaskTests {
     // to regenerate.
     static let __allTests__RuleMaskTests = [
         ("testDuplicateNested", testDuplicateNested),
+        ("testEnableBeforeDisable", testEnableBeforeDisable),
         ("testSingleFlags", testSingleFlags),
         ("testSingleRule", testSingleRule),
         ("testSpuriousFlags", testSpuriousFlags),
         ("testTwoRules", testTwoRules),
-        ("testWrongOrderFlags", testWrongOrderFlags),
     ]
 }
 

@@ -24,8 +24,19 @@ import SwiftSyntax
 /// RuleMask to see if it is disabled for the line it is currently examining.
 public class RuleMask {
 
-  /// Each rule has a list of ranges for which it is disabled.
-  private var ruleMap: [String: [Range<Int>]] = [:]
+  /// Information about whether a particular lint/format rule is enabled or disabled for a range of
+  /// lines in the source file.
+  private struct LineRangeState {
+
+    /// The line range where a rule is either disabled or enabled.
+    var range: Range<Int>
+
+    /// Indicates whether the rule is enabled in this range.
+    var isEnabled: Bool
+  }
+
+  /// Each rule has a list of ranges for which it is explicitly enabled or disabled.
+  private var ruleMap: [String: [LineRangeState]] = [:]
 
   /// Regex to match the enable comments; rule name is in the first capture group.
   private let enablePattern = #"^\s*//\s*swift-format-enable:\s+(\S+)"#
@@ -58,8 +69,9 @@ public class RuleMask {
     return loc.line
   }
 
-  /// Check if a comment matches a disable/enable flag.
+  /// Check if a comment matches a disable/enable flag, and if so, returns the name of the rule.
   private func getRule(regex: NSRegularExpression, text: String) -> String? {
+    // TODO: Support multiple rules in the same comment; e.g., a comma-delimited list.
     let nsrange = NSRange(text.startIndex..<text.endIndex, in: text)
     if let match = regex.firstMatch(in: text, options: [], range: nsrange) {
       let matchRange = match.range(at: 1)
@@ -73,47 +85,73 @@ public class RuleMask {
   /// Generate the dictionary (ruleMap) by walking the syntax tokens.
   private func generateDictionary(_ node: Syntax) {
     var disableStart: [String: Int] = [:]
+    var enableStart: [String: Int] = [:]
+
     for token in node.tokens {
-      guard let leadingtrivia = token.leadingTrivia else { continue }
+      guard let leadingTrivia = token.leadingTrivia else { continue }
 
       // Flags must be on lines by themselves: not at the end of an existing line.
       var firstPiece = true
 
-      for piece in leadingtrivia {
+      for piece in leadingTrivia {
         guard case .lineComment(let text) = piece else {
           firstPiece = false
           continue
         }
         guard !firstPiece else { continue }
 
-        if let disableRule = getRule(regex: disableRegex, text: text) {
-          guard !disableStart.keys.contains(disableRule) else { continue }
-          guard let startLine = getLine(token) else { continue }
-          disableStart[disableRule] = startLine
-        }
+        if let ruleName = getRule(regex: disableRegex, text: text) {
+          guard !disableStart.keys.contains(ruleName) else { continue }
+          guard let disableStartLine = getLine(token) else { continue }
 
-        if let enableRule = getRule(regex: enableRegex, text: text) {
-          guard let startLine = disableStart.removeValue(forKey: enableRule) else { continue }
-          guard let endLine = getLine(token) else { continue }
-          let exclusionRange = startLine..<endLine
-
-          if ruleMap.keys.contains(enableRule) {
-            ruleMap[enableRule]?.append(exclusionRange)
-          } else {
-            ruleMap[enableRule] = [exclusionRange]
+          if let enableStartLine = enableStart[ruleName] {
+            // If we're processing an enable block for the rule, finalize it.
+            ruleMap[ruleName, default: []].append(
+              LineRangeState(range: enableStartLine..<disableStartLine, isEnabled: true))
+            enableStart[ruleName] = nil
           }
+
+          disableStart[ruleName] = disableStartLine
         }
+        else if let ruleName = getRule(regex: enableRegex, text: text) {
+          guard !enableStart.keys.contains(ruleName) else { continue }
+          guard let enableStartLine = getLine(token) else { continue }
+
+          if let disableStartLine = disableStart[ruleName] {
+            // If we're processing a disable block for the rule, finalize it.
+            ruleMap[ruleName, default: []].append(
+              LineRangeState(range: disableStartLine..<enableStartLine, isEnabled: false))
+            disableStart[ruleName] = nil
+          }
+
+          enableStart[ruleName] = enableStartLine
+        }
+
         firstPiece = false
       }
+    }
+
+    // Finalize any remaining blocks by closing them off at the last line number in the file.
+    guard let lastToken = node.lastToken, let lastLine = getLine(lastToken) else { return }
+
+    for (ruleName, disableStartLine) in disableStart {
+      ruleMap[ruleName, default: []].append(
+        LineRangeState(range: disableStartLine..<lastLine + 1, isEnabled: false))
+    }
+    for (ruleName, enableStartLine) in enableStart {
+      ruleMap[ruleName, default: []].append(
+        LineRangeState(range: enableStartLine..<lastLine + 1, isEnabled: true))
     }
   }
 
   /// Return if the given rule is disabled on the provided line.
-  public func isDisabled(_ rule: String, line: Int) -> Bool {
-    guard let ranges = ruleMap[rule] else { return false }
-    for range in ranges {
-      if range.contains(line) { return true }
+  public func ruleState(_ rule: String, atLine line: Int) -> RuleState {
+    guard let rangeStates = ruleMap[rule] else { return .default }
+    for rangeState in rangeStates {
+      if rangeState.range.contains(line) {
+        return rangeState.isEnabled ? .enabled : .disabled
+      }
     }
-    return false
+    return .default
   }
 }

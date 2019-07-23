@@ -64,7 +64,7 @@ public final class OrderedImports: SyntaxFormatRule {
       var lineType = line.type
 
       // Set the line type to codeBlock if the rule is disabled.
-      if let codeblock = line.codeBlock, context.isRuleDisabled(Self.ruleName, node: codeblock) {
+      if let codeblock = line.codeBlock, !context.isRuleEnabled(Self.ruleName, node: codeblock) {
         switch lineType {
         case .comment: ()
         default:
@@ -130,7 +130,7 @@ public final class OrderedImports: SyntaxFormatRule {
       var lineType = line.type
 
       // Set the line type to codeBlock if the rule is disabled.
-      if let codeblock = line.codeBlock, context.isRuleDisabled(Self.ruleName, node: codeblock) {
+      if let codeblock = line.codeBlock, !context.isRuleEnabled(Self.ruleName, node: codeblock) {
         switch lineType {
         case .comment: ()
         default:

@@ -38,7 +38,7 @@ struct LintPipeline: SyntaxVisitor {
   func visitIfEnabled<Rule: SyntaxLintRule, Node: Syntax>(
     _ visitor: (Rule) -> (Node) -> SyntaxVisitorContinueKind, in context: Context, for node: Node
   ) {
-    guard !context.isRuleDisabled(Rule.self.ruleName, node: node) else { return }
+    guard context.isRuleEnabled(Rule.self.ruleName, node: node) else { return }
     let rule = Rule(context: context)
     _ = visitor(rule)(node)
   }
@@ -59,7 +59,7 @@ struct LintPipeline: SyntaxVisitor {
     // more importantly because the `visit` methods return protocol refinements of `Syntax` that
     // cannot currently be expressed as constraints without duplicating this function for each of
     // them individually.
-    guard !context.isRuleDisabled(Rule.self.ruleName, node: node) else { return }
+    guard context.isRuleEnabled(Rule.self.ruleName, node: node) else { return }
     let rule = Rule(context: context)
     _ = visitor(rule)(node)
   }
