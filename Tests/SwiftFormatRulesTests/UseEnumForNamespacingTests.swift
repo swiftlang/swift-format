@@ -37,13 +37,13 @@ public class UseEnumForNamespacingTests: DiagnosingTestCase {
                   static func foo() {}
                   private init() {}
                 }
-                enum C {
+                class C {
                   static func foo() {}
                 }
-                public enum D {
+                public final class D {
                   static func bar()
                 }
-                enum E {
+                final class E {
                   static let a = 123
                 }
                 """)

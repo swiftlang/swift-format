@@ -16,122 +16,71 @@ import SwiftSyntax
 
 /// Use caseless `enum`s for namespacing.
 ///
-/// In practice, this means that any `class` or `struct` that consists of only `static let`s and
-/// `static func`s should be converted to an `enum`.
+/// In practice, this means that any `struct` that consists of only `static let`s and `static func`s
+/// should be converted to an `enum`.
 ///
-/// Lint: `class`es or `struct`s consisting of only `static let/func`s will yield a lint error.
+/// This is **not** a safe transformation for `class` types because the user might pass the metatype
+/// as an `AnyClass` argument to an API, and changing the declaration to a non-`class` type breaks
+/// that (see https://bugs.swift.org/browse/SR-11111).
 ///
-/// Format: Rewrite the `class` or `struct` as an `enum`.
-///         TODO(abl): This can get complicated to pattern-match correctly.
-// .        TODO(b/78286392): Give this formatting pass a category that makes it not run on save.
+/// Lint: `struct`s consisting of only `static let/func`s will yield a lint error.
+///
+/// Format: Rewrite the `struct` as an `enum`.
 ///
 /// - SeeAlso: https://google.github.io/swift#nesting-and-namespacing
 public final class UseEnumForNamespacing: SyntaxFormatRule {
+
   public override func visit(_ node: StructDeclSyntax) -> DeclSyntax {
-    guard let newDecls = declsIfUsedAsNamespace(node.members.members),
-      node.genericParameterClause == nil,
-      node.inheritanceClause == nil
+    guard node.genericParameterClause == nil, node.inheritanceClause == nil,
+      let memberDecls = membersToKeepIfUsedAsNamespace(node.members.members)
     else {
       return node
     }
 
     diagnose(.convertToEnum(kind: "struct", name: node.identifier), on: node)
 
-    return makeEnum(
-      declarationKeyword: node.structKeyword,
-      modifiers: node.modifiers,
-      name: node.identifier,
-      members: node.members.withMembers(newDecls)
-    )
-  }
-
-  public override func visit(_ node: ClassDeclSyntax) -> DeclSyntax {
-    guard let newDecls = declsIfUsedAsNamespace(node.members.members),
-      node.genericParameterClause == nil,
-      node.inheritanceClause == nil
-    else {
-      return node
-    }
-
-    diagnose(.convertToEnum(kind: "class", name: node.identifier), on: node)
-
-    return makeEnum(
-      declarationKeyword: node.classKeyword,
-      modifiers: node.modifiers,
-      name: node.identifier,
-      members: node.members.withMembers(newDecls)
-    )
-  }
-
-  func makeEnum(
-    declarationKeyword: TokenSyntax,
-    modifiers: ModifierListSyntax?,
-    name: TokenSyntax,
-    members: MemberDeclBlockSyntax
-  ) -> EnumDeclSyntax {
-    // Since we remove the "final" modifier, we need to preserve its trivia if it is the first
-    // modifier.
-    var newLeadingTrivia: Trivia? = nil
-    if let firstMod = modifiers?.first, firstMod.name.text == "final" {
-      newLeadingTrivia = firstMod.leadingTrivia
-    }
-
-    let newModifiers = modifiers?.remove(name: "final")
-
-    let outputEnum = EnumDeclSyntax {
-      if let mods = newModifiers {
-        for mod in mods { $0.addModifier(mod) }
-      }
-      $0.useEnumKeyword(declarationKeyword.withKind(.enumKeyword))
-      $0.useIdentifier(name)
-      $0.useMembers(members)
-    }
-
-    if let trivia = newLeadingTrivia {
-      return replaceTrivia(
-        on: outputEnum,
-        token: outputEnum.firstToken,
-        leadingTrivia: trivia
-      ) as! EnumDeclSyntax
-    } else {
-      return outputEnum
+    return EnumDeclSyntax { builder in
+      node.modifiers?.forEach { builder.addModifier($0) }
+      builder.useEnumKeyword(node.structKeyword.withKind(.enumKeyword))
+      builder.useIdentifier(node.identifier)
+      builder.useMembers(node.members.withMembers(memberDecls))
     }
   }
 
-  /// Determines if the set of declarations is consistent with a class or struct being used
-  /// solely as a namespace for static functions. If there is a non-static private initializer
-  /// with no arguments, that does not count against possibly being a namespace.
-  func declsIfUsedAsNamespace(_ members: MemberDeclListSyntax) -> MemberDeclListSyntax? {
+  /// Returns the list of members that should be retained if all of them satisfy conditions that
+  /// make them effectively a namespace.
+  ///
+  /// If there is a non-static private initializer with no arguments, that does not count against
+  /// possibly being a namespace, since the user probably added it to prevent instantiation.
+  ///
+  /// If any of the members causes the type to disqualify as a namespace, this method returns nil.
+  func membersToKeepIfUsedAsNamespace(_ members: MemberDeclListSyntax) -> MemberDeclListSyntax? {
     if members.count == 0 { return nil }
     var declList = [MemberDeclListItemSyntax]()
+
     for member in members {
       switch member.decl {
       case let decl as FunctionDeclSyntax:
-        guard let modifiers = decl.modifiers,
-          modifiers.has(modifier: "static")
-        else {
-          return nil
-        }
+        guard let modifiers = decl.modifiers, modifiers.has(modifier: "static") else { return nil }
         declList.append(member)
+
       case let decl as VariableDeclSyntax:
-        guard let modifiers = decl.modifiers,
-          modifiers.has(modifier: "static")
-        else {
-          return nil
-        }
+        guard let modifiers = decl.modifiers, modifiers.has(modifier: "static") else { return nil }
         declList.append(member)
+
       case let decl as InitializerDeclSyntax:
-        guard let modifiers = decl.modifiers,
-          modifiers.has(modifier: "private"),
-          decl.parameters.parameterList.count == 0
+        guard let modifiers = decl.modifiers, modifiers.has(modifier: "private"),
+          decl.parameters.parameterList.isEmpty
         else {
           return nil
         }
-      // Do not append private initializer
+        // Do not append private initializer.
+
       default:
         declList.append(member)
       }
     }
+
     return SyntaxFactory.makeMemberDeclList(declList)
   }
 }
