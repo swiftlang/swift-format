@@ -21,4 +21,11 @@ open class SyntaxFormatRule: SyntaxRewriter, Rule {
   public required init(context: Context) {
     self.context = context
   }
+
+  open override func visitAny(_ node: Syntax) -> Syntax? {
+    // If the rule is not enabled, then return the node unmodified; otherwise, returning nil tells
+    // SwiftSyntax to continue with the standard dispatch.
+    guard context.isRuleEnabled(Self.ruleName, node: node) else { return node }
+    return nil
+  }
 }
