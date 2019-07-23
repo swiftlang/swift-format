@@ -82,25 +82,58 @@ public class RuleMask {
     return nil
   }
 
+  /// Returns the list of line comments in the given trivia that are on a line by themselves
+  /// (excluding leading whitespace).
+  ///
+  /// - Parameters:
+  ///   - trivia: The trivia collection to scan for comments.
+  ///   - isFirstToken: True if the trivia came from the first token in the file.
+  /// - Returns: The list of lone line comments from the trivia.
+  private func loneLineComments(in trivia: Trivia, isFirstToken: Bool) -> [String] {
+    var currentComment: String? = nil
+    var lineComments = [String]()
+
+    for piece in trivia.reversed() {
+      switch piece {
+      case .lineComment(let text):
+        currentComment = text
+      case .spaces, .tabs:
+        break  // Intentionally do nothing.
+      case .carriageReturnLineFeeds, .carriageReturns, .newlines:
+        if let text = currentComment {
+          lineComments.insert(text, at: 0)
+          currentComment = nil
+        }
+      default:
+        // If anything other than spaces intervened between the line comment and a newline, then the
+        // comment isn't on a line by itself, so reset our state.
+        currentComment = nil
+      }
+    }
+
+    // For the first token in the file, there may not be a newline preceding the first line comment,
+    // so check for that here.
+    if isFirstToken, let text = currentComment {
+      lineComments.insert(text, at: 0)
+    }
+
+    return lineComments
+  }
+
   /// Generate the dictionary (ruleMap) by walking the syntax tokens.
   private func generateDictionary(_ node: Syntax) {
     var disableStart: [String: Int] = [:]
     var enableStart: [String: Int] = [:]
 
+    var isFirstToken = true
+
     for token in node.tokens {
+      defer { isFirstToken = false }
+
       guard let leadingTrivia = token.leadingTrivia else { continue }
 
-      // Flags must be on lines by themselves: not at the end of an existing line.
-      var firstPiece = true
-
-      for piece in leadingTrivia {
-        guard case .lineComment(let text) = piece else {
-          firstPiece = false
-          continue
-        }
-        guard !firstPiece else { continue }
-
-        if let ruleName = getRule(regex: disableRegex, text: text) {
+      for comment in loneLineComments(in: leadingTrivia, isFirstToken: isFirstToken) {
+        if let ruleName = getRule(regex: disableRegex, text: comment) {
           guard !disableStart.keys.contains(ruleName) else { continue }
           guard let disableStartLine = getLine(token) else { continue }
 
@@ -113,7 +146,7 @@ public class RuleMask {
 
           disableStart[ruleName] = disableStartLine
         }
-        else if let ruleName = getRule(regex: enableRegex, text: text) {
+        else if let ruleName = getRule(regex: enableRegex, text: comment) {
           guard !enableStart.keys.contains(ruleName) else { continue }
           guard let enableStartLine = getLine(token) else { continue }
 
@@ -126,8 +159,6 @@ public class RuleMask {
 
           enableStart[ruleName] = enableStartLine
         }
-
-        firstPiece = false
       }
     }
 
