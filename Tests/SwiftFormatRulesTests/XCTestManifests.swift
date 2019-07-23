@@ -137,7 +137,6 @@ extension NeverUseForceTryTests {
     // to regenerate.
     static let __allTests__NeverUseForceTryTests = [
         ("testAllowForceTryInTestCode", testAllowForceTryInTestCode),
-        ("testDisableForceTry", testDisableForceTry),
         ("testInvalidTryExpression", testInvalidTryExpression),
     ]
 }

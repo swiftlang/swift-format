@@ -14,7 +14,16 @@ import Foundation
 import SwiftSyntax
 
 /// A rule that lints a given file.
-public protocol SyntaxLintRule: SyntaxVisitor, Rule {}
+open class SyntaxLintRule: SyntaxVisitorBase, Rule {
+
+  /// The context in which the rule is executed.
+  public let context: Context
+
+  /// Creates a new rule in a given context.
+  public required init(context: Context) {
+    self.context = context
+  }
+}
 
 extension Rule {
   /// Emits the provided diagnostic to the diagnostic engine.

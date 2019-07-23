@@ -23,14 +23,9 @@ import SwiftSyntax
 ///       initializer will yield a lint error.
 ///
 /// - SeeAlso: https://google.github.io/swift#initializers-2
-public struct UseSynthesizedInitializer: SyntaxLintRule {
-  public let context: Context
+public final class UseSynthesizedInitializer: SyntaxLintRule {
 
-  public init(context: Context) {
-    self.context = context
-  }
-
-  public func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
     var storedProperties: [VariableDeclSyntax] = []
     var initializers: [InitializerDeclSyntax] = []
 

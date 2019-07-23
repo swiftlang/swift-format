@@ -37,20 +37,4 @@ public class NeverUseForceTryTests: DiagnosingTestCase {
     performLint(NeverUseForceTry.self, input: input)
     XCTAssertNotDiagnosed(.doNotForceTry)
   }
-
-  public func testDisableForceTry() {
-    let input =
-      """
-      let a = 123
-
-      // swift-format-disable: NeverUseForceTry
-      let document = try! Document(path: "important.data")
-      let sheet = try! Paper()
-      // swift-format-enable: NeverUseForceTry
-
-      let b = 456
-      """
-    performLint(NeverUseForceTry.self, input: input)
-    XCTAssertNotDiagnosed(.doNotForceTry)
-  }
 }

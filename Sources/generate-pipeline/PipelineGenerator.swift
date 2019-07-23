@@ -60,7 +60,7 @@ final class PipelineGenerator: FileGenerator {
       for ruleName in lintRules.sorted() {
         handle.write(
           """
-              _ = \(ruleName)(context: context).visit(node)
+              visitIfEnabled(\(ruleName).visit, in: context, for: node)
 
           """)
       }

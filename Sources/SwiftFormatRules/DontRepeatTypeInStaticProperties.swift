@@ -23,35 +23,29 @@ import SwiftSyntax
 /// Lint: Static properties of a type that return that type will yield a lint error.
 ///
 /// - SeeAlso: https://google.github.io/swift#static-and-class-properties
-public struct DontRepeatTypeInStaticProperties: SyntaxLintRule {
+public final class DontRepeatTypeInStaticProperties: SyntaxLintRule {
 
-  public let context: Context
-
-  public init(context: Context) {
-    self.context = context
-  }
-
-  public func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseStaticMembers(node.members.members, endingWith: node.identifier.text)
     return .skipChildren
   }
 
-  public func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseStaticMembers(node.members.members, endingWith: node.identifier.text)
     return .skipChildren
   }
 
-  public func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseStaticMembers(node.members.members, endingWith: node.identifier.text)
     return .skipChildren
   }
 
-  public func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseStaticMembers(node.members.members, endingWith: node.identifier.text)
     return .skipChildren
   }
 
-  public func visit(_ node: ExtensionDeclSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: ExtensionDeclSyntax) -> SyntaxVisitorContinueKind {
     let members = node.members.members
 
     switch node.extendedType {

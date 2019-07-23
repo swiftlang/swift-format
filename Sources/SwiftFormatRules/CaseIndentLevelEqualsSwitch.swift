@@ -20,15 +20,9 @@ import SwiftSyntax
 ///       lint error is raised.
 ///
 /// - SeeAlso: https://google.github.io/swift#switch-statements
-public struct CaseIndentLevelEqualsSwitch: SyntaxLintRule {
+public final class CaseIndentLevelEqualsSwitch: SyntaxLintRule {
 
-  public let context: Context
-
-  public init(context: Context) {
-    self.context = context
-  }
-
-  public func visit(_ node: SwitchStmtSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: SwitchStmtSyntax) -> SyntaxVisitorContinueKind {
     guard let switchIndentation = node.leadingTrivia?.numberOfSpaces else {
       return .visitChildren
     }

@@ -26,40 +26,34 @@ import SwiftSyntax
 /// Lint: Declaring an identifier with a leading underscore yields a lint error.
 ///
 /// - SeeAlso: https://google.github.io/swift#naming-conventions-are-not-access-control
-public struct NoLeadingUnderscores: SyntaxLintRule {
+public final class NoLeadingUnderscores: SyntaxLintRule {
 
-  public let context: Context
-
-  public init(context: Context) {
-    self.context = context
-  }
-
-  public func visit(_ node: AssociatedtypeDeclSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: AssociatedtypeDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseIfNameStartsWithUnderscore(node.identifier)
     return .visitChildren
   }
 
-  public func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseIfNameStartsWithUnderscore(node.identifier)
     return .visitChildren
   }
 
-  public func visit(_ node: EnumCaseElementSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: EnumCaseElementSyntax) -> SyntaxVisitorContinueKind {
     diagnoseIfNameStartsWithUnderscore(node.identifier)
     return .visitChildren
   }
 
-  public func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseIfNameStartsWithUnderscore(node.identifier)
     return .visitChildren
   }
 
-  public func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseIfNameStartsWithUnderscore(node.identifier)
     return .visitChildren
   }
 
-  public func visit(_ node: FunctionParameterSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: FunctionParameterSyntax) -> SyntaxVisitorContinueKind {
     // If both names are provided, we want to check `secondName`, which will be the parameter name
     // (in that case, `firstName` is the label). If only one name is present, then it is recorded in
     // `firstName`, and it is both the label and the parameter name.
@@ -69,32 +63,32 @@ public struct NoLeadingUnderscores: SyntaxLintRule {
     return .visitChildren
   }
 
-  public func visit(_ node: GenericParameterSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: GenericParameterSyntax) -> SyntaxVisitorContinueKind {
     diagnoseIfNameStartsWithUnderscore(node.name)
     return .visitChildren
   }
 
-  public func visit(_ node: IdentifierPatternSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: IdentifierPatternSyntax) -> SyntaxVisitorContinueKind {
     diagnoseIfNameStartsWithUnderscore(node.identifier)
     return .visitChildren
   }
 
-  public func visit(_ node: PrecedenceGroupDeclSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: PrecedenceGroupDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseIfNameStartsWithUnderscore(node.identifier)
     return .visitChildren
   }
 
-  public func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseIfNameStartsWithUnderscore(node.identifier)
     return .visitChildren
   }
 
-  public func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseIfNameStartsWithUnderscore(node.identifier)
     return .visitChildren
   }
 
-  public func visit(_ node: TypealiasDeclSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: TypealiasDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseIfNameStartsWithUnderscore(node.identifier)
     return .visitChildren
   }

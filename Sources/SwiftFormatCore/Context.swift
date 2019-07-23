@@ -73,9 +73,16 @@ public class Context {
 
   /// Given a rule's name and the node it is examining, determine if the rule is disabled at this
   /// location or not.
-  public func isRuleDisabled(_ ruleName: String, node: Syntax) -> Bool {
+  public func isRuleEnabled(_ ruleName: String, node: Syntax) -> Bool {
     let loc = node.startLocation(converter: self.sourceLocationConverter)
     guard let line = loc.line else { return false }
-    return self.ruleMask.isDisabled(ruleName, line: line)
+    switch ruleMask.ruleState(ruleName, atLine: line) {
+    case .default:
+      return configuration.rules[ruleName] ?? false
+    case .disabled:
+      return false
+    case .enabled:
+      return true
+    }
   }
 }

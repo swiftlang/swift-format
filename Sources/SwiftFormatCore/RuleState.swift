@@ -10,13 +10,17 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SwiftSyntax
+/// The enablement of a lint/format rule based on the presence or absence of comment directives in
+/// the source file.
+public enum RuleState {
 
-extension Diagnostic.Message {
-  /// Prepends the name of a rule to this diagnostic message.
-  /// - parameter rule: The rule whose name will be prepended to the diagnostic.
-  /// - returns: A new `Diagnostic.Message` with the name of the provided rule prepended.
-  public func withRule(_ rule: Rule) -> Diagnostic.Message {
-    return .init(severity, "[\(type(of: rule).ruleName)]: \(text)")
-  }
+  /// There is no explicit information in the source file about whether the rule should be enabled
+  /// or disabled at the requested location, so the configuration default should be used.
+  case `default`
+
+  /// The rule is explicitly enabled at the requested location.
+  case enabled
+
+  /// The rule is explicitly disabled at the requested location.
+  case disabled
 }

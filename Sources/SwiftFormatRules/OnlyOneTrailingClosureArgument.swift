@@ -20,15 +20,9 @@ import SwiftSyntax
 ///       a lint error is raised.
 ///
 /// - SeeAlso: https://google.github.io/swift#trailing-closures
-public struct OnlyOneTrailingClosureArgument: SyntaxLintRule {
+public final class OnlyOneTrailingClosureArgument: SyntaxLintRule {
 
-  public let context: Context
-
-  public init(context: Context) {
-    self.context = context
-  }
-
-  public func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
     guard (node.argumentList.contains { $0.expression is ClosureExprSyntax }) else {
       return .skipChildren
     }

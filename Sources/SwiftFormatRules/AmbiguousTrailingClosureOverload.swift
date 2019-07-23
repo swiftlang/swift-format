@@ -20,12 +20,7 @@ import SwiftSyntax
 ///       error is raised.
 ///
 /// - SeeAlso: https://google.github.io/swift#trailing-closures
-public struct AmbiguousTrailingClosureOverload: SyntaxLintRule {
-  public let context: Context
-
-  public init(context: Context) {
-    self.context = context
-  }
+public final class AmbiguousTrailingClosureOverload: SyntaxLintRule {
 
   func diagnoseBadOverloads(_ overloads: [String: [FunctionDeclSyntax]]) {
     for (_, decls) in overloads where decls.count > 1 {
@@ -59,19 +54,19 @@ public struct AmbiguousTrailingClosureOverload: SyntaxLintRule {
     diagnoseBadOverloads(staticOverloads)
   }
 
-  public func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
     let functions = node.statements.compactMap { $0.item as? FunctionDeclSyntax }
     discoverAndDiagnoseOverloads(functions)
     return .visitChildren
   }
 
-  public func visit(_ node: CodeBlockSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: CodeBlockSyntax) -> SyntaxVisitorContinueKind {
     let functions = node.statements.compactMap { $0.item as? FunctionDeclSyntax }
     discoverAndDiagnoseOverloads(functions)
     return .visitChildren
   }
 
-  public func visit(_ decls: MemberDeclBlockSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ decls: MemberDeclBlockSyntax) -> SyntaxVisitorContinueKind {
     let functions = decls.members.compactMap { $0.decl as? FunctionDeclSyntax }
     discoverAndDiagnoseOverloads(functions)
     return .visitChildren

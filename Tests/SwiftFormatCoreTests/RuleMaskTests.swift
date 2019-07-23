@@ -24,9 +24,9 @@ public class RuleMaskTests: XCTestCase {
 
     let mask = createMask(sourceText: text)
 
-    XCTAssertFalse(mask.isDisabled("rule1", line: 1))
-    XCTAssertTrue(mask.isDisabled("rule1", line: 3))
-    XCTAssertFalse(mask.isDisabled("rule1", line: 5))
+    XCTAssertEqual(mask.ruleState("rule1", atLine: 1), .default)
+    XCTAssertEqual(mask.ruleState("rule1", atLine: 3), .disabled)
+    XCTAssertEqual(mask.ruleState("rule1", atLine: 5), .enabled)
   }
 
   public func testTwoRules() {
@@ -45,20 +45,20 @@ public class RuleMaskTests: XCTestCase {
 
     let mask = createMask(sourceText: text)
 
-    XCTAssertFalse(mask.isDisabled("rule1", line: 1))
-    XCTAssertTrue(mask.isDisabled("rule1", line: 3))
-    XCTAssertTrue(mask.isDisabled("rule1", line: 5))
-    XCTAssertFalse(mask.isDisabled("rule1", line: 7))
-    XCTAssertFalse(mask.isDisabled("rule1", line: 9))
+    XCTAssertEqual(mask.ruleState("rule1", atLine: 1), .default)
+    XCTAssertEqual(mask.ruleState("rule1", atLine: 3), .disabled)
+    XCTAssertEqual(mask.ruleState("rule1", atLine: 5), .disabled)
+    XCTAssertEqual(mask.ruleState("rule1", atLine: 7), .enabled)
+    XCTAssertEqual(mask.ruleState("rule1", atLine: 9), .enabled)
 
-    XCTAssertFalse(mask.isDisabled("rule2", line: 1))
-    XCTAssertFalse(mask.isDisabled("rule2", line: 3))
-    XCTAssertTrue(mask.isDisabled("rule2", line: 5))
-    XCTAssertTrue(mask.isDisabled("rule2", line: 7))
-    XCTAssertFalse(mask.isDisabled("rule2", line: 9))
+    XCTAssertEqual(mask.ruleState("rule2", atLine: 1), .default)
+    XCTAssertEqual(mask.ruleState("rule2", atLine: 3), .default)
+    XCTAssertEqual(mask.ruleState("rule2", atLine: 5), .disabled)
+    XCTAssertEqual(mask.ruleState("rule2", atLine: 7), .disabled)
+    XCTAssertEqual(mask.ruleState("rule2", atLine: 9), .enabled)
   }
 
-  public func testWrongOrderFlags() {
+  public func testEnableBeforeDisable() {
     let text =
       """
       let a = 123
@@ -70,9 +70,9 @@ public class RuleMaskTests: XCTestCase {
 
     let mask = createMask(sourceText: text)
 
-    XCTAssertFalse(mask.isDisabled("rule1", line: 1))
-    XCTAssertFalse(mask.isDisabled("rule1", line: 3))
-    XCTAssertFalse(mask.isDisabled("rule1", line: 5))
+    XCTAssertEqual(mask.ruleState("rule1", atLine: 1), .default)
+    XCTAssertEqual(mask.ruleState("rule1", atLine: 3), .enabled)
+    XCTAssertEqual(mask.ruleState("rule1", atLine: 5), .disabled)
   }
 
   public func testDuplicateNested() {
@@ -91,11 +91,11 @@ public class RuleMaskTests: XCTestCase {
 
     let mask = createMask(sourceText: text)
 
-    XCTAssertFalse(mask.isDisabled("rule1", line: 1))
-    XCTAssertTrue(mask.isDisabled("rule1", line: 3))
-    XCTAssertTrue(mask.isDisabled("rule1", line: 5))
-    XCTAssertFalse(mask.isDisabled("rule1", line: 7))
-    XCTAssertFalse(mask.isDisabled("rule1", line: 9))
+    XCTAssertEqual(mask.ruleState("rule1", atLine: 1), .default)
+    XCTAssertEqual(mask.ruleState("rule1", atLine: 3), .disabled)
+    XCTAssertEqual(mask.ruleState("rule1", atLine: 5), .disabled)
+    XCTAssertEqual(mask.ruleState("rule1", atLine: 7), .enabled)
+    XCTAssertEqual(mask.ruleState("rule1", atLine: 9), .enabled)
   }
 
   public func testSingleFlags() {
@@ -110,8 +110,8 @@ public class RuleMaskTests: XCTestCase {
 
     let mask1 = createMask(sourceText: text1)
 
-    XCTAssertFalse(mask1.isDisabled("rule1", line: 1))
-    XCTAssertFalse(mask1.isDisabled("rule1", line: 6))
+    XCTAssertEqual(mask1.ruleState("rule1", atLine: 1), .default)
+    XCTAssertEqual(mask1.ruleState("rule1", atLine: 5), .disabled)
 
     let text2 =
       """
@@ -124,8 +124,8 @@ public class RuleMaskTests: XCTestCase {
 
     let mask2 = createMask(sourceText: text2)
 
-    XCTAssertFalse(mask2.isDisabled("rule1", line: 1))
-    XCTAssertFalse(mask2.isDisabled("rule1", line: 6))
+    XCTAssertEqual(mask2.ruleState("rule1", atLine: 1), .default)
+    XCTAssertEqual(mask2.ruleState("rule1", atLine: 5), .enabled)
   }
 
   public func testSpuriousFlags() {
@@ -140,9 +140,9 @@ public class RuleMaskTests: XCTestCase {
 
     let mask1 = createMask(sourceText: text1)
 
-    XCTAssertFalse(mask1.isDisabled("rule1", line: 1))
-    XCTAssertFalse(mask1.isDisabled("rule1", line: 3))
-    XCTAssertFalse(mask1.isDisabled("rule1", line: 5))
+    XCTAssertEqual(mask1.ruleState("rule1", atLine: 1), .default)
+    XCTAssertEqual(mask1.ruleState("rule1", atLine: 3), .default)
+    XCTAssertEqual(mask1.ruleState("rule1", atLine: 5), .enabled)
 
     let text2 =
       #"""
@@ -158,8 +158,8 @@ public class RuleMaskTests: XCTestCase {
 
     let mask2 = createMask(sourceText: text2)
 
-    XCTAssertFalse(mask2.isDisabled("rule1", line: 1))
-    XCTAssertFalse(mask2.isDisabled("rule1", line: 6))
-    XCTAssertFalse(mask2.isDisabled("rule1", line: 8))
+    XCTAssertEqual(mask2.ruleState("rule1", atLine: 1), .default)
+    XCTAssertEqual(mask2.ruleState("rule1", atLine: 6), .default)
+    XCTAssertEqual(mask2.ruleState("rule1", atLine: 8), .enabled)
   }
 }
