@@ -622,25 +622,23 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
-    var argumentIterator = node.argumentList.makeIterator()
-    let firstArgument = argumentIterator.next()
-
-    if firstArgument != nil {
+    if shouldBreakAroundArgumentList(of: node) {
       // If there is a trailing closure, force the right parenthesis down to the next line so it
       // stays with the open curly brace.
       let breakBeforeRightParen = node.trailingClosure != nil
 
       after(node.leftParen, tokens: .break(.open, size: 0), .open(argumentListConsistency()))
       before(
-        node.rightParen,
-        tokens: .break(.close(mustBreak: breakBeforeRightParen), size: 0), .close)
+        node.rightParen, tokens: .break(.close(mustBreak: breakBeforeRightParen), size: 0), .close)
     }
     before(node.trailingClosure?.leftBrace, tokens: .break(.reset))
     return .visitChildren
   }
 
   func visit(_ node: FunctionCallArgumentSyntax) -> SyntaxVisitorContinueKind {
-    before(node.firstToken, tokens: .open)
+    if node.colon != nil {
+      before(node.firstToken, tokens: .open)
+    }
 
     // If we have an open delimiter following the colon, use a space instead of a continuation
     // break so that we don't awkwardly shift the delimiter down and indent it further if it
@@ -649,8 +647,12 @@ private final class TokenStreamCreator: SyntaxVisitor {
     after(node.colon, tokens: tokenAfterColon)
 
     if let trailingComma = node.trailingComma {
-      after(trailingComma, tokens: .close, .break(.same))
-    } else {
+      var afterTrailingComma: [Token] = [.break(.same)]
+      if node.colon != nil {
+        afterTrailingComma.insert(.close, at: 0)
+      }
+      after(trailingComma, tokens: afterTrailingComma)
+    } else if node.colon != nil {
       after(node.lastToken, tokens: .close)
     }
     return .visitChildren
@@ -1938,6 +1940,28 @@ private final class TokenStreamCreator: SyntaxVisitor {
     case .leftBrace, .leftParen, .leftSquareBracket: return true
     default: return false
     }
+  }
+
+  /// Returns true if open/close breaks should be inserted around the entire argument list of the
+  /// given function call expression.
+  private func shouldBreakAroundArgumentList(of node: FunctionCallExprSyntax) -> Bool {
+    let argumentCount = node.argumentList.count
+
+    // If there are no arguments, there's no reason to break.
+    if argumentCount == 0 { return false }
+
+    // If there is more than one argument, we must open/close break around the whole list.
+    if argumentCount > 1 { return true }
+
+    // At this point, we know there is only one argument in the list. If it's unlabeled and it's an
+    // array, dictionary, or closure literal, we shouldn't open/close break around it; it will look
+    // better if we keep the neighboring parentheses and brackets together and wrap inside them
+    // instead.
+    let firstArgument = node.argumentList.first!
+    let expression = firstArgument.expression
+    return firstArgument.colon != nil
+      || !(expression is ArrayExprSyntax || expression is DictionaryExprSyntax
+        || expression is ClosureExprSyntax)
   }
 }
 

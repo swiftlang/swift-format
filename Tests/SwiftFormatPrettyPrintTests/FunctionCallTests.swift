@@ -162,4 +162,37 @@ public class FunctionCallTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
+
+  public func testSingleUnlabeledArgumentWithDelimiters() {
+    let input =
+      """
+      myFunc([1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000])
+      myFunc(["foo": "bar", "baz": "quux", "glip": "glop"])
+      myFunc({ foo, bar in baz(1000, 2000, 3000, 4000, 5000) })
+      myFunc([1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000]) { foo in bar() }
+      """
+
+    let expected =
+      """
+      myFunc([
+        1000, 2000, 3000, 4000, 5000, 6000, 7000,
+        8000
+      ])
+      myFunc([
+        "foo": "bar", "baz": "quux", "glip": "glop"
+      ])
+      myFunc({ foo, bar in
+        baz(1000, 2000, 3000, 4000, 5000)
+      })
+      myFunc([
+        1000, 2000, 3000, 4000, 5000, 6000, 7000,
+        8000
+      ]) { foo in
+        bar()
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
+  }
 }

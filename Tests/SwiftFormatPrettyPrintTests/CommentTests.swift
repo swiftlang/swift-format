@@ -109,6 +109,8 @@ public class CommentTests: PrettyPrintTestCase {
         // Comment 5
       }
 
+      let a = myfun(123 // Cmt 7
+      )
       let a = myfun(var1: 123 // Cmt 7
       )
 
@@ -159,6 +161,9 @@ public class CommentTests: PrettyPrintTestCase {
         // Comment 5
       }
 
+      let a = myfun(
+        123  // Cmt 7
+      )
       let a = myfun(
         var1: 123  // Cmt 7
       )
@@ -342,6 +347,8 @@ public class CommentTests: PrettyPrintTestCase {
 
       let reallyLongVariableName = 123  /* This comment should wrap */
 
+      let a = myfun(123 /* Cmt 5 */
+      )
       let a = myfun(var1: 123 /* Cmt 5 */
       )
 
@@ -366,6 +373,9 @@ public class CommentTests: PrettyPrintTestCase {
       let reallyLongVariableName
         = 123 /* This comment should wrap */
 
+      let a = myfun(
+        123 /* Cmt 5 */
+      )
       let a = myfun(
         var1: 123 /* Cmt 5 */
       )
