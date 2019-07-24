@@ -39,7 +39,6 @@ extension LintPipeline {
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, in: context, for: node)
     visitIfEnabled(DontRepeatTypeInStaticProperties.visit, in: context, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, in: context, for: node)
-    visitIfEnabled(UseEnumForNamespacing.visit, in: context, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, in: context, for: node)
     return .visitChildren
   }

@@ -22,7 +22,7 @@ let pipelineFile = sourcesDirectory
   .appendingPathComponent("Pipelines+Generated.swift")
 let ruleRegistryFile = sourcesDirectory
   .appendingPathComponent("SwiftFormatConfiguration")
-  .appendingPathComponent("RuleRegistry.swift")
+  .appendingPathComponent("RuleRegistry+Generated.swift")
 
 var ruleCollector = RuleCollector()
 try ruleCollector.collect(from: rulesDirectory)
