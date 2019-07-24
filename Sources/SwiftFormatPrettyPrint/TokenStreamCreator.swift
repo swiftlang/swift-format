@@ -631,7 +631,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
       before(
         node.rightParen, tokens: .break(.close(mustBreak: breakBeforeRightParen), size: 0), .close)
     }
-    before(node.trailingClosure?.leftBrace, tokens: .break(.reset))
+    before(node.trailingClosure?.leftBrace, tokens: .break(.same))
     return .visitChildren
   }
 

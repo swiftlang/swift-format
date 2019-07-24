@@ -39,4 +39,42 @@ public class MemberAccessExprTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 15)
   }
+
+  public func testMethodChainingWithClosures() {
+    let input =
+      """
+      let result = [1, 2, 3, 4, 5]
+          .filter{$0 % 2 == 0}
+          .map{$0 * $0}
+      """
+
+    let expected =
+      """
+      let result = [1, 2, 3, 4, 5]
+        .filter { $0 % 2 == 0 }
+        .map { $0 * $0 }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
+  }
+
+  public func testMethodChainingWithClosuresFullWrap() {
+    let input =
+      """
+      let result = [1, 2, 3, 4, 5].filter { $0 % 2 == 0 }.map { $0 * $0 }
+      """
+
+    let expected =
+      """
+      let result = [
+        1, 2, 3, 4, 5
+      ].filter {
+        $0 % 2 == 0
+      }.map { $0 * $0 }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
+  }
 }
