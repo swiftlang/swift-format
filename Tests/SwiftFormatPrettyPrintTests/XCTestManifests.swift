@@ -194,6 +194,7 @@ extension FunctionCallTests {
         ("testBasicFunctionCalls_packArguments", testBasicFunctionCalls_packArguments),
         ("testDiscretionaryLineBreakBeforeClosingParenthesis", testDiscretionaryLineBreakBeforeClosingParenthesis),
         ("testDiscretionaryLineBreaksAreSelfCorrecting", testDiscretionaryLineBreaksAreSelfCorrecting),
+        ("testSingleUnlabeledArgumentWithDelimiters", testSingleUnlabeledArgumentWithDelimiters),
     ]
 }
 
