@@ -300,6 +300,8 @@ extension MemberAccessExprTests {
     static let __allTests__MemberAccessExprTests = [
         ("testImplicitMemberAccess", testImplicitMemberAccess),
         ("testMemberAccess", testMemberAccess),
+        ("testMethodChainingWithClosures", testMethodChainingWithClosures),
+        ("testMethodChainingWithClosuresFullWrap", testMethodChainingWithClosuresFullWrap),
     ]
 }
 

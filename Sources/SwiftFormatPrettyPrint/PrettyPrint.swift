@@ -210,7 +210,6 @@ public class PrettyPrinter {
       switch kind {
       case .open:
         continuationStack.append(currentLineIsContinuation)
-        isContinuationIfBreakFires = false
         openDelimiterBreakStack.append(lineNumber)
 
         // If an open break occurs on a continuation line, we must push that continuation
@@ -222,16 +221,22 @@ public class PrettyPrinter {
         }
 
         indentationStack.append(configuration.indentation)
+
+        // Once we've reached an open break and preserved the continuation state, the "scope" we now
+        // enter is *not* a continuation scope. If it was one, we'll re-enter it when we reach the
+        // corresponding close.
+        currentLineIsContinuation = false
+
       case .close(let closeMustBreak):
         guard let matchingOpenLineNumber = openDelimiterBreakStack.popLast() else {
           fatalError("Unmatched closing break")
         }
 
         indentationStack.removeLast()
-        isContinuationIfBreakFires = continuationStack.popLast() ?? false
+        let wasContinuationWhenOpened = continuationStack.popLast() ?? false
 
         // Un-persist any continuation indentation that may have applied to the open/close scope.
-        if isContinuationIfBreakFires {
+        if wasContinuationWhenOpened {
           indentationStack.removeLast()
         }
 
@@ -268,12 +273,18 @@ public class PrettyPrinter {
           //
           // Likewise, we need to do this if we popped an old continuation state off the stack,
           // even if the break *doesn't* fire.
-          currentLineIsContinuation = isContinuationIfBreakFires || isDifferentLine
+          currentLineIsContinuation = isDifferentLine
         }
+
+        // Restore the continuation state of the scope we were in before the open break occurred.
+        currentLineIsContinuation = currentLineIsContinuation || wasContinuationWhenOpened
+
       case .continue:
         isContinuationIfBreakFires = true
+
       case .same:
         break
+
       case .reset:
         mustBreak = currentLineIsContinuation
       }
