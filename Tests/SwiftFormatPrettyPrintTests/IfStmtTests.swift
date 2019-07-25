@@ -215,4 +215,25 @@ public class IfStmtTests: PrettyPrintTestCase {
     // The line length ends on the last paren of .Stuff()
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 44)
   }
+
+  public func testHangingOpenBreakIsTreatedLikeContinuation() {
+    let input =
+      """
+      if let foo = someFunction(someArgumentLabel: someValue) {
+        // do stuff
+      }
+      """
+
+    let expected =
+      """
+      if let foo = someFunction(
+        someArgumentLabel: someValue)
+      {
+        // do stuff
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+  }
 }

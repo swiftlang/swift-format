@@ -139,24 +139,25 @@ public class FunctionCallTests: PrettyPrintTestCase {
       myFunc(someArray: [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000])
       myFunc(someDictionary: ["foo": "bar", "baz": "quux", "glip": "glop"])
       myFunc(someClosure: { foo, bar in baz(1000, 2000, 3000, 4000, 5000) })
+      myFunc(someArray: [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000]) { foo in bar() }
       """
 
     let expected =
       """
-      myFunc(
-        someArray: [
-          1000, 2000, 3000, 4000, 5000, 6000, 7000,
-          8000
-        ])
-      myFunc(
-        someDictionary: [
-          "foo": "bar", "baz": "quux",
-          "glip": "glop"
-        ])
-      myFunc(
-        someClosure: { foo, bar in
-          baz(1000, 2000, 3000, 4000, 5000)
-        })
+      myFunc(someArray: [
+        1000, 2000, 3000, 4000, 5000, 6000, 7000,
+        8000
+      ])
+      myFunc(someDictionary: [
+        "foo": "bar", "baz": "quux", "glip": "glop"
+      ])
+      myFunc(someClosure: { foo, bar in
+        baz(1000, 2000, 3000, 4000, 5000)
+      })
+      myFunc(someArray: [
+        1000, 2000, 3000, 4000, 5000, 6000, 7000,
+        8000
+      ]) { foo in bar() }
 
       """
 
@@ -187,9 +188,7 @@ public class FunctionCallTests: PrettyPrintTestCase {
       myFunc([
         1000, 2000, 3000, 4000, 5000, 6000, 7000,
         8000
-      ]) { foo in
-        bar()
-      }
+      ]) { foo in bar() }
 
       """
 

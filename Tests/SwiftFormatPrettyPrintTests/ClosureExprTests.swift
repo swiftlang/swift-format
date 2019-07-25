@@ -21,48 +21,38 @@ public class ClosureExprTests: PrettyPrintTestCase {
       funcCall(closure: <)
       funcCall(closure: { 4 })
       funcCall(closure: { $0 < $1 })
-      funcCall(
-        closure: { s1, s2 in
-          s1 < s2
-        }
-      )
-      funcCall(
-        closure: { s1, s2 in
-          return s1 < s2
-        }
-      )
-      funcCall(
-        closure: { s1, s2, s3, s4, s5, s6 in
-          return s1
-        }
-      )
-      funcCall(
-        closure: {
-          s1,
-          s2,
-          s3,
-          s4,
-          s5,
-          s6,
-          s7,
-          s8,
-          s9,
-          s10 in
-          return s1
-        }
-      )
+      funcCall(closure: { s1, s2 in s1 < s2 })
+      funcCall(closure: { s1, s2 in
+        return s1 < s2
+      })
+      funcCall(closure: {
+        s1,
+        s2,
+        s3,
+        s4,
+        s5,
+        s6 in return s1
+      })
+      funcCall(closure: {
+        s1,
+        s2,
+        s3,
+        s4,
+        s5,
+        s6,
+        s7,
+        s8,
+        s9,
+        s10 in return s1
+      })
       funcCall(
         param1: 123,
-        closure: { s1, s2, s3 in
-          return s1
-        }
+        closure: { s1, s2, s3 in return s1 }
       )
-      funcCall(
-        closure: {
-          (s1: String, s2: String) -> Bool in
-          return s1 > s2
-        }
-      )
+      funcCall(closure: {
+        (s1: String, s2: String) -> Bool in
+        return s1 > s2
+      })
 
       """
 
@@ -90,34 +80,24 @@ public class ClosureExprTests: PrettyPrintTestCase {
       funcCall(closure: <)
       funcCall(closure: { 4 })
       funcCall(closure: { $0 < $1 })
-      funcCall(
-        closure: { s1, s2 in
-          s1 < s2
-        })
-      funcCall(
-        closure: { s1, s2 in
-          return s1 < s2
-        })
-      funcCall(
-        closure: { s1, s2, s3, s4, s5, s6 in
-          return s1
-        })
-      funcCall(
-        closure: {
-          s1, s2, s3, s4, s5, s6, s7, s8, s9,
-          s10 in
-          return s1
-        })
+      funcCall(closure: { s1, s2 in s1 < s2 })
+      funcCall(closure: { s1, s2 in
+        return s1 < s2
+      })
+      funcCall(closure: {
+        s1, s2, s3, s4, s5, s6 in return s1
+      })
+      funcCall(closure: {
+        s1, s2, s3, s4, s5, s6, s7, s8, s9, s10
+        in return s1
+      })
       funcCall(
         param1: 123,
-        closure: { s1, s2, s3 in
-          return s1
-        })
-      funcCall(
-        closure: {
-          (s1: String, s2: String) -> Bool in
-          return s1 > s2
-        })
+        closure: { s1, s2, s3 in return s1 })
+      funcCall(closure: {
+        (s1: String, s2: String) -> Bool in
+        return s1 > s2
+      })
 
       """
 
@@ -143,8 +123,7 @@ public class ClosureExprTests: PrettyPrintTestCase {
         return s1
       }
       funcCall(param1: 2) {
-        s1, s2, s3, s4, s5 in
-        return s1
+        s1, s2, s3, s4, s5 in return s1
       }
 
       """
@@ -281,11 +260,7 @@ public class ClosureExprTests: PrettyPrintTestCase {
 
     let expected =
       """
-      let a = [
-        { a, b in
-          someFunc(a, b)
-        }
-      ]
+      let a = [{ a, b in someFunc(a, b) }]
 
       """
 

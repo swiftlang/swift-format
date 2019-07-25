@@ -259,6 +259,7 @@ extension IfStmtTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__IfStmtTests = [
+        ("testHangingOpenBreakIsTreatedLikeContinuation", testHangingOpenBreakIsTreatedLikeContinuation),
         ("testIfElseStatement_breakBeforeElse", testIfElseStatement_breakBeforeElse),
         ("testIfElseStatement_noBreakBeforeElse", testIfElseStatement_noBreakBeforeElse),
         ("testIfLetStatements", testIfLetStatements),
