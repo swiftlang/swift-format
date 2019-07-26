@@ -108,6 +108,7 @@ extension CommentTests {
         ("testDocumentationBlockComments", testDocumentationBlockComments),
         ("testDocumentationComments", testDocumentationComments),
         ("testDoesNotInsertExtraNewlinesAfterTrailingComments", testDoesNotInsertExtraNewlinesAfterTrailingComments),
+        ("testLineCommentAtEndOfMemberDeclList", testLineCommentAtEndOfMemberDeclList),
         ("testLineComments", testLineComments),
     ]
 }

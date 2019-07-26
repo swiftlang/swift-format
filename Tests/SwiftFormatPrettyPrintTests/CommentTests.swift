@@ -435,8 +435,35 @@ public class CommentTests: PrettyPrintTestCase {
           // comment
           && false
       }
+
+      struct Foo {
+        typealias Bar
+          // comment
+          = SomeOtherType
+      }
       """
 
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 60)
+  }
+
+  public func testLineCommentAtEndOfMemberDeclList() {
+    let input =
+      """
+      enum Foo {
+        case bar
+          // This should be indented the same as the previous line
+      }
+      """
+
+    let expected =
+      """
+      enum Foo {
+        case bar
+        // This should be indented the same as the previous line
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
   }
 }

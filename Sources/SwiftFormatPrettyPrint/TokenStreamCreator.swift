@@ -838,7 +838,12 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: MemberDeclListSyntax) -> SyntaxVisitorContinueKind {
-    insertTokens(.break(.reset, size: 0), .newline, betweenElementsOf: node)
+    return .visitChildren
+  }
+
+  func visit(_ node: MemberDeclListItemSyntax) -> SyntaxVisitorContinueKind {
+    before(node.firstToken, tokens: .open)
+    after(node.lastToken, tokens: .close, .break(.reset, size: 0))
     return .visitChildren
   }
 
