@@ -299,6 +299,7 @@ extension MemberAccessExprTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__MemberAccessExprTests = [
+        ("testContinuationRestorationAfterGroup", testContinuationRestorationAfterGroup),
         ("testImplicitMemberAccess", testImplicitMemberAccess),
         ("testMemberAccess", testMemberAccess),
         ("testMethodChainingWithClosures", testMethodChainingWithClosures),

@@ -343,6 +343,7 @@ public class PrettyPrinter {
 
         // Restore the continuation state of the scope we were in before the open break occurred.
         currentLineIsContinuation = currentLineIsContinuation || wasContinuationWhenOpened
+        isContinuationIfBreakFires = wasContinuationWhenOpened
 
       case .continue:
         isContinuationIfBreakFires = true
