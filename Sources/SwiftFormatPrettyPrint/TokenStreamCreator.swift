@@ -863,6 +863,15 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: OperatorDeclSyntax) -> SyntaxVisitorContinueKind {
+    after(node.operatorKeyword, tokens: .break)
+    return .visitChildren
+  }
+
+  func visit(_ node: OperatorPrecedenceAndTypesSyntax) -> SyntaxVisitorContinueKind {
+    // Despite being an `IdentifierListSyntax`, the language grammar currently only allows a single
+    // precedence group here, so we don't worry about breaks at any interior commas.
+    after(node.colon, tokens: .break(.open))
+    after(node.lastToken, tokens: .break(.close, size: 0))
     return .visitChildren
   }
 
@@ -876,22 +885,33 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: PrecedenceGroupDeclSyntax) -> SyntaxVisitorContinueKind {
+    after(node.precedencegroupKeyword, tokens: .break)
+    after(node.identifier, tokens: .break(.reset))
+    after(node.leftBrace, tokens: .break(.open), .newline)
+    before(node.rightBrace, tokens: .break(.close))
     return .visitChildren
   }
 
   func visit(_ node: PrecedenceGroupRelationSyntax) -> SyntaxVisitorContinueKind {
+    after(node.colon, tokens: .break(.open))
+    after(node.lastToken, tokens: .break(.close), .newline)
     return .visitChildren
   }
 
   func visit(_ node: PrecedenceGroupAssignmentSyntax) -> SyntaxVisitorContinueKind {
+    after(node.colon, tokens: .break(.open))
+    after(node.lastToken, tokens: .break(.close), .newline)
     return .visitChildren
   }
 
   func visit(_ node: PrecedenceGroupNameElementSyntax) -> SyntaxVisitorContinueKind {
+    after(node.trailingComma, tokens: .break(.same))
     return .visitChildren
   }
 
   func visit(_ node: PrecedenceGroupAssociativitySyntax) -> SyntaxVisitorContinueKind {
+    after(node.colon, tokens: .break(.open))
+    after(node.lastToken, tokens: .break(.close), .newline)
     return .visitChildren
   }
 
