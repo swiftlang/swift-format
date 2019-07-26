@@ -242,6 +242,7 @@ extension GuardStmtTests {
     static let __allTests__GuardStmtTests = [
         ("testGuardStatement", testGuardStatement),
         ("testGuardWithFuncCall", testGuardWithFuncCall),
+        ("testOpenBraceIsGluedToElseKeyword", testOpenBraceIsGluedToElseKeyword),
     ]
 }
 

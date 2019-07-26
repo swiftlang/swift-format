@@ -410,7 +410,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
   func visit(_ node: GuardStmtSyntax) -> SyntaxVisitorContinueKind {
     after(node.guardKeyword, tokens: .break)
     before(node.elseKeyword, tokens: .break(.reset), .open)
-    after(node.elseKeyword, tokens: .break)
+    after(node.elseKeyword, tokens: .space)
     before(node.body.leftBrace, tokens: .close)
 
     arrangeBracesAndContents(
