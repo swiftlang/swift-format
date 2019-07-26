@@ -1639,7 +1639,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
       after(node.leftBrace, tokens: .break(.open, size: 1), .open)
       before(node.rightBrace, tokens: .break(.close, size: 1), .close)
     } else {
-      before(node.rightBrace, tokens: .break(.same, size: 0))
+      after(node.leftBrace, tokens: .break(.open, size: 0))
+      before(node.rightBrace, tokens: .break(.close, size: 0))
     }
   }
 
@@ -1668,7 +1669,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
       after(node.leftBrace, tokens: .break(.open, size: 1), .open)
       before(node.rightBrace, tokens: .break(.close, size: 1), .close)
     } else {
-      before(node.rightBrace, tokens: .break(.same, size: 0))
+      after(node.leftBrace, tokens: .break(.open, size: 0))
+      before(node.rightBrace, tokens: .break(.close, size: 0))
     }
   }
 
@@ -1697,7 +1699,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
       after(node.leftBrace, tokens: .break(.open, size: 1), .open)
       before(node.rightBrace, tokens: .break(.close, size: 1), .close)
     } else {
-      before(node.rightBrace, tokens: .break(.same, size: 0))
+      after(node.leftBrace, tokens: .break(.open, size: 0))
+      before(node.rightBrace, tokens: .break(.close, size: 0))
     }
   }
 
@@ -1720,7 +1723,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
       after(node.leftBrace, tokens: .break(.open, size: 1), .open)
       before(node.rightBrace, tokens: .break(.close, size: 1), .close)
     } else {
-      before(node.rightBrace, tokens: .break(.same, size: 0))
+      after(node.leftBrace, tokens: .break(.open, size: 0))
+      before(node.rightBrace, tokens: .break(.close, size: 0))
     }
   }
 

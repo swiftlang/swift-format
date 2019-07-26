@@ -77,4 +77,33 @@ public class MemberAccessExprTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
   }
+
+  public func testContinuationRestorationAfterGroup() {
+    let input =
+      """
+      someLongReceiverName.someEvenLongerMethodName {
+      }
+
+      someLongReceiverName.someEvenLongerMethodName {
+        bar()
+        baz()
+      }
+      """
+
+    let expected =
+      """
+      someLongReceiverName
+        .someEvenLongerMethodName {
+        }
+
+      someLongReceiverName
+        .someEvenLongerMethodName {
+          bar()
+          baz()
+        }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
+  }
 }
