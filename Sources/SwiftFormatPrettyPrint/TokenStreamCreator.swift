@@ -1203,8 +1203,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: TypeAnnotationSyntax) -> SyntaxVisitorContinueKind {
-    after(node.colon, tokens: .break, .open)
-    after(node.lastToken, tokens: .close)
+    after(node.colon, tokens: .break(.open), .open)
+    after(node.lastToken, tokens: .break(.close, size: 0), .close)
     return .visitChildren
   }
 
@@ -1373,6 +1373,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: MemberTypeIdentifierSyntax) -> SyntaxVisitorContinueKind {
+    before(node.period, tokens: .break(.continue, size: 0))
     return .visitChildren
   }
 
