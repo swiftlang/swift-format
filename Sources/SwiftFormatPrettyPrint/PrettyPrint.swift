@@ -17,6 +17,28 @@ import SwiftSyntax
 /// PrettyPrinter takes a Syntax node and outputs a well-formatted, re-indented reproduction of the
 /// code as a String.
 public class PrettyPrinter {
+
+  /// Information about an open break that has not yet been closed during the printing stage.
+  private struct ActiveOpenBreak {
+
+    /// The line number where the open break occurred.
+    let lineNumber: Int
+
+    /// Indicates whether the open break contributed to an increase in indentation of its "scope".
+    ///
+    /// An open break does not contribute to indentation if it is followed by another open break on
+    /// the same line.
+    var didIndent: Bool
+
+    init(lineNumber: Int) {
+      self.lineNumber = lineNumber
+
+      // Assume that it will indent initially. This may be flipped later if another open break is
+      // later encountered on the same line.
+      self.didIndent = true
+    }
+  }
+
   private let context: Context
   private var configuration: Configuration { return context.configuration }
   private let maxLineLength: Int
@@ -43,11 +65,12 @@ public class PrettyPrinter {
   /// If true, the token stream is printed to the console for debugging purposes.
   private var printTokenStream: Bool
 
-  /// Keeps track of the line numbers of the open (and unclosed) breaks seen so far.
-  private var openDelimiterBreakStack: [Int] = []
+  /// Keeps track of the line numbers and indentation states of the open (and unclosed) breaks seen
+  /// so far.
+  private var activeOpenBreaks: [ActiveOpenBreak] = []
 
   /// Keeps track of the current line number being printed.
-  private var lineNumber: Int = 0
+  private var lineNumber: Int = 1
 
   /// Indicates whether or not the current line being printed is a continuation line.
   private var currentLineIsContinuation = false
@@ -78,6 +101,17 @@ public class PrettyPrinter {
       totalIndentation.append(configuration.indentation)
     }
     return totalIndentation
+  }
+
+  /// The current line number being printed, with adjustments made for open/close break
+  /// calculations.
+  ///
+  /// Some of the open/close break logic is based on whether matching breaks are located on the same
+  /// physical line. In some situations, newlines can be printed before breaks that would cause the
+  /// line number to increase by one by the time we reach the break, when we really wish to consider
+  /// the break as being located at the end of the previous line.
+  private var openCloseBreakCompensatingLineNumber: Int {
+    return isAtStartOfLine ? lineNumber - 1 : lineNumber
   }
 
   /// Creates a new PrettyPrinter with the provided formatting configuration.
@@ -181,8 +215,8 @@ public class PrettyPrinter {
       printDebugToken(token: token, length: length, idx: idx)
     }
     assert(length >= 0, "Token lengths must be positive")
-    switch token {
 
+    switch token {
     // Check if we need to force breaks in this group, and calculate the indentation to be used in
     // the group.
     case .open(let breaktype):
@@ -209,18 +243,34 @@ public class PrettyPrinter {
 
       switch kind {
       case .open:
-        continuationStack.append(currentLineIsContinuation)
-        openDelimiterBreakStack.append(lineNumber)
+        let lastOpenBreak = activeOpenBreaks.last
 
-        // If an open break occurs on a continuation line, we must push that continuation
-        // indentation onto the stack. The open break will reset the continuation state for the
-        // lines within it (unless they are themselves continuations within that particular scope),
-        // so we need the continuation indentation to persist across all the lines in that scope.
-        if currentLineIsContinuation {
+        // Only increase the indentation if there wasn't an open break already encountered on this
+        // line (i.e., the previous open break didn't fire), to prevent the indentation of the next
+        // line from being more than one level deeper than this line.
+        let lastOpenBreakWasSameLine
+          = openCloseBreakCompensatingLineNumber == (lastOpenBreak?.lineNumber ?? 0)
+        if lastOpenBreakWasSameLine {
+          // If the last open break was on the same line, then we mark it as *not* contributing to
+          // the indentation of the subsequent lines. When the breaks are closed, this ensures that
+          // indentation is popped evenly (and also popped in an order that causes everything to
+          // line up properly).
+          activeOpenBreaks[activeOpenBreaks.count - 1].didIndent = false
+        } else {
+          // If an open break occurs on a continuation line, we must push that continuation
+          // indentation onto the stack. The open break will reset the continuation state for the
+          // lines within it (unless they are themselves continuations within that particular
+          // scope), so we need the continuation indentation to persist across all the lines in that
+          // scope.
+          if currentLineIsContinuation {
+            indentationStack.append(configuration.indentation)
+          }
+
           indentationStack.append(configuration.indentation)
         }
 
-        indentationStack.append(configuration.indentation)
+        continuationStack.append(currentLineIsContinuation)
+        activeOpenBreaks.append(ActiveOpenBreak(lineNumber: openCloseBreakCompensatingLineNumber))
 
         // Once we've reached an open break and preserved the continuation state, the "scope" we now
         // enter is *not* a continuation scope. If it was one, we'll re-enter it when we reach the
@@ -228,11 +278,27 @@ public class PrettyPrinter {
         currentLineIsContinuation = false
 
       case .close(let closeMustBreak):
-        guard let matchingOpenLineNumber = openDelimiterBreakStack.popLast() else {
+        guard let matchingOpenBreak = activeOpenBreaks.popLast() else {
           fatalError("Unmatched closing break")
         }
 
-        indentationStack.removeLast()
+        let openedOnDifferentLine
+          = openCloseBreakCompensatingLineNumber != matchingOpenBreak.lineNumber
+
+        if matchingOpenBreak.didIndent {
+          // We can remove an indentation unit if the close was on a different line than the
+          // matching open, if the open break before that also contributed to indentation, or if
+          // there are no more open breaks. Otherwise, we update the previous active open break to
+          // indicate that *it* contributed to indentation and move on.
+          if matchingOpenBreak.lineNumber != openCloseBreakCompensatingLineNumber
+            || activeOpenBreaks.isEmpty || activeOpenBreaks.last?.didIndent == true
+          {
+            indentationStack.removeLast()
+          } else {
+            activeOpenBreaks[activeOpenBreaks.count - 1].didIndent = true
+          }
+        }
+
         let wasContinuationWhenOpened = continuationStack.popLast() ?? false
 
         // Un-persist any continuation indentation that may have applied to the open/close scope.
@@ -240,11 +306,10 @@ public class PrettyPrinter {
           indentationStack.removeLast()
         }
 
-        let isDifferentLine = lineNumber != matchingOpenLineNumber
         if closeMustBreak {
           // If it's a mandatory breaking close, then we must break (regardless of line length) if
           // the break is on a different line than its corresponding open break.
-          mustBreak = isDifferentLine
+          mustBreak = openedOnDifferentLine
         } else if spaceRemaining == 0 {
           // If there is no room left on the line, then we must force this break to fire so that the
           // next token that comes along (typically a closing bracket of some kind) ends up on the
@@ -273,7 +338,7 @@ public class PrettyPrinter {
           //
           // Likewise, we need to do this if we popped an old continuation state off the stack,
           // even if the break *doesn't* fire.
-          currentLineIsContinuation = isDifferentLine
+          currentLineIsContinuation = openedOnDifferentLine
         }
 
         // Restore the continuation state of the scope we were in before the open break occurred.
@@ -455,7 +520,7 @@ public class PrettyPrinter {
       printToken(idx: i)
     }
 
-    guard openDelimiterBreakStack.isEmpty else {
+    guard activeOpenBreaks.isEmpty else {
       fatalError("At least one .break(.open) was not matched by a .break(.close)")
     }
 

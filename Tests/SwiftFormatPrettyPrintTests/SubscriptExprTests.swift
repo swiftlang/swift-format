@@ -52,14 +52,11 @@ public class SubscriptExprTests: PrettyPrintTestCase {
       """
       let a = myCollection[index] { $0 < $1 }
       let a = myCollection[label: index] {
-        arg1, arg2 in
-        foo()
+        arg1, arg2 in foo()
       }
       let a = myCollection[
         index, default: someDefaultValue
-      ] { arg1, arg2 in
-        foo()
-      }
+      ] { arg1, arg2 in foo() }
 
       """
 
@@ -82,9 +79,7 @@ public class SubscriptExprTests: PrettyPrintTestCase {
       } = someValue
       myCollection[
         index, default: someDefaultValue
-      ] { arg1, arg2 in
-        foo()
-      } = someValue
+      ] { arg1, arg2 in foo() } = someValue
 
       """
 

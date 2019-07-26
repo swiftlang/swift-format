@@ -622,21 +622,34 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
-    if shouldBreakAroundArgumentList(of: node) {
+    let arguments = node.argumentList
+    if !arguments.isEmpty {
       // If there is a trailing closure, force the right parenthesis down to the next line so it
       // stays with the open curly brace.
       let breakBeforeRightParen = node.trailingClosure != nil
+        && !isCompactSingleFunctionCallArgument(node.argumentList)
 
-      after(node.leftParen, tokens: .break(.open, size: 0), .open(argumentListConsistency()))
-      before(
-        node.rightParen, tokens: .break(.close(mustBreak: breakBeforeRightParen), size: 0), .close)
+      var afterLeftParen: [Token] = [.break(.open, size: 0)]
+      var beforeRightParen: [Token] = [.break(.close(mustBreak: breakBeforeRightParen), size: 0)]
+
+      if shouldGroupAroundArgumentList(of: node) {
+        afterLeftParen.append(.open(argumentListConsistency()))
+        beforeRightParen.append(.close)
+      }
+
+      after(node.leftParen, tokens: afterLeftParen)
+      before(node.rightParen, tokens: beforeRightParen)
     }
+
     before(node.trailingClosure?.leftBrace, tokens: .break(.same))
     return .visitChildren
   }
 
   func visit(_ node: FunctionCallArgumentSyntax) -> SyntaxVisitorContinueKind {
-    if node.colon != nil {
+    let argumentList = node.parent as! FunctionCallArgumentListSyntax
+    let shouldGroupAroundArgument = !isCompactSingleFunctionCallArgument(argumentList)
+
+    if shouldGroupAroundArgument {
       before(node.firstToken, tokens: .open)
     }
 
@@ -648,11 +661,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
     if let trailingComma = node.trailingComma {
       var afterTrailingComma: [Token] = [.break(.same)]
-      if node.colon != nil {
+      if shouldGroupAroundArgument {
         afterTrailingComma.insert(.close, at: 0)
       }
       after(trailingComma, tokens: afterTrailingComma)
-    } else if node.colon != nil {
+    } else if shouldGroupAroundArgument {
       after(node.lastToken, tokens: .close)
     }
     return .visitChildren
@@ -662,7 +675,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     if let signature = node.signature {
       before(signature.firstToken, tokens: .break(.open))
       if node.statements.count > 0 {
-        after(signature.inTok, tokens: .newline)
+        after(signature.inTok, tokens: .break(.same))
       } else {
         after(signature.inTok, tokens: .break(.same, size: 0))
       }
@@ -1944,7 +1957,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   /// Returns true if open/close breaks should be inserted around the entire argument list of the
   /// given function call expression.
-  private func shouldBreakAroundArgumentList(of node: FunctionCallExprSyntax) -> Bool {
+  private func shouldGroupAroundArgumentList(of node: FunctionCallExprSyntax) -> Bool {
     let argumentCount = node.argumentList.count
 
     // If there are no arguments, there's no reason to break.
@@ -1953,15 +1966,20 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // If there is more than one argument, we must open/close break around the whole list.
     if argumentCount > 1 { return true }
 
-    // At this point, we know there is only one argument in the list. If it's unlabeled and it's an
-    // array, dictionary, or closure literal, we shouldn't open/close break around it; it will look
-    // better if we keep the neighboring parentheses and brackets together and wrap inside them
-    // instead.
-    let firstArgument = node.argumentList.first!
-    let expression = firstArgument.expression
-    return firstArgument.colon != nil
-      || !(expression is ArrayExprSyntax || expression is DictionaryExprSyntax
-        || expression is ClosureExprSyntax)
+    return !isCompactSingleFunctionCallArgument(node.argumentList)
+  }
+
+  /// Returns true if the argument list can be compacted, even if it spans multiple lines (where
+  /// compact means that it can start immediately after the open parenthesis).
+  ///
+  /// This is true for any argument list that contains a single argument (labeled or unlabeled) that
+  /// is an array, dictionary, or closure literal.
+  func isCompactSingleFunctionCallArgument(_ argumentList: FunctionCallArgumentListSyntax) -> Bool {
+    guard argumentList.count == 1 else { return false }
+
+    let expression = argumentList.first!.expression
+    return expression is ArrayExprSyntax || expression is DictionaryExprSyntax
+      || expression is ClosureExprSyntax
   }
 }
 
