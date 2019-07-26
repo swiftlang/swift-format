@@ -84,4 +84,27 @@ public class GuardStmtTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 35)
   }
+
+  public func testOpenBraceIsGluedToElseKeyword() {
+    let input =
+      """
+      guard let foo = something,
+        let bar = somethingElse else
+      {
+        body()
+      }
+      """
+
+    let expected =
+      """
+      guard let foo = something,
+        let bar = somethingElse
+      else {
+        body()
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
+  }
 }
