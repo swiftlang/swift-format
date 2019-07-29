@@ -537,6 +537,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
+  func visit(_ node: YieldStmtSyntax) -> SyntaxVisitorContinueKind {
+    after(node.yieldKeyword, tokens: .break)
+    return .visitChildren
+  }
+
   // TODO: - Other nodes (yet to be organized)
 
   func visit(_ node: DeclNameArgumentsSyntax) -> SyntaxVisitorContinueKind {
