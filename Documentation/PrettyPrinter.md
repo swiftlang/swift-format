@@ -1,15 +1,14 @@
 # swift-format Pretty Printer
 
-> :warning: **NOTE:** The information in this document is based on an older
-> iteration of the pretty printer model and needs to be updated with the model
-> currently implemented.
-
 ## Introduction
 
-The algorithm used in the swift-format pretty printer is based on the "simple"
-version of the algorithm described by Derek Oppen in his paper [*Pretty
-Printing*](http://i.stanford.edu/pub/cstr/reports/cs/tr/79/770/CS-TR-79-770.pdf)
-(1979). It employs two functions: *scan* and *print*. The *scan* function
+The algorithm used in the swift-format pretty printer is based on (but not a
+strict implementation of) the "simple" version of the algorithm described by
+Derek Oppen in his paper
+[*Pretty Printing*](http://i.stanford.edu/pub/cstr/reports/cs/tr/79/770/CS-TR-79-770.pdf)
+(1979).
+
+It employs two functions: *scan* and *print*. The *scan* function
 accepts a stream of tokens and calculates the lengths of these tokens. It then
 passes the tokens and their computed lengths to *print*, which handles the
 actual printing of the tokens, automatically inserting line breaks and indents
@@ -28,9 +27,9 @@ tokens and end with *close* tokens. These tokens must always be paired.
 ### Token Types
 
 The different types of tokens are represented as a Token `enum` within the code.
-The available cases are: `syntax`, `break`, `open`, `close`, `newlines`,
-`comment`, `reset`, and `verbatim`. The behavior of each of them is described
-below with pseudocode examples.
+The available cases are: `syntax`, `break`, `spaces`, `open`, `close`,
+`newlines`, `comment`, and `verbatim`. The behavior of each of them is
+described below with pseudocode examples.
 
 See: [`Token.swift`](../Sources/SwiftFormatPrettyPrint/Token.swift)
 
@@ -44,33 +43,70 @@ columns needed to print it. For example, `func` would have a length of 4.
 
 The *break* tokens indicate where line breaks are allowed to occur. These
 frequently occur as the whitespace in between syntax tokens. The breaks contain
-two associated values that can be specified when creating the break token:
-*size* and *offset*. The size indicates how many columns of whitespace should
-be printed when the token is encountered. If a line break should occur at the
-break token, the offset indicates how many spaces should be used for indentation
-of the next token. The length of a break is its size plus the length of the
-token that immediately come after it. If a break immediately precedes a group,
-its length will be its size plus the size of the group.
+three associated values that can be specified when creating the break token:
 
-```
-# break(size, offset)
-Tokens = ["one", break(1, 2), "two", break(1, 2), "three"]
-Lengths = [3, 4, 3, 6, 5]
+* *kind:* Indicates the behavior of the break. These are described in more
+  detail below.
+* *size:* The number of spaces that should be printed when the line does *not*
+  break at this location.
+* *ignoresDiscretionary:* If false (the default), and if the pretty printer is
+  configured to respect the user's existing line breaks (referred to as
+  "discretionary" line breaks), then a break will be forced at this location.
+  If true, then the user's discretionary line break will be removed.
 
-# Maximum line length of 10
-Output =
-"""
-one two
-  three
-"""
-```
+The length of a break is its size plus the length of the token that immediately
+comes after it. If a break immediately precedes a group, its length will be its
+size plus the size of the group.
+
+##### Break kinds
+
+The break's "kind" defines the behavior of the break---specifically, the
+indentation behavior that occurs when line wrapping occurs at its location.
+There are five kinds of breaks:
+
+* *open:* If line wrapping occurs here, then the base indentation level of
+  subsequent tokens increases by one unit until the corresponding `close` break
+  is encountered.
+
+  _This should not be confused with an open group token._
+
+* *close:* If line wrapping occurs here, the base indentation level returns to
+  the value it had before the matching `open` break.
+
+  This kind of break has an associated value, `mustBreak`. If true (the
+  default), then this break will always wrap when it occurs on a different line
+  than its matching `open` break, even if the length of the break would allow
+  it to fit on the same line. This is the behavior one typically wants when
+  laying out curly-brace delimited blocks or collection literals. If this value
+  is false, then the break only wraps when necessary. This behavior is
+  desirable, for example, if you want the closing parenthesis of a function
+  call to occur on the same line as the final argument.
+
+  _ This should not be confused with a close group token._
+
+* *continue:* If line wrapping occurs here, the following line will be treated
+  as a continuation line (indented one unit further than the base level),
+  without changing the base level. These are used when wrapping something that
+  isn't "scoped" (like an argument list between delimiters), but instead
+  something "open-ended" like a long expression.
+
+* *same:* If line wrapping occurs here, the following line will be indented at
+  the same indentation level as the previous line. This is used, for example,
+  when breaking comma-delimited lists.
+
+* *reset:* If a reset break occurs on a continuation line, the line will always
+  wrap (without regard to the break's length) and the indentation level will be
+  reset to the base indentation level. This is used, for example, to reset the
+  indentation level at the end of a statement (which may have been wrapped as
+  a continution) or to force the `{` of a control flow statement onto its own
+  line when the statement was wrapped.
 
 #### Open
 
 An *open* token indicates the start of a group.
 
 ```
-# break(size=1, offset=0)
+# break(.same, 1)
 Token = ["one", break, open, "two", break, "three", break, open, "four", break, "five", close, close]
 
 # Maximum line length of 20
@@ -89,17 +125,17 @@ four five
 """
 ```
 
-Open tokens have a *break style* and an *offset*. The break style is either
-*consistent* or *inconsistent*. If a group is too large to fit on the remaining
-space on a line, and it is labeled as *consistent*, then the break tokens it
-contains will all produce line breaks. (In the case of nested groups, the break
-style affects a group's immediate children.) The default behavior is
-*inconsistent*, in which case the break tokens only produce line breaks when
-their lengths exceed the remaining space on the line.
+Open tokens have a *break style*. The break style is either *consistent* or
+*inconsistent*. If a group is too large to fit on the remaining space on a
+line, and it is labeled as *consistent*, then the break tokens it contains will
+all produce line breaks. (In the case of nested groups, the break style only
+affects a group's immediate children.) The default behavior is *inconsistent*,
+in which case the break tokens only produce line breaks when their lengths
+exceed the remaining space on the line.
 
 ```
-# open(consistent/inconsistent), break(size, offset)
-Tokens = ["one", break(1, 0), open(C), "two", break(1, 0), "three", close]
+# open(consistent/inconsistent)
+Tokens = ["one", break(.same, 1), open(C), "two", break(.same, 1), "three", close]
 
 # Maximum line length of 10 (consistent breaking)
 Output =
@@ -110,7 +146,7 @@ three
 """
 
 # With inconsistent breaking
-Tokens = ["one", break(1, 0), open(I), "two", break(1, 0), "three", close]
+Tokens = ["one", break(.same, 1), open(I), "two", break(.same, 1), "three", close]
 Output =
 """
 one
@@ -118,44 +154,11 @@ two three
 """
 ```
 
-The open token's offset applies an offset to the breaks contained within the
-group. A break token's offset value is added to the offset of its group. In the
-case of nested groups, the group offsets add together. If an outer group has an
-offset of 2, and an inner group an offset 3, any break tokens that produce line
-breaks in the inner group will offset by 5 spaces (plus the break's offsets).
-Additionally, a break that produces a line break immediately before an open
-token will also increase the offset. For example, if a break has an offset of 2
-immediately before an open with an offset of 3, the breaks within the group will
-be offset by 5.
-
-```
-# open(consistent/inconsistent, offset)
-Tokens = ["one", break, open(C, 2), "two", break, "three", close]
-
-# Maximum line length of 10
-Output =
-"""
-one
-two
-  three
-"""
-
-Tokens = ["one", break(offset=2), open(C, 0), "two", break, "three", close]
-
-# Maximum line length of 10
-Output =
-"""
-one
-  two
-  three
-"""
-```
-
 The open token of a group is assigned the total size of the group as its length.
 Open tokens must always be paired with a *close* token.
 
 ```
-Tokens = ["one", break(1, 2), open(C, 2), "two", break(1, 2), "three", close]
+Tokens = ["one", break(.same, 1), open(C), "two", break(.same, 1), "three", close]
 Lengths = [3, 11, 10, 3, 1, 5, 0]
 ```
 
@@ -167,9 +170,13 @@ They must always be paired with an *open* token.
 #### Newline
 
 The *newline* tokens behave much the same way as *break* tokens, except that
-they always produce a line break. They can be assigned an offset, in the same
-way as a break. They can also be given an integer number of line breaks to
-produce.
+they always produce a line break. They can be given an integer number of line
+breaks to produce (which is one by default).
+
+Newline tokens also have a `discretionary` flag. If true, then the newline is
+one that represents a newline that the user originally had written in their
+code. If false, then it represents one that the formatter itself added to the
+token stream.
 
 These tokens are given a length equal to the maximum allowed line width. The
 reason for this is to indicate that any enclosing groups are too large to fit on
@@ -185,43 +192,14 @@ Lengths = [3, 4, 3, 60, 59, 5, 50, 4, 0]
 #### Space
 
 *Space* tokens are used to insert whitespace between tokens, as you might do
-with a *break* token. However, line-breaks may not occur at *space* tokens. They
-have a size assigned to them, corresponding to the number of spaces you wish to
-print.
+with a *break* token. However, line-breaks may not occur at *space* tokens;
+thus, they can be used to keep neighboring tokens "glued" together under any
+circumstances.
 
-#### Reset
-
-Reset tokens are used to reset the state created by break tokens if needed, and
-are rarely used. A primary use-case is to prevent an entire group from moving to
-a new line, but you still want the group to break internally. Reset tokens have
-a length of zero.
-
-A reset token makes whatever follows it behave as if it was at the beginning of
-the line.
-
-```
-Tokens = ["one", break(1), "two", reset]
-Lengths = [3, 4, 3, 0]
-
-# Normal breaking behavior of a consistent group
-Tokens = ["one", break(1), open(C, 2), "two", break(1), "three", break(1), "four", close]
-Output =
-"""
-one
-  two
-  three
-  four
-"""
-
-# Breaking behavior of a consistent group with a reset token
-Tokens = ["one", break(1), reset, open(C, 2), "two", break(1), "three", break(1), "four", close]
-Output =
-"""
-one two
-  three
-  four
-"""
-```
+Space tokens have a size assigned to them, corresponding to the number of
+spaces you wish to print. They also have a `flexible` flag, which if true,
+allows neighboring space tokens to be collapsed together so that the number
+of spaces printed is the maximum of the pair.
 
 #### Comment
 
@@ -295,15 +273,13 @@ function. That being said, we visit the higher level nodes before the lower
 level nodes.
 
 Within the visit methods, you can attach pretty-printing tokens at different
-points within the syntax structures. For example, if you wanted to place an
-indenting group around the body of a function declaration with consistent
-breaking, and you want the trailing brace forced to the next line, it might look
-like:
+points within the syntax structures. For example, if you wanted to indent the
+contents of a curly brace structure, you might do something like:
 
 ```
-// In visit(_ node: FunctionDeclSyntax)
-after(node.body?.leftBrace, tokens: .break(offset: 2), .open(.consistent, 0))
-before(node.body?.rightBrace, tokens: .break(offset: -2), .close)
+// In arrangeBracesAndContents:
+after(node.leftBrace, tokens: .break(.open, size: 1), .open)
+before(node.rightBrace, tokens: .break(.close, size: 1), .close)
 ```
 
 Two dictionaries are maintained to keep track of the pretty-printing tokens
@@ -440,117 +416,13 @@ value is appended to the length array, and added to `total`.
 The purpose of the *print* phase is to print the contents of a syntax node to
 the console or to append it to a string buffer as we do in swift-format. It
 tracks the remaining space left on the line, and it decides whether or not to
-insert a line break based on the length of the token. It uses the following
-variables to track state in between calls to `print`:
-- `indentStack` - keeps track of the overall offset level based on the groups.
-- `relativeIndentStack` - keeps track of the incremental offsets applied within
-  each group. This is used to correct the indentation of a `break` when exiting
-  a group.
-- `forceBreakStack` - keeps track of the force break state of the groups (used
-  for consistent breaking).
-- `spaceRemaining` - how many columns remain on the current line?
-- `lastBreak` - Did the previous break token create a line break? This is used
-  by `open` tokens when calculating indentation value.
-- `lastBreakConsecutive` - This becomes true whenever a `break` produces a new
-  line, and only becomes false when a `syntax`, `space`, `reset`, `comment`, or
-  `verbatim` token is encountered. Its purpose is to prevent consecutive `break`
-  tokens from producing new lines.
-- `lastBreakOffset` - The offset value of the last `break`.
-- `lastBreakValue` - The total amount of white space needed to indent the last
-  `break`.
+insert a line break based on the length of the token.
+
+The logic for the `print` function is fairly complex and varies depending on
+the kind of token or break being printed. Rather than explain it here, we
+recommend viewing its documented source directly.
 
 See: [`PrettyPrint.swift:printToken(...)`](../Sources/SwiftFormatPrettyPrint/PrettyPrint.swift)
-
-### Syntax Tokens
-
-When we encounter a `syntax` token, we check `lastBreakConsecutive` to see if
-this token was preceded by a `break` that created a new line. If so, we first
-print the number of spaces according to `lastBreakValue`.
-
-In all cases, we print the text of the token and subtract its length from
-`spaceRemaining`. We also reset the `lastBreak` variables. That is, we set:
-
-```swift
-lastBreak = false
-lastBreakConsecutive = flase
-lastBreakOffset = 0
-lastBreakValue = 0
-```
-
-### Open Tokens
-
-If we encounter an `open` token, we check to see if we need to impose consistent
-breaking or not for this group. If the `open` token has consistent breaking and
-`lastBreak` is true (or the length of the group is greater than
-`spaceRemaining`), we push `true` onto `forceBreakStack` (`false`, otherwise).
-
-Next we calculate the indentation for this group. We read the indentation value
-from the top of the stack. We add to it the offset of this `open` token and
-`lastBreakOffset`, then push it onto `indentStack`. We add the sum of just the
-`open` token's offset and `lastBreakOffset` to the top of `relativeIndentStack`.
-
-`open` tokens do not affect `spaceRemaining`.
-
-### Close Tokens
-
-Pop the values from the top of `forceBreakStack` and `indentStack`. Next, we pop
-the value off the top of `relativeIndentStack`. We then add this to
-`lastBreakOffset`. `lastBreakOffset` is a relative value itself, so if a `break`
-creates a new line from within the group, this value will no longer correspond
-to the correct global indentation. This is why we correct it with the relative
-indentation value of its containing group.
-
-### Break Tokens
-
-At `break` tokens we need to decide whether or not to create a line break. This
-occurs if the top of the `forceBreakStack` is true, or of the length of the
-`break` exceeds `spaceRemaining`. `lastBreakConsecutive` must be false.
-
-If we need to create a line break, we need to calcualte the indentation level
-and propagate that information to future `syntax` and `open` tokens. First read
-the top of `indentStack`, and add the indentation to the `break` token's offset
-value; this will be `lastBreakValue`. Set `lastBreak` and `lastBreakConsecutive`
-to true, and `lastBreakOffset` to the `break`'s offset. The `spaceRemaining` is
-set to the maximum line length minus `lastBreakValue`.
-
-If we do not need to create a new line, we print the `break`. We write out the
-number of spaces corresponding to the `break` token's size, and subtract the
-value of `size` from `spaceRemaining`. We then reset the `lastBreak` variables
-as we did for `syntax` tokens, except we leave `lastBreakConsecutive` unchanged.
-
-### Newline Tokens
-
-`newline` tokens do the same indentation calculations as `break` tokens do when
-they are creating a line break. Additionally, `newline` tokens also print the
-number of `\n` characters specified. We do not need to check lengths or
-`forceBreakStack`, since `newline` tokens always create line breaks.
-
-### Space Tokens
-
-`space` tokens behave similarly to `syntax` tokens. If the token is preceded by
-a `break` token that created a new line (`lastBreakConsecutive` is true), the
-number of spaces for the indent are printed, and the `lastBreak` variables are
-reset. Then, we print the number of spaces according to the `space` token's
-length, and adjust `spaceRemaining` accordingly.
-
-### Reset Tokens
-
-`reset` tokens reset the `lastBreak` variables. They do nothing else.
-
-### Comment Tokens
-
-`comment` tokens also be have similarly to `syntax` tokens. If
-`lastBreakConsecutive` is true, we apply the indent and reset the `lastBreak`
-variables as usual. Next, we print the contents of the `comment` tokens
-including any necessary delimiters. `spaceRemaining` is adjusted according to
-the length of the `comment`.
-
-### Verbatim Tokens
-
-When we encounter a `verbatim` token, we simply print its contents and apply a
-global indentation according to `lastBreakValue`. We reset the `lastBreak`
-variables, and adjust `spaceRemaining` according to the token's length, which is
-equivalent to the maximum line width.
 
 ## Differences from Oppen's Algorithm
 
@@ -587,7 +459,7 @@ Oppen used "blanks" as catch-all tokens for spaces and line breaks. Indeed,
 `maximumLineWidth`. However, unlike `break` tokens, the `newline` size is fixed,
 and does not depend on what follows it.
 
-### Indentation scheme
+### Semantic breaks
 
 When Oppen encounters `open` tokens, he pushes the location of the token onto
 the indentation stack. It produces something that looks like this:
@@ -598,9 +470,15 @@ myFunc(one,  // Assuming an open token occurs after the "("
        three)
 ```
 
-We don't dynamically compute our indentation levels in this way, since we use a
-fixed indentation step of 2 spaces (in most cases). Instead, we control ours
-explicitly through the use of offsets on `open` and `break` tokens.
+We don't dynamically compute our indentation levels in this way, since we use
+configurable fixed indentation steps.
+
+Instead, we control ours explicitly through the use of semantic `break` tokens.
+Rather than associate a fixed offset with each break, we describe the
+_behavior_ of the break and the printing algorithm updates the indentation
+differently depending on that behavior. This increases the complexity of the
+`print` algorithm somewhat, but significantly improves the expressibility of
+the `visit` methods that populate the token stream.
 
 ### Consistent breaking on `open` tokens
 
@@ -609,17 +487,10 @@ the `break` tokens, whereas Oppen specifies the condition on the `break` tokens.
 `break` tokens that break consistently are grouped together, so it made more
 sense to place this label on the containing group.
 
-### Offsets on `open` tokens
-
-The purpose of this way to aid the construction of the token array. We have to
-calculate the necessary total offsets on `break` tokens dynamically in some
-cases, depending on their context. Placing offsets on the `open` tokens allows
-us to do much of this automatically, and helps keep the visit functions
-simpler.
-
-### Printing spaces on `syntax` tokens rather than on `break` tokens
+### Deferring whitespace until printing text
 
 Oppen's algorithm prints the indentation whitespace when `break` tokens are
 encountered. If we have extra blank lines in between source code, this can
-result in hanging whitespace. Waiting to print the indentation whitespace until
-encountering a `syntax` token prevents this.
+result in hanging or trailing whitespace. Waiting to print the indentation
+whitespace until encountering a `syntax`, `comment, or `verbatim` tokens
+prevents this.
