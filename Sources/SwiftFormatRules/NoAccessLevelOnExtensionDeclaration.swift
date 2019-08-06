@@ -83,17 +83,16 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
     keyword: DeclModifierSyntax
   ) -> MemberDeclListSyntax {
     var newMembers: [MemberDeclListItemSyntax] = []
+    let formattedKeyword = replaceTrivia(
+      on: keyword,
+      token: keyword.name,
+      leadingTrivia: [])
+      as! DeclModifierSyntax
 
     for memberItem in memDeclBlock.members {
       let member = memberItem.decl
-      guard let firstTokInDecl = member.firstToken else { continue }
-      let formattedKeyword = replaceTrivia(
-        on: keyword,
-        token: keyword.name,
-        leadingTrivia: firstTokInDecl.leadingTrivia)
-        as! DeclModifierSyntax
-
       guard
+        // addModifier relocates trivia for any token(s) displaced by the new modifier.
         let newDecl = addModifier(declaration: member, modifierKeyword: formattedKeyword)
         as? DeclSyntax
       else { continue }

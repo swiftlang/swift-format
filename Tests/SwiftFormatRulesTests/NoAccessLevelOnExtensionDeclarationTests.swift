@@ -15,6 +15,7 @@ public class NoAccessLevelOnExtensionDeclarationTests: DiagnosingTestCase {
                internal var y: Bool
                // Comment 2
                static var z: Bool
+               // Comment 3
                static func someFunc() {}
                init() {}
                protocol SomeProtocol {}
@@ -34,6 +35,7 @@ public class NoAccessLevelOnExtensionDeclarationTests: DiagnosingTestCase {
                   internal var y: Bool
                   // Comment 2
                   public static var z: Bool
+                  // Comment 3
                   public static func someFunc() {}
                   public init() {}
                   public protocol SomeProtocol {}
@@ -96,6 +98,146 @@ public class NoAccessLevelOnExtensionDeclarationTests: DiagnosingTestCase {
       expected: """
         extension Foo {
           fileprivate func f() {}
+        }
+        """
+    )
+  }
+
+  public func testExtensionWithAnnotation() {
+    XCTAssertFormatting(
+      NoAccessLevelOnExtensionDeclaration.self,
+      input:
+        """
+        /// This extension has a comment.
+        @objc public extension Foo {
+        }
+        """,
+      expected:
+        """
+        /// This extension has a comment.
+        @objc extension Foo {
+        }
+        """
+    )
+  }
+
+  public func testPreservesInlineAnnotationsBeforeAddedAccessLevelModifiers() {
+    XCTAssertFormatting(
+      NoAccessLevelOnExtensionDeclaration.self,
+      input: """
+            /// This extension has a comment.
+            public extension Foo {
+              /// This property has a doc comment.
+              @objc var x: Bool { get { return true }}
+              // This property has a developer comment.
+              @objc static var z: Bool { get { return false }}
+              /// This static function has a doc comment.
+              @objc static func someStaticFunc() {}
+              @objc init(with foo: Foo) {}
+              @objc func someOtherFunc() {}
+              @objc protocol SomeProtocol {}
+              @objc class SomeClass : NSObject {}
+              @objc associatedtype SomeType
+              @objc enum SomeEnum : Int {
+                case SomeInt = 32
+              }
+            }
+            """,
+      expected: """
+            /// This extension has a comment.
+            extension Foo {
+              /// This property has a doc comment.
+              @objc public var x: Bool { get { return true }}
+              // This property has a developer comment.
+              @objc public static var z: Bool { get { return false }}
+              /// This static function has a doc comment.
+              @objc public static func someStaticFunc() {}
+              @objc public init(with foo: Foo) {}
+              @objc public func someOtherFunc() {}
+              @objc public protocol SomeProtocol {}
+              @objc public class SomeClass : NSObject {}
+              @objc public associatedtype SomeType
+              @objc public enum SomeEnum : Int {
+                case SomeInt = 32
+              }
+            }
+            """
+    )
+  }
+
+  public func testPreservesMultiLineAnnotationsBeforeAddedAccessLevelModifiers() {
+    XCTAssertFormatting(
+      NoAccessLevelOnExtensionDeclaration.self,
+      input: """
+        /// This extension has a comment.
+        public extension Foo {
+          /// This property has a doc comment.
+          @available(iOS 13, *)
+          var x: Bool { get { return true }}
+          // This property has a developer comment.
+          @available(iOS 13, *)
+          static var z: Bool { get { return false }}
+          // This static function has a developer comment.
+          @objc(someStaticFunction)
+          static func someStaticFunc() {}
+          @objc(initWithFoo:)
+          init(with foo: Foo) {}
+          @objc
+          func someOtherFunc() {}
+          @objc
+          protocol SomeProtocol {}
+          @objc
+          class SomeClass : NSObject {}
+          @available(iOS 13, *)
+          associatedtype SomeType
+          @objc
+          enum SomeEnum : Int {
+            case SomeInt = 32
+          }
+
+          // This is a doc comment for a multi-argument method.
+          @objc(
+            doSomethingThatIsVeryComplicatedWithThisFoo:
+            forGoodMeasureUsingThisBar:
+            andApplyingThisBaz:
+          )
+          public func doSomething(_ foo : Foo, bar : Bar, baz : Baz) {}
+        }
+        """,
+      expected: """
+        /// This extension has a comment.
+        extension Foo {
+          /// This property has a doc comment.
+          @available(iOS 13, *)
+          public var x: Bool { get { return true }}
+          // This property has a developer comment.
+          @available(iOS 13, *)
+          public static var z: Bool { get { return false }}
+          // This static function has a developer comment.
+          @objc(someStaticFunction)
+          public static func someStaticFunc() {}
+          @objc(initWithFoo:)
+          public init(with foo: Foo) {}
+          @objc
+          public func someOtherFunc() {}
+          @objc
+          public protocol SomeProtocol {}
+          @objc
+          public class SomeClass : NSObject {}
+          @available(iOS 13, *)
+          public associatedtype SomeType
+          @objc
+          public enum SomeEnum : Int {
+            case SomeInt = 32
+          }
+
+          // This is a doc comment for a multi-argument method.
+          @objc(
+            doSomethingThatIsVeryComplicatedWithThisFoo:
+            forGoodMeasureUsingThisBar:
+            andApplyingThisBaz:
+          )
+          public func doSomething(_ foo : Foo, bar : Bar, baz : Baz) {}
         }
         """
     )
