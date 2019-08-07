@@ -157,7 +157,10 @@ extension NoAccessLevelOnExtensionDeclarationTests {
     // to regenerate.
     static let __allTests__NoAccessLevelOnExtensionDeclarationTests = [
         ("testExtensionDeclarationAccessLevel", testExtensionDeclarationAccessLevel),
+        ("testExtensionWithAnnotation", testExtensionWithAnnotation),
         ("testPreservesCommentOnRemovedModifier", testPreservesCommentOnRemovedModifier),
+        ("testPreservesInlineAnnotationsBeforeAddedAccessLevelModifiers", testPreservesInlineAnnotationsBeforeAddedAccessLevelModifiers),
+        ("testPreservesMultiLineAnnotationsBeforeAddedAccessLevelModifiers", testPreservesMultiLineAnnotationsBeforeAddedAccessLevelModifiers),
         ("testPrivateIsEffectivelyFileprivate", testPrivateIsEffectivelyFileprivate),
     ]
 }

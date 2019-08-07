@@ -22,13 +22,11 @@ private final class AddModifierRewriter: SyntaxRewriter {
   }
 
   override func visit(_ node: VariableDeclSyntax) -> DeclSyntax {
-    // Check for modifiers, if none, put accessor keyword before the first token
+    // Check for modifiers, and, if none, insert the modifier and relocate trivia from the displaced
+    // token.
     guard let modifiers = node.modifiers else {
-      guard
-        let newDecl = removeFirstTokLeadingTrivia(node: node)
-        as? VariableDeclSyntax
-      else { return node }
-      return newDecl.addModifier(modifierKeyword)
+      let nodeWithModifier = node.addModifier(modifierKeyword)
+      return nodeByRelocatingTrivia(in: nodeWithModifier) { $0.modifiers }
     }
     // If variable already has an accessor keyword, skip (do not overwrite)
     guard modifiers.accessLevelModifier == nil else { return node }
@@ -39,12 +37,11 @@ private final class AddModifierRewriter: SyntaxRewriter {
   }
 
   override func visit(_ node: FunctionDeclSyntax) -> DeclSyntax {
+    // Check for modifiers, and, if none, insert the modifier and relocate trivia from the displaced
+    // token.
     guard let modifiers = node.modifiers else {
-      guard
-        let newDecl = removeFirstTokLeadingTrivia(node: node)
-        as? FunctionDeclSyntax
-      else { return node }
-      return newDecl.addModifier(modifierKeyword)
+      let nodeWithModifier = node.addModifier(modifierKeyword)
+      return nodeByRelocatingTrivia(in: nodeWithModifier) { $0.modifiers }
     }
     guard modifiers.accessLevelModifier == nil else { return node }
     let newModifiers = modifiers.prepend(modifier: modifierKeyword)
@@ -52,12 +49,11 @@ private final class AddModifierRewriter: SyntaxRewriter {
   }
 
   override func visit(_ node: AssociatedtypeDeclSyntax) -> DeclSyntax {
+    // Check for modifiers, and, if none, insert the modifier and relocate trivia from the displaced
+    // token.
     guard let modifiers = node.modifiers else {
-      guard
-        let newDecl = removeFirstTokLeadingTrivia(node: node)
-        as? AssociatedtypeDeclSyntax
-      else { return node }
-      return newDecl.addModifier(modifierKeyword)
+      let nodeWithModifier = node.addModifier(modifierKeyword)
+      return nodeByRelocatingTrivia(in: nodeWithModifier) { $0.modifiers }
     }
     guard modifiers.accessLevelModifier == nil else { return node }
     let newModifiers = modifiers.prepend(modifier: modifierKeyword)
@@ -65,12 +61,11 @@ private final class AddModifierRewriter: SyntaxRewriter {
   }
 
   override func visit(_ node: ClassDeclSyntax) -> DeclSyntax {
+    // Check for modifiers, and, if none, insert the modifier and relocate trivia from the displaced
+    // token.
     guard let modifiers = node.modifiers else {
-      guard
-        let newDecl = removeFirstTokLeadingTrivia(node: node)
-        as? ClassDeclSyntax
-      else { return node }
-      return newDecl.addModifier(modifierKeyword)
+      let nodeWithModifier = node.addModifier(modifierKeyword)
+      return nodeByRelocatingTrivia(in: nodeWithModifier) { $0.modifiers }
     }
     guard modifiers.accessLevelModifier == nil else { return node }
     let newModifiers = modifiers.prepend(modifier: modifierKeyword)
@@ -78,12 +73,11 @@ private final class AddModifierRewriter: SyntaxRewriter {
   }
 
   override func visit(_ node: EnumDeclSyntax) -> DeclSyntax {
+    // Check for modifiers, and, if none, insert the modifier and relocate trivia from the displaced
+    // token.
     guard let modifiers = node.modifiers else {
-      guard
-        let newDecl = removeFirstTokLeadingTrivia(node: node)
-        as? EnumDeclSyntax
-      else { return node }
-      return newDecl.addModifier(modifierKeyword)
+      let nodeWithModifier = node.addModifier(modifierKeyword)
+      return nodeByRelocatingTrivia(in: nodeWithModifier) { $0.modifiers }
     }
     guard modifiers.accessLevelModifier == nil else { return node }
     let newModifiers = modifiers.prepend(modifier: modifierKeyword)
@@ -91,12 +85,11 @@ private final class AddModifierRewriter: SyntaxRewriter {
   }
 
   override func visit(_ node: ProtocolDeclSyntax) -> DeclSyntax {
+    // Check for modifiers, and, if none, insert the modifier and relocate trivia from the displaced
+    // token.
     guard let modifiers = node.modifiers else {
-      guard
-        let newDecl = removeFirstTokLeadingTrivia(node: node)
-        as? ProtocolDeclSyntax
-      else { return node }
-      return newDecl.addModifier(modifierKeyword)
+      let nodeWithModifier = node.addModifier(modifierKeyword)
+      return nodeByRelocatingTrivia(in: nodeWithModifier) { $0.modifiers }
     }
     guard modifiers.accessLevelModifier == nil else { return node }
     let newModifiers = modifiers.prepend(modifier: modifierKeyword)
@@ -104,12 +97,11 @@ private final class AddModifierRewriter: SyntaxRewriter {
   }
 
   override func visit(_ node: StructDeclSyntax) -> DeclSyntax {
+    // Check for modifiers, and, if none, insert the modifier and relocate trivia from the displaced
+    // token.
     guard let modifiers = node.modifiers else {
-      guard
-        let newDecl = removeFirstTokLeadingTrivia(node: node)
-        as? StructDeclSyntax
-      else { return node }
-      return newDecl.addModifier(modifierKeyword)
+      let nodeWithModifier = node.addModifier(modifierKeyword)
+      return nodeByRelocatingTrivia(in: nodeWithModifier) { $0.modifiers }
     }
     guard modifiers.accessLevelModifier == nil else { return node }
     let newModifiers = modifiers.prepend(modifier: modifierKeyword)
@@ -117,12 +109,11 @@ private final class AddModifierRewriter: SyntaxRewriter {
   }
 
   override func visit(_ node: TypealiasDeclSyntax) -> DeclSyntax {
+    // Check for modifiers, and, if none, insert the modifier and relocate trivia from the displaced
+    // token.
     guard let modifiers = node.modifiers else {
-      guard
-        let newDecl = removeFirstTokLeadingTrivia(node: node)
-        as? TypealiasDeclSyntax
-      else { return node }
-      return newDecl.addModifier(modifierKeyword)
+      let nodeWithModifier = node.addModifier(modifierKeyword)
+      return nodeByRelocatingTrivia(in: nodeWithModifier) { $0.modifiers }
     }
     guard modifiers.accessLevelModifier == nil else { return node }
     let newModifiers = modifiers.prepend(modifier: modifierKeyword)
@@ -130,24 +121,43 @@ private final class AddModifierRewriter: SyntaxRewriter {
   }
 
   override func visit(_ node: InitializerDeclSyntax) -> DeclSyntax {
+    // Check for modifiers, and, if none, insert the modifier and relocate trivia from the displaced
+    // token.
     guard let modifiers = node.modifiers else {
-      guard
-        let newDecl = removeFirstTokLeadingTrivia(node: node)
-        as? InitializerDeclSyntax
-      else { return node }
-      return newDecl.addModifier(modifierKeyword)
+      let nodeWithModifier = node.addModifier(modifierKeyword)
+      return nodeByRelocatingTrivia(in: nodeWithModifier) { $0.modifiers }
     }
     guard modifiers.accessLevelModifier == nil else { return node }
     let newModifiers = modifiers.prepend(modifier: modifierKeyword)
     return node.withModifiers(newModifiers)
   }
 
-  func removeFirstTokLeadingTrivia(node: DeclSyntax) -> DeclSyntax {
-    let withoutLeadTrivia = replaceTrivia(
+  /// Moves trivia in the given node to correct the placement of potentially displaced trivia in the
+  /// node after the first modifier was added to the given node. The added modifier is assumed to be
+  /// the first and only modifier of the node. After the first modifier is added to a node, any
+  /// leading trivia on the token immediately after the modifier is considered displaced. This
+  /// method moves that displaced trivia onto the new modifier. When there is no displaced trivia,
+  /// this method does nothing and returns the given node as-is.
+  /// - Parameter node: A node that was updated to include a new modifier.
+  /// - Parameter modifiersProvider: A closure that returns all modifiers for the given node.
+  func nodeByRelocatingTrivia<NodeType: DeclSyntax>(
+    in node: NodeType,
+    for modifiersProvider: (NodeType) -> ModifierListSyntax?
+  ) -> NodeType {
+    guard let modifier = modifiersProvider(node)?.firstAndOnly,
+      let movingLeadingTrivia = modifier.nextToken?.leadingTrivia
+    else {
+      // Otherwise, there's no trivia that needs to be relocated so the node is fine.
+      return node
+    }
+    let nodeWithTrivia = replaceTrivia(
       on: node,
-      token: node.firstToken,
-      leadingTrivia: []) as! DeclSyntax
-    return withoutLeadTrivia
+      token: modifier.firstToken,
+      leadingTrivia: movingLeadingTrivia) as! NodeType
+    return replaceTrivia(
+      on: nodeWithTrivia,
+      token: modifiersProvider(nodeWithTrivia)?.first?.nextToken,
+      leadingTrivia: []) as! NodeType
   }
 }
 
