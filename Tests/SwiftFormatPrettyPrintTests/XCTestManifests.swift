@@ -39,7 +39,13 @@ extension AttributeTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__AttributeTests = [
+        ("testAttributArgumentPerLineBreaking", testAttributArgumentPerLineBreaking),
+        ("testAttributeArgumentPerLineWrapping", testAttributeArgumentPerLineWrapping),
+        ("testAttributeBinPackedWrapping", testAttributeBinPackedWrapping),
+        ("testAttributeFormattingRespectsDiscretionaryLineBreaks", testAttributeFormattingRespectsDiscretionaryLineBreaks),
+        ("testAttributeInterArgumentBinPackedLineBreaking", testAttributeInterArgumentBinPackedLineBreaking),
         ("testAttributeParamSpacing", testAttributeParamSpacing),
+        ("testObjCAttributes", testObjCAttributes),
     ]
 }
 
