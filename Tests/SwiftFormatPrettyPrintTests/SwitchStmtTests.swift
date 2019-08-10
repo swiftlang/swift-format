@@ -187,7 +187,7 @@ public class SwitchStmtTests: PrettyPrintTestCase {
       case let (x, y) where x == -y:
         print("Opposite sign")
       case let (reallyLongName, anotherLongName)
-      where reallyLongName == -anotherLongName:
+        where reallyLongName == -anotherLongName:
         print("Opposite sign")
       case let (x, y): print("Arbitrary value")
       }

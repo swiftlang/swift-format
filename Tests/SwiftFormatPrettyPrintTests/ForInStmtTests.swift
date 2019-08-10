@@ -56,12 +56,13 @@ public class ForInStmtTests: PrettyPrintTestCase {
         let b = 456
       }
       for i in longerarray
-      where longerarray.isContainer() {
+        where longerarray.isContainer()
+      {
         let a = 123
         let b = 456
       }
       for i in longerarray
-      where longerarray.isContainer()
+        where longerarray.isContainer()
         && anotherCondition
       {
         let a = 123
@@ -86,7 +87,7 @@ public class ForInStmtTests: PrettyPrintTestCase {
       """
       for item
         in aVeryLargeContainterObject
-      where largeObject
+        where largeObject
         .hasProperty() && condition
       {
         let a = 123

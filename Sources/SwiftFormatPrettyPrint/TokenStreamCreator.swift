@@ -1084,7 +1084,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: WhereClauseSyntax) -> SyntaxVisitorContinueKind {
-    // We need to special case `where`-clauses associated with `catch` blocks when
+    // We need to treat special case `where`-clauses associated with `for` or `case` and `catch` blocks when
     // `lineBreakBeforeControlFlowKeywords == false`, because that's the one situation where we
     // want the `where` keyword to be treated as a continuation; that way, we get this:
     //
@@ -1102,7 +1102,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
     //     }
     //
     let wherePrecedingBreak: Token
-    if !config.lineBreakBeforeControlFlowKeywords && node.parent is CatchClauseSyntax {
+    if (!config.lineBreakBeforeControlFlowKeywords && node.parent is CatchClauseSyntax)
+      || (node.parent is ForInStmtSyntax || node.parent is CaseItemSyntax) {
       wherePrecedingBreak = .break(.continue)
     } else {
       wherePrecedingBreak = .break(.same)
