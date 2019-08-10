@@ -848,7 +848,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   func visit(_ node: MemberDeclListItemSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
-    after(node.lastToken, tokens: .close, .break(.reset, size: 0))
+    let resetSize = node.semicolon != nil ? 1 : 0
+    after(node.lastToken, tokens: .close, .break(.reset, size: resetSize))
     return .visitChildren
   }
 
@@ -934,7 +935,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   func visit(_ node: CodeBlockItemSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
-    after(node.lastToken, tokens: .close, .break(.reset, size: 0))
+    let resetSize = node.semicolon != nil ? 1 : 0
+    after(node.lastToken, tokens: .close, .break(.reset, size: resetSize))
     return .visitChildren
   }
 
