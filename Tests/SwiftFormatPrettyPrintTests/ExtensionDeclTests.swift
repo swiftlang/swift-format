@@ -101,13 +101,14 @@ public class ExtensionDeclTests: PrettyPrintTestCase {
         let B: Double
       }
       extension MyExtension
-      where S: Collection, T: ReallyLongExtensionName {
+        where S: Collection, T: ReallyLongExtensionName
+      {
         let A: Int
         let B: Double
       }
       extension MyExtension
-      where S: Collection, T: ReallyLongExtensionName,
-        U: AnotherLongExtension
+        where S: Collection, T: ReallyLongExtensionName,
+          U: AnotherLongExtension
       {
         let A: Int
         let B: Double
@@ -138,7 +139,8 @@ public class ExtensionDeclTests: PrettyPrintTestCase {
         let B: Double
       }
       extension MyExtension: ProtoOne, ProtoTwo
-      where S: Collection, T: Protocol {
+        where S: Collection, T: Protocol
+      {
         let A: Int
         let B: Double
       }
@@ -214,9 +216,9 @@ public class ExtensionDeclTests: PrettyPrintTestCase {
         MyContainerProtocolTwo,
         SomeoneElsesContainerProtocol,
         SomeFrameworkContainerProtocol
-      where BaseCollection: Collection,
-        BaseCollection.Element: Equatable,
-        BaseCollection.Element: SomeOtherProtocol
+        where BaseCollection: Collection,
+          BaseCollection.Element: Equatable,
+          BaseCollection.Element: SomeOtherProtocol
       {
         let A: Int
         let B: Double

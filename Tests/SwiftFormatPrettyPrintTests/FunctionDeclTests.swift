@@ -296,7 +296,8 @@ public class FunctionDeclTests: PrettyPrintTestCase {
       public func index<Elements: Collection, Element>(
         of element: Element, in collection: Elements
       ) -> Elements.Index?
-      where Elements.Element == Element {
+        where Elements.Element == Element
+      {
         let a = 123
         let b = "abc"
       }
@@ -305,8 +306,8 @@ public class FunctionDeclTests: PrettyPrintTestCase {
         of element: Element,
         in collection: Elements
       ) -> Elements.Index?
-      where Elements.Element == Element,
-        Element: Equatable
+        where Elements.Element == Element,
+          Element: Equatable
       {
         let a = 123
         let b = "abc"
@@ -466,9 +467,10 @@ public class FunctionDeclTests: PrettyPrintTestCase {
       of element: Element,
       in collection: Elements
     ) -> Elements.Index?
-    where
-      Elements.Element == Element,
-      Element: Equatable
+      where
+        Elements.Element
+          == Element,
+        Element: Equatable
     {
       let a = 123
       let b = "abc"
@@ -600,11 +602,12 @@ public class FunctionDeclTests: PrettyPrintTestCase {
       """
       func name<R>(_ x: Int)
         throws -> R
-      where Foo == Bar
+        where Foo == Bar
 
       func name<R>(_ x: Int)
         throws -> R
-      where Foo == Bar {
+        where Foo == Bar
+      {
         statement
         statement
       }
@@ -626,13 +629,13 @@ public class FunctionDeclTests: PrettyPrintTestCase {
       """
       func name<R>(_ x: Int)
         throws -> R
-      where
-        Fooooooo == Barrrrr
+        where
+          Fooooooo == Barrrrr
 
       func name<R>(_ x: Int)
         throws -> R
-      where
-        Fooooooo == Barrrrr
+        where
+          Fooooooo == Barrrrr
       {
         statement
         statement

@@ -233,7 +233,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     arrangeBracesAndContents(of: members, contentsKeyPath: \.members)
 
     if let genericWhereClause = genericWhereClause {
-      before(genericWhereClause.firstToken, tokens: .break(.same), .open)
+      before(genericWhereClause.firstToken, tokens: .break(.continue), .open)
       after(members.leftBrace, tokens: .close)
     }
 
@@ -310,7 +310,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     arrangeAttributeList(node.attributes)
 
     if let genericWhereClause = node.genericWhereClause {
-      before(genericWhereClause.firstToken, tokens: .break(.same), .open)
+      before(genericWhereClause.firstToken, tokens: .break(.continue), .open)
       after(genericWhereClause.lastToken, tokens: .close)
     }
 
@@ -360,7 +360,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     arrangeBracesAndContents(of: body, contentsKeyPath: bodyContentsKeyPath)
 
     if let genericWhereClause = genericWhereClause {
-      before(genericWhereClause.firstToken, tokens: .break(.same), .open)
+      before(genericWhereClause.firstToken, tokens: .break(.continue), .open)
       after(body?.leftBrace ?? genericWhereClause.lastToken, tokens: .close)
     }
 
@@ -1182,7 +1182,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     after(node.typealiasKeyword, tokens: .break)
 
     if let genericWhereClause = node.genericWhereClause {
-      before(genericWhereClause.firstToken, tokens: .break(.same), .open)
+      before(genericWhereClause.firstToken, tokens: .break(.continue), .open)
       after(node.lastToken, tokens: .close)
     }
     return .visitChildren
@@ -1344,7 +1344,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     after(node.associatedtypeKeyword, tokens: .break)
 
     if let genericWhereClause = node.genericWhereClause {
-      before(genericWhereClause.firstToken, tokens: .break(.same), .open)
+      before(genericWhereClause.firstToken, tokens: .break(.continue), .open)
       after(node.lastToken, tokens: .close)
     }
     return .visitChildren

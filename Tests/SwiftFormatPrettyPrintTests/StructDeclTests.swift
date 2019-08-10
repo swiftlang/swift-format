@@ -189,13 +189,14 @@ public class StructDeclTests: PrettyPrintTestCase {
         let B: Double
       }
       struct MyStruct<S, T>
-      where S: Collection, T: ReallyLongStructName {
+        where S: Collection, T: ReallyLongStructName
+      {
         let A: Int
         let B: Double
       }
       struct MyStruct<S, T>
-      where S: Collection, T: ReallyLongStructName,
-        U: AnotherLongStruct
+        where S: Collection, T: ReallyLongStructName,
+          U: AnotherLongStruct
       {
         let A: Int
         let B: Double
@@ -226,7 +227,8 @@ public class StructDeclTests: PrettyPrintTestCase {
         let B: Double
       }
       struct MyStruct<S, T>: ProtoOne, ProtoTwo
-      where S: Collection, T: Protocol {
+        where S: Collection, T: Protocol
+      {
         let A: Int
         let B: Double
       }
@@ -301,9 +303,9 @@ public class StructDeclTests: PrettyPrintTestCase {
       >: MyContainerProtocolOne, MyContainerProtocolTwo,
         SomeoneElsesContainerProtocol,
         SomeFrameworkContainerProtocol
-      where BaseCollection: Collection,
-        BaseCollection.Element: Equatable,
-        BaseCollection.Element: SomeOtherProtocol
+        where BaseCollection: Collection,
+          BaseCollection.Element: Equatable,
+          BaseCollection.Element: SomeOtherProtocol
       {
         let A: Int
         let B: Double

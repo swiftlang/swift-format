@@ -150,8 +150,8 @@ public class SubscriptDeclTests: PrettyPrintTestCase {
         subscript<Elements: Collection, Element>(
           var1: Element, var2: Elements
         ) -> Double
-        where Elements.Element == Element,
-          Element: Equatable
+          where Elements.Element == Element,
+            Element: Equatable
         {
           return 1.23
         }
@@ -248,10 +248,10 @@ public class SubscriptDeclTests: PrettyPrintTestCase {
         var1: Element,
         var2: ManyElements
       ) -> ManyElements.Index?
-      where
-        ManyElements.Element
-          == Element,
-        Element: Equatable
+        where
+          ManyElements.Element
+            == Element,
+          Element: Equatable
       {
         get {
           let out = vals[var1][var2]

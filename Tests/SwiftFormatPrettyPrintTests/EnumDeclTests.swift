@@ -268,13 +268,14 @@ public class EnumDeclTests: PrettyPrintTestCase {
         let B: Double
       }
       enum MyEnum<S, T>
-      where S: Collection, T: ReallyLongEnumName {
+        where S: Collection, T: ReallyLongEnumName
+      {
         case firstCase
         let B: Double
       }
       enum MyEnum<S, T>
-      where S: Collection, T: ReallyLongEnumName,
-        U: AnotherLongEnum
+        where S: Collection, T: ReallyLongEnumName,
+          U: AnotherLongEnum
       {
         case firstCase
         let B: Double
@@ -305,7 +306,8 @@ public class EnumDeclTests: PrettyPrintTestCase {
         let B: Double
       }
       enum MyEnum<S, T>: ProtoOne, ProtoTwo
-      where S: Collection, T: Protocol {
+        where S: Collection, T: Protocol
+      {
         case firstCase
         let B: Double
       }
@@ -380,9 +382,9 @@ public class EnumDeclTests: PrettyPrintTestCase {
       >: MyContainerProtocolOne, MyContainerProtocolTwo,
         SomeoneElsesContainerProtocol,
         SomeFrameworkContainerProtocol
-      where BaseCollection: Collection,
-        BaseCollection.Element: Equatable,
-        BaseCollection.Element: SomeOtherProtocol
+        where BaseCollection: Collection,
+          BaseCollection.Element: Equatable,
+          BaseCollection.Element: SomeOtherProtocol
       {
         case firstCase
         let B: Double

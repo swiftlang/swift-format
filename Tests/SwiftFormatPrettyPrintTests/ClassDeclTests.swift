@@ -189,13 +189,14 @@ public class ClassDeclTests: PrettyPrintTestCase {
         let B: Double
       }
       class MyClass<S, T>
-      where S: Collection, T: ReallyLongClassName {
+        where S: Collection, T: ReallyLongClassName
+      {
         let A: Int
         let B: Double
       }
       class MyClass<S, T>
-      where S: Collection, T: ReallyLongClassName,
-        U: LongerClassName
+        where S: Collection, T: ReallyLongClassName,
+          U: LongerClassName
       {
         let A: Int
         let B: Double
@@ -226,7 +227,8 @@ public class ClassDeclTests: PrettyPrintTestCase {
         let B: Double
       }
       class MyClass<S, T>: SuperOne, SuperTwo
-      where S: Collection, T: Protocol {
+        where S: Collection, T: Protocol
+      {
         let A: Int
         let B: Double
       }
@@ -301,9 +303,9 @@ public class ClassDeclTests: PrettyPrintTestCase {
       >: MyContainerSuperclass, MyContainerProtocol,
         SomeoneElsesContainerProtocol,
         SomeFrameworkContainerProtocol
-      where BaseCollection: Collection,
-        BaseCollection.Element: Equatable,
-        BaseCollection.Element: SomeOtherProtocol
+        where BaseCollection: Collection,
+          BaseCollection.Element: Equatable,
+          BaseCollection.Element: SomeOtherProtocol
       {
         let A: Int
         let B: Double

@@ -235,8 +235,8 @@ public class InitializerDeclTests: PrettyPrintTestCase {
       public init<Elements: Collection, Element>(
         element: Element, in collection: Elements
       )
-      where Elements.Element == Element,
-        Element: Equatable
+        where Elements.Element == Element,
+          Element: Equatable
       {
         let a = 123
         let b = "abc"
@@ -312,8 +312,8 @@ public class InitializerDeclTests: PrettyPrintTestCase {
           element: Element,
           in collection: Elements
         )
-        where Elements.Element == Element,
-          Element: Equatable
+          where Elements.Element == Element,
+            Element: Equatable
         {
           let a = 123
           let b = "abc"
