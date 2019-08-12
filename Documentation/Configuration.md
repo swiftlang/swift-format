@@ -54,9 +54,9 @@ top-level keys and values:
 
 *   `lineBreakBeforeEachArgument` _(boolean)_: Determines the line-breaking
     behavior for generic arguments and function arguments when a declaration is
-    wrapped onto multiple lines. If true, a line break will be
-    added before each argument, forcing the entire argument list to be laid out
-    vertically. If false, arguments will be laid out horizontally first, with
+    wrapped onto multiple lines. If true, a line break will be added before each
+    argument, forcing the entire argument list to be laid out vertically.
+    If false (the default), arguments will be laid out horizontally first, with
     line breaks only being fired when the line length would be exceeded.
 
 > TODO: Add support for enabling/disabling specific syntax transformations in
