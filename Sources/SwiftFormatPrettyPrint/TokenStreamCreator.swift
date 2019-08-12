@@ -1016,32 +1016,36 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func handleAvailabilitySpec(leftParen: TokenSyntax?, spec: Syntax, rightParen: TokenSyntax?) {
-    var tokens: [TokenSyntax] = []
-    if let leftParen = leftParen {
-      tokens.append(leftParen)
+  func visit(_ node: AttributeSyntax) -> SyntaxVisitorContinueKind {
+    before(node.firstToken, tokens: .open)
+    if node.argument != nil {
+      // Wrap the attribute's arguments in their own group, so arguments stay together with a higher
+      // affinity than the overall attribute (e.g. allows a break after the opening "(" and then
+      // having the entire argument list on 1 line). Necessary spaces and breaks are added inside of
+      // the argument, using type specific visitor methods.
+      after(node.leftParen, tokens: .break(.open, size: 0), .open(argumentListConsistency()))
+      before(node.rightParen, tokens: .break(.close, size: 0), .close)
     }
-    spec.tokens.forEach { tokens.append($0) }
-    if let rightParen = rightParen {
-      tokens.append(rightParen)
-    }
-
-    for i in 0..<(tokens.count - 1) {
-      switch (tokens[i].tokenKind, tokens[i+1].tokenKind) {
-      case (.leftParen, _): ()
-      case (_, .rightParen): ()
-      case (_, .comma): ()
-      case (_, .colon): ()
-      default:
-        after(tokens[i], tokens: .space)
-      }
-    }
+    after(node.lastToken, tokens: .close)
+    return .visitChildren
   }
 
-  func visit(_ node: AttributeSyntax) -> SyntaxVisitorContinueKind {
-    if let argument = node.argument {
-      handleAvailabilitySpec(leftParen: node.leftParen, spec: argument, rightParen: node.rightParen)
-    }
+  func visit(_ node: AvailabilitySpecListSyntax) -> SyntaxVisitorContinueKind {
+    insertTokens(.break(.same, size: 1), betweenElementsOf: node)
+    return .visitChildren
+  }
+
+  func visit(_ node: AvailabilityLabeledArgumentSyntax) -> SyntaxVisitorContinueKind {
+    before(node.label, tokens: .open)
+    after(node.colon, tokens: .break(.continue, size: 1))
+    after(node.value.lastToken, tokens: .close)
+    return .visitChildren
+  }
+
+  func visit(_ node: AvailabilityVersionRestrictionSyntax) -> SyntaxVisitorContinueKind {
+    before(node.firstToken, tokens: .open)
+    after(node.platform, tokens: .break(.continue, size: 1))
+    after(node.lastToken, tokens: .close)
     return .visitChildren
   }
 
@@ -1411,10 +1415,6 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: AvailabilityConditionSyntax) -> SyntaxVisitorContinueKind {
-    handleAvailabilitySpec(
-      leftParen: node.leftParen,
-      spec: node.availabilitySpec,
-      rightParen: node.rightParen)
     return .visitChildren
   }
 
