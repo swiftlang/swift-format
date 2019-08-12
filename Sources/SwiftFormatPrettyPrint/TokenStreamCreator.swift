@@ -889,6 +889,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
+  func visit(_ node: ObjCSelectorSyntax) -> SyntaxVisitorContinueKind {
+    insertTokens(.break(.same, size: 0), betweenElementsOf: node)
+    return .visitChildren
+  }
+
   func visit(_ node: PrecedenceGroupDeclSyntax) -> SyntaxVisitorContinueKind {
     after(node.precedencegroupKeyword, tokens: .break)
     after(node.identifier, tokens: .break(.reset))
