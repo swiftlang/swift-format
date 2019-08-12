@@ -45,7 +45,9 @@ extension AttributeTests {
         ("testAttributeFormattingRespectsDiscretionaryLineBreaks", testAttributeFormattingRespectsDiscretionaryLineBreaks),
         ("testAttributeInterArgumentBinPackedLineBreaking", testAttributeInterArgumentBinPackedLineBreaking),
         ("testAttributeParamSpacing", testAttributeParamSpacing),
-        ("testObjCAttributes", testObjCAttributes),
+        ("testObjCAttributesDiscretionaryLineBreaking", testObjCAttributesDiscretionaryLineBreaking),
+        ("testObjCAttributesPerLineBreaking", testObjCAttributesPerLineBreaking),
+        ("testObjCBinPackedAttributes", testObjCBinPackedAttributes),
     ]
 }
 

@@ -172,11 +172,13 @@ public class AttributeTests: PrettyPrintTestCase {
       input: input, expected: expected, linelength: 40, configuration: configuration)
   }
 
-  public func testObjCAttributes() {
+  public func testObjCBinPackedAttributes() {
     let input =
       """
       @objc func f() {}
-      @objc(foo:bar:baz)
+      @objc(foo:bar:baz:)
+      func f() {}
+      @objc(thisMethodHasAVeryLongName:foo:bar:)
       func f() {}
       @objc(thisMethodHasAVeryLongName:andThisArgumentHasANameToo:soDoesThisOne:bar:)
       func f() {}
@@ -185,16 +187,107 @@ public class AttributeTests: PrettyPrintTestCase {
     let expected =
       """
       @objc func f() {}
-      @objc(foo:bar:baz)
+      @objc(foo:bar:baz:)
       func f() {}
       @objc(
-        thisMethodHasAVeryLongName:andThisArgumentHasANameToo:soDoesThisOne:bar:
+        thisMethodHasAVeryLongName:foo:bar:
+      )
+      func f() {}
+      @objc(
+        thisMethodHasAVeryLongName:
+        andThisArgumentHasANameToo:
+        soDoesThisOne:bar:
       )
       func f() {}
 
       """
 
-    // TODO: Support line breaks between argument names in Objective-C selectors.
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+  }
+
+  public func testObjCAttributesPerLineBreaking() {
+     let input =
+       """
+       @objc func f() {}
+       @objc(foo:bar:baz)
+       func f() {}
+       @objc(thisMethodHasAVeryLongName:foo:bar:)
+       func f() {}
+       @objc(thisMethodHasAVeryLongName:andThisArgumentHasANameToo:soDoesThisOne:bar:)
+       func f() {}
+       """
+
+     let expected =
+       """
+       @objc func f() {}
+       @objc(foo:bar:baz)
+       func f() {}
+       @objc(
+         thisMethodHasAVeryLongName:
+         foo:
+         bar:
+       )
+       func f() {}
+       @objc(
+         thisMethodHasAVeryLongName:
+         andThisArgumentHasANameToo:
+         soDoesThisOne:
+         bar:
+       )
+       func f() {}
+
+       """
+
+     let configuration = Configuration()
+     configuration.lineBreakBeforeEachArgument = true
+     assertPrettyPrintEqual(
+       input: input, expected: expected, linelength: 40, configuration: configuration)
+   }
+
+  public func testObjCAttributesDiscretionaryLineBreaking() {
+    // The discretionary newlines in the 3rd function declaration are invalid, because new lines
+    // should be after the ":" character in Objective-C selector pieces, so they should be removed.
+    let input =
+      """
+      @objc
+      func f() {}
+      @objc(foo:
+            bar:
+            baz:)
+      func f() {}
+      @objc(foo
+            :bar
+            :baz:)
+      func f() {}
+      @objc(
+        thisMethodHasAVeryLongName:
+        foo:
+        bar:
+      )
+      func f() {}
+      """
+
+    let expected =
+      """
+      @objc
+      func f() {}
+      @objc(
+        foo:
+        bar:
+        baz:
+      )
+      func f() {}
+      @objc(foo:bar:baz:)
+      func f() {}
+      @objc(
+        thisMethodHasAVeryLongName:
+        foo:
+        bar:
+      )
+      func f() {}
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
   }
 }
