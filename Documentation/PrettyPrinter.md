@@ -82,7 +82,7 @@ There are five kinds of breaks:
   desirable, for example, if you want the closing parenthesis of a function
   call to occur on the same line as the final argument.
 
-  _ This should not be confused with a close group token._
+  _This should not be confused with a close group token._
 
 * *continue:* If line wrapping occurs here, the following line will be treated
   as a continuation line (indented one unit further than the base level),
