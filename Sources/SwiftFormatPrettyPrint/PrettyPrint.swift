@@ -334,11 +334,11 @@ public class PrettyPrinter {
           // breaks (if they are enabled).
           //
           // Note that in this case, the transformation of the current line into a continuation line
-          // must happen unconditionally, not only if the break fires.
+          // must happen regardless of whether this break fires.
           //
           // Likewise, we need to do this if we popped an old continuation state off the stack,
           // even if the break *doesn't* fire.
-          currentLineIsContinuation = openedOnDifferentLine
+          currentLineIsContinuation = matchingOpenBreak.didIndent && openedOnDifferentLine
         }
 
         // Restore the continuation state of the scope we were in before the open break occurred.

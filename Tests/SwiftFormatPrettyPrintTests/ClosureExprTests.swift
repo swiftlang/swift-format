@@ -133,6 +133,37 @@ public class ClosureExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: config)
   }
 
+  public func testClosureArgumentsWithTrailingClosure() {
+    let input =
+      """
+      someFunc({ return s0 }) { return s2 }
+      someLongerFunc({ return s0 }) { input in return s2 }
+      someLongerFunc({ firstInput in someUsefulFunc(firstInput) }) { secondInput in return s2 }
+      someLongerFunc({ firstInput in
+        someUsefulFunc(firstInput) }) { secondInput in return someLineBreakingCall(secondInput) }
+      """
+
+    let expected =
+      """
+      someFunc({ return s0 }) { return s2 }
+      someLongerFunc({ return s0 }) { input in
+        return s2
+      }
+      someLongerFunc({ firstInput in
+        someUsefulFunc(firstInput)
+      }) { secondInput in return s2 }
+      someLongerFunc({ firstInput in
+        someUsefulFunc(firstInput)
+      }) { secondInput in
+        return someLineBreakingCall(
+          secondInput)
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+  }
+
   public func testClosuresWithIfs() {
     let input =
     """
