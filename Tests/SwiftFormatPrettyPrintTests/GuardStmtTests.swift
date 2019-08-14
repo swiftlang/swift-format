@@ -107,4 +107,51 @@ public class GuardStmtTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
   }
+
+  public func testContinuationLineBreaking() {
+    let input =
+      """
+      guard let someObject = object as? Int,
+        let anotherCastedObject = object as? SomeOtherSlightlyLongerType else {
+        return nil
+      }
+      guard let someObject = object as? SomeLongLineBreakingType,
+        let anotherCastedObject = object as? SomeOtherSlightlyLongerType else {
+        return nil
+      }
+      guard let someCastedObject = someFunc(foo, bar, baz, quxxe, far, fab, faz),
+        let anotherCastedObject = object as? SomeOtherSlightlyLongerType else {
+        return nil
+      }
+      """
+
+    let expected =
+      """
+      guard let someObject = object as? Int,
+        let anotherCastedObject = object
+          as? SomeOtherSlightlyLongerType
+      else {
+        return nil
+      }
+      guard
+        let someObject = object
+          as? SomeLongLineBreakingType,
+        let anotherCastedObject = object
+          as? SomeOtherSlightlyLongerType
+      else {
+        return nil
+      }
+      guard
+        let someCastedObject = someFunc(
+          foo, bar, baz, quxxe, far, fab, faz),
+        let anotherCastedObject = object
+          as? SomeOtherSlightlyLongerType
+      else {
+        return nil
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+  }
 }

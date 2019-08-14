@@ -216,6 +216,53 @@ public class IfStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 44)
   }
 
+  public func testContinuationLineBreakIndentation() {
+    let input =
+      """
+      if let someObject = object as? Int,
+        let anotherCastedObject = object as? SomeOtherSlightlyLongerType,
+        let thirdObject = object as? Int {
+        return nil
+      }
+      if let someObject = object as? SomeLongLineBreakingType,
+        let anotherCastedObject = object as? SomeOtherSlightlyLongerType {
+        return nil
+      }
+      if let someCastedObject = someFunc(foo, bar, baz, quxxe, far, fab, faz),
+        let anotherCastedObject = object as? SomeOtherSlightlyLongerType {
+        return nil
+      }
+      """
+
+    let expected =
+      """
+      if let someObject = object as? Int,
+        let anotherCastedObject = object
+          as? SomeOtherSlightlyLongerType,
+        let thirdObject = object as? Int
+      {
+        return nil
+      }
+      if let someObject = object
+        as? SomeLongLineBreakingType,
+        let anotherCastedObject = object
+          as? SomeOtherSlightlyLongerType
+      {
+        return nil
+      }
+      if let someCastedObject = someFunc(
+        foo, bar, baz, quxxe, far, fab, faz),
+        let anotherCastedObject = object
+          as? SomeOtherSlightlyLongerType
+      {
+        return nil
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+  }
+
   public func testHangingOpenBreakIsTreatedLikeContinuation() {
     let input =
       """
