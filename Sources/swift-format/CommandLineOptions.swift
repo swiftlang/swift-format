@@ -23,6 +23,13 @@ struct CommandLineOptions {
   /// If not specified, the default configuration will be used.
   var configurationPath: String? = nil
 
+  /// The filename for the source code when reading from standard input, to include in diagnostic
+  /// messages.
+  ///
+  /// If not specified and standard input is used, a dummy filename is used for diagnostic messages
+  /// about the source from standard input.
+  var assumeFilename: String? = nil
+
   /// The mode in which to run the tool.
   ///
   /// If not specified, the tool will be run in format mode.
@@ -55,8 +62,14 @@ struct CommandLineOptions {
 func processArguments(commandName: String, _ arguments: [String]) -> CommandLineOptions {
   let parser = ArgumentParser(
     commandName: commandName,
-    usage: "[options] <filename or path> ...",
-    overview: "Format or lint Swift source code.")
+    usage: "[options] [filename or path ...]",
+    overview:
+      """
+      Format or lint Swift source code.
+
+      When no files are specified, it expects the source from standard input.
+      """
+  )
 
   let binder = ArgumentBinder<CommandLineOptions>()
   binder.bind(
@@ -99,6 +112,15 @@ func processArguments(commandName: String, _ arguments: [String]) -> CommandLine
     )
   ) {
     $0.configurationPath = $1
+  }
+  binder.bind(
+    option: parser.add(
+      option: "--assume-filename",
+      kind: String.self,
+      usage: "When using standard input, the filename of the source to include in diagnostics."
+    )
+  ) {
+    $0.assumeFilename = $1
   }
   binder.bind(
     option: parser.add(
@@ -145,16 +167,17 @@ func processArguments(commandName: String, _ arguments: [String]) -> CommandLine
     let args = try parser.parse(arguments)
     try binder.fill(parseResult: args, into: &opts)
 
-    if opts.mode.requiresFiles && opts.paths.isEmpty {
-      throw ArgumentParserError.expectedArguments(parser, ["filenames or paths"])
-    }
-
-    if opts.inPlace && ToolMode.format != opts.mode {
+    if opts.inPlace && (ToolMode.format != opts.mode || opts.paths.isEmpty) {
       throw ArgumentParserError.unexpectedArgument("--in-place, -i")
     }
 
-    if opts.recursive && !(ToolMode.format == opts.mode || ToolMode.lint == opts.mode) {
+    let modeSupportsRecursive = ToolMode.format == opts.mode || ToolMode.lint == opts.mode
+    if opts.recursive && (!modeSupportsRecursive || opts.paths.isEmpty) {
       throw ArgumentParserError.unexpectedArgument("--recursive, -r")
+    }
+
+    if opts.assumeFilename != nil && !opts.paths.isEmpty {
+      throw ArgumentParserError.unexpectedArgument("--assume-filename")
     }
 
     if !opts.paths.isEmpty && !opts.recursive {

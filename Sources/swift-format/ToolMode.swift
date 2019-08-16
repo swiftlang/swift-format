@@ -28,14 +28,6 @@ enum ToolMode: String, Codable, ArgumentKind {
       ])
   }
 
-  /// Indicates whether the mode requires at least one input file passed as a positional argument.
-  var requiresFiles: Bool {
-    switch self {
-    case .format, .lint: return true
-    case .dumpConfiguration, .version: return false
-    }
-  }
-
   /// Creates a `ToolMode` value from the given command line argument string, throwing an error if
   /// the string is not valid.
   init(argument: String) throws {

@@ -64,7 +64,7 @@ public final class SwiftLinter {
   ///   - url: A file URL denoting the filename/path that should be assumed for this source code.
   /// - Throws: If an unrecoverable error occurs when formatting the code.
   public func lint(source: String, assumingFileURL url: URL) throws {
-    let sourceFile = try SyntaxParser.parse(url)
+    let sourceFile = try SyntaxParser.parse(source: source)
     try lint(syntax: sourceFile, assumingFileURL: url)
   }
 
