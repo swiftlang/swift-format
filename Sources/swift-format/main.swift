@@ -22,25 +22,34 @@ fileprivate func main(_ arguments: [String]) -> Int32 {
   let options = processArguments(commandName: url.lastPathComponent, Array(arguments.dropFirst()))
   switch options.mode {
   case .format:
-    var ret = 0
-    for path in FileIterator(paths: options.paths) {
+    if options.paths.isEmpty {
       let configuration = loadConfiguration(
-        forSwiftFile: path, configFilePath: options.configurationPath)
-      ret |= formatMain(
-        configuration: configuration,
-        path: path,
-        inPlace: options.inPlace,
-        debugOptions: options.debugOptions)
+        forSwiftFile: nil, configFilePath: options.configurationPath)
+      return Int32(
+        formatMain(
+          configuration: configuration, sourceFile: FileHandle.standardInput,
+          assumingFilename: options.assumeFilename, inPlace: false,
+          debugOptions: options.debugOptions))
     }
-    return Int32(ret)
+    return processSources(from: options.paths, configurationPath: options.configurationPath) {
+      (sourceFile, path, configuration) in
+      formatMain(
+        configuration: configuration, sourceFile: sourceFile, assumingFilename: path,
+        inPlace: options.inPlace, debugOptions: options.debugOptions)
+    }
   case .lint:
-    var ret = 0
-    for path in FileIterator(paths: options.paths) {
+    if options.paths.isEmpty {
       let configuration = loadConfiguration(
-        forSwiftFile: path, configFilePath: options.configurationPath)
-      ret |= lintMain(configuration: configuration, path: path)
+        forSwiftFile: nil, configFilePath: options.configurationPath)
+      return Int32(
+        lintMain(
+          configuration: configuration, sourceFile: FileHandle.standardInput,
+          assumingFilename: options.assumeFilename))
     }
-    return Int32(ret)
+    return processSources(from: options.paths, configurationPath: options.configurationPath) {
+      (sourceFile, path, configuration) in
+      lintMain(configuration: configuration, sourceFile: sourceFile, assumingFilename: path)
+    }
   case .dumpConfiguration:
     dumpDefaultConfiguration()
     return 0
@@ -50,19 +59,44 @@ fileprivate func main(_ arguments: [String]) -> Int32 {
   }
 }
 
+/// Processes the source code at the given file paths by performing a transformation, provided by a
+/// closure.
+/// - Parameters:
+///   - paths: The file paths for the source files to process with a transformation.
+///   - configurationPath: The file path to a swift-format configuration file.
+///   - transform: A closure that performs a transformation on a specific source file.
+private func processSources(
+  from paths: [String], configurationPath: String?,
+  transform: (FileHandle, String, Configuration) -> Int
+) -> Int32 {
+  var result = 0
+  for path in FileIterator(paths: paths) {
+    guard let sourceFile = FileHandle(forReadingAtPath: path) else {
+      stderrStream.write("Unable to create a file handle for source from \(path).\n")
+      stderrStream.flush()
+      return 1
+    }
+    let configuration = loadConfiguration(forSwiftFile: path, configFilePath: configurationPath)
+    result |= transform(sourceFile, path, configuration)
+  }
+  return Int32(result)
+}
+
 /// Load the configuration.
 private func loadConfiguration(
-  forSwiftFile swiftFilePath: String, configFilePath: String?
+  forSwiftFile swiftFilePath: String?, configFilePath: String?
 ) -> Configuration {
   if let path = configFilePath {
     return decodedConfiguration(fromFileAtPath: path)
-  } else {
-    // Search for a ".swift-format" configuration file in the directory of the current .swift file,
-    // or its nearest parent.
-    let swiftFileDir = URL(fileURLWithPath: swiftFilePath)
-    return decodedConfiguration(
-      fromFileAtPath: findConfigurationFile(forSwiftFile: swiftFileDir.path))
   }
+  // Search for a ".swift-format" configuration file in the directory of the current .swift file,
+  // or its nearest parent.
+  var configurationFilePath: String? = nil
+  if let swiftFilePath = swiftFilePath {
+    configurationFilePath = findConfigurationFile(
+      forSwiftFile: URL(fileURLWithPath: swiftFilePath).path)
+  }
+  return decodedConfiguration(fromFileAtPath: configurationFilePath)
 }
 
 /// Look for a ".swift-format" configuration file in the same directory as "forSwiftFile", or its
