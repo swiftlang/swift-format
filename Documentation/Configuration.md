@@ -59,6 +59,10 @@ top-level keys and values:
     If false (the default), arguments will be laid out horizontally first, with
     line breaks only being fired when the line length would be exceeded.
 
+*   `indentConditionalCompilationBlocks` _(boolean)_: Determines if
+    conditional compilation blocks are indented. If this setting is `false` the body
+    of `#if`, `#elseif`, and `#else` is not indented. Defaults to `true`.
+
 > TODO: Add support for enabling/disabling specific syntax transformations in
 > the pipeline.
 

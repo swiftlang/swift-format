@@ -29,6 +29,7 @@ public class Configuration: Codable {
     case blankLineBetweenMembers
     case lineBreakBeforeControlFlowKeywords
     case lineBreakBeforeEachArgument
+    case indentConditionalCompilationBlocks
     case rules
   }
 
@@ -87,6 +88,9 @@ public class Configuration: Codable {
   /// each argument, forcing the entire argument list to be laid out vertically.
   public var lineBreakBeforeEachArgument = false
 
+  /// Determines the indentation behavior for `#if`, `#elseif`, and `#else`.
+  public var indentConditionalCompilationBlocks = true
+
   /// Constructs a Configuration with all default values.
   public init() {
     self.version = highestSupportedConfigurationVersion
@@ -129,6 +133,8 @@ public class Configuration: Codable {
       ?? true
     self.lineBreakBeforeEachArgument
       = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeEachArgument) ?? true
+    self.indentConditionalCompilationBlocks
+      = try container.decodeIfPresent(Bool.self, forKey: .indentConditionalCompilationBlocks) ?? true
     self.rules = try container.decodeIfPresent([String: Bool].self, forKey: .rules) ?? [:]
   }
 
@@ -145,6 +151,7 @@ public class Configuration: Codable {
     try container.encode(
       lineBreakBeforeControlFlowKeywords, forKey: .lineBreakBeforeControlFlowKeywords)
     try container.encode(lineBreakBeforeEachArgument, forKey: .lineBreakBeforeEachArgument)
+    try container.encode(indentConditionalCompilationBlocks, forKey: .indentConditionalCompilationBlocks)
     try container.encode(rules, forKey: .rules)
   }
 }
