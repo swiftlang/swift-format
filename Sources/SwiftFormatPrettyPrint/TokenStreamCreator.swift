@@ -843,16 +843,26 @@ private final class TokenStreamCreator: SyntaxVisitor {
       preconditionFailure()
     }
 
+    let breakKindOpen: BreakKind
+    let breakKindClose: BreakKind
+    if config.indentConditionalCompilationBlocks {
+      breakKindOpen = .open
+      breakKindClose = .close
+    } else {
+      breakKindOpen = .same
+      breakKindClose = .same
+    }
+
     let tokenToOpenWith = node.condition?.lastToken ?? node.poundKeyword
-    after(tokenToOpenWith, tokens: .break(.open), .open)
+    after(tokenToOpenWith, tokens: .break(breakKindOpen), .open)
 
     // Unlike other code blocks, where we may want a single statement to be laid out on the same
     // line as a parent construct, the content of an `#if` block must always be on its own line;
     // the newline token inserted at the end enforces this.
     if let lastElemTok = node.elements.lastToken {
-      after(lastElemTok, tokens: .break(.close), .newline, .close)
+      after(lastElemTok, tokens: .break(breakKindClose), .newline, .close)
     } else {
-      before(tokenToOpenWith.nextToken, tokens: .break(.close), .newline, .close)
+      before(tokenToOpenWith.nextToken, tokens: .break(breakKindClose), .newline, .close)
     }
     return .visitChildren
   }
