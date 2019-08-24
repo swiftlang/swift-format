@@ -52,12 +52,18 @@ public class Context {
   /// Contains the rules have been disabled by comments for certain line numbers.
   public let ruleMask: RuleMask
 
+  /// Contains the range of source code to be formatted.
+  ///
+  /// `nil` idicates that the whole file should be formatted
+  public let applicationRange: SourceRange?
+
   /// Creates a new Context with the provided configuration, diagnostic engine, and file URL.
   public init(
     configuration: Configuration,
     diagnosticEngine: DiagnosticEngine?,
     fileURL: URL,
-    sourceFileSyntax: SourceFileSyntax
+    sourceFileSyntax: SourceFileSyntax,
+    applicationRange: SourceRange? = nil
   ) {
     self.configuration = configuration
     self.diagnosticEngine = diagnosticEngine
@@ -69,6 +75,7 @@ public class Context {
       syntaxNode: sourceFileSyntax,
       sourceLocationConverter: sourceLocationConverter
     )
+    self.applicationRange = applicationRange
   }
 
   /// Given a rule's name and the node it is examining, determine if the rule is disabled at this

@@ -48,7 +48,7 @@ public final class SwiftFormatter {
   ///     be written.
   /// - Throws: If an unrecoverable error occurs when formatting the code.
   public func format<Output: TextOutputStream>(
-    contentsOf url: URL, to outputStream: inout Output
+    contentsOf url: URL, to outputStream: inout Output, applicationRange: SourceRange? = nil
   ) throws {
     guard FileManager.default.isReadableFile(atPath: url.path) else {
       throw SwiftFormatError.fileNotReadable
@@ -58,7 +58,7 @@ public final class SwiftFormatter {
       throw SwiftFormatError.isDirectory
     }
     let sourceFile = try SyntaxParser.parse(url)
-    try format(syntax: sourceFile, assumingFileURL: url, to: &outputStream)
+    try format(syntax: sourceFile, assumingFileURL: url, to: &outputStream, applicationRange: applicationRange)
   }
 
   /// Formats the given Swift source code and writes the result to an output stream.
@@ -89,13 +89,14 @@ public final class SwiftFormatter {
   ///     be written.
   /// - Throws: If an unrecoverable error occurs when formatting the code.
   public func format<Output: TextOutputStream>(
-    syntax: SourceFileSyntax, assumingFileURL url: URL?, to outputStream: inout Output
+    syntax: SourceFileSyntax, assumingFileURL url: URL?, to outputStream: inout Output,
+    applicationRange: SourceRange? = nil
   ) throws {
     let assumedURL = url ?? URL(fileURLWithPath: "source")
 
     let context = Context(
       configuration: configuration, diagnosticEngine: diagnosticEngine, fileURL: assumedURL,
-      sourceFileSyntax: syntax)
+      sourceFileSyntax: syntax, applicationRange: applicationRange)
     let pipeline = FormatPipeline(context: context)
     let transformedSyntax = pipeline.visit(syntax)
 

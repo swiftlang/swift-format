@@ -11,6 +11,7 @@ public class PrettyPrintTestCase: XCTestCase {
     input: String,
     expected: String,
     linelength: Int,
+    applicationRangeBuilder: ((SourceFileSyntax) -> SourceRange)? = nil,
     configuration: Configuration = Configuration(),
     file: StaticString = #file,
     line: UInt = #line
@@ -18,7 +19,7 @@ public class PrettyPrintTestCase: XCTestCase {
     configuration.lineLength = linelength
 
     // Assert that the input, when formatted, is what we expected.
-    if let formatted = prettyPrintedSource(input, configuration: configuration) {
+    if let formatted = prettyPrintedSource(input, configuration: configuration, applicationRangeBuilder: applicationRangeBuilder) {
       XCTAssertEqual(
         expected, formatted,
         "Pretty-printed result was not what was expected",
@@ -26,7 +27,8 @@ public class PrettyPrintTestCase: XCTestCase {
 
       // Idempotency check: Running the formatter multiple times should not change the outcome.
       // Assert that running the formatter again on the previous result keeps it the same.
-      if let reformatted = prettyPrintedSource(formatted, configuration: configuration) {
+      if let reformatted = prettyPrintedSource(formatted, configuration: configuration, applicationRangeBuilder:
+        applicationRangeBuilder) {
         XCTAssertEqual(
           formatted, reformatted, "Pretty printer is not idempotent", file: file, line: line)
       }
@@ -34,7 +36,7 @@ public class PrettyPrintTestCase: XCTestCase {
   }
 
   /// Returns the given source code reformatted with the pretty printer.
-  private func prettyPrintedSource(_ source: String, configuration: Configuration) -> String?
+  private func prettyPrintedSource(_ source: String, configuration: Configuration, applicationRangeBuilder: ((SourceFileSyntax) -> SourceRange)? = nil) -> String?
   {
     let sourceFileSyntax: SourceFileSyntax
     do {
@@ -48,7 +50,8 @@ public class PrettyPrintTestCase: XCTestCase {
       configuration: configuration,
       diagnosticEngine: nil,
       fileURL: URL(fileURLWithPath: "/tmp/file.swift"),
-      sourceFileSyntax: sourceFileSyntax)
+      sourceFileSyntax: sourceFileSyntax,
+      applicationRange: applicationRangeBuilder?(sourceFileSyntax))
 
     let printer = PrettyPrinter(context: context, node: sourceFileSyntax, printTokenStream: false)
     return printer.prettyPrint()

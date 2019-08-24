@@ -114,6 +114,9 @@ public class PrettyPrinter {
     return isAtStartOfLine ? lineNumber - 1 : lineNumber
   }
 
+  /// Represent the line in the original code for token at index i
+  private var lineForToken: [Int]
+  
   /// Creates a new PrettyPrinter with the provided formatting configuration.
   ///
   /// - Parameters:
@@ -126,6 +129,7 @@ public class PrettyPrinter {
     self.maxLineLength = configuration.lineLength
     self.spaceRemaining = self.maxLineLength
     self.printTokenStream = printTokenStream
+    self.lineForToken = self.tokens.lineInCode()
   }
 
   /// Append the given string to the output buffer.
@@ -199,6 +203,14 @@ public class PrettyPrinter {
     pendingSpaces = 0
   }
 
+  private func processTokenAsInOriginalInput(_ token: Token) {
+    if case let .syntax(tokenSyntax) = token {
+      tokenSyntax.leadingTrivia.write(to: &outputBuffer)
+      writeRaw(tokenSyntax.printableText)
+      tokenSyntax.trailingTrivia.write(to: &outputBuffer)
+    }
+  }
+
   /// Print out the provided token, and apply line-wrapping and indentation as needed.
   ///
   /// This method takes a Token and it's length, and it keeps track of how much space is left on the
@@ -215,6 +227,11 @@ public class PrettyPrinter {
       printDebugToken(token: token, length: length, idx: idx)
     }
     assert(length >= 0, "Token lengths must be positive")
+
+    guard isInProcessingRangeToken(at: idx) else {
+      processTokenAsInOriginalInput(token)
+      return
+    }
 
     switch token {
     // Check if we need to force breaks in this group, and calculate the indentation to be used in
@@ -383,7 +400,8 @@ public class PrettyPrinter {
       lastBreak = true
 
     // Print any indentation required, followed by the text content of the syntax token.
-    case .syntax(let text):
+    case .syntax(let tokenSyntax):
+      let text = tokenSyntax.printableText
       guard !text.isEmpty else { break }
       lastBreak = false
       write(text)
@@ -392,7 +410,7 @@ public class PrettyPrinter {
     case .comment(let comment, let wasEndOfLine):
       lastBreak = false
 
-      write(comment.print(indent: currentIndentation))
+      write(comment.print())
       if wasEndOfLine {
         if comment.length > spaceRemaining {
           diagnose(.moveEndOfLineComment, at: comment.position)
@@ -485,7 +503,8 @@ public class PrettyPrinter {
         total += maxLineLength
 
       // Syntax tokens have a length equal to the number of columns needed to print its contents.
-      case .syntax(let text):
+      case .syntax(let tokenSyntax):
+        let text = tokenSyntax.printableText
         lengths.append(text.count)
         total += text.count
 
@@ -521,11 +540,18 @@ public class PrettyPrinter {
       printToken(idx: i)
     }
 
-    guard activeOpenBreaks.isEmpty else {
-      fatalError("At least one .break(.open) was not matched by a .break(.close)")
-    }
+//    guard activeOpenBreaks.isEmpty else {
+//      fatalError("At least one .break(.open) was not matched by a .break(.close)")
+//    }
 
     return outputBuffer
+  }
+
+  private func isInProcessingRangeToken(at idx: Int) -> Bool {
+    let line = lineForToken[idx]
+    let lo = context.applicationRange?.start.line ?? 2 // lines start from 1, but we subtract 1 later
+    let hi = context.applicationRange?.end.line ?? Int.max
+    return (lo-1...hi).contains(line)
   }
 
   /// Used to track the indentation level for the debug token stream output.
@@ -586,7 +612,7 @@ public class PrettyPrinter {
         print("[COMMENT DocBlock Length: \(length) EOL: \(wasEndOfLine) Idx: \(idx)]")
       }
       printDebugIndent()
-      print(comment.print(indent: debugIndent))
+      print(comment.print())
 
     case .verbatim(let verbatim):
       printDebugIndent()

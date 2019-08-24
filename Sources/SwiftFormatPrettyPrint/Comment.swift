@@ -64,7 +64,7 @@ struct Comment {
     }
   }
 
-  func print(indent: [Indent]) -> String {
+  func print() -> String {
     switch self.kind {
     case .line, .docLine:
       let separator = "\n" + kind.prefix

@@ -105,7 +105,7 @@ enum BreakKind: Equatable {
 }
 
 enum Token {
-  case syntax(String)
+  case syntax(TokenSyntax)
   case open(GroupBreakStyle)
   case close
   case `break`(BreakKind, size: Int, ignoresDiscretionary: Bool)
@@ -141,5 +141,40 @@ enum Token {
 
   static func verbatim(text: String) -> Token {
     return Token.verbatim(Verbatim(text: text))
+  }
+}
+
+extension TokenSyntax {
+  var printableText: String {
+    if leadingTrivia.hasBackticks && trailingTrivia.hasBackticks {
+      return "`\(text)`"
+    } else {
+      return text
+    }
+  }
+}
+
+extension Trivia: TextOutputStreamable {
+  public func write<Target>(to target: inout Target) where Target : TextOutputStream {
+    forEach { triviaPiece in
+      triviaPiece.write(to: &target)
+    }
+  }
+}
+
+extension Array where Element == Token {
+  func lineInCode() -> [Int] {
+    var result = Array<Int>(repeating: 0, count: self.count)
+    var acc = 1
+    
+    for (idx, token) in self.enumerated() {
+      if case let .newlines(count, _) = token {
+        acc += count
+      }
+      
+      result[idx] = acc
+    }
+    
+    return result
   }
 }

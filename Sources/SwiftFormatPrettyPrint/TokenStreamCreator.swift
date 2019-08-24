@@ -786,7 +786,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // TODO: For now, just use the raw text of the node and don't try to format it deeper. In the
     // future, we should find a way to format the expression but without wrapping so that at least
     // internal whitespace is fixed.
-    appendToken(.syntax(node.description))
+    //FIXME: how to handle it? Children?
     // Visiting children is not needed here.
     return .skipChildren
   }
@@ -1518,15 +1518,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
   func visit(_ token: TokenSyntax) -> SyntaxVisitorContinueKind {
     extractLeadingTrivia(token)
     appendBeforeTokens(token)
-
-    let text: String
-    if token.leadingTrivia.hasBackticks && token.trailingTrivia.hasBackticks {
-      text = "`\(token.text)`"
-    } else {
-      text = token.text
-    }
-    appendToken(.syntax(text))
-
+    appendToken(.syntax(token))
     appendAfterTokensAndTrailingComments(token)
 
     // It doesn't matter what we return here, tokens do not have children.
