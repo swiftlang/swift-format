@@ -57,4 +57,69 @@ public class NoCasesWithOnlyFallthroughTests: DiagnosingTestCase {
                                   }
                                   """)
   }
+
+  func testFallthroughCasesWithCommentsAreNotCombined() {
+    XCTAssertFormatting(NoCasesWithOnlyFallthrough.self,
+                         input: """
+                                switch numbers {
+                                case 1:
+                                  return 0 // This return has an inline comment.
+                                case 2: fallthrough
+                                // This case is commented so it should stay.
+                                case 3:
+                                  fallthrough
+                                case 4:
+                                  // This fallthrough is commented so it should stay.
+                                  fallthrough
+                                case 5: fallthrough  // This fallthrough is relevant.
+                                case 6:
+                                  fallthrough
+                                // This case has a descriptive comment.
+                                case 7: print("got here")
+                                }
+                                """,
+                         expected: """
+                                   switch numbers {
+                                   case 1:
+                                     return 0 // This return has an inline comment.
+                                   // This case is commented so it should stay.
+                                   case 2...3:
+                                     fallthrough
+                                   case 4:
+                                     // This fallthrough is commented so it should stay.
+                                     fallthrough
+                                   case 5: fallthrough  // This fallthrough is relevant.
+                                   // This case has a descriptive comment.
+                                   case 6...7: print("got here")
+                                   }
+                                   """)
+  }
+
+  func testCommentsAroundCombinedCasesStayInPlace() {
+    XCTAssertFormatting(NoCasesWithOnlyFallthrough.self,
+                         input: """
+                                switch numbers {
+                                case 5:
+                                  return 42 // This return is important.
+                                case 6: fallthrough
+                                // This case has an important comment.
+                                case 7: print("6 to 7")
+                                case 8: fallthrough
+
+                                // This case has an extra leading newline for emphasis.
+                                case 9: print("8 to 9")
+                                }
+                                """,
+                         expected: """
+                                   switch numbers {
+                                   case 5:
+                                     return 42 // This return is important.
+                                   // This case has an important comment.
+                                   case 6...7: print("6 to 7")
+
+                                   // This case has an extra leading newline for emphasis.
+                                   case 8...9: print("8 to 9")
+                                   }
+                                   """)
+  }
 }

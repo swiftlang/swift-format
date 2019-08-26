@@ -121,6 +121,17 @@ extension Trivia {
     }
   }
 
+  /// Returns this set of trivia, without any trailing newline characters.
+  public func withoutTrailingNewlines() -> Trivia {
+    let triviaCondensed = self.condensed()
+    guard let lastPieceOfTrivia = triviaCondensed.suffix(1).first else { return self }
+    if case .newlines(_) = lastPieceOfTrivia {
+      return Trivia(pieces: triviaCondensed.dropLast())
+    } else {
+      return self
+    }
+  }
+
   /// Returns this set of trivia, without any newlines.
   public func withoutNewlines() -> Trivia {
     return Trivia(

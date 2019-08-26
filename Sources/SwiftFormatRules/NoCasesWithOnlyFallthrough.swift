@@ -35,10 +35,7 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
         continue
       }
 
-      if switchCase.statements.count == 1,
-        let only = switchCase.statements.first,
-        only.item is FallthroughStmtSyntax
-      {
+      if isFallthroughOnly(switchCase) {
         diagnose(.collapseCase(name: "\(label)"), on: switchCase)
         violations.append(label)
       } else {
@@ -47,23 +44,63 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
           continue
         }
 
+        var collapsedCase: SwitchCaseSyntax;
         if retrieveNumericCaseValue(caseLabel: label) != nil {
-          let newCase = collapseIntegerCases(
+          collapsedCase = collapseIntegerCases(
             violations: violations,
             validCaseLabel: label,
             validCase: switchCase)
-          newCases.append(newCase)
         } else {
-          let newCase = collapseNonIntegerCases(
+          collapsedCase = collapseNonIntegerCases(
             violations: violations,
             validCaseLabel: label,
             validCase: switchCase)
-          newCases.append(newCase)
         }
+
+        // Only the first violation case can have displaced trivia, because any non-whitespace
+        // trivia in the other violation cases would've prevented collapsing.
+        if let displacedLeadingTrivia = violations.first?.leadingTrivia?.withoutTrailingNewlines() {
+          let existingLeadingTrivia = collapsedCase.leadingTrivia ?? []
+          let mergedLeadingTrivia = displacedLeadingTrivia + existingLeadingTrivia
+          collapsedCase = collapsedCase.withLeadingTrivia(mergedLeadingTrivia)
+        }
+        newCases.append(collapsedCase)
         violations = []
       }
     }
     return node.withCases(SyntaxFactory.makeSwitchCaseList(newCases))
+  }
+
+  /// Returns whether the given `SwitchCaseSyntax` contains only a fallthrough statement.
+  /// - Parameter switchCase: A syntax node describing a case in a switch statement.
+  func isFallthroughOnly(_ switchCase: SwitchCaseSyntax) -> Bool {
+    // When there are any additional or non-fallthrough statements, it isn't only a fallthrough.
+    guard let onlyStatement = switchCase.statements.firstAndOnly,
+      onlyStatement.item is FallthroughStmtSyntax
+    else {
+      return false
+    }
+
+    // Check for any comments that are adjacent to the case or fallthrough statement.
+    if let leadingTrivia = switchCase.leadingTrivia,
+      leadingTrivia.drop(while: { !$0.isNewline }).contains(where: { $0.isComment })
+    {
+      return false
+    }
+    if let leadingTrivia = onlyStatement.leadingTrivia,
+      leadingTrivia.drop(while: { !$0.isNewline }).contains(where: { $0.isComment })
+    {
+      return false
+    }
+
+    // Check for any comments that are inline on the fallthrough statement. Inline comments are
+    // always stored in the next token's leading trivia.
+    if let nextLeadingTrivia = onlyStatement.nextToken?.leadingTrivia,
+      nextLeadingTrivia.prefix(while: { !$0.isNewline }).contains(where: { $0.isComment })
+    {
+      return false
+    }
+    return true
   }
 
   // Puts all given cases on one line with range operator or commas
@@ -105,7 +142,7 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
           SyntaxFactory.makeBinaryOperatorExpr(
             operatorToken:
               SyntaxFactory.makeUnspacedBinaryOperator("...")),
-          end
+          end,
         ])
       let newExpPat = SyntaxFactory.makeExpressionPattern(
         expression: SyntaxFactory.makeSequenceExpr(elements: newExpList))
@@ -156,6 +193,28 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
     }
     let caseItemList = SyntaxFactory.makeCaseItemList(newCaseItems)
     return validCase.withLabel(validCaseLabel.withCaseItems(caseItemList))
+  }
+}
+
+extension TriviaPiece {
+  /// Returns whether this piece is any type of comment.
+  var isComment: Bool {
+    switch self {
+    case .lineComment, .blockComment, .docLineComment, .docBlockComment:
+      return true
+    default:
+      return false
+    }
+  }
+
+  /// Returns whether this piece is a number of newlines.
+  var isNewline: Bool {
+    switch self {
+    case .newlines:
+      return true
+    default:
+      return false
+    }
   }
 }
 
