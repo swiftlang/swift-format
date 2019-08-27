@@ -47,6 +47,7 @@ extension BlankLineBetweenMembersTests {
         ("testBlankLineBeforeFirstChildOrNot", testBlankLineBeforeFirstChildOrNot),
         ("testInvalidBlankLineBetweenMembers", testInvalidBlankLineBetweenMembers),
         ("testNestedMembers", testNestedMembers),
+        ("testNoBlankLineBetweenSingleLineMembers", testNoBlankLineBetweenSingleLineMembers),
         ("testTwoMembers", testTwoMembers),
     ]
 }

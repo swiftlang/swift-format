@@ -182,4 +182,48 @@ public class BlankLineBetweenMembersTests: DiagnosingTestCase {
                 }
                 """)
   }
+
+  public func testNoBlankLineBetweenSingleLineMembers() {
+    XCTAssertFormatting(
+        BlankLineBetweenMembers.self,
+        input: """
+               enum Foo {
+                 let bar = 1
+                 let baz = 2
+               }
+               enum Foo {
+
+                 // MARK: - This is an important region of the code.
+
+                 let bar = 1
+                 let baz = 2
+               }
+               enum Foo {
+
+                 // This comment is describing bar.
+                 let bar = 1
+                 let baz = 2
+               }
+               """,
+        expected: """
+                  enum Foo {
+                    let bar = 1
+                    let baz = 2
+                  }
+                  enum Foo {
+
+                    // MARK: - This is an important region of the code.
+
+                    let bar = 1
+                    let baz = 2
+                  }
+                  enum Foo {
+
+                    // This comment is describing bar.
+                    let bar = 1
+
+                    let baz = 2
+                  }
+                  """)
+  }
 }
