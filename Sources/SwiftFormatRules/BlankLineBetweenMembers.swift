@@ -82,7 +82,7 @@ public final class BlankLineBetweenMembers: SyntaxFormatRule {
     guard let leadingTrivia = node.leadingTrivia else {
       return false
     }
-    if case let .newlines(count) = leadingTrivia.withoutSpaces().suffix(1).first {
+    if case let .newlines(count)? = leadingTrivia.withoutSpaces().suffix(1).first {
       return count > 1
     }
     return false
