@@ -37,10 +37,14 @@ public final class BlankLineBetweenMembers: SyntaxFormatRule {
     // The first member can just be added as-is; we don't force any newline before it.
     var membersList = [visitNestedDecls(of: firstMember)]
 
+    // The first comment may not be "attached" to the first member. Ignore any comments that are
+    // separated from the member by a newline.
+    let shouldIncludeLeadingComment = !isLeadingTriviaSeparate(from: firstMember)
+
     // Iterates through all the declaration of the member, to ensure that the declarations have
     // at least one blank line between them when necessary.
     var previousMemberWasSingleLine = firstMember.isSingleLine(
-      includingLeadingComment: true,
+      includingLeadingComment: shouldIncludeLeadingComment,
       sourceLocationConverter: context.sourceLocationConverter
     )
 
@@ -54,7 +58,7 @@ public final class BlankLineBetweenMembers: SyntaxFormatRule {
 
       if let memberTrivia = memberToAdd.leadingTrivia,
         !(ignoreSingleLine && previousMemberWasSingleLine && memberIsSingleLine)
-        && memberTrivia.numberOfLeadingNewlines == 1  // Only one newline => no blank line
+          && memberTrivia.numberOfLeadingNewlines == 1  // Only one newline => no blank line
       {
         let correctTrivia = Trivia.newlines(1) + memberTrivia
         memberToAdd = replaceTrivia(
@@ -70,6 +74,18 @@ public final class BlankLineBetweenMembers: SyntaxFormatRule {
     }
 
     return node.withMembers(SyntaxFactory.makeMemberDeclList(membersList))
+  }
+
+  /// Returns whether any comments in the leading trivia of the given node are separated from the
+  /// non-trivia tokens by at least 1 blank line.
+  func isLeadingTriviaSeparate(from node: Syntax) -> Bool {
+    guard let leadingTrivia = node.leadingTrivia else {
+      return false
+    }
+    if case let .newlines(count) = leadingTrivia.withoutSpaces().suffix(1).first {
+      return count > 1
+    }
+    return false
   }
 
   /// Recursively ensures all nested member types follows the BlankLineBetweenMembers rule.
