@@ -22,52 +22,75 @@ import SwiftSyntax
 ///
 /// - SeeAlso: https://google.github.io/swift#semicolons
 public final class DoNotUseSemicolons: SyntaxFormatRule {
-  private func transformItems(_ items: CodeBlockItemListSyntax) -> CodeBlockItemListSyntax {
-    var newItems = Array(items)
+
+  /// Creates a new version of the given node which doesn't contain any semicolons. The node's
+  /// items are recursively modified to remove semicolons, replacing with line breaks where needed.
+  /// Items are checked recursively to support items that contain code blocks, which may have
+  /// semicolons to be removed.
+  /// - Parameters:
+  ///   - node: A node that contains items which may have semicolons or nested code blocks.
+  ///   - nodeCreator: A closure that creates a new node given an array of items.
+  private func nodeByRemovingSemicolons<
+    ItemType: Syntax & SemicolonSyntax & Equatable, NodeType: SyntaxCollection
+  >(from node: NodeType, nodeCreator: ([ItemType]) -> NodeType) -> NodeType
+  where NodeType.Element == ItemType {
+    var newItems = Array(node)
 
     // Because newlines belong to the _first_ token on the new line, if we remove a semicolon, we
     // need to keep track of the fact that the next statement needs a new line.
     var previousHadSemicolon = false
-    for (idx, item) in items.enumerated() {
+    for (idx, item) in node.enumerated() {
 
       // Store the previous statement's semicolon-ness.
       defer { previousHadSemicolon = item.semicolon != nil }
 
+      // Check for semicolons in statements inside of the item, because code blocks may be nested
+      // inside of other code blocks.
+      guard let visitedItem = visit(item) as? ItemType else {
+        return node
+      }
+
       // Check if we need to make any modifications (removing semicolon/adding newlines)
-      guard item.semicolon != nil || previousHadSemicolon else {
+      guard visitedItem != item || item.semicolon != nil || previousHadSemicolon else {
         continue
       }
 
-      var newItem = item
+      var newItem = visitedItem
 
-      if previousHadSemicolon {
-        // Ensure the leading trivia for this statement has a newline.
-        let firstTok = item.firstToken
+      // Check if the leading trivia for this statement needs a new line.
+      if previousHadSemicolon, let firstToken = newItem.firstToken,
+        !firstToken.leadingTrivia.containsNewlines
+      {
+        let leadingTrivia = .newlines(1) + firstToken.leadingTrivia
         newItem = replaceTrivia(
-          on: item,
-          token: firstTok,
-          leadingTrivia: firstTok?.leadingTrivia.withOneLeadingNewline() ?? .newlines(1)
-        ) as! CodeBlockItemSyntax
+          on: newItem,
+          token: firstToken,
+          leadingTrivia: leadingTrivia
+        ) as! ItemType
       }
 
       // If there's a semicolon, diagnose and remove it.
-      if idx < items.count {
-        diagnose(.removeSemicolonAndMove, on: item)
-      } else {
-        diagnose(.removeSemicolon, on: item)
+      if let semicolon = item.semicolon {
+        // This discards any trailingTrivia from the semicolon. That trivia is at most some spaces,
+        // and the pretty printer adds any necessary spaces so it's safe to discard.
+        newItem = newItem.withSemicolon(nil)
+        if idx < node.count - 1 {
+          diagnose(.removeSemicolonAndMove, on: semicolon)
+        } else {
+          diagnose(.removeSemicolon, on: semicolon)
+        }
       }
-      newItem = newItem.withSemicolon(nil)
       newItems[idx] = newItem
     }
-    return SyntaxFactory.makeCodeBlockItemList(newItems)
+    return nodeCreator(newItems)
   }
 
-  public override func visit(_ node: CodeBlockSyntax) -> Syntax {
-    return node.withStatements(transformItems(node.statements))
+  public override func visit(_ node: CodeBlockItemListSyntax) -> Syntax {
+    return nodeByRemovingSemicolons(from: node, nodeCreator: SyntaxFactory.makeCodeBlockItemList)
   }
 
-  public override func visit(_ node: SourceFileSyntax) -> Syntax {
-    return node.withStatements(transformItems(node.statements))
+  public override func visit(_ node: MemberDeclListSyntax) -> Syntax {
+    return nodeByRemovingSemicolons(from: node, nodeCreator: SyntaxFactory.makeMemberDeclList)
   }
 }
 
