@@ -43,15 +43,13 @@ public final class GroupNumericLiterals: SyntaxFormatRule {
     case "0x":
       // Hexadecimal
       let digitsNoPrefix = String(digits.dropFirst(2))
-      guard let intDigits = Int(digitsNoPrefix, radix: 16) else { return node }
-      guard intDigits >= 0x1000_0000 else { return node }
+      guard digitsNoPrefix.count >= 8 else { return node }
       diagnose(.groupNumericLiteral(byStride: 4), on: node)
       newDigits = "0x" + groupDigitsByStride(digits: digitsNoPrefix, stride: 4)
     case "0b":
       // Binary
       let digitsNoPrefix = String(digits.dropFirst(2))
-      guard let intDigits = Int(digitsNoPrefix, radix: 2) else { return node }
-      guard intDigits >= 0b1_000000000 else { return node }
+      guard digitsNoPrefix.count >= 10 else { return node }
       diagnose(.groupNumericLiteral(byStride: 8), on: node)
       newDigits = "0b" + groupDigitsByStride(digits: digitsNoPrefix, stride: 8)
     case "0o":
@@ -59,8 +57,7 @@ public final class GroupNumericLiterals: SyntaxFormatRule {
       return node
     default:
       // Decimal
-      guard let intDigits = Int(digits) else { return node }
-      guard intDigits >= 1_000_000 else { return node }
+      guard digits.count >= 7 else { return node }
       diagnose(.groupNumericLiteral(byStride: 3), on: node)
       newDigits = groupDigitsByStride(digits: digits, stride: 3)
     }
