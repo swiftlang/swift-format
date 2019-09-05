@@ -66,7 +66,7 @@ public final class BlankLineBetweenMembers: SyntaxFormatRule {
           leadingTrivia: correctTrivia
         ) as! MemberDeclListItemSyntax
 
-        diagnose(.addBlankLine, on: memberToAdd)
+        diagnose(.addBlankLine, on: member)
       }
 
       membersList.append(memberToAdd)
