@@ -48,9 +48,13 @@ extension LintPipeline {
     return .visitChildren
   }
 
+  func visit(_ node: CodeBlockItemListSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(DoNotUseSemicolons.visit, in: context, for: node)
+    return .visitChildren
+  }
+
   func visit(_ node: CodeBlockSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AmbiguousTrailingClosureOverload.visit, in: context, for: node)
-    visitIfEnabled(DoNotUseSemicolons.visit, in: context, for: node)
     visitIfEnabled(OneVariableDeclarationPerLine.visit, in: context, for: node)
     return .visitChildren
   }
@@ -166,6 +170,11 @@ extension LintPipeline {
     return .visitChildren
   }
 
+  func visit(_ node: MemberDeclListSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(DoNotUseSemicolons.visit, in: context, for: node)
+    return .visitChildren
+  }
+
   func visit(_ node: PatternBindingSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(UseSingleLinePropertyGetter.visit, in: context, for: node)
     return .visitChildren
@@ -197,7 +206,6 @@ extension LintPipeline {
 
   func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AmbiguousTrailingClosureOverload.visit, in: context, for: node)
-    visitIfEnabled(DoNotUseSemicolons.visit, in: context, for: node)
     visitIfEnabled(NeverForceUnwrap.visit, in: context, for: node)
     visitIfEnabled(NeverUseForceTry.visit, in: context, for: node)
     visitIfEnabled(NeverUseImplicitlyUnwrappedOptionals.visit, in: context, for: node)

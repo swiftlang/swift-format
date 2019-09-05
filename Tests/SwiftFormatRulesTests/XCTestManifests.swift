@@ -68,6 +68,9 @@ extension DoNotUseSemicolonsTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__DoNotUseSemicolonsTests = [
+        ("testNewlinesAfterSemicolons", testNewlinesAfterSemicolons),
+        ("testSemicolonsInMemberLists", testSemicolonsInMemberLists),
+        ("testSemicolonsInNestedStatements", testSemicolonsInNestedStatements),
         ("testSemicolonUse", testSemicolonUse),
     ]
 }
