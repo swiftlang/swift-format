@@ -39,7 +39,8 @@ extension Diagnostic.Message {
   {
     return .init(
       .warning,
-      "The identifier '\(identifierName)' contains the following non-ASCII characters: \(invalidCharacters.joined(separator: ", "))"
+      "remove non-ASCII characters from '\(identifierName)': "
+        + "\(invalidCharacters.joined(separator: ", "))"
     )
   }
 }

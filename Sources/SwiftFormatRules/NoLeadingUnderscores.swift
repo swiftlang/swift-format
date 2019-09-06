@@ -108,6 +108,6 @@ public final class NoLeadingUnderscores: SyntaxLintRule {
 extension Diagnostic.Message {
 
   static func doNotStartWithUnderscore(identifier: String) -> Diagnostic.Message {
-    return .init(.warning, "identifier \(identifier) should not start with '_'")
+    return .init(.warning, "remove leading '_' from identifier '\(identifier)'")
   }
 }

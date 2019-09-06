@@ -610,5 +610,5 @@ public class PrettyPrinter {
 extension Diagnostic.Message {
 
   static let moveEndOfLineComment = Diagnostic.Message(
-    .warning, "End-of-line comment exceeds the line length")
+    .warning, "move end-of-line comment that exceeds the line length")
 }

@@ -137,7 +137,7 @@ extension Diagnostic.Message {
   static func parametersDontMatch(funcName: String) -> Diagnostic.Message {
     return Diagnostic.Message(
       .warning,
-      "the parameters of \(funcName) don't match the parameters in its documentation"
+      "change the parameters of \(funcName)'s documentation to match its parameters"
     )
   }
 

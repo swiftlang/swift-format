@@ -56,6 +56,6 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
 
 extension Diagnostic.Message {
   static func variableNameMustBeLowerCamelCase(_ name: String) -> Diagnostic.Message {
-    return .init(.warning, "variable '\(name)' must be lower-camel-case")
+    return .init(.warning, "rename variable '\(name)' using lower-camel-case")
   }
 }
