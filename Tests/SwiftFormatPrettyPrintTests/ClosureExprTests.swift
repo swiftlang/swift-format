@@ -283,6 +283,54 @@ public class ClosureExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
   }
 
+  public func testClosureVariables() {
+    let input =
+      """
+      var someClosure: (Int, Int, Int) -> Bool = {  // a comment
+        (a, b, c) in
+        foo()
+        return true
+      }
+      var someOtherClosure: (Int, Int, Int) -> Bool = {
+        foo($0, $1, $2)
+        return true
+      }
+      class Bar {
+        private lazy var foo = { Foo() }()
+      }
+      class Foo {
+        private lazy var bar = {
+          // do some computations
+          return Bar()
+        }()
+      }
+      """
+    let expected =
+      """
+      var someClosure: (Int, Int, Int) -> Bool = {  // a comment
+        (a, b, c) in
+        foo()
+        return true
+      }
+      var someOtherClosure: (Int, Int, Int) -> Bool = {
+        foo($0, $1, $2)
+        return true
+      }
+      class Bar {
+        private lazy var foo = { Foo() }()
+      }
+      class Foo {
+        private lazy var bar = {
+          // do some computations
+          return Bar()
+        }()
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
+  }
+
   public func testArrayClosures() {
     let input =
       """
