@@ -139,7 +139,7 @@ public class WhitespaceLinter {
     // Only run this check at the start of a line.
     guard
       (user.count > 1 && form.count > 1)
-      || (form.count == 1 && form.count == 1 && isFirstCharacter)
+        || (form.count == 1 && form.count == 1 && isFirstCharacter)
     else {
       return
     }
@@ -224,7 +224,8 @@ public class WhitespaceLinter {
       // of a file is a special case since it isn't preceded by any newlines.
       if form.count == 1 && user.count == 1 && isFirstCharacter {
         if form[0].count != user[0].count {
-          diagnose(.indentationError(form[0].count), line: 1, column: 1, utf8Offset: 0)
+          diagnose(
+            .indentationError(form[0].count - user[0].count), line: 1, column: 1, utf8Offset: 0)
         }
       }
       return
@@ -234,10 +235,12 @@ public class WhitespaceLinter {
       offset += user[i].count + 1
     }
     if form.last?.count != user.last?.count {
+      guard let formattedWhitespaceCount = form.last?.count,
+        let userTextWhitespaceCount = user.last?.count
+      else { return }
       let pos = calculatePosition(offset: userOffset + offset, data: self.userText)
-      diagnose(
-        .indentationError(form.last!.count), line: pos.line, column: pos.column, utf8Offset: 0
-      )
+      let delta = formattedWhitespaceCount - userTextWhitespaceCount
+      diagnose(.indentationError(delta), line: pos.line, column: pos.column, utf8Offset: 0)
     }
   }
 
@@ -277,7 +280,8 @@ public class WhitespaceLinter {
     guard form.count == 1 && user.count == 1 && !isFirstCharacter else { return }
     if form[0].count != user[0].count {
       let pos = calculatePosition(offset: userOffset, data: self.userText)
-      diagnose(.spacingError(form[0].count), line: pos.line, column: pos.column, utf8Offset: 0)
+      let delta = form[0].count - user[0].count
+      diagnose(.spacingError(delta), line: pos.line, column: pos.column, utf8Offset: 0)
     }
   }
 
@@ -417,11 +421,15 @@ extension Diagnostic.Message {
     .warning, "[TrailingWhitespace]: remove trailing whitespace")
 
   static func indentationError(_ spaces: Int) -> Diagnostic.Message {
-    return .init(.warning, "[Indentation]: indentation should be \(spaces) spaces")
+    let verb = spaces > 0 ? "indent" : "unindent"
+    let noun = abs(spaces) == 1 ? "space" : "spaces"
+    return .init(.warning, "[Indentation]: \(verb) by \(abs(spaces)) \(noun)")
   }
 
   static func spacingError(_ spaces: Int) -> Diagnostic.Message {
-    return .init(.warning, "[Spacing]: should be \(spaces) spaces")
+    let verb = spaces > 0 ? "add" : "remove"
+    let noun = abs(spaces) == 1 ? "space" : "spaces"
+    return .init(.warning, "[Spacing]: \(verb) \(abs(spaces)) \(noun)")
   }
 
   static let removeLineError = Diagnostic.Message(.warning, "[RemoveLine]: remove line break")
