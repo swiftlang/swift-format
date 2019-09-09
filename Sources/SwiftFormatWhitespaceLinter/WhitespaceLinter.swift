@@ -414,21 +414,21 @@ public class WhitespaceLinter {
 
 extension Diagnostic.Message {
   static let trailingWhitespaceError = Diagnostic.Message(
-    .warning, "[TrailingWhitespace]: remove trailing whitespace.")
+    .warning, "[TrailingWhitespace]: remove trailing whitespace")
 
   static func indentationError(_ spaces: Int) -> Diagnostic.Message {
-    return .init(.warning, "[Indentation]: indentation should be \(spaces) spaces.")
+    return .init(.warning, "[Indentation]: indentation should be \(spaces) spaces")
   }
 
   static func spacingError(_ spaces: Int) -> Diagnostic.Message {
-    return .init(.warning, "[Spacing]: should be \(spaces) spaces.")
+    return .init(.warning, "[Spacing]: should be \(spaces) spaces")
   }
 
-  static let removeLineError = Diagnostic.Message(.warning, "[RemoveLine]: remove line break.")
+  static let removeLineError = Diagnostic.Message(.warning, "[RemoveLine]: remove line break")
 
   static func addLinesError(_ lines: Int) -> Diagnostic.Message {
-    return .init(.warning, "[AddLines]: add \(lines) line breaks.")
+    return .init(.warning, "[AddLines]: add \(lines) line breaks")
   }
 
-  static let lineLengthError = Diagnostic.Message(.warning, "[LineLength]: line is too long.")
+  static let lineLengthError = Diagnostic.Message(.warning, "[LineLength]: line is too long")
 }

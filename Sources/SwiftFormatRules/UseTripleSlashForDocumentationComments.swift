@@ -20,9 +20,9 @@ import SwiftSyntax
 ///
 /// Lint: If a doc block comment appears, a lint error is raised.
 ///
-/// Format: If a doc block comment appears on its own on a line, or if a doc block comment spans multiple
-///         lines without appearing on the same line as code, it will be replaced with multiple
-///         doc line comments.
+/// Format: If a doc block comment appears on its own on a line, or if a doc block comment spans
+///         multiple lines without appearing on the same line as code, it will be replaced with
+///         multiple doc line comments.
 ///
 /// - SeeAlso: https://google.github.io/swift#general-format
 public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
@@ -123,5 +123,5 @@ public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
 
 extension Diagnostic.Message {
   static let avoidDocBlockComment = Diagnostic.Message(
-    .warning, "Documentation block comments are not allowed")
+    .warning, "replace documentation block comments with documentation line comments")
 }

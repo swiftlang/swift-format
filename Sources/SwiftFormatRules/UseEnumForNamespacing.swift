@@ -87,9 +87,6 @@ public final class UseEnumForNamespacing: SyntaxFormatRule {
 
 extension Diagnostic.Message {
   static func convertToEnum(kind: String, name: TokenSyntax) -> Diagnostic.Message {
-    return .init(
-      .warning,
-      "\(kind) '\(name.text)' used as a namespace should be an enum"
-    )
+    return .init(.warning, "replace \(kind) '\(name.text)' with an enum when used as a namespace")
   }
 }

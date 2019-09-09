@@ -145,5 +145,5 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
 extension Diagnostic.Message {
   static let removeRedundantInitializer = Diagnostic.Message(
     .warning,
-    "initializer is the same as synthesized initializer")
+    "remove initializer and use the synthesized initializer")
 }

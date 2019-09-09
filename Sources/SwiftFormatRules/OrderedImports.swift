@@ -403,11 +403,11 @@ class Line {
 
 extension Diagnostic.Message {
   static let placeAtTopOfFile = Diagnostic.Message(
-    .warning, "Place imports at the top of the file.")
+    .warning, "place imports at the top of the file")
 
   static func groupImports(before: LineType, after: LineType) -> Diagnostic.Message {
-    return Diagnostic.Message(.warning, "Place \(before) imports before \(after) imports.")
+    return Diagnostic.Message(.warning, "place \(before) imports before \(after) imports")
   }
 
-  static let sortImports = Diagnostic.Message(.warning, "Sort import statements lexicographically.")
+  static let sortImports = Diagnostic.Message(.warning, "sort import statements lexicographically")
 }

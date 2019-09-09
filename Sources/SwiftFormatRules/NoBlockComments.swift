@@ -117,9 +117,10 @@ public final class NoBlockComments: SyntaxFormatRule {
 
 extension Diagnostic.Message {
   static let avoidBlockComment = Diagnostic.Message(
-    .warning, "Replace block comment with line comments.")
+    .warning, "replace block comment with line comments")
+
   static let avoidBlockCommentBetweenCode = Diagnostic.Message(
-    .warning, "Remove block comment inline with code")
+    .warning, "remove block comment inline with code")
 }
 
 extension Trivia {
