@@ -17,7 +17,7 @@ public class WhitespaceLintTests: WhitespaceTestCase {
       """
 
     performWhitespaceLint(input: input, expected: expected)
-    XCTAssertDiagnosed(.spacingError(0), line: 1, column: 6)
+    XCTAssertDiagnosed(.spacingError(-1), line: 1, column: 6)
     XCTAssertDiagnosed(.spacingError(1), line: 2, column: 8)
   }
 
@@ -39,9 +39,9 @@ public class WhitespaceLintTests: WhitespaceTestCase {
       """
 
     performWhitespaceLint(input: input, expected: expected)
-    XCTAssertDiagnosed(.indentationError(0), line: 1, column: 1)
+    XCTAssertDiagnosed(.indentationError(-2), line: 1, column: 1)
     XCTAssertDiagnosed(.indentationError(2), line: 2, column: 1)
-    XCTAssertDiagnosed(.indentationError(0), line: 3, column: 1)
+    XCTAssertDiagnosed(.indentationError(-1), line: 3, column: 1)
   }
 
   public func testTrailingWhitespace() {
