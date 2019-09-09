@@ -697,7 +697,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   func visit(_ node: ClosureExprSyntax) -> SyntaxVisitorContinueKind {
     if let signature = node.signature {
-      before(signature.firstToken, tokens: .break(.open))
+      after(node.leftBrace, tokens: .break(.open))
       if node.statements.count > 0 {
         after(signature.inTok, tokens: .break(.same))
       } else {

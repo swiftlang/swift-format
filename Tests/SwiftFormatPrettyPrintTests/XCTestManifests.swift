@@ -102,6 +102,7 @@ extension ClosureExprTests {
         ("testClosureCapture", testClosureCapture),
         ("testClosureCaptureWithoutArguments", testClosureCaptureWithoutArguments),
         ("testClosuresWithIfs", testClosuresWithIfs),
+        ("testClosureVariables", testClosureVariables),
         ("testTrailingClosure", testTrailingClosure),
     ]
 }
