@@ -20,6 +20,8 @@ public class PrettyPrinter {
 
   /// Information about an open break that has not yet been closed during the printing stage.
   private struct ActiveOpenBreak {
+    /// The kind of open break that created this scope.
+    let kind: OpenBreakKind
 
     /// The line number where the open break occurred.
     let lineNumber: Int
@@ -37,15 +39,6 @@ public class PrettyPrinter {
     /// break may apply both a continuation indent and a block indent, either indent, or neither
     /// indent.
     var contributesBlockIndent: Bool
-
-    init(lineNumber: Int, contributesContinuationIndent: Bool) {
-      self.lineNumber = lineNumber
-      self.contributesContinuationIndent = contributesContinuationIndent
-
-      // Assume that it will indent initially. This may be flipped later if another open break is
-      // later encountered on the same line.
-      self.contributesBlockIndent = true
-    }
   }
 
   private let context: Context
@@ -255,7 +248,7 @@ public class PrettyPrinter {
       var isContinuationIfBreakFires = false
 
       switch kind {
-      case .open:
+      case .open(let openKind):
         let lastOpenBreak = activeOpenBreaks.last
         let currentLineNumber = openCloseBreakCompensatingLineNumber
 
@@ -263,22 +256,28 @@ public class PrettyPrinter {
         // line (i.e., the previous open break didn't fire), to prevent the indentation of the next
         // line from being more than one level deeper than this line.
         let lastOpenBreakWasSameLine = currentLineNumber == (lastOpenBreak?.lineNumber ?? 0)
-        if lastOpenBreakWasSameLine {
+        if lastOpenBreakWasSameLine && openKind == .block {
           // If the last open break was on the same line, then we mark it as *not* contributing to
           // the indentation of the subsequent lines. When the breaks are closed, this ensures that
           // indentation is popped evenly (and also popped in an order that causes everything to
           // line up properly).
           activeOpenBreaks[activeOpenBreaks.count - 1].contributesBlockIndent = false
         }
+
         // If an open break occurs on a continuation line, we must push that continuation
         // indentation onto the stack. The open break will reset the continuation state for the
         // lines within it (unless they are themselves continuations within that particular
         // scope), so we need the continuation indentation to persist across all the lines in that
-        // scope.
+        // scope. Additionally, continuation open breaks must indent when the break fires.
+        let breakWillFire = (!isAtStartOfLine && length > spaceRemaining) || mustBreak
+        let contributesContinuationIndent
+          = currentLineIsContinuation || (breakWillFire && openKind == .continuation)
         activeOpenBreaks.append(
           ActiveOpenBreak(
+            kind: openKind,
             lineNumber: currentLineNumber,
-            contributesContinuationIndent: currentLineIsContinuation))
+            contributesContinuationIndent: contributesContinuationIndent,
+            contributesBlockIndent: openKind == .block))
 
         continuationStack.append(currentLineIsContinuation)
 
@@ -340,11 +339,16 @@ public class PrettyPrinter {
           //
           // Likewise, we need to do this if we popped an old continuation state off the stack,
           // even if the break *doesn't* fire.
-          currentLineIsContinuation
-            = matchingOpenBreak.contributesBlockIndent && openedOnDifferentLine
+          let matchingOpenBreakIndented = matchingOpenBreak.contributesContinuationIndent
+            || matchingOpenBreak.contributesBlockIndent
+          currentLineIsContinuation = matchingOpenBreakIndented && openedOnDifferentLine
         }
 
-        let wasContinuationWhenOpened = continuationStack.popLast() ?? false
+        let wasContinuationWhenOpened = (continuationStack.popLast() ?? false)
+          || matchingOpenBreak.contributesContinuationIndent
+          // This ensures a continuation indent is propagated to following scope when an initial
+          // scope would've indented if the leading break wasn't at the start of a line.
+          || (matchingOpenBreak.kind == .continuation && openedOnDifferentLine)
 
         // Restore the continuation state of the scope we were in before the open break occurred.
         currentLineIsContinuation = currentLineIsContinuation || wasContinuationWhenOpened
@@ -360,7 +364,7 @@ public class PrettyPrinter {
         mustBreak = currentLineIsContinuation
       }
 
-      if length > spaceRemaining || mustBreak {
+      if (!isAtStartOfLine && length > spaceRemaining) || mustBreak {
         currentLineIsContinuation = isContinuationIfBreakFires
         writeNewlines(1, kind: .flexible)
         lastBreak = true
@@ -603,8 +607,8 @@ public class PrettyPrinter {
   private func diagnose(_ message: Diagnostic.Message, at position: AbsolutePosition?) {
     let location: SourceLocation?
     if let position = position {
-      location = SourceLocation(
-        offset: position.utf8Offset, converter: context.sourceLocationConverter)
+      location
+        = SourceLocation(offset: position.utf8Offset, converter: context.sourceLocationConverter)
     } else {
       location = nil
     }

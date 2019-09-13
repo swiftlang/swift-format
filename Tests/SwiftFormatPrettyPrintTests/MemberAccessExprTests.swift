@@ -106,4 +106,20 @@ public class MemberAccessExprTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
+
+  public func testOperatorChainedMemberAccessExprs() {
+    let input =
+      """
+      let totalHeight = Constants.textFieldHeight + Constants.borderHeight + Constants.importantLabelHeight
+      """
+
+    let expected =
+      """
+      let totalHeight = Constants.textFieldHeight
+        + Constants.borderHeight + Constants.importantLabelHeight
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
+  }
 }
