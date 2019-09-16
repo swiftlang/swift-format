@@ -24,18 +24,27 @@ public class PrettyPrinter {
     /// The line number where the open break occurred.
     let lineNumber: Int
 
-    /// Indicates whether the open break contributed to an increase in indentation of its "scope".
+    /// Indicates whether the open break contributed a continuation indent to its scope.
     ///
-    /// An open break does not contribute to indentation if it is followed by another open break on
-    /// the same line.
-    var didIndent: Bool
+    /// This indent is applied independently of `contributesBlockIndent`, which means a given break
+    /// may apply both a continuation indent and a block indent, either indent, or neither indent.
+    var contributesContinuationIndent: Bool
 
-    init(lineNumber: Int) {
+    /// Indicates whether the open break contributed a block indent to its scope. Only one block
+    /// indent is applied per line that contains open breaks.
+    ///
+    /// This indent is applied independently of `contributesContinuationIndent`, which means a given
+    /// break may apply both a continuation indent and a block indent, either indent, or neither
+    /// indent.
+    var contributesBlockIndent: Bool
+
+    init(lineNumber: Int, contributesContinuationIndent: Bool) {
       self.lineNumber = lineNumber
+      self.contributesContinuationIndent = contributesContinuationIndent
 
       // Assume that it will indent initially. This may be flipped later if another open break is
       // later encountered on the same line.
-      self.didIndent = true
+      self.contributesBlockIndent = true
     }
   }
 
@@ -54,10 +63,6 @@ public class PrettyPrinter {
   /// Did the previous token create a new line? This is used to determine if a group needs to
   /// consistently break.
   private var lastBreak = false
-
-  /// Keeps track of the base indentation level (as determined by the unclosed `.break(.open)`
-  /// tokens) as a sequence of space or tab values.
-  private var indentationStack: [Indent] = []
 
   /// Keep track of whether we are forcing breaks within a group (for consistent breaking).
   private var forceBreakStack = [false]
@@ -96,7 +101,12 @@ public class PrettyPrinter {
   /// The computed indentation level, as a number of spaces, based on the state of any unclosed
   /// delimiters and whether or not the current line is a continuation line.
   private var currentIndentation: [Indent] {
-    var totalIndentation = indentationStack
+    let indentation = configuration.indentation
+    var totalIndentation: [Indent] = activeOpenBreaks.flatMap { (open) -> [Indent] in
+      let count = (open.contributesBlockIndent ? 1 : 0)
+        + (open.contributesContinuationIndent ? 1 : 0)
+      return Array(repeating: indentation, count: count)
+    }
     if currentLineIsContinuation {
       totalIndentation.append(configuration.indentation)
     }
@@ -247,33 +257,30 @@ public class PrettyPrinter {
       switch kind {
       case .open:
         let lastOpenBreak = activeOpenBreaks.last
+        let currentLineNumber = openCloseBreakCompensatingLineNumber
 
         // Only increase the indentation if there wasn't an open break already encountered on this
         // line (i.e., the previous open break didn't fire), to prevent the indentation of the next
         // line from being more than one level deeper than this line.
-        let lastOpenBreakWasSameLine
-          = openCloseBreakCompensatingLineNumber == (lastOpenBreak?.lineNumber ?? 0)
+        let lastOpenBreakWasSameLine = currentLineNumber == (lastOpenBreak?.lineNumber ?? 0)
         if lastOpenBreakWasSameLine {
           // If the last open break was on the same line, then we mark it as *not* contributing to
           // the indentation of the subsequent lines. When the breaks are closed, this ensures that
           // indentation is popped evenly (and also popped in an order that causes everything to
           // line up properly).
-          activeOpenBreaks[activeOpenBreaks.count - 1].didIndent = false
-        } else {
-          // If an open break occurs on a continuation line, we must push that continuation
-          // indentation onto the stack. The open break will reset the continuation state for the
-          // lines within it (unless they are themselves continuations within that particular
-          // scope), so we need the continuation indentation to persist across all the lines in that
-          // scope.
-          if currentLineIsContinuation {
-            indentationStack.append(configuration.indentation)
-          }
-
-          indentationStack.append(configuration.indentation)
+          activeOpenBreaks[activeOpenBreaks.count - 1].contributesBlockIndent = false
         }
+        // If an open break occurs on a continuation line, we must push that continuation
+        // indentation onto the stack. The open break will reset the continuation state for the
+        // lines within it (unless they are themselves continuations within that particular
+        // scope), so we need the continuation indentation to persist across all the lines in that
+        // scope.
+        activeOpenBreaks.append(
+          ActiveOpenBreak(
+            lineNumber: currentLineNumber,
+            contributesContinuationIndent: currentLineIsContinuation))
 
         continuationStack.append(currentLineIsContinuation)
-        activeOpenBreaks.append(ActiveOpenBreak(lineNumber: openCloseBreakCompensatingLineNumber))
 
         // Once we've reached an open break and preserved the continuation state, the "scope" we now
         // enter is *not* a continuation scope. If it was one, we'll re-enter it when we reach the
@@ -288,25 +295,17 @@ public class PrettyPrinter {
         let openedOnDifferentLine
           = openCloseBreakCompensatingLineNumber != matchingOpenBreak.lineNumber
 
-        if matchingOpenBreak.didIndent {
-          // We can remove an indentation unit if the close was on a different line than the
-          // matching open, if the open break before that also contributed to indentation, or if
-          // there are no more open breaks. Otherwise, we update the previous active open break to
-          // indicate that *it* contributed to indentation and move on.
-          if matchingOpenBreak.lineNumber != openCloseBreakCompensatingLineNumber
-            || activeOpenBreaks.isEmpty || activeOpenBreaks.last?.didIndent == true
+        if matchingOpenBreak.contributesBlockIndent {
+          // When two or more open breaks are encountered on the same line, only the final open
+          // break is allowed to increase the block indent, avoiding multiple block indents. As the
+          // open breaks on that line are closed, the new final open break must be enabled again to
+          // add a block indent.
+          if matchingOpenBreak.lineNumber == openCloseBreakCompensatingLineNumber,
+            let lastActiveOpenBreak = activeOpenBreaks.last,
+            !lastActiveOpenBreak.contributesBlockIndent
           {
-            indentationStack.removeLast()
-          } else {
-            activeOpenBreaks[activeOpenBreaks.count - 1].didIndent = true
+            activeOpenBreaks[activeOpenBreaks.count - 1].contributesBlockIndent = true
           }
-        }
-
-        let wasContinuationWhenOpened = continuationStack.popLast() ?? false
-
-        // Un-persist any continuation indentation that may have applied to the open/close scope.
-        if wasContinuationWhenOpened {
-          indentationStack.removeLast()
         }
 
         if closeMustBreak {
@@ -341,8 +340,11 @@ public class PrettyPrinter {
           //
           // Likewise, we need to do this if we popped an old continuation state off the stack,
           // even if the break *doesn't* fire.
-          currentLineIsContinuation = matchingOpenBreak.didIndent && openedOnDifferentLine
+          currentLineIsContinuation
+            = matchingOpenBreak.contributesBlockIndent && openedOnDifferentLine
         }
+
+        let wasContinuationWhenOpened = continuationStack.popLast() ?? false
 
         // Restore the continuation state of the scope we were in before the open break occurred.
         currentLineIsContinuation = currentLineIsContinuation || wasContinuationWhenOpened
