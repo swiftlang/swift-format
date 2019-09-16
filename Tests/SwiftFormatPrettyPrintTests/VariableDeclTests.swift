@@ -46,4 +46,47 @@ public class VariableDeclarationTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
+
+  public func testMultipleBindings() {
+    let input =
+      """
+      let a = 100, b = 200, c = 300, d = 400, e = 500, f = 600
+      let a = 5, anotherReallyLongVariableName = something, longVariableName = longFunctionCall()
+      let a = letsForceTheFirstOneToWrapAsWell, longVariableName = longFunctionCall()
+      """
+
+    let expected =
+      """
+      let a = 100, b = 200, c = 300, d = 400,
+        e = 500, f = 600
+      let a = 5,
+        anotherReallyLongVariableName
+          = something,
+        longVariableName = longFunctionCall()
+      let
+        a = letsForceTheFirstOneToWrapAsWell,
+        longVariableName = longFunctionCall()
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+  }
+
+  public func testMultipleBindingsWithTypeAnnotations() {
+    let input =
+      """
+      let a: Int = 100, b: ReallyLongTypeName = 200, c: (AnotherLongTypeName, AnotherOne) = 300
+      """
+
+    let expected =
+      """
+      let a: Int = 100,
+        b: ReallyLongTypeName = 200,
+        c: (AnotherLongTypeName, AnotherOne)
+          = 300
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+  }
 }
