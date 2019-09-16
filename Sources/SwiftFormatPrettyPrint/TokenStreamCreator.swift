@@ -1182,7 +1182,35 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
     arrangeAttributeList(node.attributes)
-    after(node.letOrVarKeyword, tokens: .space)
+
+    if node.bindings.count == 1 {
+      // If there is only a single binding, don't allow a break between the `let/var` keyword and
+      // the identifier; there are better places to break later on.
+      after(node.letOrVarKeyword, tokens: .space)
+    } else {
+      // If there is more than one binding, we permit an open-break after `let/var` so that each of
+      // the comma-delimited items will potentially receive indentation. We also add a group around
+      // the individual bindings to bind them together better. (This is done here, not in
+      // `visit(_: PatternBindingSyntax)`, because we only want that behavior when there are
+      // multiple bindings.)
+      after(node.letOrVarKeyword, tokens: .break(.open))
+
+      for binding in node.bindings {
+        before(binding.firstToken, tokens: .open)
+        after(binding.trailingComma, tokens: .break(.same))
+        after(binding.lastToken, tokens: .close)
+      }
+
+      after(node.lastToken, tokens: .break(.close, size: 0))
+    }
+
+    return .visitChildren
+  }
+
+  func visit(_ node: PatternBindingSyntax) -> SyntaxVisitorContinueKind {
+    if let accessorOrCodeBlock = node.accessor {
+      arrangeAccessorOrCodeBlock(accessorOrCodeBlock)
+    }
     return .visitChildren
   }
 
@@ -1249,13 +1277,6 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: NilLiteralExprSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
-  func visit(_ node: PatternBindingSyntax) -> SyntaxVisitorContinueKind {
-    if let accessorOrCodeBlock = node.accessor {
-      arrangeAccessorOrCodeBlock(accessorOrCodeBlock)
-    }
     return .visitChildren
   }
 

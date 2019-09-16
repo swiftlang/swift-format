@@ -528,6 +528,8 @@ extension VariableDeclarationTests {
     // to regenerate.
     static let __allTests__VariableDeclarationTests = [
         ("testBasicVariableDecl", testBasicVariableDecl),
+        ("testMultipleBindings", testMultipleBindings),
+        ("testMultipleBindingsWithTypeAnnotations", testMultipleBindingsWithTypeAnnotations),
         ("testVariableDeclWithAttributes", testVariableDeclWithAttributes),
     ]
 }
