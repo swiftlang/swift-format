@@ -149,22 +149,25 @@ public class PrettyPrinter {
   ///
   /// - Parameters:
   ///   - count: The number of newlines to write.
-  ///   - discretionary: Indicates whether the newlines are user-entered discretionary newlines.
-  ///     Discretionary newlines are always printed, after excluding any other consecutive newlines
-  ///     thus far, and up through the maximum allowed number provided to the printer at
-  ///     initialization time. Non-discretionary newlines are only printed if discretionary newlines
-  ///     have already not been printed yet.
-  private func writeNewlines(_ count: Int, discretionary: Bool) {
+  ///   - kind: Indicates whether the newlines are flexible, discretionary, or mandatory newlines.
+  ///     Refer to the documentation of `NewlineKind` for details on how each of these are printed.
+  private func writeNewlines(_ count: Int, kind: NewlineKind) {
     // We add 1 because it takes 2 newlines to create a blank line.
-    let maximumNewlines = configuration.maximumBlankLines + 1
     let numberToPrint: Int
-    if count <= maximumNewlines {
-      numberToPrint = count - consecutiveNewlineCount
+    if kind == .mandatory {
+      numberToPrint = count
     } else {
-      numberToPrint = maximumNewlines - consecutiveNewlineCount
-    }
+      let maximumNewlines = configuration.maximumBlankLines + 1
+      if count <= maximumNewlines {
+        numberToPrint = count - consecutiveNewlineCount
+      } else {
+        numberToPrint = maximumNewlines - consecutiveNewlineCount
+      }
 
-    guard (discretionary && numberToPrint > 0) || consecutiveNewlineCount == 0 else { return }
+      guard (kind == .discretionary && numberToPrint > 0) || consecutiveNewlineCount == 0 else {
+        return
+      }
+    }
 
     writeRaw(String(repeating: "\n", count: numberToPrint))
     lineNumber += numberToPrint
@@ -357,7 +360,7 @@ public class PrettyPrinter {
 
       if length > spaceRemaining || mustBreak {
         currentLineIsContinuation = isContinuationIfBreakFires
-        writeNewlines(1, discretionary: false)
+        writeNewlines(1, kind: .flexible)
         lastBreak = true
       } else {
         if isAtStartOfLine {
@@ -377,9 +380,9 @@ public class PrettyPrinter {
       enqueueSpaces(size)
 
     // Apply `count` line breaks, calculate the indentation required, and adjust spaceRemaining.
-    case .newlines(let count, let discretionary):
+    case .newlines(let count, let kind):
       currentLineIsContinuation = (lastBreakKind == .continue)
-      writeNewlines(count, discretionary: discretionary)
+      writeNewlines(count, kind: kind)
       lastBreak = true
 
     // Print any indentation required, followed by the text content of the syntax token.

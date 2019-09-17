@@ -405,6 +405,13 @@ extension StringTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__StringTests = [
+        ("testMultilineRawString", testMultilineRawString),
+        ("testMultilineRawStringOpenQuotesWrap", testMultilineRawStringOpenQuotesWrap),
+        ("testMultilineStringAutocorrectMisalignedLines", testMultilineStringAutocorrectMisalignedLines),
+        ("testMultilineStringInterpolations", testMultilineStringInterpolations),
+        ("testMultilineStringIsReindentedCorrectly", testMultilineStringIsReindentedCorrectly),
+        ("testMultilineStringKeepsBlankLines", testMultilineStringKeepsBlankLines),
+        ("testMultilineStringOpenQuotesDoNotWrapIfStringIsVeryLong", testMultilineStringOpenQuotesDoNotWrapIfStringIsVeryLong),
         ("testStrings", testStrings),
     ]
 }

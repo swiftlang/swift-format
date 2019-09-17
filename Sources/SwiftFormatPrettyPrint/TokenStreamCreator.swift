@@ -26,6 +26,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
   private let config: Configuration
   private let maxlinelength: Int
 
+  /// Keeps track of the prefix length of multiline string segments when they are visited so that
+  /// the prefix can be stripped at the beginning of lines before the text is added to the token
+  /// stream.
+  private var pendingMultilineStringSegmentPrefixLengths = [TokenSyntax: Int]()
+
   init(configuration: Configuration) {
     self.config = configuration
     self.maxlinelength = config.lineLength
@@ -1240,10 +1245,6 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: StringSegmentSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
   func visit(_ node: TypealiasDeclSyntax) -> SyntaxVisitorContinueKind {
     arrangeAttributeList(node.attributes)
 
@@ -1396,6 +1397,29 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: StringLiteralExprSyntax) -> SyntaxVisitorContinueKind {
+    if node.openQuote.tokenKind == .multilineStringQuote {
+      // If it's a multiline string, the last segment of the literal will end with a newline and
+      // zero or more whitespace that indicates the amount of whitespace stripped from each line of
+      // the string literal.
+      if let lastSegment = node.segments.last as? StringSegmentSyntax,
+        let lastLine =
+          lastSegment.content.text.split(separator: "\n", omittingEmptySubsequences: false).last
+      {
+        let prefixCount = lastLine.count
+
+        // Segments may be `StringSegmentSyntax` or `ExpressionSegmentSyntax`; for the purposes of
+        // newline handling and whitespace stripping, we only need to handle the former.
+        for case let segment as StringSegmentSyntax in node.segments {
+          // Register the content tokens of the segments and the amount of leading whitespace to
+          // strip; this will be retrieved when we visit the token.
+          pendingMultilineStringSegmentPrefixLengths[segment.content] = prefixCount
+        }
+      }
+    }
+    return .visitChildren
+  }
+
+  func visit(_ node: StringSegmentSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
@@ -1550,18 +1574,66 @@ private final class TokenStreamCreator: SyntaxVisitor {
     extractLeadingTrivia(token)
     appendBeforeTokens(token)
 
-    let text: String
-    if token.leadingTrivia.hasBackticks && token.trailingTrivia.hasBackticks {
-      text = "`\(token.text)`"
+    if let pendingSegmentIndex = pendingMultilineStringSegmentPrefixLengths.index(forKey: token) {
+      appendMultilineStringSegments(at: pendingSegmentIndex)
     } else {
-      text = token.text
+      // Otherwise, it's just a regular token, so add the text as-is.
+      let text: String
+      if token.leadingTrivia.hasBackticks && token.trailingTrivia.hasBackticks {
+        text = "`\(token.text)`"
+      } else {
+        text = token.text
+      }
+
+      appendToken(.syntax(text))
     }
-    appendToken(.syntax(text))
 
     appendAfterTokensAndTrailingComments(token)
 
     // It doesn't matter what we return here, tokens do not have children.
     return .skipChildren
+  }
+
+  /// Appends the contents of the pending multiline string segment at the given index in the
+  /// registration dictionary (removing it from that dictionary) to the token stream, splitting it
+  /// into lines along with `.newline` tokens and stripping the leading whitespace.
+  private func appendMultilineStringSegments(at index: Dictionary<TokenSyntax, Int>.Index) {
+    let (token, prefixCount) = pendingMultilineStringSegmentPrefixLengths[index]
+    pendingMultilineStringSegmentPrefixLengths.remove(at: index)
+
+    let lines = token.text.split(separator: "\n", omittingEmptySubsequences: false)
+
+    // The first "line" is a special case. If it is non-empty, then it is a piece of text that
+    // immediately followed an interpolation segment on the same line of the string, like the
+    // " baz" in "foo bar \(x + y) baz". If that is the case, we need to insert that text before
+    // anything else.
+    let firstLine = lines.first!
+    if !firstLine.isEmpty {
+      appendToken(.syntax(String(firstLine)))
+    }
+
+    // Add the remaining lines of the segment, preceding each with a newline and stripping the
+    // leading whitespace so that the pretty-printer can re-indent the string according to the
+    // standard rules that it would apply.
+    for line in lines.dropFirst() as ArraySlice {
+      appendToken(.newline(kind: .mandatory))
+
+      // Verify that the characters to be stripped are all spaces. If they are not, the string
+      // is not valid (no line should contain less leading whitespace than the line with the
+      // closing quotes), but the parser still allows this and it's flagged as an error later during
+      // compilation, so we don't want to destroy the user's text in that case.
+      let stringToAppend: Substring
+      if (line.prefix(prefixCount).allSatisfy { $0 == " " }) {
+        stringToAppend = line.dropFirst(prefixCount)
+      } else {
+        // Only strip as many spaces as we have. This will force the misaligned line to line up with
+        // the others; let's assume that's what the user wanted anyway.
+        stringToAppend = line.drop { $0 == " " }
+      }
+      if !stringToAppend.isEmpty {
+        appendToken(.syntax(String(stringToAppend)))
+      }
+    }
   }
 
   /// Appends the before-tokens of the given syntax token to the token stream.
@@ -1926,7 +1998,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
         if config.respectsExistingLineBreaks
           && (lastPieceWasLineComment || isDiscretionaryNewlineAllowed(before: token))
         {
-          appendToken(.newlines(count, discretionary: true))
+          appendToken(.newlines(count, kind: .discretionary))
         } else {
           // Even if discretionary line breaks are not being respected, we still respect multiple
           // line breaks in order to keep blank separator lines that the user might want.
@@ -1934,7 +2006,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
           // and declarations; as currently implemented, multiple newlines will locally the
           // configuration setting.
           if count > 1 {
-            appendToken(.newlines(count, discretionary: true))
+            appendToken(.newlines(count, kind: .discretionary))
           }
         }
 
@@ -2004,23 +2076,24 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
       // If we see a pair of newlines where one is required and one is not, keep only the required
       // one.
-      case (.newlines(_, discretionary: false), .newlines(let count, discretionary: true)),
-        (.newlines(let count, discretionary: true), .newlines(_, discretionary: false)):
-        tokens[tokens.count - 1] = .newlines(count, discretionary: true)
+      case
+        (.newlines(_, kind: .flexible), .newlines(let count, let requiredKind))
+      where requiredKind == .discretionary || requiredKind == .mandatory,
+        (.newlines(let count, let requiredKind), .newlines(_, kind: .flexible))
+      where requiredKind == .discretionary || requiredKind == .mandatory:
+        tokens[tokens.count - 1] = .newlines(count, kind: requiredKind)
         return
 
       // If we see a pair of required newlines, combine them into a new token with the sum of
       // their counts.
-      case (.newlines(let first, discretionary: true), .newlines(let second, discretionary: true)):
-        tokens[tokens.count - 1] = .newlines(first + second, discretionary: true)
+      case (.newlines(let first, let firstKind), .newlines(let second, let secondKind))
+      where firstKind == secondKind && (firstKind == .discretionary || firstKind == .mandatory):
+        tokens[tokens.count - 1] = .newlines(first + second, kind: firstKind)
         return
 
-      // If we see a pair of non-required newlines, keep only the larger one.
-      case (
-        .newlines(let first, discretionary: false),
-        .newlines(let second, discretionary: false)
-      ):
-        tokens[tokens.count - 1] = .newlines(max(first, second), discretionary: true)
+      // If we see a pair of flexible newlines, keep only the larger one.
+      case (.newlines(let first, kind: .flexible), .newlines(let second, kind: .flexible)):
+        tokens[tokens.count - 1] = .newlines(max(first, second), kind: .flexible)
         return
 
       // If we see a pair of spaces where one or both are flexible, combine them into a new token
