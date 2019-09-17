@@ -18,10 +18,12 @@ public class NoAccessLevelOnExtensionDeclarationTests: DiagnosingTestCase {
                // Comment 3
                static func someFunc() {}
                init() {}
+               subscript(index: Int) -> Element {}
                protocol SomeProtocol {}
                class SomeClass {}
                struct SomeStruct {}
                enum SomeEnum {}
+               typealias Foo = Bar
              }
              internal extension Bar {
                var a: Int
@@ -38,10 +40,12 @@ public class NoAccessLevelOnExtensionDeclarationTests: DiagnosingTestCase {
                   // Comment 3
                   public static func someFunc() {}
                   public init() {}
+                  public subscript(index: Int) -> Element {}
                   public protocol SomeProtocol {}
                   public class SomeClass {}
                   public struct SomeStruct {}
                   public enum SomeEnum {}
+                  public typealias Foo = Bar
                 }
                 extension Bar {
                   var a: Int

@@ -132,6 +132,18 @@ private final class AddModifierRewriter: SyntaxRewriter {
     return node.withModifiers(newModifiers)
   }
 
+  override func visit(_ node: SubscriptDeclSyntax) -> DeclSyntax {
+    // Check for modifiers, and, if none, insert the modifier and relocate trivia from the displaced
+    // token.
+    guard let modifiers = node.modifiers else {
+      let nodeWithModifier = node.addModifier(modifierKeyword)
+      return nodeByRelocatingTrivia(in: nodeWithModifier) { $0.modifiers }
+    }
+    guard modifiers.accessLevelModifier == nil else { return node }
+    let newModifiers = modifiers.prepend(modifier: modifierKeyword)
+    return node.withModifiers(newModifiers)
+  }
+
   /// Moves trivia in the given node to correct the placement of potentially displaced trivia in the
   /// node after the first modifier was added to the given node. The added modifier is assumed to be
   /// the first and only modifier of the node. After the first modifier is added to a node, any
