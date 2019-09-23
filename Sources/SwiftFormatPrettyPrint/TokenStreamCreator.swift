@@ -573,13 +573,6 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: BinaryOperatorExprSyntax) -> SyntaxVisitorContinueKind {
-    switch node.operatorToken.tokenKind {
-    case .unspacedBinaryOperator:
-      break
-    default:
-      before(node.operatorToken, tokens: .break)
-      after(node.operatorToken, tokens: .space)
-    }
     return .visitChildren
   }
 
@@ -1122,9 +1115,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
   func visit(_ node: TernaryExprSyntax) -> SyntaxVisitorContinueKind {
     before(node.questionMark, tokens: .break, .open)
     after(node.questionMark, tokens: .space)
-    before(node.colonMark, tokens: .break)
+    before(node.colonMark, tokens: .break, .open)
     after(node.colonMark, tokens: .space)
-    after(node.secondChoice.lastToken, tokens: .close)
+    after(node.secondChoice.lastToken, tokens: .close, .close)
     return .visitChildren
   }
 
@@ -1178,6 +1171,61 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: SequenceExprSyntax) -> SyntaxVisitorContinueKind {
+    let elements = Array(node.elements)
+
+    // Apply groups around specific operators that are known to have very low precendence. Ideally,
+    // the formatter would use the actual precedence of all operators to create groups but operator
+    // precendence isn't available in the syntax tree. Since some operators almost always have the
+    // lowest precendence in an expression, grouping around those operators typically results in
+    // breaking at more visually appealing and logical locations.
+    let groupingIndices = elements.indices.filter { elements[$0].isKnownLowPrecendenceOperator }
+
+    let afterClosingOperandTokens: [Token]
+      = [.break(.reset, size: 0), .break(.close(mustBreak: false), size: 0), .close]
+    if !groupingIndices.isEmpty {
+      before(elements.first?.firstToken, tokens: .break(.open(kind: .continuation), size: 0), .open)
+      after(elements.last?.lastToken, tokens: afterClosingOperandTokens)
+    }
+
+    let beforeOperatorTokens: [Token] = [.break(.open(kind: .continuation), size: 1), .open]
+    for (index, expr) in elements.enumerated() {
+      if groupingIndices.contains(index) {
+        let leftOperandLastExpr = elements[elements.index(before: index)]
+        let operatorExpr = elements[index]
+
+        // Placing the opening tokens after a previous syntax token allows the group to consume any
+        // comments between groups, ensuring the comments have correct indentation when they are
+        // later printed.
+        after(operatorExpr.previousToken, tokens: beforeOperatorTokens)
+        after(leftOperandLastExpr.lastToken, tokens: afterClosingOperandTokens)
+      }
+      if let binaryOperatorExpr = expr as? BinaryOperatorExprSyntax {
+        switch binaryOperatorExpr.operatorToken.tokenKind {
+        case .unspacedBinaryOperator:
+          break
+        default:
+          if !groupingIndices.contains(index) {
+            after(binaryOperatorExpr.operatorToken.previousToken, tokens: .break(.continue))
+          }
+          after(binaryOperatorExpr.operatorToken, tokens: .space)
+        }
+      }
+    }
+
+    // These expressions are enumerated after adding all operator based grouping tokens to ensure
+    // the appropriate order of open/close tokens is maintained.
+    for expr in elements {
+      // Adding groups around these expressions allows them to prefer breaking onto a newline before
+      // the expression, keeping the entire expression together when possible, before breaking inside
+      // of the expression. This is a hand-crafted list of expressions that generally look better
+      // when the break(s) before the expression fire before breaks inside of the expression.
+      if expr is FunctionCallExprSyntax || expr is MemberAccessExprSyntax
+        || expr is SubscriptExprSyntax
+      {
+        before(expr.firstToken, tokens: .open)
+        after(expr.lastToken, tokens: .close)
+      }
+    }
     return .visitChildren
   }
 
@@ -1402,8 +1450,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
       // zero or more whitespace that indicates the amount of whitespace stripped from each line of
       // the string literal.
       if let lastSegment = node.segments.last as? StringSegmentSyntax,
-        let lastLine =
-          lastSegment.content.text.split(separator: "\n", omittingEmptySubsequences: false).last
+        let lastLine
+          = lastSegment.content.text.split(separator: "\n", omittingEmptySubsequences: false).last
       {
         let prefixCount = lastLine.count
 
@@ -2076,8 +2124,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
       // If we see a pair of newlines where one is required and one is not, keep only the required
       // one.
-      case
-        (.newlines(_, kind: .flexible), .newlines(let count, let requiredKind))
+      case (.newlines(_, kind: .flexible), .newlines(let count, let requiredKind))
       where requiredKind == .discretionary || requiredKind == .mandatory,
         (.newlines(let count, let requiredKind), .newlines(_, kind: .flexible))
       where requiredKind == .discretionary || requiredKind == .mandatory:
@@ -2158,5 +2205,25 @@ extension Syntax {
 extension Collection {
   subscript(safe index: Index) -> Element? {
     return index < endIndex ? self[index] : nil
+  }
+}
+
+extension ExprSyntax {
+  /// Returns whether this expression is an operator that is known to typically have a relatively
+  /// low precedence, meaning it's applied after other operators in a sequence. These operators are
+  /// typically good candidates for breaks in a long sequence.
+  var isKnownLowPrecendenceOperator: Bool {
+    if let binaryOperator = self as? BinaryOperatorExprSyntax {
+      let operatorText = binaryOperator.operatorToken.text
+      switch operatorText {
+      // Logical AND and OR operators are almost always the lowest precendence operators in a
+      // sequence, and are generally good candidates for breaks.
+      case "&&", "||":
+        return true
+      default:
+        return false
+      }
+    }
+    return false
   }
 }

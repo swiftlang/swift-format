@@ -19,8 +19,8 @@ public class AccessorTests: PrettyPrintTestCase {
             return A
           }
           set(newValue) {
-            memberValue = newValue
-            memberValue2 = newValue / 2
+            memberValue = newValue && otherValue
+            memberValue2 = newValue / 2 && andableValue
           }
         }
       }
@@ -61,8 +61,9 @@ public class AccessorTests: PrettyPrintTestCase {
             return A
           }
           set(newValue) {
-            memberValue = newValue
+            memberValue = newValue && otherValue
             memberValue2 = newValue / 2
+              && andableValue
           }
         }
       }

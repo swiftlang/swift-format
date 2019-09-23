@@ -80,14 +80,27 @@ public class ForInStmtTests: PrettyPrintTestCase {
         let a = 123
         let b = 456
       }
+      for item in aVeryLargeContainterObject where tinyObj.hasProperty() && condition {
+        let a = 123
+        let b = 456
+      }
       """
 
     let expected =
       """
       for item
         in aVeryLargeContainterObject
-      where largeObject
-        .hasProperty() && condition
+      where
+        largeObject.hasProperty()
+        && condition
+      {
+        let a = 123
+        let b = 456
+      }
+      for item
+        in aVeryLargeContainterObject
+      where tinyObj.hasProperty()
+        && condition
       {
         let a = 123
         let b = 456
@@ -185,5 +198,68 @@ public class ForInStmtTests: PrettyPrintTestCase {
       """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
+  }
+
+  public func testForStatementWithNestedExpressions() {
+    let input =
+      """
+      for x in someCollection where someTestableCondition && x.someProperty + x.someSpecialProperty({ $0.value }) && someOtherCondition + thatUses + operators && binPackable && exprs
+      {
+        let a = 42
+        let foo = someFunc()
+      }
+      for x in someCollection
+      where someTestableCondition
+        && x.someProperty
+          + x.someSpecialProperty({
+            // comment #0
+            $0.value
+          })
+        // comment #1
+        && someOtherCondition
+          // comment #2
+          + thatUses + operators
+        && binPackable && exprs
+      {
+        let a = 42
+        let foo = someFunc()
+      }
+      """
+
+    let expected =
+      """
+      for x in someCollection
+      where someTestableCondition
+        && x.someProperty
+          + x.someSpecialProperty({
+            $0.value
+          })
+        && someOtherCondition
+          + thatUses + operators
+        && binPackable && exprs
+      {
+        let a = 42
+        let foo = someFunc()
+      }
+      for x in someCollection
+      where someTestableCondition
+        && x.someProperty
+          + x.someSpecialProperty({
+            // comment #0
+            $0.value
+          })
+        // comment #1
+        && someOtherCondition
+          // comment #2
+          + thatUses + operators
+        && binPackable && exprs
+      {
+        let a = 42
+        let foo = someFunc()
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
 }

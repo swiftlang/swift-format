@@ -24,10 +24,21 @@ enum GroupBreakStyle {
   case inconsistent
 }
 
+enum OpenBreakKind: Equatable {
+  /// An open break that applies a block indent to its scope and is allowed to apply a continuation
+  /// indent if and only if the line on which the open break occurs is a continuation line.
+  case block
+
+  /// An open break that always applies up to one continuation indent to its scope. A continuation
+  /// indent is applied if either the line on which this break is encountered is a continuation or
+  /// if this break fires. A continuation open break never applies a block indent to its scope.
+  case continuation
+}
+
 enum BreakKind: Equatable {
   /// If line wrapping occurs at an `open` break, then the base indentation level increases by one
   /// indentation unit until the corresponding `close` break is encountered.
-  case open
+  case open(kind: OpenBreakKind)
 
   /// If line wrapping occurs at a `close` break, then the base indentation level returns to the
   /// value it had before the corresponding `open` break.
@@ -102,6 +113,9 @@ enum BreakKind: Equatable {
 
   /// A `close` break that defaults to forced breaking behavior.
   static let close = BreakKind.close(mustBreak: true)
+
+  /// An `open` break that defaults to applying a block indent to its scope.
+  static let open = BreakKind.open(kind: .block)
 }
 
 enum NewlineKind {

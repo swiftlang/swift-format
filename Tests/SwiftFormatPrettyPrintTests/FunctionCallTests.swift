@@ -208,4 +208,20 @@ public class FunctionCallTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
+
+  func testNestedFunctionCallExprSequences() {
+    let input =
+      """
+      let result = firstObj.someOptionalReturningFunc(foo: arg) ?? (someOtherObj as SomeUsefulType).someGetterFunc()
+      """
+
+    let expected =
+      """
+      let result = firstObj.someOptionalReturningFunc(foo: arg)
+        ?? (someOtherObj as SomeUsefulType).someGetterFunc()
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
+  }
 }
