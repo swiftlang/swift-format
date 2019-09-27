@@ -71,13 +71,6 @@ extension Trivia {
     return false
   }
 
-  public var hasBackticks: Bool {
-    for piece in self {
-      if case .backticks = piece { return true }
-    }
-    return false
-  }
-
   /// Returns this set of trivia, without any whitespace characters.
   public func withoutSpaces() -> Trivia {
     return Trivia(
@@ -185,8 +178,6 @@ extension Trivia {
         prev = .verticalTabs(l + r)
       case (.garbageText(let l), .garbageText(let r)):
         prev = .garbageText(l + r)
-      case (.backticks(let l), .backticks(let r)):
-        prev = .backticks(l + r)
       case (.formfeeds(let l), .formfeeds(let r)):
         prev = .formfeeds(l + r)
       default:
