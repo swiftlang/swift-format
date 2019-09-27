@@ -13,13 +13,37 @@ invoked via an [API](#api-usage).
 > and the code is provided so that it can be tested on real-world code and
 > experiments can be made by modifying it.
 
-## Command Line Usage
+## Matching swift-format to Your Swift Version
 
-> NOTE: `swift-format` currently uses the standalone Swift parser that
-> requires a Swift 5.1 or higher. The version of the toolchain used must
-> match the version of `SwiftSyntax` listed in
-> [Package.swift](Package.swift) (or be the most recent version before it,
-> if there is not an exact match).
+`swift-format` depends on [SwiftSyntax](https://github.com/apple/swift-syntax)
+and the standalone parsing library that is distributed as part of the Swift
+toolchain. The SwiftSyntax version in use must match the toolchain version, so
+you should check out and build `swift-format` from the branch that is
+compatible with the version of Swift you are using. This version dependency
+is also expressed in the `SwiftSyntax` dependency in
+[Package.swift](Package.swift).
+
+| Xcode Release | Swift Version                           | `swift-format` Branch |
+|:-------------:|:---------------------------------------:|:----------------------|
+| Xcode 11.0    | Swift 5.1                               | `swift-5.1-branch`    |
+
+For example, if you are using Xcode 11.0 (Swift 5.1), you can check out and
+build `swift-format` using the following commands:
+
+```
+git clone -b swift-5.1-branch https://github.com/apple/swift-format.git
+swift build
+```
+
+You can also add the `--single-branch` option if you only want to clone that
+specific branch.
+
+The `master` branch is used for development and may depend on either a release
+version of Swift or on a developer snapshot. Changes committed to `master`
+that are compatible with the latest release branch will be cherry-picked into
+that branch.
+
+## Command Line Usage
 
 ```
 swift-format [OPTIONS] FILE...
