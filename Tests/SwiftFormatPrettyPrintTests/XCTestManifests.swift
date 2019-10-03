@@ -253,6 +253,7 @@ extension FunctionTypeTests {
     // to regenerate.
     static let __allTests__FunctionTypeTests = [
         ("testFunctionType", testFunctionType),
+        ("testFunctionTypeInOut", testFunctionTypeInOut),
         ("testFunctionTypeThrows", testFunctionTypeThrows),
     ]
 }
