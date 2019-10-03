@@ -991,6 +991,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
   func visit(_ node: TupleTypeElementSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
     after(node.colon, tokens: .break)
+    after(node.inOut, tokens: .break)
     before(node.secondName, tokens: .break)
 
     if let trailingComma = node.trailingComma {
