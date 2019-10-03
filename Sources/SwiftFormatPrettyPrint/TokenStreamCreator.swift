@@ -1513,15 +1513,24 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: SameTypeRequirementSyntax) -> SyntaxVisitorContinueKind {
+  func visit(_ node: GenericRequirementSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
-    before(node.equalityToken, tokens: .break)
-    after(node.equalityToken, tokens: .space)
     if let trailingComma = node.trailingComma {
       after(trailingComma, tokens: .close, .break(.same))
     } else {
       after(node.lastToken, tokens: .close)
     }
+    return .visitChildren
+  }
+
+  func visit(_ node: SameTypeRequirementSyntax) -> SyntaxVisitorContinueKind {
+    before(node.equalityToken, tokens: .break)
+    after(node.equalityToken, tokens: .space)
+    return .visitChildren
+  }
+
+  func visit(_ node: ConformanceRequirementSyntax) -> SyntaxVisitorContinueKind {
+    after(node.colon, tokens: .break)
     return .visitChildren
   }
 
@@ -1577,19 +1586,6 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: ConformanceRequirementSyntax) -> SyntaxVisitorContinueKind {
-    before(node.firstToken, tokens: .open)
-    after(node.colon, tokens: .break)
-
-    if let trailingComma = node.trailingComma {
-      after(trailingComma, tokens: .close, .break(.same))
-    } else {
-      after(node.lastToken, tokens: .close)
-    }
-
-    return .visitChildren
-  }
-
   func visit(_ node: MatchingPatternConditionSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
     after(node.caseKeyword, tokens: .break)
@@ -1626,14 +1622,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
       appendMultilineStringSegments(at: pendingSegmentIndex)
     } else {
       // Otherwise, it's just a regular token, so add the text as-is.
-      let text: String
-      if token.leadingTrivia.hasBackticks && token.trailingTrivia.hasBackticks {
-        text = "`\(token.text)`"
-      } else {
-        text = token.text
-      }
-
-      appendToken(.syntax(text))
+      appendToken(.syntax(token.text))
     }
 
     appendAfterTokensAndTrailingComments(token)

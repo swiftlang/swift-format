@@ -304,8 +304,7 @@ The only types of trivia we are interested in are newlines and comments. Since
 these only appear as leading trivia, we don't need to look at trailing trivia.
 It is important to note that `SwiftSyntax` always attaches comments as the
 leading trivia on the following token.  Spaces are handled directly by inserting
-`break` and `space` tokens, and backticks are handled in the *scan* and *print*
-phases of the algorithm, after token generation.
+`break` and `space` tokens.
 
 When examining trivia for comments, a distinction is made for end-of-line
 comments:
