@@ -22,6 +22,10 @@ public class GroupNumericLiteralsTests: DiagnosingTestCase {
              let k = 0x00000012
              let l = 0x0000012
              let m = 0b00010010101
+             let n = [
+               0xff00ff00,  // comment
+               0x00ff00ff,  // comment
+             ]
              """,
       expected: """
                 let a = 9_876_543_210
@@ -37,16 +41,21 @@ public class GroupNumericLiteralsTests: DiagnosingTestCase {
                 let k = 0x0000_0012
                 let l = 0x0000012
                 let m = 0b000_10010101
+                let n = [
+                  0xff00_ff00,  // comment
+                  0x00ff_00ff,  // comment
+                ]
                 """)
-    XCTAssertDiagnosed(.groupNumericLiteral(byStride: 3))
-    XCTAssertDiagnosed(.groupNumericLiteral(byStride: 3))
-    XCTAssertDiagnosed(.groupNumericLiteral(byStride: 3))
-    XCTAssertNotDiagnosed(.groupNumericLiteral(byStride: 3))
-    XCTAssertDiagnosed(.groupNumericLiteral(byStride: 4))
-    XCTAssertDiagnosed(.groupNumericLiteral(byStride: 4))
-    XCTAssertNotDiagnosed(.groupNumericLiteral(byStride: 4))
-    XCTAssertDiagnosed(.groupNumericLiteral(byStride: 8))
-    XCTAssertDiagnosed(.groupNumericLiteral(byStride: 8))
-    XCTAssertNotDiagnosed(.groupNumericLiteral(byStride: 8))
+    XCTAssertDiagnosed(.groupNumericLiteral(every: 3))
+    XCTAssertDiagnosed(.groupNumericLiteral(every: 3))
+    XCTAssertDiagnosed(.groupNumericLiteral(every: 3))
+    XCTAssertNotDiagnosed(.groupNumericLiteral(every: 3))
+    XCTAssertDiagnosed(.groupNumericLiteral(every: 4))
+    XCTAssertDiagnosed(.groupNumericLiteral(every: 4))
+    XCTAssertDiagnosed(.groupNumericLiteral(every: 8))
+    XCTAssertDiagnosed(.groupNumericLiteral(every: 8))
+    XCTAssertNotDiagnosed(.groupNumericLiteral(every: 8))
+    XCTAssertDiagnosed(.groupNumericLiteral(every: 4))
+    XCTAssertDiagnosed(.groupNumericLiteral(every: 4))
   }
 }
