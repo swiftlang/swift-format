@@ -50,6 +50,9 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
       }
     }
 
+    // Collects all of the initializers that could be replaced by the synthesized memberwise
+    // initializer(s).
+    var extraneousInitializers = [InitializerDeclSyntax]()
     for initializer in initializers {
       guard
         matchesPropertyList(
@@ -61,7 +64,15 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
           variables: storedProperties,
           initBody: initializer.body)
       else { continue }
-      diagnose(.removeRedundantInitializer, on: initializer)
+      extraneousInitializers.append(initializer)
+    }
+
+    // The synthesized memberwise initializer(s) are only created when there are no initializers.
+    // If there are other initializers that cannot be replaced by a synthesized memberwise
+    // initializer, then all of the initializers must remain.
+    let initializersCount = node.members.members.filter { $0.decl is InitializerDeclSyntax }.count
+    if extraneousInitializers.count == initializersCount {
+      extraneousInitializers.forEach { diagnose(.removeRedundantInitializer, on: $0) }
     }
 
     return .skipChildren
@@ -82,16 +93,20 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
       let propertyId = property.firstIdentifier
       guard let propertyType = property.firstType else { return false }
 
-      // Sythesized initializer only keeps default argument if the declaration uses 'var'
-      if property.letOrVarKeyword.tokenKind == .varKeyword {
-        if let initializer = property.firstInitializer {
-          guard let defaultArg = parameter.defaultArgument else { return false }
-          guard initializer.value.description == defaultArg.value.description else { return false }
-        }
+      // Ensure that parameters that correspond to properties declared using 'var' have a default
+      // argument that is identical to the property's default value. Otherwise, a default argument
+      // doesn't match the memberwise initializer.
+      let isVarDecl = property.letOrVarKeyword.tokenKind == .varKeyword
+      if isVarDecl, let initializer = property.firstInitializer {
+        guard let defaultArg = parameter.defaultArgument else { return false }
+        guard initializer.value.description == defaultArg.value.description else { return false }
+      } else if parameter.defaultArgument != nil {
+        return false
       }
 
-      if propertyId.identifier.text != paramId.text || propertyType.description.trimmingCharacters(
-        in: .whitespaces) != paramType.description.trimmingCharacters(in: .whitespacesAndNewlines)
+      if propertyId.identifier.text != paramId.text
+        || propertyType.description.trimmingCharacters(
+          in: .whitespaces) != paramType.description.trimmingCharacters(in: .whitespacesAndNewlines)
       { return false }
     }
     return true
