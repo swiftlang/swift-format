@@ -870,6 +870,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: MemberDeclListSyntax) -> SyntaxVisitorContinueKind {
+    // This is the same as `insertTokens(_:betweenElementsOf:)`, but testing for an extra condition
+    // on the left-hand element.
+    for item in node.dropLast() where shouldInsertNewline(basedOn: item.semicolon) {
+      after(item.lastToken, tokens: .newline)
+    }
     return .visitChildren
   }
 
@@ -962,6 +967,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: CodeBlockItemListSyntax) -> SyntaxVisitorContinueKind {
+    // This is the same as `insertTokens(_:betweenElementsOf:)`, but testing for an extra condition
+    // on the left-hand element.
+    for item in node.dropLast() where shouldInsertNewline(basedOn: item.semicolon) {
+      after(item.lastToken, tokens: .newline)
+    }
     return .visitChildren
   }
 
@@ -2182,6 +2192,21 @@ private final class TokenStreamCreator: SyntaxVisitor {
     let expression = argumentList.first!.expression
     return expression is ArrayExprSyntax || expression is DictionaryExprSyntax
       || expression is ClosureExprSyntax
+  }
+
+  /// Returns a value indicating whether a statement or member declaration should have a newline
+  /// inserted after it, based on the presence of a semicolon and whether or not the formatter is
+  /// respecting existing newlines.
+  private func shouldInsertNewline(basedOn semicolon: TokenSyntax?) -> Bool {
+    if config.respectsExistingLineBreaks {
+      // If we are respecting existing newlines, then we only want to force a newline at the end of
+      // statements and declarations that don't have a semicolon (i.e., where they are required).
+      return semicolon == nil
+    } else {
+      // If we are not respecting existing newlines, then we always force a newline (this forces
+      // even semicolon-delimited statements onto separate lines).
+      return true
+    }
   }
 }
 
