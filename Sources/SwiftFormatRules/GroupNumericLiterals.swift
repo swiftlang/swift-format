@@ -15,6 +15,7 @@ import SwiftFormatCore
 import SwiftSyntax
 
 /// Numeric literals should be grouped with `_`s to delimit common separators.
+///
 /// Specifically, decimal numeric literals should be grouped every 3 numbers, hexadecimal every 4,
 /// and binary every 8.
 ///
@@ -22,51 +23,57 @@ import SwiftSyntax
 ///
 /// Format: All numeric literals that should be grouped will have `_`s inserted where appropriate.
 ///
-/// TODO: Minimum numeric literal length bounds and numeric groupings selected arbitrarily, could
-///       be  reevaluated.
-///
-/// TODO: Handle floating point literals
+/// TODO: Minimum numeric literal length bounds and numeric groupings have been selected arbitrarily;
+/// these could be reevaluated.
+/// TODO: Handle floating point literals.
 ///
 /// - SeeAlso: https://google.github.io/swift#numeric-literals
 public final class GroupNumericLiterals: SyntaxFormatRule {
   public override func visit(_ node: IntegerLiteralExprSyntax) -> ExprSyntax {
+    var originalDigits = node.digits.text
+    guard !originalDigits.contains("_") else { return node }
 
-    var digits = node.digits.text
-    guard !digits.contains("_") else { return node }
-
-    let isNegative = digits.first == "-"
-    digits = isNegative ? String(digits.dropFirst()) : digits
+    let isNegative = originalDigits.first == "-"
+    originalDigits = isNegative ? String(originalDigits.dropFirst()) : originalDigits
 
     var newDigits = ""
 
-    switch digits.prefix(2) {
+    switch originalDigits.prefix(2) {
     case "0x":
       // Hexadecimal
-      let digitsNoPrefix = String(digits.dropFirst(2))
+      let digitsNoPrefix = String(originalDigits.dropFirst(2))
       guard digitsNoPrefix.count >= 8 else { return node }
-      diagnose(.groupNumericLiteral(byStride: 4), on: node)
-      newDigits = "0x" + groupDigitsByStride(digits: digitsNoPrefix, stride: 4)
+      diagnose(.groupNumericLiteral(every: 4), on: node)
+      newDigits = "0x" + digits(digitsNoPrefix, groupedEvery: 4)
     case "0b":
       // Binary
-      let digitsNoPrefix = String(digits.dropFirst(2))
+      let digitsNoPrefix = String(originalDigits.dropFirst(2))
       guard digitsNoPrefix.count >= 10 else { return node }
-      diagnose(.groupNumericLiteral(byStride: 8), on: node)
-      newDigits = "0b" + groupDigitsByStride(digits: digitsNoPrefix, stride: 8)
+      diagnose(.groupNumericLiteral(every: 8), on: node)
+      newDigits = "0b" + digits(digitsNoPrefix, groupedEvery: 8)
     case "0o":
       // Octal
       return node
     default:
       // Decimal
-      guard digits.count >= 7 else { return node }
-      diagnose(.groupNumericLiteral(byStride: 3), on: node)
-      newDigits = groupDigitsByStride(digits: digits, stride: 3)
+      guard originalDigits.count >= 7 else { return node }
+      diagnose(.groupNumericLiteral(every: 3), on: node)
+      newDigits = digits(originalDigits, groupedEvery: 3)
     }
 
     newDigits = isNegative ? "-" + newDigits : newDigits
-    return node.withDigits(SyntaxFactory.makeIdentifier(newDigits))
+    return node.withDigits(
+      SyntaxFactory.makeIntegerLiteral(
+        newDigits,
+        leadingTrivia: node.digits.leadingTrivia,
+        trailingTrivia: node.digits.trailingTrivia))
   }
 
-  func groupDigitsByStride(digits: String, stride: Int) -> String {
+  /// Returns a copy of the given string with an underscore (`_`) inserted between every group of
+  /// `stride` digits, counting from the right.
+  ///
+  /// Precondition: `digits` does not already contain underscores.
+  private func digits(_ digits: String, groupedEvery stride: Int) -> String {
     var newGrouping = Array(digits)
     var i = 1
     while i * stride < digits.count {
@@ -78,8 +85,8 @@ public final class GroupNumericLiterals: SyntaxFormatRule {
 }
 
 extension Diagnostic.Message {
-  static func groupNumericLiteral(byStride: Int) -> Diagnostic.Message {
-    let ending = byStride == 3 ? "rd" : "th"
-    return .init(.warning, "group numeric literal using '_' every \(byStride)\(ending) number")
+  static func groupNumericLiteral(every stride: Int) -> Diagnostic.Message {
+    let ending = stride == 3 ? "rd" : "th"
+    return .init(.warning, "group numeric literal using '_' every \(stride)\(ending) number")
   }
 }
