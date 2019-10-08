@@ -50,7 +50,11 @@ public class PrettyPrintTestCase: XCTestCase {
       fileURL: URL(fileURLWithPath: "/tmp/file.swift"),
       sourceFileSyntax: sourceFileSyntax)
 
-    let printer = PrettyPrinter(context: context, node: sourceFileSyntax, printTokenStream: false)
+    let printer = PrettyPrinter(
+      context: context,
+      operatorContext: OperatorContext.makeBuiltinOperatorContext(),
+      node: sourceFileSyntax,
+      printTokenStream: false)
     return printer.prettyPrint()
   }
 }

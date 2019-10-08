@@ -34,8 +34,7 @@ public class AssignmentExprTests: PrettyPrintTestCase {
       shortName = wxyz + aaaaaa
         + bbbbbb + cccccc
       longerName = wxyz + aaaaaa
-        + bbbbbb + cccccc
-        || zzzzzzz
+        + bbbbbb + cccccc || zzzzzzz
 
       """
 
