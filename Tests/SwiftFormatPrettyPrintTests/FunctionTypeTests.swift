@@ -120,4 +120,34 @@ public class FunctionTypeTests: PrettyPrintTestCase {
     
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 67)
   }
+
+  func testFunctionTypeInOut() {
+    let input =
+      """
+      func f(g: (firstArg: inout FirstArg, secondArg: inout SecondArg) -> Result) {
+        let a = 123
+        let b = "abc"
+      }
+      """
+
+    let expected =
+      """
+      func f(
+        g: (
+          firstArg:
+            inout
+            FirstArg,
+          secondArg:
+            inout
+            SecondArg
+        ) -> Result
+      ) {
+        let a = 123
+        let b = "abc"
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 17)
+  }
 }

@@ -354,7 +354,18 @@ extension UseSynthesizedInitializerTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__UseSynthesizedInitializerTests = [
-        ("testRedundantCustomInitializer", testRedundantCustomInitializer),
+        ("testCustomInitializerVoidsSynthesizedInitializerWarning", testCustomInitializerVoidsSynthesizedInitializerWarning),
+        ("testCustomInitializerWithExtraParameters", testCustomInitializerWithExtraParameters),
+        ("testCustomInitializerWithExtraStatements", testCustomInitializerWithExtraStatements),
+        ("testCustomInitializerWithMismatchedTypes", testCustomInitializerWithMismatchedTypes),
+        ("testFailableMemberwiseInitializerIsNotDiagnosed", testFailableMemberwiseInitializerIsNotDiagnosed),
+        ("testMemberwiseInitializerIsDiagnosed", testMemberwiseInitializerIsDiagnosed),
+        ("testMemberwiseInitializerMissingDefaultValues", testMemberwiseInitializerMissingDefaultValues),
+        ("testMemberwiseInitializerWithDefaultArgument", testMemberwiseInitializerWithDefaultArgument),
+        ("testMemberwiseInitializerWithDefaultArgumentIsDiagnosed", testMemberwiseInitializerWithDefaultArgumentIsDiagnosed),
+        ("testMemberwiseInitializerWithNonMatchingDefaultValues", testMemberwiseInitializerWithNonMatchingDefaultValues),
+        ("testPublicMemberwiseInitializerIsNotDiagnosed", testPublicMemberwiseInitializerIsNotDiagnosed),
+        ("testThrowingMemberwiseInitializerIsNotDiagnosed", testThrowingMemberwiseInitializerIsNotDiagnosed),
     ]
 }
 
