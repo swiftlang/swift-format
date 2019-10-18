@@ -88,8 +88,10 @@ public class PrettyPrinter {
   /// Indicates whether or not the printer is currently at the beginning of a line.
   private var isAtStartOfLine = true
 
-  /// The kind of the last break token that was printed.
-  private var lastBreakKind: BreakKind = .reset
+  /// Indicates whether the kind of the last break was one that triggers a continuation line (i.e.,
+  /// a `.continue`, an `.open(.continuation)`, or a `.close` break that causes
+  /// `currentLineIsContinuation` to become true).
+  private var wasLastBreakKindContinue = false
 
   /// The computed indentation level, as a number of spaces, based on the state of any unclosed
   /// delimiters and whether or not the current line is a continuation line.
@@ -121,11 +123,18 @@ public class PrettyPrinter {
   ///
   /// - Parameters:
   ///   - context: The formatter context.
+  ///   - operatorContext: The operator context that defines the infix operators and precedence
+  ///     groups that should be used to make operator-sensitive formatting decisions.
   ///   - node: The node to be pretty printed.
-  public init(context: Context, node: Syntax, printTokenStream: Bool) {
+  ///   - printTokenStream: Indicates whether debug information about the token stream should be
+  ///     printed to standard output.
+  public init(
+    context: Context, operatorContext: OperatorContext, node: Syntax, printTokenStream: Bool
+  ) {
     self.context = context
     let configuration = context.configuration
-    self.tokens = node.makeTokenStream(configuration: configuration)
+    self.tokens =
+      node.makeTokenStream(configuration: configuration, operatorContext: operatorContext)
     self.maxLineLength = configuration.lineLength
     self.spaceRemaining = self.maxLineLength
     self.printTokenStream = printTokenStream
@@ -239,7 +248,7 @@ public class PrettyPrinter {
     // Create a line break if needed. Calculate the indentation required and adjust spaceRemaining
     // accordingly.
     case .break(let kind, let size, _):
-      lastBreakKind = kind
+      wasLastBreakKindContinue = false
       var mustBreak = forceBreakStack.last ?? false
 
       // Tracks whether the current line should be considered a continuation line, *if and only if
@@ -249,6 +258,7 @@ public class PrettyPrinter {
 
       switch kind {
       case .open(let openKind):
+        wasLastBreakKindContinue = openKind == .continuation
         let lastOpenBreak = activeOpenBreaks.last
         let currentLineNumber = openCloseBreakCompensatingLineNumber
 
@@ -269,9 +279,9 @@ public class PrettyPrinter {
         // lines within it (unless they are themselves continuations within that particular
         // scope), so we need the continuation indentation to persist across all the lines in that
         // scope. Additionally, continuation open breaks must indent when the break fires.
-        let breakWillFire = (!isAtStartOfLine && length > spaceRemaining) || mustBreak
-        let contributesContinuationIndent
-          = currentLineIsContinuation || (breakWillFire && openKind == .continuation)
+        let continuationBreakWillFire = openKind == .continuation
+          && (isAtStartOfLine || length > spaceRemaining || mustBreak)
+        let contributesContinuationIndent = currentLineIsContinuation || continuationBreakWillFire
         activeOpenBreaks.append(
           ActiveOpenBreak(
             kind: openKind,
@@ -352,9 +362,11 @@ public class PrettyPrinter {
 
         // Restore the continuation state of the scope we were in before the open break occurred.
         currentLineIsContinuation = currentLineIsContinuation || wasContinuationWhenOpened
+        wasLastBreakKindContinue = wasContinuationWhenOpened
         isContinuationIfBreakFires = wasContinuationWhenOpened
 
       case .continue:
+        wasLastBreakKindContinue = true
         isContinuationIfBreakFires = true
 
       case .same:
@@ -387,7 +399,7 @@ public class PrettyPrinter {
 
     // Apply `count` line breaks, calculate the indentation required, and adjust spaceRemaining.
     case .newlines(let count, let kind):
-      currentLineIsContinuation = (lastBreakKind == .continue)
+      currentLineIsContinuation = wasLastBreakKindContinue
       writeNewlines(count, kind: kind)
       lastBreak = true
 
