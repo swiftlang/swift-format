@@ -83,8 +83,10 @@ public final class SwiftLinter {
 
     // Perform whitespace linting by comparing the input source text with the output of the
     // pretty-printer.
+    let operatorContext = OperatorContext.makeBuiltinOperatorContext()
     let printer = PrettyPrinter(
       context: context,
+      operatorContext: operatorContext,
       node: syntax,
       printTokenStream: debugOptions.contains(.dumpTokenStream))
     let formatted = printer.prettyPrint()

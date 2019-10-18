@@ -15,8 +15,6 @@ import SwiftFormatConfiguration
 import SwiftFormatCore
 import SwiftSyntax
 
-private let rangeOperators: Set = ["...", "..<"]
-
 /// Visits the nodes of a syntax tree and constructs a linear stream of formatting tokens that
 /// tell the pretty printer how the source text should be laid out.
 private final class TokenStreamCreator: SyntaxVisitor {
@@ -24,6 +22,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
   private var beforeMap = [TokenSyntax: [Token]]()
   private var afterMap = [TokenSyntax: [[Token]]]()
   private let config: Configuration
+  private let operatorContext: OperatorContext
   private let maxlinelength: Int
 
   /// Keeps track of the prefix length of multiline string segments when they are visited so that
@@ -31,8 +30,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
   /// stream.
   private var pendingMultilineStringSegmentPrefixLengths = [TokenSyntax: Int]()
 
-  init(configuration: Configuration) {
+  init(configuration: Configuration, operatorContext: OperatorContext) {
     self.config = configuration
+    self.operatorContext = operatorContext
     self.maxlinelength = config.lineLength
   }
 
@@ -572,10 +572,6 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: BinaryOperatorExprSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
   func visit(_ node: TupleExprSyntax) -> SyntaxVisitorContinueKind {
     after(node.leftParen, tokens: .break(.open, size: 0), .open)
     before(node.rightParen, tokens: .close, .break(.close, size: 0))
@@ -790,12 +786,6 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: ObjcKeyPathExprSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
-  func visit(_ node: AssignmentExprSyntax) -> SyntaxVisitorContinueKind {
-    before(node.assignToken, tokens: .break)
-    after(node.assignToken, tokens: .space)
     return .visitChildren
   }
 
@@ -1033,31 +1023,12 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: AsExprSyntax) -> SyntaxVisitorContinueKind {
-    before(node.asTok, tokens: .break)
-    before(node.typeName.firstToken, tokens: .space)
-    return .visitChildren
-  }
-
-  func visit(_ node: IsExprSyntax) -> SyntaxVisitorContinueKind {
-    before(node.isTok, tokens: .break)
-    before(node.typeName.firstToken, tokens: .space)
-    return .visitChildren
-  }
-
   func visit(_ node: TryExprSyntax) -> SyntaxVisitorContinueKind {
     before(node.expression.firstToken, tokens: .break)
     return .visitChildren
   }
 
   func visit(_ node: TypeExprSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
-  func visit(_ node: ArrowExprSyntax) -> SyntaxVisitorContinueKind {
-    before(node.throwsToken, tokens: .break)
-    before(node.arrowToken, tokens: .break)
-    after(node.arrowToken, tokens: .space)
     return .visitChildren
   }
 
@@ -1182,61 +1153,82 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: SequenceExprSyntax) -> SyntaxVisitorContinueKind {
-    let elements = Array(node.elements)
+    let elementCount = node.elements.count
+    assert(elementCount > 0 && elementCount <= 3, "SequenceExpr should have already been folded.")
 
-    // Apply groups around specific operators that are known to have very low precendence. Ideally,
-    // the formatter would use the actual precedence of all operators to create groups but operator
-    // precendence isn't available in the syntax tree. Since some operators almost always have the
-    // lowest precendence in an expression, grouping around those operators typically results in
-    // breaking at more visually appealing and logical locations.
-    let groupingIndices = elements.indices.filter { elements[$0].isKnownLowPrecendenceOperator }
+    var iterator = node.elements.makeIterator()
+    let lhs = iterator.next()!
+    maybeGroupAroundSubexpression(lhs)
 
-    let afterClosingOperandTokens: [Token]
-      = [.break(.reset, size: 0), .break(.close(mustBreak: false), size: 0), .close]
-    if !groupingIndices.isEmpty {
-      before(elements.first?.firstToken, tokens: .break(.open(kind: .continuation), size: 0), .open)
-      after(elements.last?.lastToken, tokens: afterClosingOperandTokens)
-    }
+    if elementCount == 2 {
+      // Cast expressions are 2-element sequence expressions, containing the left-hand side followed
+      // by a single `AsExpr` or `IsExpr` node that holds both the keyword and the right-hand type
+      // expression.
+      let castOp = iterator.next()!
 
-    let beforeOperatorTokens: [Token] = [.break(.open(kind: .continuation), size: 1), .open]
-    for (index, expr) in elements.enumerated() {
-      if groupingIndices.contains(index) {
-        let leftOperandLastExpr = elements[elements.index(before: index)]
-        let operatorExpr = elements[index]
+      before(castOp.firstToken, tokens: .break(.continue), .open)
+      after(castOp.lastToken, tokens: .close)
+    } else if elementCount == 3 {
+      // Binary operators (and other syntax that isn't considered strictly a "binary" operator, like
+      // assignment expressions) are covered by 3-element sequence expressions.
+      let binOp = iterator.next()!
+      let rhs = iterator.next()!
+      maybeGroupAroundSubexpression(rhs)
 
-        // Placing the opening tokens after a previous syntax token allows the group to consume any
-        // comments between groups, ensuring the comments have correct indentation when they are
-        // later printed.
-        after(operatorExpr.previousToken, tokens: beforeOperatorTokens)
-        after(leftOperandLastExpr.lastToken, tokens: afterClosingOperandTokens)
-      }
-      if let binaryOperatorExpr = expr as? BinaryOperatorExprSyntax {
-        switch binaryOperatorExpr.operatorToken.tokenKind {
-        case .unspacedBinaryOperator:
-          break
-        default:
-          if !groupingIndices.contains(index) {
-            after(binaryOperatorExpr.operatorToken.previousToken, tokens: .break(.continue))
-          }
-          after(binaryOperatorExpr.operatorToken, tokens: .space)
+      if shouldRequireWhitespace(around: binOp) {
+        if shouldStackIndentation(after: binOp) {
+          // For certain operators like `&&` and `||`, we don't want to treat all continue breaks
+          // the same. If we did, then all operators would line up at the same alignment regardless
+          // of whether they were, for example, `&&` or something between a pair of `&&`. To make
+          // long conditionals format more cleanly, we use open-continuation/close pairs around such
+          // operators and their right-hand sides so that the continuation breaks inside those
+          // scopes "stack", instead of receiving the usual single-level "continuation line or not"
+          // behavior.
+          before(binOp.firstToken, tokens: .break(.open(kind: .continuation)), .open)
+          after(
+            rhs.lastToken,
+            tokens: [.break(.reset, size: 0), .break(.close(mustBreak: false), size: 0), .close])
+        } else {
+          before(binOp.firstToken, tokens: .break(.continue))
         }
+
+        after(binOp.lastToken, tokens: .space)
       }
     }
 
-    // These expressions are enumerated after adding all operator based grouping tokens to ensure
-    // the appropriate order of open/close tokens is maintained.
-    for expr in elements {
-      // Adding groups around these expressions allows them to prefer breaking onto a newline before
-      // the expression, keeping the entire expression together when possible, before breaking inside
-      // of the expression. This is a hand-crafted list of expressions that generally look better
-      // when the break(s) before the expression fire before breaks inside of the expression.
-      if expr is FunctionCallExprSyntax || expr is MemberAccessExprSyntax
-        || expr is SubscriptExprSyntax
-      {
-        before(expr.firstToken, tokens: .open)
-        after(expr.lastToken, tokens: .close)
-      }
-    }
+    return .visitChildren
+  }
+
+  func visit(_ node: AssignmentExprSyntax) -> SyntaxVisitorContinueKind {
+    // Breaks and spaces are inserted at the `SequenceExpr` level.
+    return .visitChildren
+  }
+
+  func visit(_ node: BinaryOperatorExprSyntax) -> SyntaxVisitorContinueKind {
+    // Breaks and spaces are inserted at the `SequenceExpr` level.
+    return .visitChildren
+  }
+
+  func visit(_ node: AsExprSyntax) -> SyntaxVisitorContinueKind {
+    // The break before the `as` keyword is inserted at the `SequenceExpr` level so that it is
+    // placed in the correct relative position to the group surrounding the cast operator and type
+    // expression.
+    before(node.typeName.firstToken, tokens: .space)
+    return .visitChildren
+  }
+
+  func visit(_ node: IsExprSyntax) -> SyntaxVisitorContinueKind {
+    // The break before the `is` keyword is inserted at the `SequenceExpr` level so that it is
+    // placed in the correct relative position to the group surrounding the cast operator and type
+    // expression.
+    before(node.typeName.firstToken, tokens: .space)
+    return .visitChildren
+  }
+
+  func visit(_ node: ArrowExprSyntax) -> SyntaxVisitorContinueKind {
+    // The break before the `throws` keyword is inserted at the `SequenceExpr` level so that it is
+    // placed in the correct relative position to the group surrounding the "operator".
+    after(node.throwsToken, tokens: .break)
     return .visitChildren
   }
 
@@ -2219,37 +2211,96 @@ private final class TokenStreamCreator: SyntaxVisitor {
       return true
     }
   }
+
+  /// Adds a grouping around certain subexpressions during `SequenceExpr` visitation.
+  ///
+  /// Adding groups around these expressions allows them to prefer breaking onto a newline before
+  /// the expression, keeping the entire expression together when possible, before breaking inside
+  /// the expression. This is a hand-crafted list of expressions that generally look better when the
+  /// break(s) before the expression fire before breaks inside of the expression.
+  private func maybeGroupAroundSubexpression(_ expr: ExprSyntax) {
+    switch expr {
+    case is FunctionCallExprSyntax, is MemberAccessExprSyntax, is SubscriptExprSyntax:
+      before(expr.firstToken, tokens: .open)
+      after(expr.lastToken, tokens: .close)
+    default:
+      break
+    }
+  }
+
+  /// Returns a value indicating whether indentation should be stacked within subexpressions to the
+  /// right of the given operator.
+  ///
+  /// Operators that are good candidates for this behavior are ones that have low precedence and
+  /// may occur in chains, such as logical AND (`&&`) and OR (`||`) in conditional statements, where
+  /// the extra level of indentation helps to improve readability with the operators inside those
+  /// conditions.
+  private func shouldStackIndentation(after operatorExpr: ExprSyntax) -> Bool {
+    if let binaryOperator = operatorExpr as? BinaryOperatorExprSyntax {
+      let operatorText = binaryOperator.operatorToken.text
+      if let precedence = operatorContext.infixOperator(named: operatorText)?.precedenceGroup,
+        precedence === operatorContext.precedenceGroup(named: .logicalConjunction)
+          || precedence === operatorContext.precedenceGroup(named: .logicalDisjunction)
+      {
+        return true
+      }
+    }
+    return false
+  }
+
+  /// Returns a value indicating whether whitespace should be required around the given operator.
+  ///
+  /// If spaces are not required (for example, range operators), then the formatter will also forbid
+  /// breaks around the operator. This is to prevent situations where a break could occur before an
+  /// unspaced operator (e.g., turning `0...10` into `0<newline>...10`), which would be a breaking
+  /// change because it would treat it as a prefix operator `...10` instead of an infix operator.
+  private func shouldRequireWhitespace(around operatorExpr: ExprSyntax) -> Bool {
+    // Note that we look at the operator itself to make this determination, not the token kind.
+    // The token kind (spaced or unspaced operator) represents how the *user* wrote it, and we want
+    // to ignore that and apply our own rules.
+    if let binaryOperator = operatorExpr as? BinaryOperatorExprSyntax {
+      let operatorText = binaryOperator.operatorToken.text
+      if let precedence = operatorContext.infixOperator(named: operatorText)?.precedenceGroup,
+        precedence === operatorContext.precedenceGroup(named: .rangeFormation)
+      {
+        return false
+      }
+    }
+    return true
+  }
 }
 
 extension Syntax {
   /// Creates a pretty-printable token stream for the provided Syntax node.
-  func makeTokenStream(configuration: Configuration) -> [Token] {
-    return TokenStreamCreator(configuration: configuration).makeStream(from: self)
+  func makeTokenStream(configuration: Configuration, operatorContext: OperatorContext) -> [Token] {
+    // First, fold the sequence expressions in the tree before passing it along to the token stream,
+    // because we don't want to modify the tree during token stream creation.
+    let folded = SequenceExprFoldingRewriter(operatorContext: operatorContext).visit(self)
+    return TokenStreamCreator(
+      configuration: configuration, operatorContext: operatorContext).makeStream(from: folded)
+  }
+}
+
+/// Rewrites a syntax tree by folding any sequence expressions contained in it.
+class SequenceExprFoldingRewriter: SyntaxRewriter {
+  private let operatorContext: OperatorContext
+
+  init(operatorContext: OperatorContext) {
+    self.operatorContext = operatorContext
+  }
+
+  override func visit(_ node: SequenceExprSyntax) -> ExprSyntax {
+    let rewrittenBySuper = super.visit(node)
+    if let sequence = rewrittenBySuper as? SequenceExprSyntax {
+      return sequence.folded(context: operatorContext)
+    } else {
+      return rewrittenBySuper
+    }
   }
 }
 
 extension Collection {
   subscript(safe index: Index) -> Element? {
     return index < endIndex ? self[index] : nil
-  }
-}
-
-extension ExprSyntax {
-  /// Returns whether this expression is an operator that is known to typically have a relatively
-  /// low precedence, meaning it's applied after other operators in a sequence. These operators are
-  /// typically good candidates for breaks in a long sequence.
-  var isKnownLowPrecendenceOperator: Bool {
-    if let binaryOperator = self as? BinaryOperatorExprSyntax {
-      let operatorText = binaryOperator.operatorToken.text
-      switch operatorText {
-      // Logical AND and OR operators are almost always the lowest precendence operators in a
-      // sequence, and are generally good candidates for breaks.
-      case "&&", "||":
-        return true
-      default:
-        return false
-      }
-    }
-    return false
   }
 }
