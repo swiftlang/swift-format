@@ -14,6 +14,20 @@ import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
+// FIXME: Remove this once we've completely moved up to a version of SwiftSyntax that has
+// consolidated the TupleExprElement and FunctionCallArgument nodes.
+#if HAS_CONSOLIDATED_TUPLE_AND_FUNCTION_CALL_SYNTAX
+fileprivate typealias FunctionCallArgumentSyntax = TupleExprElementSyntax
+
+extension SyntaxFactory {
+  fileprivate static func makeFunctionCallArgumentList(_ arguments: [TupleExprElementSyntax])
+    -> TupleExprElementListSyntax
+  {
+    return makeTupleExprElementList(arguments)
+  }
+}
+#endif
+
 /// Redundant labels are forbidden in case patterns.
 ///
 /// In practice, *all* case pattern labels should be redundant.
