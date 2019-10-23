@@ -15,6 +15,16 @@ import SwiftFormatConfiguration
 import SwiftFormatCore
 import SwiftSyntax
 
+// FIXME: Remove this once we've completely moved up to a version of SwiftSyntax that has
+// consolidated the TupleExprElement and FunctionCallArgument nodes.
+#if HAS_CONSOLIDATED_TUPLE_AND_FUNCTION_CALL_SYNTAX
+fileprivate typealias FunctionCallArgumentSyntax = TupleExprElementSyntax
+fileprivate typealias FunctionCallArgumentListSyntax = TupleExprElementListSyntax
+#else
+fileprivate typealias TupleExprElementListSyntax = TupleElementListSyntax
+fileprivate typealias TupleExprElementSyntax = TupleElementSyntax
+#endif
+
 /// Visits the nodes of a syntax tree and constructs a linear stream of formatting tokens that
 /// tell the pretty printer how the source text should be laid out.
 private final class TokenStreamCreator: SyntaxVisitor {
@@ -575,19 +585,38 @@ private final class TokenStreamCreator: SyntaxVisitor {
   func visit(_ node: TupleExprSyntax) -> SyntaxVisitorContinueKind {
     after(node.leftParen, tokens: .break(.open, size: 0), .open)
     before(node.rightParen, tokens: .close, .break(.close, size: 0))
+
+    insertTokens(.break(.same), betweenElementsOf: node.elementList)
+
+    for element in node.elementList {
+      arrangeAsTupleExprElement(element)
+    }
+
     return .visitChildren
   }
 
-  func visit(_ node: TupleElementListSyntax) -> SyntaxVisitorContinueKind {
-    insertTokens(.break(.same), betweenElementsOf: node)
+  func visit(_ node: TupleExprElementListSyntax) -> SyntaxVisitorContinueKind {
+    // Intentionally do nothing here. Since `TupleExprElement`s are used both in tuple expressions
+    // and function argument lists, which need to be formatted, differently, those nodes manually
+    // loop over the nodes and arrange them in those contexts.
     return .visitChildren
   }
 
-  func visit(_ node: TupleElementSyntax) -> SyntaxVisitorContinueKind {
+  func visit(_ node: TupleExprElementSyntax) -> SyntaxVisitorContinueKind {
+    // Intentionally do nothing here. Since `TupleExprElement`s are used both in tuple expressions
+    // and function argument lists, which need to be formatted, differently, those nodes manually
+    // loop over the nodes and arrange them in those contexts.
+    return .visitChildren
+  }
+
+  /// Arranges the given tuple expression element as a tuple element (rather than a function call
+  /// argument).
+  ///
+  /// - Parameter node: The tuple expression element to be arranged.
+  private func arrangeAsTupleExprElement(_ node: TupleExprElementSyntax) {
     before(node.firstToken, tokens: .open)
     after(node.colon, tokens: .break)
     after(node.lastToken, tokens: .close)
-    return .visitChildren
   }
 
   func visit(_ node: ArrayExprSyntax) -> SyntaxVisitorContinueKind {
@@ -660,14 +689,25 @@ private final class TokenStreamCreator: SyntaxVisitor {
     }
 
     before(node.trailingClosure?.leftBrace, tokens: .break(.same))
+
+    let shouldGroupAroundArgument = !isCompactSingleFunctionCallArgument(arguments)
+    for argument in arguments {
+      arrangeAsFunctionCallArgument(argument, shouldGroup: shouldGroupAroundArgument)
+    }
+
     return .visitChildren
   }
 
-  func visit(_ node: FunctionCallArgumentSyntax) -> SyntaxVisitorContinueKind {
-    let argumentList = node.parent as! FunctionCallArgumentListSyntax
-    let shouldGroupAroundArgument = !isCompactSingleFunctionCallArgument(argumentList)
-
-    if shouldGroupAroundArgument {
+  /// Arranges the given tuple expression element as a function call argument.
+  ///
+  /// - Parameters:
+  ///   - node: The tuple expression element.
+  ///   - shouldGroup: If true, group around the argument to prefer keeping it together if possible.
+  private func arrangeAsFunctionCallArgument(
+    _ node: FunctionCallArgumentSyntax,
+    shouldGroup: Bool
+  ) {
+    if shouldGroup {
       before(node.firstToken, tokens: .open)
     }
 
@@ -679,14 +719,13 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
     if let trailingComma = node.trailingComma {
       var afterTrailingComma: [Token] = [.break(.same)]
-      if shouldGroupAroundArgument {
+      if shouldGroup {
         afterTrailingComma.insert(.close, at: 0)
       }
       after(trailingComma, tokens: afterTrailingComma)
-    } else if shouldGroupAroundArgument {
+    } else if shouldGroup {
       after(node.lastToken, tokens: .close)
     }
-    return .visitChildren
   }
 
   func visit(_ node: ClosureExprSyntax) -> SyntaxVisitorContinueKind {
@@ -762,7 +801,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: SubscriptExprSyntax) -> SyntaxVisitorContinueKind {
-    if node.argumentList.count > 0 {
+    let arguments = node.argumentList
+    if !arguments.isEmpty {
       // If there is a trailing closure, force the right bracket down to the next line so it stays
       // with the open curly brace.
       let breakBeforeRightBracket = node.trailingClosure != nil
@@ -773,6 +813,12 @@ private final class TokenStreamCreator: SyntaxVisitor {
         tokens: .break(.close(mustBreak: breakBeforeRightBracket), size: 0), .close)
     }
     before(node.trailingClosure?.leftBrace, tokens: .space)
+
+    let shouldGroupAroundArgument = !isCompactSingleFunctionCallArgument(arguments)
+    for argument in arguments {
+      arrangeAsFunctionCallArgument(argument, shouldGroup: shouldGroupAroundArgument)
+    }
+
     return .visitChildren
   }
 
@@ -1516,6 +1562,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
+  // FIXME: Remove once the changes around `GenericRequirementSyntax` and its children have settled.
+  #if !HAS_UNCONSOLIDATED_GENERIC_REQUIREMENTS
   func visit(_ node: GenericRequirementSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
     if let trailingComma = node.trailingComma {
@@ -1525,15 +1573,34 @@ private final class TokenStreamCreator: SyntaxVisitor {
     }
     return .visitChildren
   }
+  #endif
 
   func visit(_ node: SameTypeRequirementSyntax) -> SyntaxVisitorContinueKind {
     before(node.equalityToken, tokens: .break)
     after(node.equalityToken, tokens: .space)
+
+    #if HAS_UNCONSOLIDATED_GENERIC_REQUIREMENTS
+    before(node.firstToken, tokens: .open)
+    if let trailingComma = node.trailingComma {
+      after(trailingComma, tokens: .close, .break(.same))
+    } else {
+      after(node.lastToken, tokens: .close)
+    }
+    #endif
     return .visitChildren
   }
 
   func visit(_ node: ConformanceRequirementSyntax) -> SyntaxVisitorContinueKind {
     after(node.colon, tokens: .break)
+
+    #if HAS_UNCONSOLIDATED_GENERIC_REQUIREMENTS
+    before(node.firstToken, tokens: .open)
+    if let trailingComma = node.trailingComma {
+      after(trailingComma, tokens: .close, .break(.same))
+    } else {
+      after(node.lastToken, tokens: .close)
+    }
+    #endif
     return .visitChildren
   }
 
