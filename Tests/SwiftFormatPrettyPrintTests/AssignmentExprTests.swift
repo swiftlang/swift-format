@@ -40,4 +40,43 @@ public class AssignmentExprTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
+
+  public func testAssignmentFromFunctionCalls() {
+    let input =
+      """
+      result = firstOp + secondOp + someOpFetchingFunc(foo, bar: bar, baz: baz)
+      result = someOpFetchingFunc(foo, bar: bar, baz: baz)
+      result += someOpFetchingFunc(foo, bar: bar, baz: baz)
+      result = someOpFetchingFunc(foo, bar: bar, baz: baz) + someOtherOperand + andAThirdOneForReasons
+      let result = firstOp + secondOp + someOpFetchingFunc(foo, bar: bar, baz: baz)
+      let result = someOpFetchingFunc(foo, bar: bar, baz: baz)
+      let result = someOpFetchingFunc(foo, bar: bar, baz: baz) + someOtherOperand + andAThirdOneForReasons
+      """
+    let expected =
+      """
+      result = firstOp + secondOp
+        + someOpFetchingFunc(
+          foo, bar: bar, baz: baz)
+      result = someOpFetchingFunc(
+        foo, bar: bar, baz: baz)
+      result += someOpFetchingFunc(
+        foo, bar: bar, baz: baz)
+      result = someOpFetchingFunc(
+        foo, bar: bar, baz: baz)
+        + someOtherOperand
+        + andAThirdOneForReasons
+      let result = firstOp + secondOp
+        + someOpFetchingFunc(
+          foo, bar: bar, baz: baz)
+      let result = someOpFetchingFunc(
+        foo, bar: bar, baz: baz)
+      let result = someOpFetchingFunc(
+        foo, bar: bar, baz: baz)
+        + someOtherOperand
+        + andAThirdOneForReasons
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 35)
+  }
 }
