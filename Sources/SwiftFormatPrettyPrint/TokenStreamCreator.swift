@@ -640,6 +640,13 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
+    if let calledMemberAccessExpr = node.calledExpression as? MemberAccessExprSyntax {
+      if let base = calledMemberAccessExpr.base, base is IdentifierExprSyntax {
+        before(base.firstToken, tokens: .open)
+        after(calledMemberAccessExpr.name.lastToken, tokens: .close)
+      }
+    }
+
     let arguments = node.argumentList
     if !arguments.isEmpty {
       // If there is a trailing closure, force the right parenthesis down to the next line so it
@@ -1173,7 +1180,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
       // assignment expressions) are covered by 3-element sequence expressions.
       let binOp = iterator.next()!
       let rhs = iterator.next()!
-      maybeGroupAroundSubexpression(rhs)
+      maybeGroupAroundSubexpression(rhs, combiningOperator: binOp)
 
       if shouldRequireWhitespace(around: binOp) {
         if shouldStackIndentation(after: binOp) {
@@ -2218,14 +2225,47 @@ private final class TokenStreamCreator: SyntaxVisitor {
   /// the expression, keeping the entire expression together when possible, before breaking inside
   /// the expression. This is a hand-crafted list of expressions that generally look better when the
   /// break(s) before the expression fire before breaks inside of the expression.
-  private func maybeGroupAroundSubexpression(_ expr: ExprSyntax) {
+  private func maybeGroupAroundSubexpression(
+    _ expr: ExprSyntax, combiningOperator operatorExpr: ExprSyntax? = nil
+  ) {
     switch expr {
-    case is FunctionCallExprSyntax, is MemberAccessExprSyntax, is SubscriptExprSyntax:
+    case is MemberAccessExprSyntax, is SubscriptExprSyntax:
       before(expr.firstToken, tokens: .open)
       after(expr.lastToken, tokens: .close)
     default:
       break
     }
+
+    // When a function call expression is assigned to an lvalue, we omit the group around the
+    // function call so that the callee and open parenthesis can remain on the same line, if they
+    // fit. This is a frequent enough case that the outcome looks better with the exception in
+    // place.
+    if expr is FunctionCallExprSyntax,
+      let operatorExpr = operatorExpr, !isAssigningOperator(operatorExpr)
+    {
+      before(expr.firstToken, tokens: .open)
+      after(expr.lastToken, tokens: .close)
+    }
+  }
+
+  /// Returns whether the given operator behaves as an assignment, to assign a right-hand-side to a
+  /// left-hand-side in a SequenceExpr.
+  ///
+  /// Assignment is defined as either being an assignment operator (i.e. `=`) or any operator that
+  /// uses "assignment" precedence.
+  private func isAssigningOperator(_ operatorExpr: ExprSyntax) -> Bool {
+    if operatorExpr is AssignmentExprSyntax {
+      return true
+    }
+    if let binaryOperator = operatorExpr as? BinaryOperatorExprSyntax {
+      let operatorText = binaryOperator.operatorToken.text
+      if let precedence = operatorContext.infixOperator(named: operatorText)?.precedenceGroup,
+        precedence === operatorContext.precedenceGroup(named: .assignment)
+      {
+        return true
+      }
+    }
+    return false
   }
 
   /// Returns a value indicating whether indentation should be stacked within subexpressions to the
