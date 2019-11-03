@@ -81,6 +81,16 @@ extension Trivia {
       })
   }
 
+  /// Returns this set of trivia, with whitespace characters only.
+  public func withSpacesOnly() -> Trivia {
+    return Trivia(
+      pieces: filter {
+        if case .spaces = $0 { return true }
+        if case .tabs = $0 { return true }
+        return false
+    })
+  }
+
   /// Returns this set of trivia without any trailing whitespace characters.
   public func withoutTrailingSpaces() -> Trivia {
     var pieces = [TriviaPiece]()

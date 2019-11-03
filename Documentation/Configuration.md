@@ -82,6 +82,10 @@ An example `.swift-format` configuration file is shown below.
     "blankLineBetweenMembers": {
         "ignoreSingleLineProperties": true
     },
+    "blankLineAfterFunctionDeclarations": {
+        "ignoreSingleLineFunctions": true,
+        "ignoreSuperCallsOnFirstLine": true
+    },
     "lineBreakBeforeControlFlowKeywords": true,
     "lineBreakBeforeEachArgument": true
 }

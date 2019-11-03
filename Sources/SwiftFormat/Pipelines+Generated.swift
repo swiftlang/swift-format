@@ -114,6 +114,7 @@ extension LintPipeline {
     visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, in: context, for: node)
     visitIfEnabled(AlwaysUseLowerCamelCase.visit, in: context, for: node)
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, in: context, for: node)
+    visitIfEnabled(BlankLineAfterFunctionDeclarations.visit, in: context, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, in: context, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, in: context, for: node)
     visitIfEnabled(ValidateDocumentationComments.visit, in: context, for: node)
@@ -282,6 +283,7 @@ extension FormatPipeline {
 
   func visit(_ node: Syntax) -> Syntax {
     var node = node
+    node = BlankLineAfterFunctionDeclarations(context: context).visit(node)
     node = BlankLineBetweenMembers(context: context).visit(node)
     node = DoNotUseSemicolons(context: context).visit(node)
     node = FullyIndirectEnum(context: context).visit(node)

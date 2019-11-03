@@ -27,6 +27,7 @@ public class Configuration: Codable {
     case indentation
     case respectsExistingLineBreaks
     case blankLineBetweenMembers
+    case blankLineAfterFunctionDeclarations
     case lineBreakBeforeControlFlowKeywords
     case lineBreakBeforeEachArgument
     case indentConditionalCompilationBlocks
@@ -71,6 +72,9 @@ public class Configuration: Codable {
 
   /// Rules for limiting blank lines between members.
   public var blankLineBetweenMembers = BlankLineBetweenMembersConfiguration()
+
+  /// Rules for requiring blank lines after function declarations.
+  public var blankLineAfterFunctionDeclarations = BlankLineAfterFunctionDeclarationConfiguration()
 
   /// Determines the line-breaking behavior for control flow keywords that follow a closing brace,
   /// like `else` and `catch`.
@@ -128,6 +132,9 @@ public class Configuration: Codable {
     self.blankLineBetweenMembers = try container.decodeIfPresent(
       BlankLineBetweenMembersConfiguration.self, forKey: .blankLineBetweenMembers)
       ?? BlankLineBetweenMembersConfiguration()
+    self.blankLineAfterFunctionDeclarations = try container.decodeIfPresent(
+      BlankLineAfterFunctionDeclarationConfiguration.self, forKey: .blankLineAfterFunctionDeclarations)
+      ?? BlankLineAfterFunctionDeclarationConfiguration()
     self.lineBreakBeforeControlFlowKeywords
       = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeControlFlowKeywords)
       ?? true
@@ -148,6 +155,7 @@ public class Configuration: Codable {
     try container.encode(indentation, forKey: .indentation)
     try container.encode(respectsExistingLineBreaks, forKey: .respectsExistingLineBreaks)
     try container.encode(blankLineBetweenMembers, forKey: .blankLineBetweenMembers)
+    try container.encode(blankLineAfterFunctionDeclarations, forKey: .blankLineAfterFunctionDeclarations)
     try container.encode(
       lineBreakBeforeControlFlowKeywords, forKey: .lineBreakBeforeControlFlowKeywords)
     try container.encode(lineBreakBeforeEachArgument, forKey: .lineBreakBeforeEachArgument)
@@ -160,6 +168,16 @@ public class Configuration: Codable {
 public struct BlankLineBetweenMembersConfiguration: Codable {
   /// If true, blank lines are not required between single-line properties.
   public let ignoreSingleLineProperties = true
+}
+
+/// Configuration for the BlankLineAfterFunctionDeclaration rule.
+public struct BlankLineAfterFunctionDeclarationConfiguration: Codable {
+
+  /// If true, blank lines are not required in single-line functions.
+  public var ignoreSingleLineFunctions = true
+
+  /// If true, blank lines are not required before super call if on the first line.
+  public var ignoreSuperCallsOnFirstLine = true
 }
 
 /// Configuration for the NoPlaygroundLiterals rule.

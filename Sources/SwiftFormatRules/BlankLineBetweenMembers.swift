@@ -66,7 +66,7 @@ public final class BlankLineBetweenMembers: SyntaxFormatRule {
           leadingTrivia: correctTrivia
         ) as! MemberDeclListItemSyntax
 
-        diagnose(.addBlankLine, on: member)
+        diagnose(.addBlankLineBetweenMembers, on: member)
       }
 
       membersList.append(memberToAdd)
@@ -114,5 +114,5 @@ public final class BlankLineBetweenMembers: SyntaxFormatRule {
 }
 
 extension Diagnostic.Message {
-  static let addBlankLine = Diagnostic.Message(.warning, "add one blank line between declarations")
+  static let addBlankLineBetweenMembers = Diagnostic.Message(.warning, "add one blank line between declarations")
 }

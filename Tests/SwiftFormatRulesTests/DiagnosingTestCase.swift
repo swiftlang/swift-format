@@ -89,6 +89,7 @@ public class DiagnosingTestCase: XCTestCase {
   ///
   /// - Parameters:
   ///   - formatType: The metatype of the format rule you wish to apply.
+  ///   - configure: A closure to configure the context's `Configuration` before applying the rule.
   ///   - input: The unformatted input code.
   ///   - expected: The expected result of formatting the input code.
   ///   - file: The file the test resides in (defaults to the current caller's file)
@@ -96,7 +97,8 @@ public class DiagnosingTestCase: XCTestCase {
   ///   - checkForUnassertedDiagnostics: Fail the test if there are any unasserted linter
   ///     diagnostics.
   func XCTAssertFormatting(
-    _ formatType: SyntaxFormatRule.Type,
+    _ formatType: SyntaxFormatRule.Type ,
+    configure: (Configuration) -> Void = { _ in },
     input: String,
     expected: String,
     file: StaticString = #file,
@@ -113,8 +115,9 @@ public class DiagnosingTestCase: XCTestCase {
 
     context = makeContext(sourceFileSyntax: sourceFileSyntax)
 
-    // Force the rule to be enabled while we test it.
+    // Force the rule to be enabled while we test it, and perform any initial configuration.
     context!.configuration.rules[formatType.ruleName] = true
+    configure(context!.configuration)
 
     shouldCheckForUnassertedDiagnostics = checkForUnassertedDiagnostics
     let formatter = formatType.init(context: context!)

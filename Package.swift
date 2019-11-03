@@ -42,7 +42,7 @@ let package = Package(
     .target(name: "SwiftFormatCore", dependencies: ["SwiftFormatConfiguration", "SwiftSyntax"]),
     .target(
       name: "SwiftFormatRules",
-      dependencies: ["SwiftFormatCore", "SwiftFormatConfiguration"]
+      dependencies: ["SwiftFormatCore", "SwiftFormatConfiguration", "SwiftSyntax"]
     ),
     .target(
       name: "SwiftFormatPrettyPrint",

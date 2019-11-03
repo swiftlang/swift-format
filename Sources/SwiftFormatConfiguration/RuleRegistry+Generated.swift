@@ -18,6 +18,7 @@ enum RuleRegistry {
     "AlwaysUseLowerCamelCase": true,
     "AmbiguousTrailingClosureOverload": true,
     "BeginDocumentationCommentWithOneLineSummary": true,
+    "BlankLineAfterFunctionDeclarations": true,
     "BlankLineBetweenMembers": true,
     "CaseIndentLevelEqualsSwitch": true,
     "DoNotUseSemicolons": true,
