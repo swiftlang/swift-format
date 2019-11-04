@@ -29,6 +29,7 @@ public struct Configuration: Codable, Equatable {
     case blankLineBetweenMembers
     case lineBreakBeforeControlFlowKeywords
     case lineBreakBeforeEachArgument
+    case lineBreakBeforeEachGenericRequirement
     case prioritizeKeepingFunctionOutputTogether
     case indentConditionalCompilationBlocks
     case rules
@@ -89,6 +90,14 @@ public struct Configuration: Codable, Equatable {
   /// each argument, forcing the entire argument list to be laid out vertically.
   public var lineBreakBeforeEachArgument = false
 
+  /// Determines the line-breaking behavior for generic requirements when the requirements list
+  /// is wrapped onto multiple lines.
+  ///
+  /// If true, a line break will be added before each requirement, forcing the entire requirements
+  /// list to be laid out vertically. If false (the default), requirements will be laid out
+  /// horizontally first, with line breaks only being fired when the line length would be exceeded.
+  public var lineBreakBeforeEachGenericRequirement = false
+
   /// Determines if function-like declaration outputs should be prioritized to be together with the
   /// function signature right (closing) parenthesis.
   ///
@@ -142,6 +151,8 @@ public struct Configuration: Codable, Equatable {
       = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeControlFlowKeywords) ?? false
     self.lineBreakBeforeEachArgument
       = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeEachArgument) ?? false
+    self.lineBreakBeforeEachGenericRequirement
+      = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeEachGenericRequirement) ?? false
     self.prioritizeKeepingFunctionOutputTogether
       = try container.decodeIfPresent(Bool.self, forKey: .prioritizeKeepingFunctionOutputTogether) ?? false
     self.indentConditionalCompilationBlocks
@@ -167,6 +178,7 @@ public struct Configuration: Codable, Equatable {
     try container.encode(blankLineBetweenMembers, forKey: .blankLineBetweenMembers)
     try container.encode(lineBreakBeforeControlFlowKeywords, forKey: .lineBreakBeforeControlFlowKeywords)
     try container.encode(lineBreakBeforeEachArgument, forKey: .lineBreakBeforeEachArgument)
+    try container.encode(lineBreakBeforeEachGenericRequirement, forKey: .lineBreakBeforeEachGenericRequirement)
     try container.encode(prioritizeKeepingFunctionOutputTogether, forKey: .prioritizeKeepingFunctionOutputTogether)
     try container.encode(indentConditionalCompilationBlocks, forKey: .indentConditionalCompilationBlocks)
     try container.encode(rules, forKey: .rules)

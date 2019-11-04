@@ -1603,6 +1603,10 @@ private final class TokenStreamCreator: SyntaxVisitor {
   func visit(_ node: GenericWhereClauseSyntax) -> SyntaxVisitorContinueKind {
     after(node.whereKeyword, tokens: .break(.open))
     after(node.lastToken, tokens: .break(.close, size: 0))
+
+    before(node.requirementList.firstToken, tokens: .open(genericRequirementListConsistency()))
+    after(node.requirementList.lastToken, tokens: .close)
+
     return .visitChildren
   }
 
@@ -2059,6 +2063,12 @@ private final class TokenStreamCreator: SyntaxVisitor {
   /// current configuration.
   private func argumentListConsistency() -> GroupBreakStyle {
     return config.lineBreakBeforeEachArgument ? .consistent : .inconsistent
+  }
+
+  /// Returns the group consistency that should be used for generic requirement lists based on
+  /// the user's current configuration.
+  private func genericRequirementListConsistency() -> GroupBreakStyle {
+    return config.lineBreakBeforeEachGenericRequirement ? .consistent : .inconsistent
   }
 
   private func afterTokensForTrailingComment(_ token: TokenSyntax)
