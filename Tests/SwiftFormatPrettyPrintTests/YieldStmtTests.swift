@@ -21,8 +21,8 @@ public class YieldStmtTests: PrettyPrintTestCase {
             1234567890
         }
         _modify {
-          var someLongVariable
-            = 0
+          var someLongVariable =
+            0
           yield
             &someLongVariable
         }

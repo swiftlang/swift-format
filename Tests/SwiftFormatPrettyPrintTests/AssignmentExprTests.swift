@@ -9,10 +9,10 @@ public class AssignmentExprTests: PrettyPrintTestCase {
     let expected =
       """
       foo = bar
-      someVeryLongVariableName
-        = anotherPrettyLongVariableName
-      shortName
-        = superLongNameForAVariable
+      someVeryLongVariableName =
+        anotherPrettyLongVariableName
+      shortName =
+        superLongNameForAVariable
 
       """
 
@@ -28,8 +28,8 @@ public class AssignmentExprTests: PrettyPrintTestCase {
       """
     let expected =
       """
-      someVeryLongVariableName
-        = anotherPrettyLongVariableName
+      someVeryLongVariableName =
+        anotherPrettyLongVariableName
         && someOtherOperand
       shortName = wxyz + aaaaaa
         + bbbbbb + cccccc

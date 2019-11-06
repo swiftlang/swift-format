@@ -16,8 +16,8 @@ public class VariableDeclarationTests: PrettyPrintTestCase {
       let y: Int = anotherVar
         + moreVar
       let (w, z, s):
-        (Int, Double, Bool)
-        = firstTuple + secondTuple
+        (Int, Double, Bool) =
+          firstTuple + secondTuple
 
       """
 
@@ -37,8 +37,8 @@ public class VariableDeclarationTests: PrettyPrintTestCase {
       """
       @NSCopying let a: Int = 123
       @NSCopying @NSManaged let a: Int = 123
-      @NSCopying let areallylongvarname: Int
-        = 123
+      @NSCopying let areallylongvarname: Int =
+        123
       @NSCopying @NSManaged
       let areallylongvarname: Int = 123
 
@@ -60,8 +60,8 @@ public class VariableDeclarationTests: PrettyPrintTestCase {
       let a = 100, b = 200, c = 300, d = 400,
         e = 500, f = 600
       let a = 5,
-        anotherReallyLongVariableName
-          = something,
+        anotherReallyLongVariableName =
+          something,
         longVariableName = longFunctionCall()
       let
         a = letsForceTheFirstOneToWrapAsWell,
@@ -82,8 +82,8 @@ public class VariableDeclarationTests: PrettyPrintTestCase {
       """
       let a: Int = 100,
         b: ReallyLongTypeName = 200,
-        c: (AnotherLongTypeName, AnotherOne)
-          = 300
+        c: (AnotherLongTypeName, AnotherOne) =
+          300
 
       """
 
