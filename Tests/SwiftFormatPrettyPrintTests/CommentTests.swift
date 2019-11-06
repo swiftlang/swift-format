@@ -370,8 +370,8 @@ public class CommentTests: PrettyPrintTestCase {
       /* Comment 3
          Comment 4 */
 
-      let reallyLongVariableName
-        = 123 /* This comment should wrap */
+      let reallyLongVariableName =
+        123 /* This comment should wrap */
 
       let a = myfun(
         123 /* Cmt 5 */
@@ -437,9 +437,9 @@ public class CommentTests: PrettyPrintTestCase {
       }
 
       struct Foo {
-        typealias Bar
+        typealias Bar =
           // comment
-          = SomeOtherType
+          SomeOtherType
       }
       """
 

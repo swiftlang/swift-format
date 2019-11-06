@@ -20,6 +20,9 @@ public class PrettyPrinter {
 
   /// Information about an open break that has not yet been closed during the printing stage.
   private struct ActiveOpenBreak {
+    /// The index of the open break.
+    let index: Int
+
     /// The kind of open break that created this scope.
     let kind: OpenBreakKind
 
@@ -258,7 +261,6 @@ public class PrettyPrinter {
 
       switch kind {
       case .open(let openKind):
-        wasLastBreakKindContinue = openKind == .continuation
         let lastOpenBreak = activeOpenBreaks.last
         let currentLineNumber = openCloseBreakCompensatingLineNumber
 
@@ -282,14 +284,22 @@ public class PrettyPrinter {
         let continuationBreakWillFire = openKind == .continuation
           && (isAtStartOfLine || length > spaceRemaining || mustBreak)
         let contributesContinuationIndent = currentLineIsContinuation || continuationBreakWillFire
+
         activeOpenBreaks.append(
           ActiveOpenBreak(
+            index: idx,
             kind: openKind,
             lineNumber: currentLineNumber,
             contributesContinuationIndent: contributesContinuationIndent,
             contributesBlockIndent: openKind == .block))
 
         continuationStack.append(currentLineIsContinuation)
+
+        // If the open break kind is a continuation and it fired, then we don't want to set this
+        // flag because the active open break will provide the continuation indentation for the
+        // remaining lines. If the break doesn't fire, we need to set it so that the remaining lines
+        // get the appropriate indentation.
+        wasLastBreakKindContinue = openKind == .continuation && !continuationBreakWillFire
 
         // Once we've reached an open break and preserved the continuation state, the "scope" we now
         // enter is *not* a continuation scope. If it was one, we'll re-enter it when we reach the
@@ -311,6 +321,7 @@ public class PrettyPrinter {
           // add a block indent.
           if matchingOpenBreak.lineNumber == openCloseBreakCompensatingLineNumber,
             let lastActiveOpenBreak = activeOpenBreaks.last,
+            lastActiveOpenBreak.kind == .block,
             !lastActiveOpenBreak.contributesBlockIndent
           {
             activeOpenBreaks[activeOpenBreaks.count - 1].contributesBlockIndent = true
@@ -399,6 +410,18 @@ public class PrettyPrinter {
 
     // Apply `count` line breaks, calculate the indentation required, and adjust spaceRemaining.
     case .newlines(let count, let kind):
+      // If a newline immediately followed an open-continue break, then this is effectively the
+      // same as if it had fired. Activate it, and reset the last-break-kind flag so that the
+      // indentation of subsequent lines is contributed by that break and not by inherited
+      // continuation state.
+      if let lastActiveOpenBreak = activeOpenBreaks.last,
+        lastActiveOpenBreak.index == idx - 1,
+        lastActiveOpenBreak.kind == .continuation
+      {
+        activeOpenBreaks[activeOpenBreaks.count - 1].contributesContinuationIndent = true
+        wasLastBreakKindContinue = false
+      }
+
       currentLineIsContinuation = wasLastBreakKindContinue
       writeNewlines(count, kind: kind)
       lastBreak = true
@@ -494,7 +517,13 @@ public class PrettyPrinter {
       // of any prior break tokens.
       case .newlines:
         if let index = delimIndexStack.last, case .break = tokens[index] {
-          lengths[index] += total
+          if index == i - 1 {
+            // A break immediately preceding a newline should have a length of zero, so that it
+            // doesn't fire.
+            lengths[index] = 0
+          } else {
+            lengths[index] += total
+          }
           delimIndexStack.removeLast()
         }
 

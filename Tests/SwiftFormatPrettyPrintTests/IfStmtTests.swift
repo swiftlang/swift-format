@@ -171,8 +171,8 @@ public class IfStmtTests: PrettyPrintTestCase {
         let a = 123
         var b = "abc"
       }
-      if case .reallyLongCaseName
-        = reallyLongVariableName
+      if case .reallyLongCaseName =
+        reallyLongVariableName
       {
         let a = 123
         var b = "abc"

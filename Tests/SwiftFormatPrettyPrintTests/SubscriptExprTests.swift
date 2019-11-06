@@ -32,8 +32,8 @@ public class SubscriptExprTests: PrettyPrintTestCase {
       myCollection[index] = someValue
       myCollection[label: index] = someValue
       myCollection[
-        index, default: someDefaultValue]
-        = someValue
+        index, default: someDefaultValue] =
+        someValue
 
       """
 
