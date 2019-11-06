@@ -243,6 +243,8 @@ extension FunctionDeclTests {
         ("testBreaksBeforeOrInsideOutput", testBreaksBeforeOrInsideOutput),
         ("testBreaksBeforeOrInsideOutputWithAttributes", testBreaksBeforeOrInsideOutputWithAttributes),
         ("testBreaksBeforeOrInsideOutputWithWhereClause", testBreaksBeforeOrInsideOutputWithWhereClause),
+        ("testDoesNotCollapseFunctionParameterAttributes", testDoesNotCollapseFunctionParameterAttributes),
+        ("testDoesNotCollapseStackedFunctionParameterAttributes", testDoesNotCollapseStackedFunctionParameterAttributes),
         ("testEmptyFunction", testEmptyFunction),
         ("testFunctionAttributes", testFunctionAttributes),
         ("testFunctionDeclReturns", testFunctionDeclReturns),
