@@ -1182,6 +1182,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
       let rhs = iterator.next()!
       maybeGroupAroundSubexpression(rhs, combiningOperator: binOp)
 
+      let wrapsBeforeOperator = !isAssigningOperator(binOp)
+
       if shouldRequireWhitespace(around: binOp) {
         if shouldStackIndentation(after: binOp) {
           // For certain operators like `&&` and `||`, we don't want to treat all continue breaks
@@ -1191,15 +1193,28 @@ private final class TokenStreamCreator: SyntaxVisitor {
           // operators and their right-hand sides so that the continuation breaks inside those
           // scopes "stack", instead of receiving the usual single-level "continuation line or not"
           // behavior.
-          before(binOp.firstToken, tokens: .break(.open(kind: .continuation)), .open)
+          let openBreakTokens: [Token] = [.break(.open(kind: .continuation)), .open]
+          if wrapsBeforeOperator {
+            before(binOp.firstToken, tokens: openBreakTokens)
+          } else {
+            after(binOp.lastToken, tokens: openBreakTokens)
+          }
           after(
             rhs.lastToken,
             tokens: [.break(.reset, size: 0), .break(.close(mustBreak: false), size: 0), .close])
         } else {
-          before(binOp.firstToken, tokens: .break(.continue))
+          if wrapsBeforeOperator {
+            before(binOp.firstToken, tokens: .break(.continue))
+          } else {
+            after(binOp.lastToken, tokens: .break(.continue))
+          }
         }
 
-        after(binOp.lastToken, tokens: .space)
+        if wrapsBeforeOperator {
+          after(binOp.lastToken, tokens: .space)
+        } else {
+          before(binOp.firstToken, tokens: .space)
+        }
       }
     }
 
@@ -1272,7 +1287,19 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   func visit(_ node: PatternBindingSyntax) -> SyntaxVisitorContinueKind {
     if let accessorOrCodeBlock = node.accessor {
+      if let typeAnnotation = node.typeAnnotation {
+        after(typeAnnotation.colon, tokens: .break)
+      }
       arrangeAccessorOrCodeBlock(accessorOrCodeBlock)
+    } else {
+      if let typeAnnotation = node.typeAnnotation {
+        after(typeAnnotation.colon, tokens: .break(.open(kind: .continuation)))
+        after(node.lastToken, tokens: .break(.close, size: 0))
+      }
+      if let initializer = node.initializer {
+        after(initializer.equal, tokens: .break(.open(kind: .continuation)))
+        after(node.lastToken, tokens: .break(.close, size: 0))
+      }
     }
     return .visitChildren
   }
@@ -1316,8 +1343,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: TypeInitializerClauseSyntax) -> SyntaxVisitorContinueKind {
-    before(node.equal, tokens: .break)
-    after(node.equal, tokens: .space)
+    before(node.equal, tokens: .space)
+    after(node.equal, tokens: .break)
     return .visitChildren
   }
 
@@ -1348,8 +1375,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: TypeAnnotationSyntax) -> SyntaxVisitorContinueKind {
-    after(node.colon, tokens: .break(.open), .open)
-    after(node.lastToken, tokens: .break(.close, size: 0), .close)
+    before(node.type.firstToken, tokens: .open)
+    after(node.type.lastToken, tokens: .close)
     return .visitChildren
   }
 
@@ -1445,8 +1472,13 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: InitializerClauseSyntax) -> SyntaxVisitorContinueKind {
-    before(node.equal, tokens: .break)
-    after(node.equal, tokens: .space)
+    before(node.equal, tokens: .space)
+
+    // InitializerClauses that are children of a PatternBindingSyntax are already handled in the
+    // latter node, to ensure that continuations stack appropriately.
+    if !(node.parent is PatternBindingSyntax) {
+      after(node.equal, tokens: .break)
+    }
     return .visitChildren
   }
 

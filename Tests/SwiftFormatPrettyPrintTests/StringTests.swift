@@ -12,10 +12,10 @@ public class StringTests: PrettyPrintTestCase {
       """
       let a = "abc"
       myFun("Some string \\(a + b)")
-      let b
-        = "A really long string that should not wrap"
-      let c
-        = "A really long string with \\(a + b) some expressions \\(c + d)"
+      let b =
+        "A really long string that should not wrap"
+      let c =
+        "A really long string with \\(a + b) some expressions \\(c + d)"
 
       """
 
@@ -100,8 +100,8 @@ public class StringTests: PrettyPrintTestCase {
 
     let expected =
       #"""
-      let aLongVariableName
-        = """
+      let aLongVariableName =
+        """
         some
         multi-
         line
