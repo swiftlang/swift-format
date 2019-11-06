@@ -552,6 +552,53 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 33)
   }
 
+  public func testBreaksBeforeOrInsideOutput_prioritizingKeepingOutputTogether() {
+    let input =
+    """
+      func name<R>(_ x: Int) throws -> R
+
+      func name<R>(_ x: Int) throws -> R {
+        statement
+        statement
+      }
+      """
+
+    var expected =
+    """
+      func name<R>(
+        _ x: Int
+      ) throws -> R
+
+      func name<R>(
+        _ x: Int
+      ) throws -> R {
+        statement
+        statement
+      }
+
+      """
+    let config = Configuration()
+    config.prioritizeKeepingFunctionOutputTogether = true
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 23, configuration: config)
+
+    expected =
+    """
+    func name<R>(
+      _ x: Int
+    ) throws -> R
+
+    func name<R>(
+      _ x: Int
+    ) throws -> R {
+      statement
+      statement
+    }
+
+    """
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 30, configuration: config)
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 33, configuration: config)
+  }
+
   public func testBreaksBeforeOrInsideOutputWithAttributes() {
     let input =
       """
@@ -583,6 +630,42 @@ public class FunctionDeclTests: PrettyPrintTestCase {
 
       """
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 23)
+  }
+
+  public func testBreaksBeforeOrInsideOutputWithAttributes_prioritizingKeepingOutputTogether() {
+    let input =
+    """
+      @objc @discardableResult
+      func name<R>(_ x: Int) throws -> R
+
+      @objc @discardableResult
+      func name<R>(_ x: Int) throws -> R {
+        statement
+        statement
+      }
+      """
+
+    let expected =
+    """
+      @objc
+      @discardableResult
+      func name<R>(
+        _ x: Int
+      ) throws -> R
+
+      @objc
+      @discardableResult
+      func name<R>(
+        _ x: Int
+      ) throws -> R {
+        statement
+        statement
+      }
+
+      """
+    let config = Configuration()
+    config.prioritizeKeepingFunctionOutputTogether = true
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 23, configuration: config)
   }
 
   public func testBreaksBeforeOrInsideOutputWithWhereClause() {
@@ -640,6 +723,69 @@ public class FunctionDeclTests: PrettyPrintTestCase {
 
       """
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 23)
+  }
+
+  public func testBreaksBeforeOrInsideOutputWithWhereClause_prioritizingKeepingOutputTogether() {
+    var input =
+    """
+      func name<R>(_ x: Int) throws -> R where Foo == Bar
+
+      func name<R>(_ x: Int) throws -> R where Foo == Bar {
+        statement
+        statement
+      }
+      """
+
+    var expected =
+    """
+      func name<R>(
+        _ x: Int
+      ) throws -> R
+      where Foo == Bar
+
+      func name<R>(
+        _ x: Int
+      ) throws -> R
+      where Foo == Bar {
+        statement
+        statement
+      }
+
+      """
+    let config = Configuration()
+    config.prioritizeKeepingFunctionOutputTogether = true
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 23, configuration: config)
+
+    input =
+    """
+    func name<R>(_ x: Int) throws -> R where Fooooooo == Barrrrr
+
+    func name<R>(_ x: Int) throws -> R where Fooooooo == Barrrrr {
+    statement
+    statement
+    }
+    """
+
+    expected =
+    """
+    func name<R>(
+      _ x: Int
+    ) throws -> R
+    where
+      Fooooooo == Barrrrr
+
+    func name<R>(
+      _ x: Int
+    ) throws -> R
+    where
+      Fooooooo == Barrrrr
+    {
+      statement
+      statement
+    }
+
+    """
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 23, configuration: config)
   }
 
   public func testAttributedTypes() {
