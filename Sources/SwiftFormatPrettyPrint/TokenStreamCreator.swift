@@ -808,6 +808,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   func visit(_ node: FunctionParameterSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
+    arrangeAttributeList(node.attributes)
     after(node.colon, tokens: .break)
     before(node.secondName, tokens: .break)
 
