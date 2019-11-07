@@ -81,6 +81,10 @@ public final class SwiftLinter {
     var pipeline = LintPipeline(context: context)
     syntax.walk(&pipeline)
 
+    if debugOptions.contains(.disablePrettyPrint) {
+      return
+    }
+
     // Perform whitespace linting by comparing the input source text with the output of the
     // pretty-printer.
     let operatorContext = OperatorContext.makeBuiltinOperatorContext()
