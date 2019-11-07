@@ -1287,21 +1287,37 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: PatternBindingSyntax) -> SyntaxVisitorContinueKind {
-    if let accessorOrCodeBlock = node.accessor {
-      if let typeAnnotation = node.typeAnnotation {
-        after(typeAnnotation.colon, tokens: .break)
-      }
-      arrangeAccessorOrCodeBlock(accessorOrCodeBlock)
-    } else {
-      if let typeAnnotation = node.typeAnnotation {
-        after(typeAnnotation.colon, tokens: .break(.open(kind: .continuation)))
-        after(node.lastToken, tokens: .break(.close, size: 0))
-      }
-      if let initializer = node.initializer {
-        after(initializer.equal, tokens: .break(.open(kind: .continuation)))
-        after(node.lastToken, tokens: .break(.close, size: 0))
-      }
+    // If the type annotation and/or the initializer clause need to wrap, we want those
+    // continuations to stack to improve readability. So, we need to keep track of how many open
+    // breaks we create (so we can close them at the end of the binding) and also keep track of the
+    // right-most token that will anchor the close breaks.
+    var closesNeeded: Int = 0
+    var closeAfterToken: TokenSyntax? = nil
+
+    if let typeAnnotation = node.typeAnnotation {
+      after(typeAnnotation.colon, tokens: .break(.open(kind: .continuation)))
+      closesNeeded += 1
+      closeAfterToken = typeAnnotation.lastToken
     }
+    if let initializer = node.initializer {
+      after(initializer.equal, tokens: .break(.open(kind: .continuation)))
+      closesNeeded += 1
+      closeAfterToken = initializer.lastToken
+    }
+
+    if let accessorOrCodeBlock = node.accessor {
+      arrangeAccessorOrCodeBlock(accessorOrCodeBlock)
+    } else if let trailingComma = node.trailingComma {
+      // If this is one of multiple comma-delimited bindings, move any pending close breaks to
+      // follow the comma so that it doesn't get separated from the tokens before it.
+      closeAfterToken = trailingComma
+    }
+
+    if closeAfterToken != nil && closesNeeded > 0 {
+      let closeTokens = [Token](repeatElement(.break(.close, size: 0), count: closesNeeded))
+      after(closeAfterToken, tokens: closeTokens)
+    }
+
     return .visitChildren
   }
 

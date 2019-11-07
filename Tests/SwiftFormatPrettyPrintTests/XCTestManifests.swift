@@ -7,10 +7,13 @@ extension AccessorTests {
     // to regenerate.
     static let __allTests__AccessorTests = [
         ("testBasicAccessors", testBasicAccessors),
+        ("testDefaultValueAndAccessor", testDefaultValueAndAccessor),
         ("testEmptyAccessorBody", testEmptyAccessorBody),
         ("testEmptyAccessorBodyWithComment", testEmptyAccessorBodyWithComment),
         ("testEmptyAccessorList", testEmptyAccessorList),
+        ("testMultipleBindingsWithAccessors", testMultipleBindingsWithAccessors),
         ("testSetModifier", testSetModifier),
+        ("testTypeDefaultValueAndAccessor", testTypeDefaultValueAndAccessor),
     ]
 }
 
