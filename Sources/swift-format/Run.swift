@@ -24,12 +24,15 @@ import SwiftSyntax
 ///   - configuration: The `Configuration` that contains user-specific settings.
 ///   - sourceFile: A file handle from which to read the source code to be linted.
 ///   - assumingFilename: The filename of the source file, used in diagnostic output.
+///   - debugOptions: The set containing any debug options that were supplied on the command line.
 /// - Returns: Zero if there were no lint errors, otherwise a non-zero number.
-func lintMain(configuration: Configuration, sourceFile: FileHandle, assumingFilename: String?)
-  -> Int
-{
+func lintMain(
+  configuration: Configuration, sourceFile: FileHandle, assumingFilename: String?,
+  debugOptions: DebugOptions
+) -> Int {
   let diagnosticEngine = makeDiagnosticEngine()
   let linter = SwiftLinter(configuration: configuration, diagnosticEngine: diagnosticEngine)
+  linter.debugOptions = debugOptions
   let assumingFileURL = URL(fileURLWithPath: assumingFilename ?? "<stdin>")
 
   guard let source = readSource(from: sourceFile) else {

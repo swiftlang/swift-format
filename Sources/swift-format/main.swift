@@ -44,11 +44,13 @@ fileprivate func main(_ arguments: [String]) -> Int32 {
       return Int32(
         lintMain(
           configuration: configuration, sourceFile: FileHandle.standardInput,
-          assumingFilename: options.assumeFilename))
+          assumingFilename: options.assumeFilename, debugOptions: options.debugOptions))
     }
     return processSources(from: options.paths, configurationPath: options.configurationPath) {
       (sourceFile, path, configuration) in
-      lintMain(configuration: configuration, sourceFile: sourceFile, assumingFilename: path)
+      lintMain(
+        configuration: configuration, sourceFile: sourceFile, assumingFilename: path,
+        debugOptions: options.debugOptions)
     }
   case .dumpConfiguration:
     dumpDefaultConfiguration()

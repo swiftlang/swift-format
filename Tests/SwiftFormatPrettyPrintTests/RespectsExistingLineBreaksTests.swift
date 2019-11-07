@@ -49,8 +49,8 @@ class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
       }
 
       struct Foo {
-        var storedProperty: Int
-          = 100
+        var storedProperty: Int =
+          100
         var readOnlyProperty: Int {
           return
             200
@@ -61,8 +61,8 @@ class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
               somethingElse
           }
           set {
-            somethingElse
-              = newValue
+            somethingElse =
+              newValue
           }
         }
 

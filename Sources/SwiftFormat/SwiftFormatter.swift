@@ -104,8 +104,10 @@ public final class SwiftFormatter {
       return
     }
 
+    let operatorContext = OperatorContext.makeBuiltinOperatorContext()
     let printer = PrettyPrinter(
       context: context,
+      operatorContext: operatorContext,
       node: transformedSyntax,
       printTokenStream: debugOptions.contains(.dumpTokenStream))
     outputStream.write(printer.prettyPrint())

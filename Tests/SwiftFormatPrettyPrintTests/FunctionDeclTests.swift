@@ -700,4 +700,28 @@ public class FunctionDeclTests: PrettyPrintTestCase {
       """
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 21)
   }
+
+  func testDoesNotCollapseFunctionParameterAttributes() {
+    let input =
+    """
+    func foo<Content: View>(@ViewBuilder bar: () -> View) {
+      bar()
+    }
+
+    """
+
+    assertPrettyPrintEqual(input: input, expected: input, linelength: 60)
+  }
+
+  func testDoesNotCollapseStackedFunctionParameterAttributes() {
+    let input =
+    """
+    func foo<Content: View>(@FakeAttr @ViewBuilder bar: () -> View) {
+      bar()
+    }
+
+    """
+
+    assertPrettyPrintEqual(input: input, expected: input, linelength: 80)
+  }
 }
