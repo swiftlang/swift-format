@@ -151,4 +151,148 @@ public class AccessorTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 50)
   }
+
+  public func testDefaultValueAndAccessor() {
+    let input =
+      """
+      var property = defaultValue {
+        didSet {
+          foo()
+          bar()
+        }
+      }
+      """
+
+    assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 80)
+
+    let expected20 =
+      """
+      var property =
+        defaultValue
+      {
+        didSet {
+          foo()
+          bar()
+        }
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected20, linelength: 20)
+  }
+
+  public func testTypeDefaultValueAndAccessor() {
+    let input =
+      """
+      var property: SomeType = defaultValue {
+        didSet {
+          foo()
+          bar()
+        }
+      }
+      """
+
+    assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 80)
+
+    let expected25 =
+      """
+      var property: SomeType =
+        defaultValue
+      {
+        didSet {
+          foo()
+          bar()
+        }
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected25, linelength: 25)
+
+    let expected20 =
+      """
+      var property:
+        SomeType =
+          defaultValue
+      {
+        didSet {
+          foo()
+          bar()
+        }
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected20, linelength: 20)
+  }
+
+  public func testMultipleBindingsWithAccessors() {
+    // NOTE: These examples are not actually valid Swift! The syntax parser will allow a variable
+    // declaration that has multiple comma-separated bindings that have accessors, but the compiler
+    // rejects these at a later stage ("error: 'var' declarations with multiple variables cannot
+    // have explicit getters/setters"). But since the parser allows it, we make an attempt to format
+    // them correctly, rather than bail out and potentially leave the source code in a worse state
+    // than the original.
+
+    let input =
+      """
+      var property1: SomeType = defaultValue {
+        didSet {
+          foo()
+          bar()
+        }
+      }, property2: SomeType = defaultValue {
+        didSet {
+          foo()
+          bar()
+        }
+      }
+      """
+
+    let expected =
+      """
+      var
+        property1: SomeType = defaultValue {
+          didSet {
+            foo()
+            bar()
+          }
+        },
+        property2: SomeType = defaultValue {
+          didSet {
+            foo()
+            bar()
+          }
+        }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
+
+    let expected20 =
+      """
+      var
+        property1:
+          SomeType =
+            defaultValue
+        {
+          didSet {
+            foo()
+            bar()
+          }
+        },
+        property2:
+          SomeType =
+            defaultValue
+        {
+          didSet {
+            foo()
+            bar()
+          }
+        }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected20, linelength: 20)
+  }
 }
