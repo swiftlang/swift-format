@@ -10,12 +10,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Basic
 import Foundation
-import SPMUtility
 import SwiftFormat
 import SwiftFormatConfiguration
 import SwiftFormatCore
+import TSCBasic
+import TSCUtility
 
 fileprivate func main(_ arguments: [String]) -> Int32 {
   let url = URL(fileURLWithPath: arguments.first!)

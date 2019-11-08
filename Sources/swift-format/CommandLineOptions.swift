@@ -10,10 +10,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Basic
 import Foundation
-import SPMUtility
 import SwiftFormat
+import TSCBasic
+import TSCUtility
 
 /// Collects the command line options that were passed to `swift-format`.
 struct CommandLineOptions {
