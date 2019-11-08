@@ -17,7 +17,8 @@ let package = Package(
   name: "swift-format",
   products: [
     .executable(name: "swift-format", targets: ["swift-format"]),
-    .library(name: "SwiftFormat", targets: ["SwiftFormat"]),
+    .library(name: "SwiftFormat", targets: ["SwiftFormat", "SwiftFormatConfiguration"]),
+    .library(name: "SwiftFormatConfiguration", targets: ["SwiftFormatConfiguration"]),
   ],
   dependencies: [
     .package(url: "https://github.com/apple/swift-package-manager.git", from: "0.4.0"),
