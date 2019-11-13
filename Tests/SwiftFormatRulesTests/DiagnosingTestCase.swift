@@ -38,9 +38,11 @@ public class DiagnosingTestCase: XCTestCase {
   }
 
   /// Creates and returns a new `Context` from the given syntax tree.
-  private func makeContext(sourceFileSyntax: SourceFileSyntax) -> Context {
+  private func makeContext(sourceFileSyntax: SourceFileSyntax, configuration: Configuration? = nil)
+    -> Context
+  {
     let context = Context(
-      configuration: Configuration(),
+      configuration: configuration ?? Configuration(),
       diagnosticEngine: DiagnosticEngine(),
       fileURL: URL(fileURLWithPath: "/tmp/test.swift"),
       sourceFileSyntax: sourceFileSyntax)
@@ -101,7 +103,8 @@ public class DiagnosingTestCase: XCTestCase {
     expected: String,
     file: StaticString = #file,
     line: UInt = #line,
-    checkForUnassertedDiagnostics: Bool = false
+    checkForUnassertedDiagnostics: Bool = false,
+    configuration: Configuration? = nil
   ) {
     let sourceFileSyntax: SourceFileSyntax
     do {
@@ -111,7 +114,7 @@ public class DiagnosingTestCase: XCTestCase {
       return
     }
 
-    context = makeContext(sourceFileSyntax: sourceFileSyntax)
+    context = makeContext(sourceFileSyntax: sourceFileSyntax, configuration: configuration)
 
     // Force the rule to be enabled while we test it.
     context!.configuration.rules[formatType.ruleName] = true
