@@ -30,8 +30,12 @@ import SwiftSyntax
 /// - SeeAlso: https://google.github.io/swift#vertical-whitespace
 public final class BlankLineBetweenMembers: SyntaxFormatRule {
   public override func visit(_ node: MemberDeclBlockSyntax) -> Syntax {
-    guard let firstMember = node.members.first else { return super.visit(node) }
+    // This rule is implemented by ensuring that all multiline member decls include a blank line
+    // before the member's leading trivia and a blank line after any members that have a preceding
+    // comment. Any comments that are separated from a member with blank lines are ignored, because
+    // those comments aren't considered to be related to a specific member.
 
+    guard let firstMember = node.members.first else { return super.visit(node) }
     let ignoreSingleLine = context.configuration.blankLineBetweenMembers.ignoreSingleLineProperties
 
     // The first member can just be added as-is; we don't force any newline before it.
@@ -40,37 +44,37 @@ public final class BlankLineBetweenMembers: SyntaxFormatRule {
     // The first comment may not be "attached" to the first member. Ignore any comments that are
     // separated from the member by a newline.
     let shouldIncludeLeadingComment = !isLeadingTriviaSeparate(from: firstMember)
-
-    // Iterates through all the declaration of the member, to ensure that the declarations have
-    // at least one blank line between them when necessary.
     var previousMemberWasSingleLine = firstMember.isSingleLine(
       includingLeadingComment: shouldIncludeLeadingComment,
       sourceLocationConverter: context.sourceLocationConverter
     )
 
+    // Iterates through all the declaration of the member, to ensure that the declarations have
+    // at least one blank line between them when necessary.
     for member in node.members.dropFirst() {
       var memberToAdd = visitNestedDecls(of: member)
 
-      let memberIsSingleLine = memberToAdd.isSingleLine(
+      // Include the comment here to ensure all comments have a preceding blank line.
+      let isMemberSingleLine = memberToAdd.isSingleLine(
         includingLeadingComment: true,
-        sourceLocationConverter: context.sourceLocationConverter
-      )
+        sourceLocationConverter: context.sourceLocationConverter)
 
-      if let memberTrivia = memberToAdd.leadingTrivia,
-        !(ignoreSingleLine && previousMemberWasSingleLine && memberIsSingleLine)
-          && memberTrivia.numberOfLeadingNewlines == 1  // Only one newline => no blank line
-      {
-        let correctTrivia = Trivia.newlines(1) + memberTrivia
+      let ignoreMember = ignoreSingleLine && isMemberSingleLine
+      if (!previousMemberWasSingleLine || !ignoreMember) && !isLeadingBlankLinePresent(on: member) {
+        let blankLinePrefacedTrivia = Trivia.newlines(1) + (member.leadingTrivia ?? [])
         memberToAdd = replaceTrivia(
-          on: memberToAdd, token: memberToAdd.firstToken!,
-          leadingTrivia: correctTrivia
+          on: memberToAdd,
+          token: memberToAdd.firstToken,
+          leadingTrivia: blankLinePrefacedTrivia
         ) as! MemberDeclListItemSyntax
-
         diagnose(.addBlankLine, on: member)
       }
 
       membersList.append(memberToAdd)
-      previousMemberWasSingleLine = memberIsSingleLine
+
+      // Consider the member single line if the trivia was separate so that non-member-specific
+      // comments won't cause blank lines between members that are otherwise single line.
+      previousMemberWasSingleLine = isMemberSingleLine || isLeadingTriviaSeparate(from: memberToAdd)
     }
 
     return node.withMembers(SyntaxFactory.makeMemberDeclList(membersList))
@@ -78,7 +82,7 @@ public final class BlankLineBetweenMembers: SyntaxFormatRule {
 
   /// Returns whether any comments in the leading trivia of the given node are separated from the
   /// non-trivia tokens by at least 1 blank line.
-  func isLeadingTriviaSeparate(from node: Syntax) -> Bool {
+  private func isLeadingTriviaSeparate(from node: Syntax) -> Bool {
     guard let leadingTrivia = node.leadingTrivia else {
       return false
     }
@@ -86,6 +90,14 @@ public final class BlankLineBetweenMembers: SyntaxFormatRule {
       return count > 1
     }
     return false
+  }
+
+  /// Returns whether there is at least 1 blank line in the leading trivia of the given node.
+  private func isLeadingBlankLinePresent(on node: Syntax) -> Bool {
+    guard let leadingTrivia = node.leadingTrivia else {
+      return false
+    }
+    return leadingTrivia.numberOfLeadingNewlines > 1
   }
 
   /// Recursively ensures all nested member types follows the BlankLineBetweenMembers rule.

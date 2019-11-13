@@ -159,7 +159,11 @@ public class Configuration: Codable {
 /// Configuration for the BlankLineBetweenMembers rule.
 public struct BlankLineBetweenMembersConfiguration: Codable {
   /// If true, blank lines are not required between single-line properties.
-  public let ignoreSingleLineProperties = true
+  public let ignoreSingleLineProperties: Bool
+
+  public init(ignoreSingleLineProperties: Bool = true) {
+    self.ignoreSingleLineProperties = ignoreSingleLineProperties
+  }
 }
 
 /// Configuration for the NoPlaygroundLiterals rule.

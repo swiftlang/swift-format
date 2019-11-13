@@ -45,6 +45,8 @@ extension BlankLineBetweenMembersTests {
     // to regenerate.
     static let __allTests__BlankLineBetweenMembersTests = [
         ("testBlankLineBeforeFirstChildOrNot", testBlankLineBeforeFirstChildOrNot),
+        ("testBlankLineBetweenMembersIgnoreSingleLineDisabled", testBlankLineBetweenMembersIgnoreSingleLineDisabled),
+        ("testBlankLinesAroundDocumentedMembers", testBlankLinesAroundDocumentedMembers),
         ("testInvalidBlankLineBetweenMembers", testInvalidBlankLineBetweenMembers),
         ("testNestedMembers", testNestedMembers),
         ("testNoBlankLineBetweenSingleLineMembers", testNoBlankLineBetweenSingleLineMembers),

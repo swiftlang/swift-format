@@ -1,6 +1,7 @@
 import Foundation
-import XCTest
+import SwiftFormatConfiguration
 import SwiftSyntax
+import XCTest
 
 @testable import SwiftFormatRules
 
@@ -192,17 +193,23 @@ public class BlankLineBetweenMembersTests: DiagnosingTestCase {
                  let baz = 2
                }
                enum Foo {
-
                  // MARK: - This is an important region of the code.
 
                  let bar = 1
                  let baz = 2
                }
                enum Foo {
+                 var quxxe = 0
+                 // MARK: - This is an important region of the code.
 
-                 // This comment is describing bar.
                  let bar = 1
                  let baz = 2
+               }
+               enum Foo {
+                 let bar = 1
+                 let baz = 2
+
+                 // MARK: - This is an important region of the code.
                }
                """,
         expected: """
@@ -211,6 +218,13 @@ public class BlankLineBetweenMembersTests: DiagnosingTestCase {
                     let baz = 2
                   }
                   enum Foo {
+                    // MARK: - This is an important region of the code.
+
+                    let bar = 1
+                    let baz = 2
+                  }
+                  enum Foo {
+                    var quxxe = 0
 
                     // MARK: - This is an important region of the code.
 
@@ -218,12 +232,107 @@ public class BlankLineBetweenMembersTests: DiagnosingTestCase {
                     let baz = 2
                   }
                   enum Foo {
+                    let bar = 1
+                    let baz = 2
+
+                    // MARK: - This is an important region of the code.
+                  }
+                  """)
+  }
+
+  public func testBlankLinesAroundDocumentedMembers() {
+    XCTAssertFormatting(
+           BlankLineBetweenMembers.self,
+           input: """
+                  enum Foo {
 
                     // This comment is describing bar.
                     let bar = 1
-
                     let baz = 2
+                    let quxxe = 3
                   }
-                  """)
+                  enum Foo {
+                    var quxxe = 0
+
+                    /// bar: A property that has a Bar.
+                    let bar = 1
+                    let baz = 2
+                    var car = 3
+                  }
+                  """,
+           expected: """
+                     enum Foo {
+
+                       // This comment is describing bar.
+                       let bar = 1
+
+                       let baz = 2
+                       let quxxe = 3
+                     }
+                     enum Foo {
+                       var quxxe = 0
+
+                       /// bar: A property that has a Bar.
+                       let bar = 1
+
+                       let baz = 2
+                       var car = 3
+                     }
+                     """)
+  }
+
+  public func testBlankLineBetweenMembersIgnoreSingleLineDisabled() {
+    let config = Configuration()
+    config.blankLineBetweenMembers =
+      BlankLineBetweenMembersConfiguration(ignoreSingleLineProperties: false)
+
+    let input = """
+      enum Foo {
+        let bar = 1
+        let baz = 2
+      }
+      enum Foo {
+        // MARK: - This is an important region of the code.
+
+        let bar = 1
+        let baz = 2
+      }
+      enum Foo {
+        var quxxe = 0
+        // MARK: - This is an important region of the code.
+
+        let bar = 1
+        let baz = 2
+      }
+      """
+    let expected = """
+      enum Foo {
+        let bar = 1
+
+        let baz = 2
+      }
+      enum Foo {
+        // MARK: - This is an important region of the code.
+
+        let bar = 1
+
+        let baz = 2
+      }
+      enum Foo {
+        var quxxe = 0
+
+        // MARK: - This is an important region of the code.
+
+        let bar = 1
+
+        let baz = 2
+      }
+      """
+
+    XCTAssertFormatting(
+      BlankLineBetweenMembers.self,
+      input: input,
+      expected: expected,
+      configuration: config)
   }
 }
