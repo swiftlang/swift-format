@@ -120,10 +120,25 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
   func shortenOptionalType(argument: GenericArgumentSyntax, trivia: (Trivia, Trivia))
     -> TypeSyntax
   {
+    let argumentType: TypeSyntax
+    if let functionType = argument.argumentType as? FunctionTypeSyntax {
+      // Function types must be wrapped as a tuple before using shorthand optional syntax,
+      // otherwise the "?" applies to the return type instead of the function type.
+      let tupleTypeElement =
+        SyntaxFactory.makeTupleTypeElement(type: functionType, trailingComma: nil)
+      let tupleElementList = SyntaxFactory.makeTupleTypeElementList([tupleTypeElement])
+      argumentType = SyntaxFactory.makeTupleType(
+        leftParen: SyntaxFactory.makeLeftParenToken(),
+        elements: tupleElementList,
+        rightParen: SyntaxFactory.makeRightParenToken())
+    } else {
+      // Otherwise, the argument type can safely become an optional by simply appending a "?".
+      argumentType = argument.argumentType
+    }
     let (_, trailing) = trivia
     let questionMark = SyntaxFactory.makePostfixQuestionMarkToken(trailingTrivia: trailing)
-    let newOptional = SyntaxFactory.makeOptionalType(
-      wrappedType: argument.argumentType, questionMark: questionMark)
+    let newOptional =
+      SyntaxFactory.makeOptionalType(wrappedType: argumentType, questionMark: questionMark)
     return newOptional
   }
 
