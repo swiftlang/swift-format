@@ -219,6 +219,120 @@ public class SubscriptDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 70)
   }
 
+  public func testBreaksBeforeOrInsideOutput() {
+    let input =
+    """
+      protocol MyProtocol {
+        subscript<R>(index: Int) -> R
+      }
+
+      struct MyStruct {
+        subscript<R>(index: Int) -> R {
+          statement
+          statement
+        }
+      }
+      """
+
+    var expected =
+    """
+      protocol MyProtocol {
+        subscript<R>(index: Int)
+          -> R
+      }
+
+      struct MyStruct {
+        subscript<R>(index: Int)
+          -> R
+        {
+          statement
+          statement
+        }
+      }
+
+      """
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 26)
+
+    expected =
+    """
+    protocol MyProtocol {
+      subscript<R>(index: Int)
+        -> R
+    }
+
+    struct MyStruct {
+      subscript<R>(index: Int)
+        -> R
+      {
+        statement
+        statement
+      }
+    }
+
+    """
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 27)
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
+  }
+
+  public func testBreaksBeforeOrInsideOutput_prioritizingKeepingOutputTogether() {
+    let input =
+    """
+      protocol MyProtocol {
+        subscript<R>(index: Int) -> R
+      }
+
+      struct MyStruct {
+        subscript<R>(index: Int) -> R {
+          statement
+          statement
+        }
+      }
+      """
+
+    var expected =
+    """
+      protocol MyProtocol {
+        subscript<R>(
+          index: Int
+        ) -> R
+      }
+
+      struct MyStruct {
+        subscript<R>(
+          index: Int
+        ) -> R {
+          statement
+          statement
+        }
+      }
+
+      """
+    let config = Configuration()
+    config.prioritizeKeepingFunctionOutputTogether = true
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 26, configuration: config)
+
+    expected =
+    """
+    protocol MyProtocol {
+      subscript<R>(
+        index: Int
+      ) -> R
+    }
+
+    struct MyStruct {
+      subscript<R>(
+        index: Int
+      ) -> R {
+        statement
+        statement
+      }
+    }
+
+    """
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 27, configuration: config)
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 30, configuration: config)
+  }
+
   public func testSubscriptFullWrap() {
     let input =
     """
