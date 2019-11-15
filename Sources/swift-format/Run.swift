@@ -10,12 +10,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Basic
 import Foundation
 import SwiftFormat
 import SwiftFormatConfiguration
 import SwiftFormatCore
 import SwiftSyntax
+import TSCBasic
 
 /// Runs the linting pipeline over the provided source file.
 ///
