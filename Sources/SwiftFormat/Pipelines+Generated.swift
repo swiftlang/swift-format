@@ -244,7 +244,6 @@ extension LintPipeline {
   }
 
   func visit(_ node: SwitchStmtSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(CaseIndentLevelEqualsSwitch.visit, in: context, for: node)
     visitIfEnabled(NoCasesWithOnlyFallthrough.visit, in: context, for: node)
     visitIfEnabled(NoParensAroundConditions.visit, in: context, for: node)
     return .visitChildren

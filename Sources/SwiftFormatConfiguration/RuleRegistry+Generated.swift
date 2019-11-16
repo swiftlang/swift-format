@@ -19,7 +19,6 @@ enum RuleRegistry {
     "AmbiguousTrailingClosureOverload": true,
     "BeginDocumentationCommentWithOneLineSummary": true,
     "BlankLineBetweenMembers": true,
-    "CaseIndentLevelEqualsSwitch": true,
     "DoNotUseSemicolons": true,
     "DontRepeatTypeInStaticProperties": true,
     "FullyIndirectEnum": true,
