@@ -40,36 +40,8 @@ extension SequenceExprSyntax {
     // we don't have to distinguish between "shapes" of SequenceExpr.
     guard mayChangeByFolding else { return self }
 
-    var normalizedElements = [ExprSyntax]()
-
-    // In order to simplify implementation, we construct a new elements array
-    // that has the same layout as the one that would have been produced by the
-    // compiler; see
-    // <https://github.com/apple/swift/blob/d6c92dcfca5b81dc7433b8c5efc9513461598894/lib/Sema/TypeCheckExpr.cpp#L729-L741>.
-    // This layout differs from the syntax tree that SwiftSyntax emits in a
-    // couple subtle ways that are described below.
-    for element in elements {
-      if element is AsExprSyntax || element is IsExprSyntax {
-        // Cast operators (`as`, `is`) appear twice in the list to preserve the
-        // even/odd property of the rest of the sequence; that is, that each
-        // even-indexed element is an operand and each odd-indexed element is
-        // (or begins with) an operator.
-        normalizedElements.append(element)
-        normalizedElements.append(element)
-      } else if let ternaryExpr = element as? TernaryExprSyntax {
-        // In the compiler implementation, ternary expressions have their
-        // condition and false choice appear in the main sequence, with the true
-        // choice nested inside an `if-expr` with null values for the other two
-        // parts. In order to match that behavior, we extract the condition and
-        // false choice from the ternary and put them directly in the sequence.
-        // We can't null out those properties of a `TernaryExprSyntax` because
-        // they are non-optional, so instead we simply insert the original
-        // ternary in that slot and the rest of the algorithm will ignore
-        // everything except for the true choice.
-        normalizeTernaryExpression(ternaryExpr, into: &normalizedElements)
-      } else {
-        normalizedElements.append(element)
-      }
+    let normalizedElements = elements.reduce(into: []) { result, expr in
+      normalizeExpression(expr, into: &result)
     }
 
     assert(
@@ -113,22 +85,23 @@ extension SequenceExprSyntax {
       return elements.first! is TernaryExprSyntax
 
     case 2:
-      // A sequence with two elements (a cast expression) will not be changed by
-      // folding.
-      return false
+      // A sequence with two elements might be changed by folding if the first
+      // element is a ternary or the second element is something other than a
+      // cast.
+      var elementsIterator = elements.makeIterator()
+      let first = elementsIterator.next()!
+      let second = elementsIterator.next()!
+      return first is TernaryExprSyntax
+        || !(second is AsExprSyntax || second is IsExprSyntax)
 
     case 3:
       // A sequence with three elements will not be changed by folding unless
-      // the first element is a `TryExpr`, or if the first or third element is a
-      // `TernaryExpr`.
-      var elementsIterator = elements.makeIterator()
-      let first = elementsIterator.next()!
-      _ = elementsIterator.next()!
-      let last = elementsIterator.next()!
-
-      return first is TryExprSyntax
-        || first is TernaryExprSyntax
-        || last is TernaryExprSyntax
+      // it contains a cast expression, ternary, or `try`. (This may be more
+      // inclusive than it needs to be.)
+      return elements.contains {
+        $0 is AsExprSyntax || $0 is IsExprSyntax || $0 is TernaryExprSyntax
+          || $0 is TryExprSyntax
+      }
 
     default:
       // A sequence with more than three elements will be changed by folding.
@@ -289,25 +262,41 @@ extension SequenceExprSyntax {
       operator: op1.operatorExpr, lhs: lhs, rhs: rhs, context: context)
   }
 
-  /// Recursively normalizes ternary expressions by flattening them into the
-  /// given elements array so that they are suitable as input into the sequence
-  /// expression folding algorithm.
-  private func normalizeTernaryExpression(
-    _ expr: TernaryExprSyntax,
+  /// Normalizes an element of a sequence expression so that it has the same
+  /// layout as the one that would have been produced by the compiler and adds
+  /// the resulting element or elements to the end of the given array.
+  private func normalizeExpression(
+    _ expr: ExprSyntax,
     into elements: inout [ExprSyntax]
   ) {
-    if let ternaryCondition = expr.conditionExpression as? TernaryExprSyntax {
-      normalizeTernaryExpression(ternaryCondition, into: &elements)
+    // In order to simplify implementation, we construct a new elements array
+    // that has the same layout as the one that would have been produced by the
+    // compiler; see
+    // <https://github.com/apple/swift/blob/d6c92dcfca5b81dc7433b8c5efc9513461598894/lib/Sema/TypeCheckExpr.cpp#L729-L741>.
+    // This layout differs from the syntax tree that SwiftSyntax emits in a
+    // couple subtle ways that are described below.
+    if expr is AsExprSyntax || expr is IsExprSyntax {
+      // Cast operators (`as`, `is`) appear twice in the list to preserve the
+      // even/odd property of the rest of the sequence; that is, that each
+      // even-indexed element is an operand and each odd-indexed element is
+      // (or begins with) an operator.
+      elements.append(expr)
+      elements.append(expr)
+    } else if let ternaryExpr = expr as? TernaryExprSyntax {
+      // In the compiler implementation, ternary expressions have their
+      // condition and false choice appear in the main sequence, with the true
+      // choice nested inside an `if-expr` with null values for the other two
+      // parts. In order to match that behavior, we extract the condition and
+      // false choice from the ternary and put them directly in the sequence.
+      // We can't null out those properties of a `TernaryExprSyntax` because
+      // they are non-optional, so instead we simply insert the original
+      // ternary in that slot and the rest of the algorithm will ignore
+      // everything except for the true choice.
+      normalizeExpression(ternaryExpr.conditionExpression, into: &elements)
+      elements.append(ternaryExpr)
+      normalizeExpression(ternaryExpr.secondChoice, into: &elements)
     } else {
-      elements.append(expr.conditionExpression)
-    }
-
-    elements.append(expr)
-
-    if let ternarySecondChoice = expr.secondChoice as? TernaryExprSyntax {
-      normalizeTernaryExpression(ternarySecondChoice, into: &elements)
-    } else {
-      elements.append(expr.secondChoice)
+      elements.append(expr)
     }
   }
 

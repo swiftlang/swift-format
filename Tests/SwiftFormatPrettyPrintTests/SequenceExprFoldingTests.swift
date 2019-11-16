@@ -99,6 +99,9 @@ final class SequenceExprFoldingTests: XCTestCase {
   func testComplexCastExpressions() {
     assertFoldedExprStructure("a + b as C", "{{ a + b } as C }")
     assertFoldedExprStructure("a < b as C", "{ a < { b as C }}")
+    assertFoldedExprStructure(
+      "a is X && b is Y && c is Z",
+      "{{{ a is X } && { b is Y }} && { c is Z }}")
   }
 
   func testTryFolding() {
@@ -143,6 +146,60 @@ final class SequenceExprFoldingTests: XCTestCase {
     assertFoldedExprStructure("a ** b ** c + d", "{{ a ** { b ** c }} + d }")
     assertFoldedExprStructure("a * b ** c + d", "{{ a * { b ** c }} + d }")
     assertFoldedExprStructure("a * b + c ** d", "{{ a * b } + { c ** d }}")
+  }
+
+  func testMixedCastsTriesAndTernaries() {
+    // These are some regression tests around some mixed cast, try, and ternary
+    // expressions that the folding algorithm originally didn't handle correctly
+    // because it either didn't detect that it needed to fold them at all or it
+    // did not recursively duplicate the cast expression when it was inside a
+    // ternary condition or false choice (causing the odd-length precondition to
+    // fail).
+    assertFoldedExprStructure(
+      "b is C ? d : e",
+      "{{ b is C } ? d : e }")
+    assertFoldedExprStructure(
+      "b is X ? c : d as Z",
+      "{{ b is X } ? c : { d as Z }}")
+    assertFoldedExprStructure(
+      "b is X ? c as Y : d",
+      "{{ b is X } ? { c as Y } : d }")
+    assertFoldedExprStructure(
+      "b is X ? c as Y : d as Z",
+      "{{ b is X } ? { c as Y } : { d as Z }}")
+
+    assertFoldedExprStructure(
+      "a = b is C ? d : e",
+      "{ a = {{ b is C } ? d : e }}")
+    assertFoldedExprStructure(
+      "a = b is X ? c : d as Z",
+      "{ a = {{ b is X } ? c : { d as Z }}}")
+    assertFoldedExprStructure(
+      "a = b is X ? c as Y : d",
+      "{ a = {{ b is X } ? { c as Y } : d }}")
+    assertFoldedExprStructure(
+      "a = b is X ? c as Y : d as Z",
+      "{ a = {{ b is X } ? { c as Y } : { d as Z }}}")
+
+    assertFoldedExprStructure(
+      "a ? b : c as Z",
+      "{ a ? b : { c as Z }}")
+    assertFoldedExprStructure(
+      "a ? b as Y : c as Z",
+      "{ a ? { b as Y } : { c as Z }}")
+    assertFoldedExprStructure(
+      "a as X ? b : c as Z",
+      "{{ a as X } ? b : { c as Z }}")
+    assertFoldedExprStructure(
+      "a as X ? b as Y : c as Z",
+      "{{ a as X } ? { b as Y } : { c as Z }}")
+
+    assertFoldedExprStructure(
+      "a ? try b : try c as Z",
+      "{ a ? try b : try { c as Z }}")
+    assertFoldedExprStructure(
+      "a as X ? try b : try c as Z",
+      "{{ a as X } ? try b : try { c as Z }}")
   }
 
   /// Asserts that a sequence expression, after folding, as the expected

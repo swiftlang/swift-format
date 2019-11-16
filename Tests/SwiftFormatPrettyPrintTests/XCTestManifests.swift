@@ -448,6 +448,7 @@ extension SequenceExprFoldingTests {
         ("testCustomOperator", testCustomOperator),
         ("testDifferentOperatorsSamePrecedence", testDifferentOperatorsSamePrecedence),
         ("testMixedAssociativity", testMixedAssociativity),
+        ("testMixedCastsTriesAndTernaries", testMixedCastsTriesAndTernaries),
         ("testNestedTernary", testNestedTernary),
         ("testSimpleBinaryExprIsUnchanged", testSimpleBinaryExprIsUnchanged),
         ("testSimpleBinaryExprLeftAssociativity", testSimpleBinaryExprLeftAssociativity),
