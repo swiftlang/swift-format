@@ -72,10 +72,10 @@ public class DiagnosingTestCase: XCTestCase {
       return
     }
 
-    self.context = makeContext(sourceFileSyntax: sourceFileSyntax)
-
     // Force the rule to be enabled while we test it.
-    context!.configuration.rules[type.ruleName] = true
+    var configuration = Configuration()
+    configuration.rules[type.ruleName] = true
+    self.context = makeContext(sourceFileSyntax: sourceFileSyntax, configuration: configuration)
 
     // If we're linting, then indicate that we want to fail for unasserted diagnostics when the test
     // is torn down.
@@ -114,10 +114,10 @@ public class DiagnosingTestCase: XCTestCase {
       return
     }
 
-    context = makeContext(sourceFileSyntax: sourceFileSyntax, configuration: configuration)
-
     // Force the rule to be enabled while we test it.
-    context!.configuration.rules[formatType.ruleName] = true
+    var configuration = configuration ?? Configuration()
+    configuration.rules[formatType.ruleName] = true
+    context = makeContext(sourceFileSyntax: sourceFileSyntax, configuration: configuration)
 
     shouldCheckForUnassertedDiagnostics = checkForUnassertedDiagnostics
     let formatter = formatType.init(context: context!)

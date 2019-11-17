@@ -58,15 +58,17 @@ public class WhitespaceTestCase: XCTestCase {
       return
     }
 
+    var configuration = Configuration()
+    if let linelength = linelength {
+      configuration.lineLength = linelength
+    }
+
     context = Context(
-      configuration: Configuration(),
+      configuration: configuration,
       diagnosticEngine: DiagnosticEngine(),
       fileURL: URL(fileURLWithPath: "/tmp/test.swift"),
       sourceFileSyntax: sourceFileSyntax
     )
-    if let linelength = linelength {
-      context?.configuration.lineLength = linelength
-    }
     consumer = DiagnosticTrackingConsumer()
     context?.diagnosticEngine?.addConsumer(consumer)
 

@@ -17,7 +17,7 @@ import Foundation
 private let highestSupportedConfigurationVersion = 1
 
 /// Holds the complete set of configured values and defaults.
-public class Configuration: Codable {
+public struct Configuration: Codable, Equatable {
 
   private enum CodingKeys: CodingKey {
     case version
@@ -41,7 +41,7 @@ public class Configuration: Codable {
 
   /// The dictionary containing the rule names that we wish to run on. A rule is not used if it is
   /// marked as `false`, or if it is missing from the dictionary.
-  public var rules: [String: Bool] = [:]
+  public var rules: [String: Bool] = RuleRegistry.rules
 
   /// The maximum number of consecutive blank lines that may appear in a file.
   public var maximumBlankLines = 1
@@ -105,10 +105,9 @@ public class Configuration: Codable {
   /// Constructs a Configuration with all default values.
   public init() {
     self.version = highestSupportedConfigurationVersion
-    self.rules = RuleRegistry.rules
   }
 
-  public required init(from decoder: Decoder) throws {
+  public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
 
     // Unfortunately, to allow the user to leave out configuration options in the JSON, we would
@@ -147,7 +146,13 @@ public class Configuration: Codable {
       = try container.decodeIfPresent(Bool.self, forKey: .prioritizeKeepingFunctionOutputTogether) ?? false
     self.indentConditionalCompilationBlocks
       = try container.decodeIfPresent(Bool.self, forKey: .indentConditionalCompilationBlocks) ?? true
-    self.rules = try container.decodeIfPresent([String: Bool].self, forKey: .rules) ?? [:]
+
+    // If the `rules` key is not present at all, default it to the built-in set
+    // so that the behavior is the same as if the configuration had been
+    // default-initialized. To get an empty rules dictionary, one can explicitly
+    // set the `rules` key to `{}`.
+    self.rules
+      = try container.decodeIfPresent([String: Bool].self, forKey: .rules) ?? RuleRegistry.rules
   }
 
   public func encode(to encoder: Encoder) throws {
@@ -169,7 +174,7 @@ public class Configuration: Codable {
 }
 
 /// Configuration for the BlankLineBetweenMembers rule.
-public struct BlankLineBetweenMembersConfiguration: Codable {
+public struct BlankLineBetweenMembersConfiguration: Codable, Equatable {
   /// If true, blank lines are not required between single-line properties.
   public let ignoreSingleLineProperties: Bool
 
@@ -179,7 +184,7 @@ public struct BlankLineBetweenMembersConfiguration: Codable {
 }
 
 /// Configuration for the NoPlaygroundLiterals rule.
-public struct NoPlaygroundLiteralsConfiguration: Codable {
+public struct NoPlaygroundLiteralsConfiguration: Codable, Equatable {
   public enum ResolveBehavior: String, Codable {
     /// If not sure, use `UIColor` to replace `#colorLiteral`.
     case useUIColor

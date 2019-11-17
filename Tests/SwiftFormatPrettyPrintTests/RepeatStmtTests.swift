@@ -83,7 +83,7 @@ public class RepeatStmtTests: PrettyPrintTestCase {
 
       """
 
-    let config = Configuration()
+    var config = Configuration()
     config.lineBreakBeforeControlFlowKeywords = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 25, configuration: config)
   }

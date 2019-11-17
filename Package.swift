@@ -68,6 +68,10 @@ let package = Package(
       ]
     ),
     .testTarget(
+      name: "SwiftFormatConfigurationTests",
+      dependencies: ["SwiftFormatConfiguration"]
+    ),
+    .testTarget(
       name: "SwiftFormatRulesTests",
       dependencies: [
         "SwiftFormatConfiguration",

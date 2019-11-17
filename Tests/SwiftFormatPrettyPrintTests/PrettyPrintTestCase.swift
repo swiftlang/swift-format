@@ -15,6 +15,7 @@ public class PrettyPrintTestCase: XCTestCase {
     file: StaticString = #file,
     line: UInt = #line
   ) {
+    var configuration = configuration
     configuration.lineLength = linelength
 
     // Assert that the input, when formatted, is what we expected.
