@@ -134,6 +134,23 @@ extension Trivia {
       })
   }
 
+  /// Returns this trivia, excluding the last newline and anything following it.
+  ///
+  /// If there is no newline in the trivia, it is returned unmodified.
+  public func withoutLastLine() -> Trivia {
+    var maybeLastNewlineOffset: Int? = nil
+    for (offset, piece) in self.enumerated() {
+      switch piece {
+      case .newlines, .carriageReturns, .carriageReturnLineFeeds:
+        maybeLastNewlineOffset = offset
+      default:
+        break
+      }
+    }
+    guard let lastNewlineOffset = maybeLastNewlineOffset else { return self }
+    return Trivia(pieces: self.dropLast(self.count - lastNewlineOffset))
+  }
+
   /// Returns this set of trivia, with all spaces removed except for one at the
   /// end.
   public func withOneTrailingSpace() -> Trivia {
