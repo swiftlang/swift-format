@@ -174,9 +174,11 @@ extension NoCasesWithOnlyFallthroughTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__NoCasesWithOnlyFallthroughTests = [
+        ("testCasesInsideConditionalCompilationBlock", testCasesInsideConditionalCompilationBlock),
         ("testCommentsAroundCombinedCasesStayInPlace", testCommentsAroundCombinedCasesStayInPlace),
         ("testFallthroughCases", testFallthroughCases),
         ("testFallthroughCasesWithCommentsAreNotCombined", testFallthroughCasesWithCommentsAreNotCombined),
+        ("testNestedSwitches", testNestedSwitches),
     ]
 }
 
