@@ -282,7 +282,7 @@ public class BlankLineBetweenMembersTests: DiagnosingTestCase {
   }
 
   public func testBlankLineBetweenMembersIgnoreSingleLineDisabled() {
-    let config = Configuration()
+    var config = Configuration()
     config.blankLineBetweenMembers =
       BlankLineBetweenMembersConfiguration(ignoreSingleLineProperties: false)
 

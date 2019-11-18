@@ -56,7 +56,7 @@ public class ClosureExprTests: PrettyPrintTestCase {
 
       """
 
-    let config = Configuration()
+    var config = Configuration()
     config.lineBreakBeforeEachArgument = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 42, configuration: config)
   }
@@ -101,7 +101,7 @@ public class ClosureExprTests: PrettyPrintTestCase {
 
       """
 
-    let config = Configuration()
+    var config = Configuration()
     config.lineBreakBeforeEachArgument = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 42, configuration: config)
   }
@@ -128,7 +128,7 @@ public class ClosureExprTests: PrettyPrintTestCase {
 
       """
 
-    let config = Configuration()
+    var config = Configuration()
     config.lineBreakBeforeEachArgument = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: config)
   }

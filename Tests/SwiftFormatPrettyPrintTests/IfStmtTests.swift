@@ -147,7 +147,7 @@ public class IfStmtTests: PrettyPrintTestCase {
 
       """
 
-    let config = Configuration()
+    var config = Configuration()
     config.lineBreakBeforeControlFlowKeywords = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20, configuration: config)
   }

@@ -42,7 +42,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
 
       """
 
-    let config = Configuration()
+    var config = Configuration()
     config.lineBreakBeforeEachArgument = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
@@ -85,7 +85,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
 
       """
 
-    let config = Configuration()
+    var config = Configuration()
     config.lineBreakBeforeEachArgument = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
@@ -129,7 +129,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
 
       """
 
-    let config = Configuration()
+    var config = Configuration()
     config.lineBreakBeforeEachArgument = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
@@ -174,7 +174,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
 
       """
 
-    let config = Configuration()
+    var config = Configuration()
     config.lineBreakBeforeEachArgument = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
@@ -221,7 +221,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
 
       """
 
-    let config = Configuration()
+    var config = Configuration()
     config.lineBreakBeforeEachArgument = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: config)
   }
@@ -267,7 +267,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
 
       """
 
-    let config = Configuration()
+    var config = Configuration()
     config.lineBreakBeforeEachArgument = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: config)
   }
@@ -314,7 +314,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
 
       """
 
-    let config = Configuration()
+    var config = Configuration()
     config.lineBreakBeforeEachArgument = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
@@ -577,7 +577,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
       }
 
       """
-    let config = Configuration()
+    var config = Configuration()
     config.prioritizeKeepingFunctionOutputTogether = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 23, configuration: config)
 
@@ -663,7 +663,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
       }
 
       """
-    let config = Configuration()
+    var config = Configuration()
     config.prioritizeKeepingFunctionOutputTogether = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 23, configuration: config)
   }
@@ -752,7 +752,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
       }
 
       """
-    let config = Configuration()
+    var config = Configuration()
     config.prioritizeKeepingFunctionOutputTogether = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 23, configuration: config)
 
@@ -813,7 +813,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
 
       """
 
-    let config = Configuration()
+    var config = Configuration()
     config.lineBreakBeforeEachArgument = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 35, configuration: config)
   }

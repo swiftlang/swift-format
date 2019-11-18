@@ -191,7 +191,7 @@ class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
   /// Creates a new configuration with the given value for `respectsExistingLineBreaks` and default
   /// values for everything else.
   private func configuration(respectingExistingLineBreaks: Bool) -> Configuration {
-    let config = Configuration()
+    var config = Configuration()
     config.respectsExistingLineBreaks = respectingExistingLineBreaks
     return config
   }
