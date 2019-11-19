@@ -673,32 +673,58 @@ private final class TokenStreamCreator: SyntaxVisitor {
     }
 
     let arguments = node.argumentList
-    if !arguments.isEmpty {
-      // If there is a trailing closure, force the right parenthesis down to the next line so it
-      // stays with the open curly brace.
-      let breakBeforeRightParen = node.trailingClosure != nil
-        && !isCompactSingleFunctionCallArgument(node.argumentList)
 
-      var afterLeftParen: [Token] = [.break(.open, size: 0)]
-      var beforeRightParen: [Token] = [.break(.close(mustBreak: breakBeforeRightParen), size: 0)]
-
-      if shouldGroupAroundArgumentList(of: node) {
-        afterLeftParen.append(.open(argumentListConsistency()))
-        beforeRightParen.append(.close)
-      }
-
-      after(node.leftParen, tokens: afterLeftParen)
-      before(node.rightParen, tokens: beforeRightParen)
-    }
+    // If there is a trailing closure, force the right parenthesis down to the next line so it
+    // stays with the open curly brace.
+    let breakBeforeRightParen = node.trailingClosure != nil
+      && !isCompactSingleFunctionCallArgument(arguments)
 
     before(node.trailingClosure?.leftBrace, tokens: .break(.same))
+
+    arrangeFunctionCallArgumentList(
+      arguments,
+      leftDelimiter: node.leftParen,
+      rightDelimiter: node.rightParen,
+      forcesBreakBeforeRightDelimiter: breakBeforeRightParen)
+
+    return .visitChildren
+  }
+
+  /// Arrange the given argument list (or equivalently, tuple expression list) as a list of function
+  /// arguments.
+  ///
+  /// - Parameters:
+  ///   - arguments: The argument list/tuple expression list to arrange.
+  ///   - leftDelimiter: The left parenthesis or bracket surrounding the arguments, if any.
+  ///   - rightDelimiter: The right parenthesis or bracket surrounding the arguments, if any.
+  ///   - forcesBreakBeforeRightDelimiter: True if a line break should be forced before the right
+  ///     right delimiter if a line break occurred after the left delimiter, or false if the right
+  ///     delimiter is allowed to hang on the same line as the final argument.
+  private func arrangeFunctionCallArgumentList(
+    _ arguments: FunctionCallArgumentListSyntax,
+    leftDelimiter: TokenSyntax?,
+    rightDelimiter: TokenSyntax?,
+    forcesBreakBeforeRightDelimiter: Bool
+  ) {
+    if !arguments.isEmpty {
+      var afterLeftDelimiter: [Token] = [.break(.open, size: 0)]
+      var beforeRightDelimiter: [Token] = [
+        .break(.close(mustBreak: forcesBreakBeforeRightDelimiter), size: 0),
+      ]
+
+      if shouldGroupAroundArgumentList(arguments) {
+        afterLeftDelimiter.append(.open(argumentListConsistency()))
+        beforeRightDelimiter.append(.close)
+      }
+
+      after(leftDelimiter, tokens: afterLeftDelimiter)
+      before(rightDelimiter, tokens: beforeRightDelimiter)
+    }
 
     let shouldGroupAroundArgument = !isCompactSingleFunctionCallArgument(arguments)
     for argument in arguments {
       arrangeAsFunctionCallArgument(argument, shouldGroup: shouldGroupAroundArgument)
     }
-
-    return .visitChildren
   }
 
   /// Arranges the given tuple expression element as a function call argument.
@@ -805,22 +831,18 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   func visit(_ node: SubscriptExprSyntax) -> SyntaxVisitorContinueKind {
     let arguments = node.argumentList
-    if !arguments.isEmpty {
-      // If there is a trailing closure, force the right bracket down to the next line so it stays
-      // with the open curly brace.
-      let breakBeforeRightBracket = node.trailingClosure != nil
 
-      after(node.leftBracket, tokens: .break(.open, size: 0), .open)
-      before(
-        node.rightBracket,
-        tokens: .break(.close(mustBreak: breakBeforeRightBracket), size: 0), .close)
-    }
+    // If there is a trailing closure, force the right bracket down to the next line so it stays
+    // with the open curly brace.
+    let breakBeforeRightBracket = node.trailingClosure != nil
+
     before(node.trailingClosure?.leftBrace, tokens: .space)
 
-    let shouldGroupAroundArgument = !isCompactSingleFunctionCallArgument(arguments)
-    for argument in arguments {
-      arrangeAsFunctionCallArgument(argument, shouldGroup: shouldGroupAroundArgument)
-    }
+    arrangeFunctionCallArgumentList(
+      arguments,
+      leftDelimiter: node.leftBracket,
+      rightDelimiter: node.rightBracket,
+      forcesBreakBeforeRightDelimiter: breakBeforeRightBracket)
 
     return .visitChildren
   }
@@ -839,6 +861,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: ObjectLiteralExprSyntax) -> SyntaxVisitorContinueKind {
+    arrangeFunctionCallArgumentList(
+      node.arguments,
+      leftDelimiter: node.leftParen,
+      rightDelimiter: node.rightParen,
+      forcesBreakBeforeRightDelimiter: false)
     return .visitChildren
   }
 
@@ -2286,10 +2313,10 @@ private final class TokenStreamCreator: SyntaxVisitor {
     }
   }
 
-  /// Returns true if open/close breaks should be inserted around the entire argument list of the
-  /// given function call expression.
-  private func shouldGroupAroundArgumentList(of node: FunctionCallExprSyntax) -> Bool {
-    let argumentCount = node.argumentList.count
+  /// Returns true if open/close breaks should be inserted around the entire function call argument
+  /// list.
+  private func shouldGroupAroundArgumentList(_ arguments: FunctionCallArgumentListSyntax) -> Bool {
+    let argumentCount = arguments.count
 
     // If there are no arguments, there's no reason to break.
     if argumentCount == 0 { return false }
@@ -2297,7 +2324,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // If there is more than one argument, we must open/close break around the whole list.
     if argumentCount > 1 { return true }
 
-    return !isCompactSingleFunctionCallArgument(node.argumentList)
+    return !isCompactSingleFunctionCallArgument(arguments)
   }
 
   /// Returns true if the argument list can be compacted, even if it spans multiple lines (where
