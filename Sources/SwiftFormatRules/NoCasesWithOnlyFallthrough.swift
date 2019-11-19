@@ -65,12 +65,12 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
         if let label = switchCase.label as? SwitchCaseLabelSyntax {
           if retrieveNumericCaseValue(caseLabel: label) != nil {
             collapsedCase = collapseIntegerCases(
-              violations: fallthroughOnlyCasesAndLabels.lazy.map(\.label),
+              violations: fallthroughOnlyCasesAndLabels.lazy.map { $0.label },
               validCaseLabel: label,
               validCase: switchCase)
           } else {
             collapsedCase = collapseNonIntegerCases(
-              violations: fallthroughOnlyCasesAndLabels.lazy.map(\.label),
+              violations: fallthroughOnlyCasesAndLabels.lazy.map { $0.label },
               validCaseLabel: label,
               validCase: switchCase)
           }
