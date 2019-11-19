@@ -334,7 +334,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
 
       """
 
-    let config = Configuration()
+    var config = Configuration()
     config.lineBreakBeforeEachArgument = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
@@ -600,7 +600,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
 
     """
 
-    let config = Configuration()
+    var config = Configuration()
     config.lineBreakBeforeEachGenericRequirement = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30, configuration: config)
   }

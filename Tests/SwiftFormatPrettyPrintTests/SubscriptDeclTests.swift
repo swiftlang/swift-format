@@ -200,7 +200,7 @@ public class SubscriptDeclTests: PrettyPrintTestCase {
 
       """
 
-    let config = Configuration()
+    var config = Configuration()
     config.lineBreakBeforeEachArgument = false
     config.lineBreakBeforeEachGenericRequirement = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
@@ -473,7 +473,7 @@ public class SubscriptDeclTests: PrettyPrintTestCase {
 
     """
 
-    let config = Configuration()
+    var config = Configuration()
     config.lineBreakBeforeEachGenericRequirement = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 34, configuration: config)
   }

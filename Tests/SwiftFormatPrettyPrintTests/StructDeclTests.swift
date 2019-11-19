@@ -247,7 +247,7 @@ public class StructDeclTests: PrettyPrintTestCase {
 
       """
 
-    let config = Configuration()
+    var config = Configuration()
     config.lineBreakBeforeEachGenericRequirement = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60, configuration: config)
   }
@@ -335,7 +335,7 @@ public class StructDeclTests: PrettyPrintTestCase {
 
       """
 
-    let config = Configuration()
+    var config = Configuration()
     config.lineBreakBeforeEachGenericRequirement = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60, configuration: config)
   }
@@ -416,7 +416,7 @@ public class StructDeclTests: PrettyPrintTestCase {
 
       """
 
-    let config = Configuration()
+    var config = Configuration()
     config.lineBreakBeforeEachArgument = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
