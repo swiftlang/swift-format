@@ -59,6 +59,13 @@ top-level keys and values:
     If false (the default), arguments will be laid out horizontally first, with
     line breaks only being fired when the line length would be exceeded.
     
+*   `lineBreakBeforeEachGenericRequirement` _(boolean)_:  Determines the 
+    line-breaking behavior for generic requirements when the requirements list 
+    is wrapped onto multiple lines. If true, a line break will be added before each
+    requirement, forcing the entire requirements list to be laid out vertically. If false
+    (the default), requirements will be laid out horizontally first, with line breaks 
+    only being fired when the line length would be exceeded.
+
 *   `prioritizeKeepingFunctionOutputTogether` _(boolean)_: Determines if 
     function-like declaration outputs should be prioritized to be together with the
     function signature right (closing) parenthesis. If false (the default), function 

@@ -289,6 +289,14 @@ public class FunctionDeclTests: PrettyPrintTestCase {
         let a = 123
         let b = "abc"
       }
+
+      public func index<Elements: Collection, Element>(
+        of element: Element,
+        in collection: Elements
+      ) -> Elements.Index? where Elements.Element == Element, Element: Equatable, Element: ReallyLongProtocolName {
+        let a = 123
+        let b = "abc"
+      }
       """
 
     let expected =
@@ -305,8 +313,89 @@ public class FunctionDeclTests: PrettyPrintTestCase {
         of element: Element,
         in collection: Elements
       ) -> Elements.Index?
-      where Elements.Element == Element,
+      where
+        Elements.Element == Element, Element: Equatable
+      {
+        let a = 123
+        let b = "abc"
+      }
+
+      public func index<Elements: Collection, Element>(
+        of element: Element,
+        in collection: Elements
+      ) -> Elements.Index?
+      where
+        Elements.Element == Element, Element: Equatable,
+        Element: ReallyLongProtocolName
+      {
+        let a = 123
+        let b = "abc"
+      }
+
+      """
+
+    let config = Configuration()
+    config.lineBreakBeforeEachArgument = false
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
+  }
+
+  public func testFunctionWhereClause_lineBreakBeforeEachGenericRequirement() {
+    let input =
+    """
+      public func index<Elements: Collection, Element>(
+        of element: Element, in collection: Elements
+      ) -> Elements.Index? where Elements.Element == Element {
+        let a = 123
+        let b = "abc"
+      }
+
+      public func index<Elements: Collection, Element>(
+        of element: Element,
+        in collection: Elements
+      ) -> Elements.Index? where Elements.Element == Element, Element: Equatable {
+        let a = 123
+        let b = "abc"
+      }
+
+      public func index<Elements: Collection, Element>(
+        of element: Element,
+        in collection: Elements
+      ) -> Elements.Index? where Elements.Element == Element, Element: Equatable, Element: ReallyLongProtocolName {
+        let a = 123
+        let b = "abc"
+      }
+      """
+
+    let expected =
+    """
+      public func index<Elements: Collection, Element>(
+        of element: Element, in collection: Elements
+      ) -> Elements.Index?
+      where Elements.Element == Element {
+        let a = 123
+        let b = "abc"
+      }
+
+      public func index<Elements: Collection, Element>(
+        of element: Element,
+        in collection: Elements
+      ) -> Elements.Index?
+      where
+        Elements.Element == Element,
         Element: Equatable
+      {
+        let a = 123
+        let b = "abc"
+      }
+
+      public func index<Elements: Collection, Element>(
+        of element: Element,
+        in collection: Elements
+      ) -> Elements.Index?
+      where
+        Elements.Element == Element,
+        Element: Equatable,
+        Element: ReallyLongProtocolName
       {
         let a = 123
         let b = "abc"
@@ -316,6 +405,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
 
     var config = Configuration()
     config.lineBreakBeforeEachArgument = false
+    config.lineBreakBeforeEachGenericRequirement = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 
@@ -450,7 +540,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     let input =
     """
     @discardableResult @objc
-    public func index<Elements: Collection, Element>(of element: Element, in collection: Elements) -> Elements.Index? where Elements.Element == Element, Element: Equatable {
+    public func index<Elements: Collection, Element>(of element: Element, in collection: Elements) -> Elements.Index? where Element: Foo, Element: Bar, Elements.Element == Element  {
       let a = 123
       let b = "abc"
     }
@@ -467,8 +557,8 @@ public class FunctionDeclTests: PrettyPrintTestCase {
       in collection: Elements
     ) -> Elements.Index?
     where
-      Elements.Element == Element,
-      Element: Equatable
+      Element: Foo, Element: Bar,
+      Elements.Element == Element
     {
       let a = 123
       let b = "abc"
@@ -477,6 +567,42 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
+  }
+
+  public func testFunctionFullWrap_lineBreakBeforeEachGenericRequirement() {
+    let input =
+    """
+    @discardableResult @objc
+    public func index<Elements: Collection, Element>(of element: Element, in collection: Elements) -> Elements.Index? where Element: Foo, Element: Bar, Elements.Element == Element  {
+      let a = 123
+      let b = "abc"
+    }
+    """
+
+    let expected =
+    """
+    @discardableResult @objc
+    public func index<
+      Elements: Collection,
+      Element
+    >(
+      of element: Element,
+      in collection: Elements
+    ) -> Elements.Index?
+    where
+      Element: Foo,
+      Element: Bar,
+      Elements.Element == Element
+    {
+      let a = 123
+      let b = "abc"
+    }
+
+    """
+
+    let config = Configuration()
+    config.lineBreakBeforeEachGenericRequirement = true
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 30, configuration: config)
   }
 
   public func testEmptyFunction() {

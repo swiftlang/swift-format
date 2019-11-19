@@ -205,7 +205,7 @@ public class EnumDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30, configuration: config)
   }
 
-  public func testEnumInheritence() {
+  public func testEnumInheritance() {
     let input =
       """
       enum MyEnum: ProtoOne {
@@ -273,8 +273,8 @@ public class EnumDeclTests: PrettyPrintTestCase {
         let B: Double
       }
       enum MyEnum<S, T>
-      where S: Collection, T: ReallyLongEnumName,
-        U: AnotherLongEnum
+      where
+        S: Collection, T: ReallyLongEnumName, U: AnotherLongEnum
       {
         case firstCase
         let B: Double
@@ -285,7 +285,53 @@ public class EnumDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
   }
 
-  public func testEnumWhereClauseWithInheritence() {
+  public func testEnumWhereClause_lineBreakBeforeEachGenericRequirement() {
+    let input =
+    """
+      enum MyEnum<S, T> where S: Collection {
+        case firstCase
+        let B: Double
+      }
+      enum MyEnum<S, T> where S: Collection, T: ReallyLongEnumName {
+        case firstCase
+        let B: Double
+      }
+      enum MyEnum<S, T> where S: Collection, T: ReallyLongEnumName, U: AnotherLongEnum, W: AnotherReallyLongEnumName {
+        case firstCase
+        let B: Double
+      }
+      """
+
+    let expected =
+    """
+      enum MyEnum<S, T> where S: Collection {
+        case firstCase
+        let B: Double
+      }
+      enum MyEnum<S, T>
+      where S: Collection, T: ReallyLongEnumName {
+        case firstCase
+        let B: Double
+      }
+      enum MyEnum<S, T>
+      where
+        S: Collection,
+        T: ReallyLongEnumName,
+        U: AnotherLongEnum,
+        W: AnotherReallyLongEnumName
+      {
+        case firstCase
+        let B: Double
+      }
+
+      """
+
+    let config = Configuration()
+    config.lineBreakBeforeEachGenericRequirement = true
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 60, configuration: config)
+  }
+
+  public func testEnumWhereClauseWithInheritance() {
     let input =
       """
       enum MyEnum<S, T>: ProtoOne where S: Collection {
@@ -293,6 +339,10 @@ public class EnumDeclTests: PrettyPrintTestCase {
         let B: Double
       }
       enum MyEnum<S, T>: ProtoOne, ProtoTwo where S: Collection, T: Protocol {
+        case firstCase
+        let B: Double
+      }
+      enum MyEnum<S, T>: ProtoOne, ProtoTwo where S: Collection, T: Protocol, T: ReallyLongEnumName, U: LongerEnumName, W: AnotherReallyLongEnumName {
         case firstCase
         let B: Double
       }
@@ -309,10 +359,65 @@ public class EnumDeclTests: PrettyPrintTestCase {
         case firstCase
         let B: Double
       }
+      enum MyEnum<S, T>: ProtoOne, ProtoTwo
+      where
+        S: Collection, T: Protocol, T: ReallyLongEnumName,
+        U: LongerEnumName, W: AnotherReallyLongEnumName
+      {
+        case firstCase
+        let B: Double
+      }
 
       """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
+  }
+
+  public func testEnumWhereClauseWithInheritance_lineBreakBeforeEachGenericRequirement() {
+    let input =
+    """
+      enum MyEnum<S, T>: ProtoOne where S: Collection {
+        case firstCase
+        let B: Double
+      }
+      enum MyEnum<S, T>: ProtoOne, ProtoTwo where S: Collection, T: Protocol {
+        case firstCase
+        let B: Double
+      }
+      enum MyEnum<S, T>: ProtoOne, ProtoTwo where S: Collection, T: Protocol, T: ReallyLongEnumName, U: LongerEnumName, W: AnotherReallyLongEnumName {
+        case firstCase
+        let B: Double
+      }
+      """
+
+    let expected =
+    """
+      enum MyEnum<S, T>: ProtoOne where S: Collection {
+        case firstCase
+        let B: Double
+      }
+      enum MyEnum<S, T>: ProtoOne, ProtoTwo
+      where S: Collection, T: Protocol {
+        case firstCase
+        let B: Double
+      }
+      enum MyEnum<S, T>: ProtoOne, ProtoTwo
+      where
+        S: Collection,
+        T: Protocol,
+        T: ReallyLongEnumName,
+        U: LongerEnumName,
+        W: AnotherReallyLongEnumName
+      {
+        case firstCase
+        let B: Double
+      }
+
+      """
+
+    let config = Configuration()
+    config.lineBreakBeforeEachGenericRequirement = true
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 60, configuration: config)
   }
 
   public func testEnumAttributes() {
@@ -366,7 +471,7 @@ public class EnumDeclTests: PrettyPrintTestCase {
   public func testEnumFullWrap() {
     let input =
       """
-      public enum MyEnum<BaseCollection, SecondCollection>: MyContainerProtocolOne, MyContainerProtocolTwo, SomeoneElsesContainerProtocol, SomeFrameworkContainerProtocol where BaseCollection: Collection, BaseCollection.Element: Equatable, BaseCollection.Element: SomeOtherProtocol {
+      public enum MyEnum<BaseCollection, SecondCollection>: MyContainerProtocolOne, MyContainerProtocolTwo, SomeoneElsesContainerProtocol, SomeFrameworkContainerProtocol where BaseCollection: Collection, BaseCollection: P, BaseCollection.Element: Equatable, BaseCollection.Element: SomeOtherProtocol {
         case firstCase
         let B: Double
       }
@@ -380,7 +485,42 @@ public class EnumDeclTests: PrettyPrintTestCase {
       >: MyContainerProtocolOne, MyContainerProtocolTwo,
         SomeoneElsesContainerProtocol,
         SomeFrameworkContainerProtocol
-      where BaseCollection: Collection,
+      where
+        BaseCollection: Collection, BaseCollection: P,
+        BaseCollection.Element: Equatable,
+        BaseCollection.Element: SomeOtherProtocol
+      {
+        case firstCase
+        let B: Double
+      }
+
+      """
+
+    let config = Configuration()
+    config.lineBreakBeforeEachArgument = false
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
+  }
+
+  public func testEnumFullWrap_lineBreakBeforeEachGenericRequirement() {
+    let input =
+    """
+      public enum MyEnum<BaseCollection, SecondCollection>: MyContainerProtocolOne, MyContainerProtocolTwo, SomeoneElsesContainerProtocol, SomeFrameworkContainerProtocol where BaseCollection: Collection, BaseCollection: P, BaseCollection.Element: Equatable, BaseCollection.Element: SomeOtherProtocol {
+        case firstCase
+        let B: Double
+      }
+      """
+
+    let expected =
+
+    """
+      public enum MyEnum<
+        BaseCollection, SecondCollection
+      >: MyContainerProtocolOne, MyContainerProtocolTwo,
+        SomeoneElsesContainerProtocol,
+        SomeFrameworkContainerProtocol
+      where
+        BaseCollection: Collection,
+        BaseCollection: P,
         BaseCollection.Element: Equatable,
         BaseCollection.Element: SomeOtherProtocol
       {
@@ -392,6 +532,7 @@ public class EnumDeclTests: PrettyPrintTestCase {
 
     var config = Configuration()
     config.lineBreakBeforeEachArgument = false
+    config.lineBreakBeforeEachGenericRequirement = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 

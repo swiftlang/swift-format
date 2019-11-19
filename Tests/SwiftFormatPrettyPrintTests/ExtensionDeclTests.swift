@@ -1,3 +1,5 @@
+import SwiftFormatConfiguration
+
 public class ExtensionDeclTests: PrettyPrintTestCase {
   public func testBasicExtensionDeclarations() {
     let input =
@@ -38,7 +40,7 @@ public class ExtensionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 33)
   }
 
-  public func testExtensionInheritence() {
+  public func testExtensionInheritance() {
     let input =
       """
       extension MyExtension: ProtoOne {
@@ -106,8 +108,8 @@ public class ExtensionDeclTests: PrettyPrintTestCase {
         let B: Double
       }
       extension MyExtension
-      where S: Collection, T: ReallyLongExtensionName,
-        U: AnotherLongExtension
+      where
+        S: Collection, T: ReallyLongExtensionName, U: AnotherLongExtension
       {
         let A: Int
         let B: Double
@@ -118,7 +120,53 @@ public class ExtensionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 70)
   }
 
-  public func testExtensionWhereClauseWithInheritence() {
+  public func testExtensionWhereClause_lineBreakBeforeEachGenericRequirement() {
+    let input =
+    """
+      extension MyExtension where S: Collection {
+        let A: Int
+        let B: Double
+      }
+      extension MyExtension where S: Collection, T: ReallyLongExtensionName {
+        let A: Int
+        let B: Double
+      }
+      extension MyExtension where S: Collection, T: ReallyLongExtensionName, U: AnotherLongExtension, W: AnotherReallyLongExtensionName {
+        let A: Int
+        let B: Double
+      }
+      """
+
+    let expected =
+    """
+      extension MyExtension where S: Collection {
+        let A: Int
+        let B: Double
+      }
+      extension MyExtension
+      where S: Collection, T: ReallyLongExtensionName {
+        let A: Int
+        let B: Double
+      }
+      extension MyExtension
+      where
+        S: Collection,
+        T: ReallyLongExtensionName,
+        U: AnotherLongExtension,
+        W: AnotherReallyLongExtensionName
+      {
+        let A: Int
+        let B: Double
+      }
+
+      """
+
+    let config = Configuration()
+    config.lineBreakBeforeEachGenericRequirement = true
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 70, configuration: config)
+  }
+
+  public func testExtensionWhereClauseWithInheritance() {
     let input =
       """
       extension MyExtension: ProtoOne where S: Collection {
@@ -126,6 +174,10 @@ public class ExtensionDeclTests: PrettyPrintTestCase {
         let B: Double
       }
       extension MyExtension: ProtoOne, ProtoTwo where S: Collection, T: Protocol {
+        let A: Int
+        let B: Double
+      }
+      extension MyExtension: ProtoOne, ProtoTwo where S: Collection, T: Protocol, T: ReallyLongExtensionName, U: LongerExtensionName {
         let A: Int
         let B: Double
       }
@@ -142,10 +194,64 @@ public class ExtensionDeclTests: PrettyPrintTestCase {
         let A: Int
         let B: Double
       }
+      extension MyExtension: ProtoOne, ProtoTwo
+      where
+        S: Collection, T: Protocol, T: ReallyLongExtensionName,
+        U: LongerExtensionName
+      {
+        let A: Int
+        let B: Double
+      }
 
       """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 70)
+  }
+
+  public func testExtensionWhereClauseWithInheritance_lineBreakBeforeEachGenericRequirement() {
+    let input =
+    """
+      extension MyExtension: ProtoOne where S: Collection {
+        let A: Int
+        let B: Double
+      }
+      extension MyExtension: ProtoOne, ProtoTwo where S: Collection, T: Protocol {
+        let A: Int
+        let B: Double
+      }
+      extension MyExtension: ProtoOne, ProtoTwo where S: Collection, T: Protocol, T: ReallyLongExtensionName, U: LongerExtensionName {
+        let A: Int
+        let B: Double
+      }
+      """
+
+    let expected =
+    """
+      extension MyExtension: ProtoOne where S: Collection {
+        let A: Int
+        let B: Double
+      }
+      extension MyExtension: ProtoOne, ProtoTwo
+      where S: Collection, T: Protocol {
+        let A: Int
+        let B: Double
+      }
+      extension MyExtension: ProtoOne, ProtoTwo
+      where
+        S: Collection,
+        T: Protocol,
+        T: ReallyLongExtensionName,
+        U: LongerExtensionName
+      {
+        let A: Int
+        let B: Double
+      }
+
+      """
+
+    let config = Configuration()
+    config.lineBreakBeforeEachGenericRequirement = true
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 70, configuration: config)
   }
 
   public func testExtensionAttributes() {
@@ -201,7 +307,7 @@ public class ExtensionDeclTests: PrettyPrintTestCase {
   public func testExtensionFullWrap() {
     let input =
       """
-      public extension MyContainer: MyContainerProtocolOne, MyContainerProtocolTwo, SomeoneElsesContainerProtocol, SomeFrameworkContainerProtocol where BaseCollection: Collection, BaseCollection.Element: Equatable, BaseCollection.Element: SomeOtherProtocol {
+      public extension MyContainer: MyContainerProtocolOne, MyContainerProtocolTwo, SomeoneElsesContainerProtocol, SomeFrameworkContainerProtocol where BaseCollection: Collection, BaseCollection: P, BaseCollection.Element: Equatable, BaseCollection.Element: SomeOtherProtocol {
         let A: Int
         let B: Double
       }
@@ -214,7 +320,8 @@ public class ExtensionDeclTests: PrettyPrintTestCase {
         MyContainerProtocolTwo,
         SomeoneElsesContainerProtocol,
         SomeFrameworkContainerProtocol
-      where BaseCollection: Collection,
+      where
+        BaseCollection: Collection, BaseCollection: P,
         BaseCollection.Element: Equatable,
         BaseCollection.Element: SomeOtherProtocol
       {
@@ -225,6 +332,39 @@ public class ExtensionDeclTests: PrettyPrintTestCase {
       """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+  }
+
+  public func testExtensionFullWrap_lineBreakBeforeEachGenericRequirement() {
+    let input =
+    """
+      public extension MyContainer: MyContainerProtocolOne, MyContainerProtocolTwo, SomeoneElsesContainerProtocol, SomeFrameworkContainerProtocol where BaseCollection: Collection, BaseCollection: P, BaseCollection.Element: Equatable, BaseCollection.Element: SomeOtherProtocol {
+        let A: Int
+        let B: Double
+      }
+      """
+
+    let expected =
+
+    """
+      public extension MyContainer: MyContainerProtocolOne,
+        MyContainerProtocolTwo,
+        SomeoneElsesContainerProtocol,
+        SomeFrameworkContainerProtocol
+      where
+        BaseCollection: Collection,
+        BaseCollection: P,
+        BaseCollection.Element: Equatable,
+        BaseCollection.Element: SomeOtherProtocol
+      {
+        let A: Int
+        let B: Double
+      }
+
+      """
+
+    let config = Configuration()
+    config.lineBreakBeforeEachGenericRequirement = true
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 
   public func testEmptyExtension() {

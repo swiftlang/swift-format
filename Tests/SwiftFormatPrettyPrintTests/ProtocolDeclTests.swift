@@ -48,7 +48,7 @@ public class ProtocolDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
 
-  public func testProtocolInheritence() {
+  public func testProtocolInheritance() {
     let input =
       """
       protocol MyProtocol: ProtoOne {
