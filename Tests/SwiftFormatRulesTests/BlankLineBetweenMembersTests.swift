@@ -335,4 +335,31 @@ public class BlankLineBetweenMembersTests: DiagnosingTestCase {
       expected: expected,
       configuration: config)
   }
+
+  func testTrailingCommentsAreKeptTrailing() {
+    XCTAssertFormatting(
+      BlankLineBetweenMembers.self,
+      input:
+        """
+        enum Foo {
+          static let foo = "foo"  // foo
+          static let bar = "bar"  // bar
+          // this should move down
+          static let baz = "baz"  // baz
+          static let andSo = "should"  // this
+        }
+        """,
+      expected:
+        """
+        enum Foo {
+          static let foo = "foo"  // foo
+          static let bar = "bar"  // bar
+
+          // this should move down
+          static let baz = "baz"  // baz
+
+          static let andSo = "should"  // this
+        }
+        """)
+  }
 }
