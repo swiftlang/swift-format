@@ -2445,13 +2445,24 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // The token kind (spaced or unspaced operator) represents how the *user* wrote it, and we want
     // to ignore that and apply our own rules.
     if let binaryOperator = operatorExpr as? BinaryOperatorExprSyntax {
-      let operatorText = binaryOperator.operatorToken.text
-      if let precedence = operatorContext.infixOperator(named: operatorText)?.precedenceGroup,
+      let token = binaryOperator.operatorToken
+      if let precedence = operatorContext.infixOperator(named: token.text)?.precedenceGroup,
         precedence === operatorContext.precedenceGroup(named: .rangeFormation)
       {
+        // We want to omit whitespace around range formation operators if possible. We can't do this
+        // if the token is either preceded by a postfix operator or followed by a prefix operator---
+        // removing the spaces in those situations would cause the parser to greedily treat the
+        // combined sequence of operator characters as a single operator.
+        if case .postfixOperator? = token.previousToken?.tokenKind { return true }
+        if case .prefixOperator? = token.nextToken?.tokenKind { return true }
         return false
       }
     }
+
+    // For all other operators, we want to require whitespace on each side. That's always safe, so
+    // we don't need to be concerned about neighboring operator tokens. For example, we don't need
+    // to be concerned about the user writing "4+-5" when they meant "4 + -5", because Swift would
+    // always parse the former as "4 +- 5".
     return true
   }
 }

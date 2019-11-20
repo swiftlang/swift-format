@@ -89,7 +89,11 @@ extension BinaryOperatorExprTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__BinaryOperatorExprTests = [
-        ("testOperatorSpacing", testOperatorSpacing),
+        ("testNonRangeFormationOperatorsAreSurroundedByBreaks", testNonRangeFormationOperatorsAreSurroundedByBreaks),
+        ("testRangeFormationOperatorsAreCompactedWhenPossible", testRangeFormationOperatorsAreCompactedWhenPossible),
+        ("testRangeFormationOperatorsAreNotCompactedWhenFollowingAPostfixOperator", testRangeFormationOperatorsAreNotCompactedWhenFollowingAPostfixOperator),
+        ("testRangeFormationOperatorsAreNotCompactedWhenPrecedingAPrefixOperator", testRangeFormationOperatorsAreNotCompactedWhenPrecedingAPrefixOperator),
+        ("testRangeFormationOperatorsAreNotCompactedWhenUnaryOperatorsAreOnEachSide", testRangeFormationOperatorsAreNotCompactedWhenUnaryOperatorsAreOnEachSide),
     ]
 }
 
