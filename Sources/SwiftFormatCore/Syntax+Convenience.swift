@@ -44,10 +44,19 @@ extension Syntax {
       // Iterate over the trivia, stopping at the first comment, and using that as the start
       // position.
       var currentPosition = firstToken.position
-      for piece in firstToken.leadingTrivia {
+      var sawNewline = false
+      loop: for piece in firstToken.leadingTrivia {
         switch piece {
-        case .lineComment, .blockComment, .docLineComment, .docBlockComment:
-          break
+        case .docLineComment,
+          .docBlockComment,
+          .lineComment where sawNewline,
+          .blockComment where sawNewline:
+          // Non-doc line or block comments before we've seen the first newline should actually be
+          // considered trailing comments of the previous line.
+          break loop
+        case .newlines, .carriageReturns, .carriageReturnLineFeeds:
+          sawNewline = true
+          fallthrough
         default:
           currentPosition += piece.sourceLength
         }

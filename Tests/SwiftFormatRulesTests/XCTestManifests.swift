@@ -50,6 +50,7 @@ extension BlankLineBetweenMembersTests {
         ("testInvalidBlankLineBetweenMembers", testInvalidBlankLineBetweenMembers),
         ("testNestedMembers", testNestedMembers),
         ("testNoBlankLineBetweenSingleLineMembers", testNoBlankLineBetweenSingleLineMembers),
+        ("testTrailingCommentsAreKeptTrailing", testTrailingCommentsAreKeptTrailing),
         ("testTwoMembers", testTwoMembers),
     ]
 }

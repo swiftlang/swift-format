@@ -61,11 +61,10 @@ public final class BlankLineBetweenMembers: SyntaxFormatRule {
 
       let ignoreMember = ignoreSingleLine && isMemberSingleLine
       if (!previousMemberWasSingleLine || !ignoreMember) && !isLeadingBlankLinePresent(on: member) {
-        let blankLinePrefacedTrivia = Trivia.newlines(1) + (member.leadingTrivia ?? [])
         memberToAdd = replaceTrivia(
           on: memberToAdd,
           token: memberToAdd.firstToken,
-          leadingTrivia: blankLinePrefacedTrivia
+          leadingTrivia: blankLinePrefixedTrivia(member.leadingTrivia)
         ) as! MemberDeclListItemSyntax
         diagnose(.addBlankLine, on: member)
       }
@@ -78,6 +77,26 @@ public final class BlankLineBetweenMembers: SyntaxFormatRule {
     }
 
     return node.withMembers(SyntaxFactory.makeMemberDeclList(membersList))
+  }
+
+  /// Returns new trivia with a blank line inserted at the "beginning" of the given trivia, but
+  /// respecting any end-of-line comments associated with the previous line that may be present.
+  private func blankLinePrefixedTrivia(_ trivia: Trivia?) -> Trivia {
+    guard let trivia = trivia else { return .newlines(1) }
+
+    guard let firstNewlineIndex = trivia.firstIndex(where: {
+      switch $0 {
+      case .newlines, .carriageReturns, .carriageReturnLineFeeds:
+        return true
+      default:
+        return false
+      }
+    }) else {
+      return .newlines(1) + trivia
+    }
+
+    let newPieces = trivia[..<firstNewlineIndex] + [.newlines(1)] + trivia[firstNewlineIndex...]
+    return Trivia(pieces: newPieces).condensed()
   }
 
   /// Returns whether any comments in the leading trivia of the given node are separated from the
