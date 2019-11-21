@@ -144,6 +144,10 @@ public class ProtocolDeclTests: PrettyPrintTestCase {
       protocol MyProtocol {
         func foo(bar: Int) -> Int
         func reallyLongName(reallyLongLabel: Int, anotherLongLabel: Bool) -> Float
+        func doAProtoThing(first: Foo, second s: Bar)
+        func doAThing(first: Foo) -> ResultType
+        func doSomethingElse(firstArg: Foo, second secondArg: Bar, third thirdArg: Baz)
+        func doStuff(firstArg: Foo, second second: Bar, third third: Baz) -> Output
       }
       """
     
@@ -155,6 +159,19 @@ public class ProtocolDeclTests: PrettyPrintTestCase {
           reallyLongLabel: Int,
           anotherLongLabel: Bool
         ) -> Float
+        func doAProtoThing(
+          first: Foo, second s: Bar)
+        func doAThing(first: Foo)
+          -> ResultType
+        func doSomethingElse(
+          firstArg: Foo,
+          second secondArg: Bar,
+          third thirdArg: Baz)
+        func doStuff(
+          firstArg: Foo,
+          second second: Bar,
+          third third: Baz
+        ) -> Output
       }
 
       """
@@ -177,8 +194,7 @@ public class ProtocolDeclTests: PrettyPrintTestCase {
         init(bar: Int)
         init(
           reallyLongLabel: Int,
-          anotherLongLabel: Bool
-        )
+          anotherLongLabel: Bool)
       }
 
       """

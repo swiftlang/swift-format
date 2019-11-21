@@ -262,6 +262,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
       after(node.identifier.lastToken, tokens: .space)
     }
 
+    let mustBreak = node.body != nil || node.signature.output != nil
+    arrangeParameterClause(node.signature.input, forcesBreakBeforeRightParen: mustBreak)
+
     arrangeFunctionLikeDecl(
       node,
       attributes: node.attributes,
@@ -282,6 +285,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
     }
 
     before(node.throwsOrRethrowsKeyword, tokens: .break)
+
+    arrangeParameterClause(node.parameters, forcesBreakBeforeRightParen: node.body != nil)
 
     arrangeFunctionLikeDecl(
       node,
@@ -332,6 +337,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
     }
 
     after(node.lastToken, tokens: .close)
+
+    arrangeParameterClause(node.indices, forcesBreakBeforeRightParen: true)
 
     return .visitChildren
   }
@@ -870,9 +877,6 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: ParameterClauseSyntax) -> SyntaxVisitorContinueKind {
-    after(node.leftParen, tokens: .break(.open, size: 0), .open(argumentListConsistency()))
-    before(node.rightParen, tokens: .break(.close, size: 0), .close)
-
     // Prioritize keeping ") throws -> <return_type>" together.
     if config.prioritizeKeepingFunctionOutputTogether {
       // Due to visitation order, this .open corresponds to a .close added in FunctionDeclSyntax
@@ -990,6 +994,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   func visit(_ node: EnumCaseElementSyntax) -> SyntaxVisitorContinueKind {
     after(node.trailingComma, tokens: .break)
+
+    if let associatedValue = node.associatedValue {
+      arrangeParameterClause(associatedValue, forcesBreakBeforeRightParen: true)
+    }
+
     return .visitChildren
   }
 
@@ -1970,6 +1979,22 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // iterator and check if it returns `nil` immediately.
     var contentsIterator = node[keyPath: contentsKeyPath].makeIterator()
     return contentsIterator.next() == nil && !commentPrecedesRightBrace
+  }
+
+  /// Applies formatting to a collection of parameters for a decl.
+  ///
+  /// - Parameters:
+  ///    - parameters: A node that contains the parameters that can be passed to a decl when its
+  ///      called.
+  ///    - forcesBreakBeforeRightParen: Whether a break should be required before the right paren
+  ///      when the right paren is on a different line than the corresponding left paren.
+  private func arrangeParameterClause(
+    _ parameters: ParameterClauseSyntax, forcesBreakBeforeRightParen: Bool
+  ) {
+    after(parameters.leftParen, tokens: .break(.open, size: 0), .open(argumentListConsistency()))
+    before(
+      parameters.rightParen,
+      tokens: .break(.close(mustBreak: forcesBreakBeforeRightParen), size: 0), .close)
   }
 
   /// Applies consistent formatting to the braces and contents of the given node.
