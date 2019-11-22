@@ -187,28 +187,30 @@ public class ValidateDocumentationCommentsTests: DiagnosingTestCase {
   public func testInitializer() {
     let input =
     """
-    /// Brief summary.
-    ///
-    /// - Parameter command: The command to execute in the shell environment.
-    /// - Returns: Shouldn't be here.
-    init(label commando: String) {
-    // ...
-    }
+    struct SomeType {
+      /// Brief summary.
+      ///
+      /// - Parameter command: The command to execute in the shell environment.
+      /// - Returns: Shouldn't be here.
+      init(label commando: String) {
+      // ...
+      }
 
-    /// Brief summary.
-    ///
-    /// - Parameter command: The command to execute in the shell environment.
-    init(label command: String) {
-    // ...
-    }
+      /// Brief summary.
+      ///
+      /// - Parameter command: The command to execute in the shell environment.
+      init(label command: String) {
+      // ...
+      }
 
-    /// Brief summary.
-    ///
-    /// - Parameters:
-    ///   - command: The command to execute in the shell environment.
-    ///   - stdin: The string to use as standard input.
-    init(label command: String, label2 stdin: String) {
-    // ...
+      /// Brief summary.
+      ///
+      /// - Parameters:
+      ///   - command: The command to execute in the shell environment.
+      ///   - stdin: The string to use as standard input.
+      init(label command: String, label2 stdin: String) {
+      // ...
+      }
     }
     """
     performLint(ValidateDocumentationComments.self, input: input)
