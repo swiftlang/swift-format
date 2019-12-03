@@ -16,8 +16,9 @@ public class BinaryOperatorExprTests: PrettyPrintTestCase {
 
     let expected10 =
       """
-      x = 1 + 8
-        - 9
+      x =
+        1 + 8
+          - 9
         ^*^ 5
         * 4 / 10
 
@@ -73,14 +74,18 @@ public class BinaryOperatorExprTests: PrettyPrintTestCase {
 
     let expected10 =
       """
-      x = 1++
-        ... 100
-      x = 1--
-        ..< 100
-      x = 1++
-        ... 100
-      x = 1--
-        ..< 100
+      x =
+        1++
+          ... 100
+      x =
+        1--
+          ..< 100
+      x =
+        1++
+          ... 100
+      x =
+        1--
+          ..< 100
 
       """
 
@@ -109,14 +114,18 @@ public class BinaryOperatorExprTests: PrettyPrintTestCase {
 
     let expected10 =
       """
-      x = 1
-        ... -100
-      x = 1
-        ..< -100
-      x = 1
-        ... √100
-      x = 1
-        ..< √100
+      x =
+        1
+          ... -100
+      x =
+        1
+          ..< -100
+      x =
+        1
+          ... √100
+      x =
+        1
+          ..< √100
 
       """
 
@@ -145,14 +154,18 @@ public class BinaryOperatorExprTests: PrettyPrintTestCase {
 
     let expected10 =
       """
-      x = 1++
-        ... -100
-      x = 1--
-        ..< -100
-      x = 1++
-        ... √100
-      x = 1--
-        ..< √100
+      x =
+        1++
+          ... -100
+      x =
+        1--
+          ..< -100
+      x =
+        1++
+          ... √100
+      x =
+        1--
+          ..< √100
 
       """
 

@@ -179,8 +179,9 @@ public class CommentTests: PrettyPrintTestCase {
       default: ()
       }
 
-      let a = 123 +  // comment
-        b + c
+      let a =
+        123 +  // comment
+          b + c
 
       let d = 123
       // Trailing Comment

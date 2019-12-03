@@ -1272,7 +1272,20 @@ private final class TokenStreamCreator: SyntaxVisitor {
       let wrapsBeforeOperator = !isAssigningOperator(binOp)
 
       if shouldRequireWhitespace(around: binOp) {
-        if shouldStackIndentation(after: binOp) {
+        if isAssigningOperator(binOp) {
+          var beforeTokens: [Token] = [.break(.open(kind: .continuation))]
+          var afterTokens: [Token] = [.break(.close(mustBreak: false), size: 0)]
+
+          // When the RHS is a simple expression, even if is requires multiple lines, we don't add a
+          // group so that as much of the expression as possible can stay on the same line as the
+          // operator token.
+          if isCompoundExpression(rhs) {
+            beforeTokens.append(.open)
+            afterTokens.append(.close)
+          }
+          after(binOp.lastToken, tokens: beforeTokens)
+          after(rhs.lastToken, tokens: afterTokens)
+        } else if shouldStackIndentation(after: binOp) {
           // For certain operators like `&&` and `||`, we don't want to treat all continue breaks
           // the same. If we did, then all operators would line up at the same alignment regardless
           // of whether they were, for example, `&&` or something between a pair of `&&`. To make
@@ -1389,6 +1402,15 @@ private final class TokenStreamCreator: SyntaxVisitor {
       after(initializer.equal, tokens: .break(.open(kind: .continuation)))
       closesNeeded += 1
       closeAfterToken = initializer.lastToken
+
+      // When the RHS is a simple expression, even if is requires multiple lines, we don't add a
+      // group so that as much of the expression as possible can stay on the same line as the
+      // operator token.
+      let expr = initializer.value
+      if isCompoundExpression(expr) {
+        before(expr.firstToken, tokens: .open)
+        after(expr.lastToken, tokens: .close)
+      }
     }
 
     if let accessorOrCodeBlock = node.accessor {
@@ -2417,6 +2439,19 @@ private final class TokenStreamCreator: SyntaxVisitor {
       before(expr.firstToken, tokens: .open)
       after(expr.lastToken, tokens: .close)
     }
+  }
+
+  /// Returns whether the given expression consists of multiple subexpressions. Certain expressions
+  /// that are known to wrap an expressions, e.g. try expressions, are handled by checking the
+  /// expression that they contain.
+  private func isCompoundExpression(_ expr: ExprSyntax) -> Bool {
+    if let sequenceExpr = expr as? SequenceExprSyntax {
+      return sequenceExpr.elements.count > 1
+    }
+    if let tryExpr = expr as? TryExprSyntax {
+      return isCompoundExpression(tryExpr.expression)
+    }
+    return false
   }
 
   /// Returns whether the given operator behaves as an assignment, to assign a right-hand-side to a

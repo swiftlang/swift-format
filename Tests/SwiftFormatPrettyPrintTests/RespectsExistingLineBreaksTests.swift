@@ -14,11 +14,12 @@ class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
 
     let expectedRespecting =
       """
-      a = b + c
-        + d
-        + e + f
-        + g
-        + h + i
+      a =
+        b + c
+          + d
+          + e + f
+          + g
+          + h + i
 
       """
 
@@ -28,8 +29,9 @@ class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
 
     let expectedNotRespecting =
       """
-      a = b + c + d + e + f + g
-        + h + i
+      a =
+        b + c + d + e + f + g
+          + h + i
 
       """
 
