@@ -10,6 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftFormatConfiguration
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -223,9 +224,14 @@ public class WhitespaceLinter {
       // Ordinarily, we only look for indentation spacing following a newline. The first character
       // of a file is a special case since it isn't preceded by any newlines.
       if form.count == 1 && user.count == 1 && isFirstCharacter {
-        if form[0].count != user[0].count {
+        if form[0] != user[0] {
+          let actual = indentation(of: user[0])
+          let expected = indentation(of: form[0])
           diagnose(
-            .indentationError(form[0].count - user[0].count), line: 1, column: 1, utf8Offset: 0)
+            .indentationError(expected: expected, actual: actual),
+            line: 1,
+            column: 1,
+            utf8Offset: 0)
         }
       }
       return
@@ -234,13 +240,15 @@ public class WhitespaceLinter {
     for i in 0..<(user.count - 1) {
       offset += user[i].count + 1
     }
-    if form.last?.count != user.last?.count {
-      guard let formattedWhitespaceCount = form.last?.count,
-        let userTextWhitespaceCount = user.last?.count
-      else { return }
+    if form.last != user.last {
       let pos = calculatePosition(offset: userOffset + offset, data: self.userText)
-      let delta = formattedWhitespaceCount - userTextWhitespaceCount
-      diagnose(.indentationError(delta), line: pos.line, column: pos.column, utf8Offset: 0)
+      let actual = indentation(of: user.last ?? "")
+      let expected = indentation(of: form.last ?? "")
+      diagnose(
+        .indentationError(expected: expected, actual: actual),
+        line: pos.line,
+        column: pos.column,
+        utf8Offset: 0)
     }
   }
 
@@ -278,8 +286,13 @@ public class WhitespaceLinter {
   ) {
     // The spaces in front of the first character of a file are indentation and not spacing related.
     guard form.count == 1 && user.count == 1 && !isFirstCharacter else { return }
-    if form[0].count != user[0].count {
-      let pos = calculatePosition(offset: userOffset, data: self.userText)
+    guard form[0] != user[0] else { return }
+
+    let pos = calculatePosition(offset: userOffset, data: self.userText)
+    let illegalSpacingCharacters = ["\t"]
+    if illegalSpacingCharacters.contains(where: { user[0].contains($0) }) {
+      diagnose(.spacingCharError, line: pos.line, column: pos.column, utf8Offset: 0)
+    } else if form[0].count != user[0].count {
       let delta = form[0].count - user[0].count
       diagnose(.spacingError(delta), line: pos.line, column: pos.column, utf8Offset: 0)
     }
@@ -359,7 +372,7 @@ public class WhitespaceLinter {
       let index = data.index(data.startIndex, offsetBy: i)
       let char = data[index]
 
-      if [" ", "\n"].contains(char) {
+      if char.isWhitespace {
         whitespaceBuffer += String(char)
       } else {
         return (offset: i, char: char, whitespace: whitespaceBuffer)
@@ -414,16 +427,124 @@ public class WhitespaceLinter {
       actions: actions
     )
   }
+
+  /// Returns the indentation that represents the indentation of the given whitespace, which is the
+  /// leading spacing for a line.
+  ///
+  /// A return value of nil indicates that there was no indentation.
+  private func indentation(of whitespace: String) -> WhitespaceIndentation {
+    if whitespace.count == 0 {
+      return .none
+    }
+
+    var orderedRuns: [(char: Character, count: Int)] = []
+    for char in whitespace {
+      // Any non-whitespace character indicates the end of the indentation whitespace.
+      guard char.isWhitespace else { break }
+
+      let lastRun = orderedRuns.last
+      if lastRun?.char == char {
+        orderedRuns[orderedRuns.endIndex - 1].count += 1
+      } else {
+        orderedRuns.append((char, 1))
+      }
+    }
+
+    let indents = orderedRuns.map { run in
+      // Assumes any non-tab whitespace character is some type of space.
+      return run.char == "\t" ? Indent.tabs(run.count) : Indent.spaces(run.count)
+    }
+    if indents.count == 1, let onlyIndent = indents.first {
+      return .homogeneous(onlyIndent)
+    }
+    return .heterogeneous(indents)
+  }
+}
+
+/// Describes the composition of the whitespace that creates an indentation for a line of code.
+enum WhitespaceIndentation: Equatable {
+  /// The line has no preceding whitespace, meaning there's no indentation.
+  case none
+
+  /// The line's leading whitespace consists of a single run of one kind of whitespace character.
+  case homogeneous(Indent)
+
+  /// The line's leading whitespace consists of multiple runs of different kinds of whitespace
+  /// characters.
+  case heterogeneous([Indent])
+}
+
+extension Indent {
+  /// Returns a string that describes the indentation in a human readable format, which is
+  /// appropriate for use in diagnostic messages.
+  var diagnosticDescription: String {
+    switch self {
+    case .spaces(let count):
+      let noun = count == 1 ? "space" : "spaces"
+      return "\(count) \(noun)"
+    case .tabs(let count):
+      let noun = count == 1 ? "tab" : "tabs"
+      return "\(count) \(noun)"
+    }
+  }
+}
+
+extension WhitespaceIndentation {
+  /// Returns a string that describes the whitespace in a human readable format, which is
+  /// appropriate for use in diagnostic messages.
+  var diagnosticDescription: String {
+    switch self {
+    case .none:
+      return "no indentation"
+    case .heterogeneous(let indents):
+      guard let first = indents.first else { return "no indentation" }
+      return indents.dropFirst().reduce(first.diagnosticDescription) {
+        return $0 + ", " + $1.diagnosticDescription
+      }
+    case .homogeneous(let indent):
+      return indent.diagnosticDescription
+    }
+  }
 }
 
 extension Diagnostic.Message {
   static let trailingWhitespaceError = Diagnostic.Message(
     .warning, "[TrailingWhitespace]: remove trailing whitespace")
 
-  static func indentationError(_ spaces: Int) -> Diagnostic.Message {
-    let verb = spaces > 0 ? "indent" : "unindent"
-    let noun = abs(spaces) == 1 ? "space" : "spaces"
-    return .init(.warning, "[Indentation]: \(verb) by \(abs(spaces)) \(noun)")
+  static func indentationError(
+    expected expectedIndentation: WhitespaceIndentation,
+    actual actualIndentation: WhitespaceIndentation
+  ) -> Diagnostic.Message {
+    switch expectedIndentation {
+    case .none:
+      return .init(.warning, "[Indentation] remove all leading whitespace")
+
+    case .homogeneous, .heterogeneous:
+      if case .homogeneous(let expectedIndent) = expectedIndentation,
+        case .homogeneous(let actualIndent) = actualIndentation
+      {
+        if case .spaces(let expectedCount) = expectedIndent,
+          case .spaces(let actualCount) = actualIndent
+        {
+          let delta = expectedCount - actualCount
+          let verb = delta > 0 ? "indent" : "unindent"
+          return .init(.warning, "[Indentation] \(verb) by \(abs(delta)) spaces")
+        }
+        if case .tabs(let expectedCount) = expectedIndent,
+          case .tabs(let actualCount) = actualIndent
+        {
+          let delta = expectedCount - actualCount
+          let verb = delta > 0 ? "indent" : "unindent"
+          return .init(.warning, "[Indentation] \(verb) by \(abs(delta)) tabs")
+        }
+        // Intentionally fallthrough to the heterogeneous indentation diagnostic below.
+      }
+      // Otherwise, the change can't be described by a simple add/remove N spaces/tabs. It's easier
+      // to instruct the user to remove the existing whitespace and add the appropriate sequence of
+      // indenting characters.
+      let expectedDescription = expectedIndentation.diagnosticDescription
+      return .init(.warning, "[Indentation] replace leading whitespace with \(expectedDescription)")
+    }
   }
 
   static func spacingError(_ spaces: Int) -> Diagnostic.Message {
@@ -431,6 +552,9 @@ extension Diagnostic.Message {
     let noun = abs(spaces) == 1 ? "space" : "spaces"
     return .init(.warning, "[Spacing]: \(verb) \(abs(spaces)) \(noun)")
   }
+
+  static let spacingCharError = Diagnostic.Message(
+    .warning, "[SpacingCharacter]: use spaces for spacing")
 
   static let removeLineError = Diagnostic.Message(.warning, "[RemoveLine]: remove line break")
 
