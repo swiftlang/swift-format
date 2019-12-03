@@ -43,7 +43,8 @@ extension AssignmentExprTests {
     // to regenerate.
     static let __allTests__AssignmentExprTests = [
         ("testAssignmentExprsWithGroupedOperators", testAssignmentExprsWithGroupedOperators),
-        ("testAssignmentFromFunctionCalls", testAssignmentFromFunctionCalls),
+        ("testAssignmentOperatorFromSequenceWithFunctionCalls", testAssignmentOperatorFromSequenceWithFunctionCalls),
+        ("testAssignmentPatternBindingFromSequenceWithFunctionCalls", testAssignmentPatternBindingFromSequenceWithFunctionCalls),
         ("testBasicAssignmentExprs", testBasicAssignmentExprs),
     ]
 }

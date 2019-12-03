@@ -1,3 +1,5 @@
+import SwiftFormatConfiguration
+
 public class AssignmentExprTests: PrettyPrintTestCase {
   public func testBasicAssignmentExprs() {
     let input =
@@ -30,53 +32,177 @@ public class AssignmentExprTests: PrettyPrintTestCase {
       """
       someVeryLongVariableName =
         anotherPrettyLongVariableName
-        && someOtherOperand
-      shortName = wxyz + aaaaaa
-        + bbbbbb + cccccc
-      longerName = wxyz + aaaaaa
-        + bbbbbb + cccccc || zzzzzzz
+          && someOtherOperand
+      shortName =
+        wxyz + aaaaaa + bbbbbb
+          + cccccc
+      longerName =
+        wxyz + aaaaaa + bbbbbb
+          + cccccc || zzzzzzz
 
       """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
 
-  public func testAssignmentFromFunctionCalls() {
+  public func testAssignmentOperatorFromSequenceWithFunctionCalls() {
+    let input =
+        """
+        result = firstOp + secondOp + someOpFetchingFunc(foo, bar: bar, baz: baz)
+        result = someOpFetchingFunc(foo, bar: bar, baz: baz)
+        result += someOpFetchingFunc(foo, bar: bar, baz: baz)
+        result = someOpFetchingFunc(foo, bar: bar, baz: baz) + someOtherOperand + andAThirdOneForReasons
+        result = firstOp + secondOp + thirdOp + someOpFetchingFunc(foo, bar, baz) + nextOp + lastOp
+        result += firstOp + secondOp + thirdOp + someOpFetchingFunc(foo, bar, baz) + nextOp + lastOp
+        """
+
+      let expectedWithArgBinPacking =
+        """
+        result =
+          firstOp + secondOp
+            + someOpFetchingFunc(
+              foo, bar: bar, baz: baz)
+        result = someOpFetchingFunc(
+          foo, bar: bar, baz: baz)
+        result += someOpFetchingFunc(
+          foo, bar: bar, baz: baz)
+        result =
+          someOpFetchingFunc(
+            foo, bar: bar, baz: baz)
+            + someOtherOperand
+            + andAThirdOneForReasons
+        result =
+          firstOp + secondOp + thirdOp
+            + someOpFetchingFunc(
+              foo, bar, baz) + nextOp
+            + lastOp
+        result +=
+          firstOp + secondOp + thirdOp
+            + someOpFetchingFunc(
+              foo, bar, baz) + nextOp
+            + lastOp
+
+        """
+
+      var config = Configuration()
+      config.lineBreakBeforeEachArgument = false
+      assertPrettyPrintEqual(
+        input: input, expected: expectedWithArgBinPacking, linelength: 35, configuration: config)
+
+      let expectedWithBreakBeforeEachArg =
+        """
+        result =
+          firstOp + secondOp
+            + someOpFetchingFunc(
+              foo,
+              bar: bar,
+              baz: baz
+            )
+        result = someOpFetchingFunc(
+          foo,
+          bar: bar,
+          baz: baz
+        )
+        result += someOpFetchingFunc(
+          foo,
+          bar: bar,
+          baz: baz
+        )
+        result =
+          someOpFetchingFunc(
+            foo,
+            bar: bar,
+            baz: baz
+          ) + someOtherOperand
+            + andAThirdOneForReasons
+        result =
+          firstOp + secondOp + thirdOp
+            + someOpFetchingFunc(
+              foo,
+              bar,
+              baz
+            ) + nextOp + lastOp
+        result +=
+          firstOp + secondOp + thirdOp
+            + someOpFetchingFunc(
+              foo,
+              bar,
+              baz
+            ) + nextOp + lastOp
+
+        """
+      config.lineBreakBeforeEachArgument = true
+      assertPrettyPrintEqual(
+        input: input, expected: expectedWithBreakBeforeEachArg, linelength: 35, configuration: config)
+  }
+
+  public func testAssignmentPatternBindingFromSequenceWithFunctionCalls() {
     let input =
       """
-      result = firstOp + secondOp + someOpFetchingFunc(foo, bar: bar, baz: baz)
-      result = someOpFetchingFunc(foo, bar: bar, baz: baz)
-      result += someOpFetchingFunc(foo, bar: bar, baz: baz)
-      result = someOpFetchingFunc(foo, bar: bar, baz: baz) + someOtherOperand + andAThirdOneForReasons
       let result = firstOp + secondOp + someOpFetchingFunc(foo, bar: bar, baz: baz)
       let result = someOpFetchingFunc(foo, bar: bar, baz: baz)
       let result = someOpFetchingFunc(foo, bar: bar, baz: baz) + someOtherOperand + andAThirdOneForReasons
+      let result = firstOp + secondOp + thirdOp + someOpFetchingFunc(foo, bar, baz) + nextOp + lastOp
       """
-    let expected =
+
+    let expectedWithArgBinPacking =
       """
-      result = firstOp + secondOp
-        + someOpFetchingFunc(
-          foo, bar: bar, baz: baz)
-      result = someOpFetchingFunc(
-        foo, bar: bar, baz: baz)
-      result += someOpFetchingFunc(
-        foo, bar: bar, baz: baz)
-      result = someOpFetchingFunc(
-        foo, bar: bar, baz: baz)
-        + someOtherOperand
-        + andAThirdOneForReasons
-      let result = firstOp + secondOp
-        + someOpFetchingFunc(
-          foo, bar: bar, baz: baz)
+      let result =
+        firstOp + secondOp
+          + someOpFetchingFunc(
+            foo, bar: bar, baz: baz)
       let result = someOpFetchingFunc(
         foo, bar: bar, baz: baz)
-      let result = someOpFetchingFunc(
-        foo, bar: bar, baz: baz)
-        + someOtherOperand
-        + andAThirdOneForReasons
+      let result =
+        someOpFetchingFunc(
+          foo, bar: bar, baz: baz)
+          + someOtherOperand
+          + andAThirdOneForReasons
+      let result =
+        firstOp + secondOp + thirdOp
+          + someOpFetchingFunc(
+            foo, bar, baz) + nextOp
+          + lastOp
 
       """
 
-    assertPrettyPrintEqual(input: input, expected: expected, linelength: 35)
+    var config = Configuration()
+    config.lineBreakBeforeEachArgument = false
+    assertPrettyPrintEqual(
+      input: input, expected: expectedWithArgBinPacking, linelength: 35, configuration: config)
+
+    let expectedWithBreakBeforeEachArg =
+      """
+      let result =
+        firstOp + secondOp
+          + someOpFetchingFunc(
+            foo,
+            bar: bar,
+            baz: baz
+          )
+      let result = someOpFetchingFunc(
+        foo,
+        bar: bar,
+        baz: baz
+      )
+      let result =
+        someOpFetchingFunc(
+          foo,
+          bar: bar,
+          baz: baz
+        ) + someOtherOperand
+          + andAThirdOneForReasons
+      let result =
+        firstOp + secondOp + thirdOp
+          + someOpFetchingFunc(
+            foo,
+            bar,
+            baz
+          ) + nextOp + lastOp
+
+      """
+    config.lineBreakBeforeEachArgument = true
+    assertPrettyPrintEqual(
+      input: input, expected: expectedWithBreakBeforeEachArg, linelength: 35, configuration: config)
   }
 }
