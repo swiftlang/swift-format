@@ -1,3 +1,4 @@
+import SwiftFormatConfiguration
 @testable import SwiftFormatWhitespaceLinter
 
 public class WhitespaceLintTests: WhitespaceTestCase {
@@ -21,28 +22,140 @@ public class WhitespaceLintTests: WhitespaceTestCase {
     XCTAssertDiagnosed(.spacingError(1), line: 2, column: 8)
   }
 
-  public func testIndentation() {
+  public func testTabSpacing() {
+    let input =
+      """
+      let a\t: Int = 123
+
+      """
+
+    let expected =
+      """
+      let a: Int = 123
+
+      """
+
+    performWhitespaceLint(input: input, expected: expected)
+    XCTAssertDiagnosed(.spacingCharError, line: 1, column: 6)
+  }
+
+  public func testSpaceIndentation() {
     let input =
       """
         let a = 123
       let b = 456
        let c = "abc"
+      \tlet d = 111
 
       """
 
     let expected =
       """
       let a = 123
-        let b = 456
+          let b = 456
       let c = "abc"
+        let d = 111
 
       """
 
     performWhitespaceLint(input: input, expected: expected)
-    XCTAssertDiagnosed(.indentationError(-2), line: 1, column: 1)
-    XCTAssertDiagnosed(.indentationError(2), line: 2, column: 1)
-    XCTAssertDiagnosed(.indentationError(-1), line: 3, column: 1)
+    XCTAssertDiagnosed(
+      .indentationError(expected: .none, actual: .homogeneous(.spaces(2))), line: 1, column: 1)
+    XCTAssertDiagnosed(
+      .indentationError(expected: .homogeneous(.spaces(4)), actual: .none), line: 2, column: 1)
+    XCTAssertDiagnosed(
+      .indentationError(expected: .none, actual: .homogeneous(.spaces(1))), line: 3, column: 1)
+    XCTAssertDiagnosed(
+      .indentationError(expected: .homogeneous(.spaces(2)), actual: .homogeneous(.tabs(1))),
+      line: 4,
+      column: 1)
   }
+
+  public func testTabIndentation() {
+     let input =
+       """
+       \t\tlet a = 123
+       let b = 456
+         let c = "abc"
+        let d = 111
+
+       """
+
+     let expected =
+       """
+       let a = 123
+       \tlet b = 456
+       let c = "abc"
+       \t\tlet d = 111
+
+       """
+
+    performWhitespaceLint(input: input, expected: expected)
+    XCTAssertDiagnosed(
+      .indentationError(expected: .none, actual: .homogeneous(.tabs(2))), line: 1, column: 1)
+    XCTAssertDiagnosed(
+      .indentationError(expected: .homogeneous(.tabs(1)), actual: .none), line: 2, column: 1)
+    XCTAssertDiagnosed(
+      .indentationError(expected: .none, actual: .homogeneous(.spaces(2))), line: 3, column: 1)
+    XCTAssertDiagnosed(
+      .indentationError(expected: .homogeneous(.tabs(2)), actual: .homogeneous(.spaces(1))),
+      line: 4,
+      column: 1)
+   }
+
+  public func testHeterogeneousIndentation() {
+     let input =
+       """
+       \t\t  \t let a = 123
+       let b = 456
+         let c = "abc"
+        \tlet d = 111
+       \t let e = 111
+
+       """
+
+     let expected =
+       """
+         let a = 123
+       \t  \t let b = 456
+       let c = "abc"
+         let d = 111
+        \tlet e = 111
+
+       """
+
+    performWhitespaceLint(input: input, expected: expected)
+    XCTAssertDiagnosed(
+      .indentationError(
+        expected: .homogeneous(.spaces(2)),
+        actual: .heterogeneous([.tabs(2), .spaces(2), .tabs(1), .spaces(1)])),
+      line: 1,
+      column: 1)
+    XCTAssertDiagnosed(
+      .indentationError(
+        expected: .heterogeneous([.tabs(1), .spaces(2), .tabs(1), .spaces(1)]),
+        actual: .none),
+      line: 2,
+      column: 1)
+    XCTAssertDiagnosed(
+      .indentationError(
+        expected: .none,
+        actual: .homogeneous(.spaces(2))),
+      line: 3,
+      column: 1)
+    XCTAssertDiagnosed(
+      .indentationError(
+        expected:  .homogeneous(.spaces(2)),
+        actual: .homogeneous(.tabs(1))),
+      line: 4,
+      column: 1)
+    XCTAssertDiagnosed(
+      .indentationError(
+        expected: .heterogeneous([.spaces(1), .tabs(1)]),
+        actual: .heterogeneous([.tabs(1), .spaces(1)])),
+      line: 5,
+      column: 1)
+   }
 
   public func testTrailingWhitespace() {
     let input =

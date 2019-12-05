@@ -7,10 +7,13 @@ extension WhitespaceLintTests {
     // to regenerate.
     static let __allTests__WhitespaceLintTests = [
         ("testAddLines", testAddLines),
-        ("testIndentation", testIndentation),
+        ("testHeterogeneousIndentation", testHeterogeneousIndentation),
         ("testLineLength", testLineLength),
         ("testRemoveLines", testRemoveLines),
+        ("testSpaceIndentation", testSpaceIndentation),
         ("testSpacing", testSpacing),
+        ("testTabIndentation", testTabIndentation),
+        ("testTabSpacing", testTabSpacing),
         ("testTrailingWhitespace", testTrailingWhitespace),
     ]
 }
