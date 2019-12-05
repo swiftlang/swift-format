@@ -171,4 +171,44 @@ public class BinaryOperatorExprTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected10, linelength: 10)
   }
+
+  public func testRangeFormationOperatorsAreNotCompactedWhenPrecedingPrefixDot() {
+    let input =
+      """
+      x = .first   ...   .last
+      x = .first   ..<   .last
+      x = .first   ...   .last
+      x = .first   ..<   .last
+      """
+
+    let expected80 =
+      """
+      x = .first ... .last
+      x = .first ..< .last
+      x = .first ... .last
+      x = .first ..< .last
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected80, linelength: 80)
+
+    let expected10 =
+      """
+      x =
+        .first
+          ... .last
+      x =
+        .first
+          ..< .last
+      x =
+        .first
+          ... .last
+      x =
+        .first
+          ..< .last
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected10, linelength: 10)
+  }
 }

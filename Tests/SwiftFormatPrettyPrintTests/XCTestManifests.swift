@@ -94,6 +94,7 @@ extension BinaryOperatorExprTests {
         ("testRangeFormationOperatorsAreCompactedWhenPossible", testRangeFormationOperatorsAreCompactedWhenPossible),
         ("testRangeFormationOperatorsAreNotCompactedWhenFollowingAPostfixOperator", testRangeFormationOperatorsAreNotCompactedWhenFollowingAPostfixOperator),
         ("testRangeFormationOperatorsAreNotCompactedWhenPrecedingAPrefixOperator", testRangeFormationOperatorsAreNotCompactedWhenPrecedingAPrefixOperator),
+        ("testRangeFormationOperatorsAreNotCompactedWhenPrecedingPrefixDot", testRangeFormationOperatorsAreNotCompactedWhenPrecedingPrefixDot),
         ("testRangeFormationOperatorsAreNotCompactedWhenUnaryOperatorsAreOnEachSide", testRangeFormationOperatorsAreNotCompactedWhenUnaryOperatorsAreOnEachSide),
     ]
 }

@@ -2510,12 +2510,16 @@ private final class TokenStreamCreator: SyntaxVisitor {
         precedence === operatorContext.precedenceGroup(named: .rangeFormation)
       {
         // We want to omit whitespace around range formation operators if possible. We can't do this
-        // if the token is either preceded by a postfix operator or followed by a prefix operator---
-        // removing the spaces in those situations would cause the parser to greedily treat the
-        // combined sequence of operator characters as a single operator.
+        // if the token is either preceded by a postfix operator, followed by a prefix operator, or
+        // followed by a dot (for example, in an implicit member reference)---removing the spaces in
+        // those situations would cause the parser to greedily treat the combined sequence of
+        // operator characters as a single operator.
         if case .postfixOperator? = token.previousToken?.tokenKind { return true }
-        if case .prefixOperator? = token.nextToken?.tokenKind { return true }
-        return false
+
+        switch token.nextToken?.tokenKind {
+        case .prefixOperator?, .prefixPeriod?: return true
+        default: return false
+        }
       }
     }
 
