@@ -44,6 +44,13 @@ version of Swift or on a developer snapshot. Changes committed to `master`
 that are compatible with the latest release branch will be cherry-picked into
 that branch.
 
+To test that the formatter was built succesfully and is compatible with your swift toolchain, you can run the following command:
+
+```
+swift test --parallel
+```
+We recommend using the `--parallel` flag to speed up the test run since there are a large number of tests.
+
 ## Command Line Usage
 
 ```
