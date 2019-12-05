@@ -325,4 +325,33 @@ public class IfStmtTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
+
+  public func testOptionalBindingConditions() {
+    let input =
+      """
+      if let someObject: Foo = object as? Int {
+        return nil
+      }
+      if let someObject: (foo: Foo, bar: SomeVeryLongTypeNameThatDefinitelyBreaks, baz: Baz) = foo(a, b, c, d) { return nil }
+      """
+
+    let expected =
+      """
+      if let someObject: Foo = object as? Int
+      {
+        return nil
+      }
+      if let someObject:
+        (
+          foo: Foo,
+          bar:
+            SomeVeryLongTypeNameThatDefinitelyBreaks,
+          baz: Baz
+        ) = foo(a, b, c, d)
+      { return nil }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+  }
 }

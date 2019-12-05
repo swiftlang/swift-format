@@ -1802,6 +1802,12 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   func visit(_ node: OptionalBindingConditionSyntax) -> SyntaxVisitorContinueKind {
     after(node.letOrVarKeyword, tokens: .break)
+
+    if let typeAnnotation = node.typeAnnotation {
+      after(typeAnnotation.colon, tokens: .break(.open(kind: .continuation)))
+      after(typeAnnotation.lastToken, tokens: .break(.close(mustBreak: false), size: 0))
+    }
+
     return .visitChildren
   }
 
