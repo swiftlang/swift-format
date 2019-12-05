@@ -216,4 +216,44 @@ public class SwitchStmtTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
   }
+
+  public func testNewlinesDisambiguatingWhereClauses() {
+    let input =
+      """
+      switch foo {
+      case 1, 2, 3:
+        break
+      case 4 where bar(), 5, 6:
+        break
+      case 7, 8, 9 where bar():
+        break
+      case 10 where bar(), 11 where bar(), 12 where bar():
+        break
+      case 13, 14 where bar(), 15, 16 where bar():
+        break
+      }
+      """
+
+    let expected =
+      """
+      switch foo {
+      case 1, 2, 3:
+        break
+      case 4 where bar(), 5, 6:
+        break
+      case 7, 8,
+        9 where bar():
+        break
+      case 10 where bar(), 11 where bar(), 12 where bar():
+        break
+      case 13,
+        14 where bar(), 15,
+        16 where bar():
+        break
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
+  }
 }

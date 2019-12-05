@@ -176,6 +176,7 @@ extension NoCasesWithOnlyFallthroughTests {
     // to regenerate.
     static let __allTests__NoCasesWithOnlyFallthroughTests = [
         ("testCasesInsideConditionalCompilationBlock", testCasesInsideConditionalCompilationBlock),
+        ("testCasesWithWhereClauses", testCasesWithWhereClauses),
         ("testCommentsAroundCombinedCasesStayInPlace", testCommentsAroundCombinedCasesStayInPlace),
         ("testFallthroughCases", testFallthroughCases),
         ("testFallthroughCasesWithCommentsAreNotCombined", testFallthroughCasesWithCommentsAreNotCombined),
