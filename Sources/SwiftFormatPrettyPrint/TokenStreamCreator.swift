@@ -555,6 +555,19 @@ private final class TokenStreamCreator: SyntaxVisitor {
   func visit(_ node: SwitchCaseLabelSyntax) -> SyntaxVisitorContinueKind {
     before(node.caseKeyword, tokens: .open)
     after(node.caseKeyword, tokens: .space)
+
+    // If an item with a `where` clause follows an item without a `where` clause, the compiler emits
+    // a warning telling the user that they should insert a newline between them to disambiguate
+    // their appearance. We enforce that "requirement" here to avoid spurious warnings, especially
+    // following a `NoCasesWithOnlyFallthrough` transformation that might merge cases.
+    var lastItemWithoutWhereClause: CaseItemSyntax? = nil
+    for item in node.caseItems {
+      if let lastItem = lastItemWithoutWhereClause, item.whereClause != nil {
+        after(lastItem.trailingComma, tokens: .newline)
+      }
+      lastItemWithoutWhereClause = item.whereClause == nil ? item : nil
+    }
+
     after(node.colon, tokens: .close)
     return .visitChildren
   }

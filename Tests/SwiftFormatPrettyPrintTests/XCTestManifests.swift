@@ -576,6 +576,7 @@ extension SwitchStmtTests {
     static let __allTests__SwitchStmtTests = [
         ("testBasicSwitch", testBasicSwitch),
         ("testNestedSwitch", testNestedSwitch),
+        ("testNewlinesDisambiguatingWhereClauses", testNewlinesDisambiguatingWhereClauses),
         ("testSwitchCases", testSwitchCases),
         ("testSwitchCompoundCases", testSwitchCompoundCases),
         ("testSwitchValueBinding", testSwitchValueBinding),
