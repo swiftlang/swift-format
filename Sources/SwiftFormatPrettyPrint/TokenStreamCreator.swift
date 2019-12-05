@@ -258,6 +258,10 @@ private final class TokenStreamCreator: SyntaxVisitor {
       after(node.signature.lastToken, tokens: .close)
     }
 
+    // Add a non-breaking space after the identifier if it's an operator, to separate it visually
+    // from the following parenthesis or generic argument list. Note that even if the function is
+    // defining a prefix or postfix operator, or even if the operator isn't originally followed by a
+    // space, the token kind always comes through as `spacedBinaryOperator`.
     if case .spacedBinaryOperator = node.identifier.tokenKind {
       after(node.identifier.lastToken, tokens: .space)
     }
