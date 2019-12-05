@@ -163,4 +163,35 @@ public class GuardStmtTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
+
+  public func testOptionalBindingConditions() {
+    let input =
+      """
+      guard let someObject: Foo = object as? Int else {
+        return nil
+      }
+      guard let someObject: (foo: Foo, bar: SomeVeryLongTypeNameThatBreaks, baz: Baz) = foo(a, b, c, d) else { return nil }
+      """
+
+    let expected =
+      """
+      guard
+        let someObject: Foo = object as? Int
+      else {
+        return nil
+      }
+      guard
+        let someObject:
+          (
+            foo: Foo,
+            bar:
+              SomeVeryLongTypeNameThatBreaks,
+            baz: Baz
+          ) = foo(a, b, c, d)
+      else { return nil }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+  }
 }
