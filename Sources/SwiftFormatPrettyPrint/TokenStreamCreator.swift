@@ -412,13 +412,12 @@ private final class TokenStreamCreator: SyntaxVisitor {
   func visit(_ node: IfStmtSyntax) -> SyntaxVisitorContinueKind {
     after(node.ifKeyword, tokens: .space)
 
-    // Add break groups around any conditions after the first so that those conditions have at least
-    // 1 non-continuation based indent from an indentation stack. Without that indent, all
-    // continuation lines in the condition are indented by the same amount as the condition's first
-    // line because continuation breaks don't stack. There are no breaks around the first condition
-    // because if-statements look better without a break between the "if" and the first condition.
+    // Add break groups, using open continuation breaks, around any conditions after the first so
+    // that continuations inside of the conditions can stack in addition to continuations between
+    // the conditions. There are no breaks around the first condition because if-statements look
+    // better without a break between the "if" and the first condition.
     for condition in node.conditions.dropFirst() {
-      before(condition.firstToken, tokens: .break(.open, size: 0))
+      before(condition.firstToken, tokens: .break(.open(kind: .continuation), size: 0))
       after(condition.lastToken, tokens: .break(.close(mustBreak: false), size: 0))
     }
 
@@ -438,11 +437,10 @@ private final class TokenStreamCreator: SyntaxVisitor {
   func visit(_ node: GuardStmtSyntax) -> SyntaxVisitorContinueKind {
     after(node.guardKeyword, tokens: .space)
 
-    // Add break groups around all conditions, similar to the break groups used around if-statement
-    // conditions. For guard-statements, breaking after the "guard" is visually acceptable hence the
-    // first condition is included.
+    // Add break groups, using open continuation breaks, around all conditions so that continuations
+    // inside of the conditions can stack in addition to continuations between the conditions.
     for condition in node.conditions {
-      before(condition.firstToken, tokens: .break(.open, size: 0))
+      before(condition.firstToken, tokens: .break(.open(kind: .continuation), size: 0))
       after(condition.lastToken, tokens: .break(.close(mustBreak: false), size: 0))
     }
 

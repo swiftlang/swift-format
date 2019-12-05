@@ -123,6 +123,9 @@ public class GuardStmtTests: PrettyPrintTestCase {
         let anotherCastedObject = object as? SomeOtherSlightlyLongerType else {
         return nil
       }
+      guard let object1 = fetchingFunc(foo), let object2 = fetchingFunc(bar), let object3 = fetchingFunc(baz) else {
+        return nil
+      }
       """
 
     let expected =
@@ -146,6 +149,12 @@ public class GuardStmtTests: PrettyPrintTestCase {
           foo, bar, baz, quxxe, far, fab, faz),
         let anotherCastedObject = object
           as? SomeOtherSlightlyLongerType
+      else {
+        return nil
+      }
+      guard let object1 = fetchingFunc(foo),
+        let object2 = fetchingFunc(bar),
+        let object3 = fetchingFunc(baz)
       else {
         return nil
       }
