@@ -620,19 +620,42 @@ public class FunctionDeclTests: PrettyPrintTestCase {
   public func testOperatorOverloads() {
     let input =
       """
-      func < (lhs: Position, rhs: Position) -> Bool {
-        foo()
-      }
-
-      func + (left: [Int], right: [Int]) -> [Int] {
-        foo()
-      }
-
-      func ⊕ (left: Tensor, right: Tensor) -> Tensor {
-        foo()
+      struct X {
+        static func + (lhs: X, rhs: X) -> X {}
+        static func +(lhs: X, rhs: X) -> X {}
+        static func ⊕ (lhs: X, rhs: X) -> X {}
+        static func ⊕(lhs: X, rhs: X) -> X {}
+        static func * <T>(lhs: X, rhs: T) -> T {}
+        static func *<T>(lhs: X, rhs: T) -> T {}
       }
       """
-    assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 50)
+
+    let expected =
+      """
+      struct X {
+        static func + (
+          lhs: X, rhs: X
+        ) -> X {}
+        static func + (
+          lhs: X, rhs: X
+        ) -> X {}
+        static func ⊕ (
+          lhs: X, rhs: X
+        ) -> X {}
+        static func ⊕ (
+          lhs: X, rhs: X
+        ) -> X {}
+        static func * <T>(
+          lhs: X, rhs: T
+        ) -> T {}
+        static func * <T>(
+          lhs: X, rhs: T
+        ) -> T {}
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
   }
 
   public func testBreaksBeforeOrInsideOutput() {
