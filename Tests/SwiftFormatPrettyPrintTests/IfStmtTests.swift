@@ -232,6 +232,9 @@ public class IfStmtTests: PrettyPrintTestCase {
         let anotherCastedObject = object as? SomeOtherSlightlyLongerType {
         return nil
       }
+      if let object1 = fetchingFunc(foo), let object2 = fetchingFunc(bar), let object3 = fetchingFunc(baz) {
+        return nil
+      }
       """
 
     let expected =
@@ -254,6 +257,12 @@ public class IfStmtTests: PrettyPrintTestCase {
         foo, bar, baz, quxxe, far, fab, faz),
         let anotherCastedObject = object
           as? SomeOtherSlightlyLongerType
+      {
+        return nil
+      }
+      if let object1 = fetchingFunc(foo),
+        let object2 = fetchingFunc(bar),
+        let object3 = fetchingFunc(baz)
       {
         return nil
       }
