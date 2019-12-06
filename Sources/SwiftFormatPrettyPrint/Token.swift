@@ -141,6 +141,21 @@ enum NewlineKind {
   case mandatory
 }
 
+/// Kinds of printer control tokens that can be used to customize the pretty printer's behavior in
+/// a subsection of a token stream.
+enum PrinterControlKind {
+  /// A signal that break tokens shouldn't be allowed to fire until a corresponding enable breaking
+  /// control token is encountered.
+  ///
+  /// It's valid to nest `disableBreaking` and `enableBreaking` tokens. Breaks will be suppressed
+  /// long as there is at least 1 unmatched disable token.
+  case disableBreaking
+
+  /// A signal that break tokens should be allowed to fire following this token, as long as there
+  /// are no other unmatched disable tokens.
+  case enableBreaking
+}
+
 enum Token {
   case syntax(String)
   case open(GroupBreakStyle)
@@ -150,6 +165,7 @@ enum Token {
   case newlines(Int, kind: NewlineKind)
   case comment(Comment, wasEndOfLine: Bool)
   case verbatim(Verbatim)
+  case printerControl(kind: PrinterControlKind)
 
   // Convenience overloads for the enum types
   static let open = Token.open(.inconsistent, 0)

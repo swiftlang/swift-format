@@ -956,6 +956,12 @@ private final class TokenStreamCreator: SyntaxVisitor {
     } else {
       before(tokenToOpenWith.nextToken, tokens: .break(breakKindClose), .newline, .close)
     }
+
+    if let condition = node.condition {
+      before(condition.firstToken, tokens: .printerControl(kind: .disableBreaking))
+      after(condition.lastToken, tokens: .printerControl(kind: .enableBreaking), .break(.reset, size: 0))
+    }
+
     return .visitChildren
   }
 

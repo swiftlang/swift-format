@@ -96,6 +96,15 @@ public class PrettyPrinter {
   /// `currentLineIsContinuation` to become true).
   private var wasLastBreakKindContinue = false
 
+  /// Tracks how many printer control tokens to suppress firing breaks are active.
+  private var activeBreakSuppressionCount = 0
+
+  /// Whether breaks are supressed from firing. When true, no breaks should fire and the only way to
+  /// move to a new line is an explicit new line token.
+  private var isBreakingSupressed: Bool {
+    return activeBreakSuppressionCount > 0
+  }
+
   /// The computed indentation level, as a number of spaces, based on the state of any unclosed
   /// delimiters and whether or not the current line is a continuation line.
   private var currentIndentation: [Indent] {
@@ -283,6 +292,7 @@ public class PrettyPrinter {
         // scope. Additionally, continuation open breaks must indent when the break fires.
         let continuationBreakWillFire = openKind == .continuation
           && (isAtStartOfLine || length > spaceRemaining || mustBreak)
+          && !isBreakingSupressed
         let contributesContinuationIndent = currentLineIsContinuation || continuationBreakWillFire
 
         activeOpenBreaks.append(
@@ -387,7 +397,7 @@ public class PrettyPrinter {
         mustBreak = currentLineIsContinuation
       }
 
-      if (!isAtStartOfLine && length > spaceRemaining) || mustBreak {
+      if !isBreakingSupressed && ((!isAtStartOfLine && length > spaceRemaining) || mustBreak) {
         currentLineIsContinuation = isContinuationIfBreakFires
         writeNewlines(1, kind: .flexible)
         lastBreak = true
@@ -451,6 +461,14 @@ public class PrettyPrinter {
       pendingSpaces = 0
       lastBreak = false
       spaceRemaining -= length
+
+    case .printerControl(let kind):
+      switch kind {
+      case .disableBreaking:
+        activeBreakSuppressionCount += 1
+      case .enableBreaking:
+        activeBreakSuppressionCount -= 1
+      }
     }
   }
 
@@ -554,6 +572,10 @@ public class PrettyPrinter {
         }
         lengths.append(length)
         total += length
+
+      case .printerControl:
+        // Control tokens have no length. They aren't printed.
+        lengths.append(0)
       }
     }
 
@@ -642,6 +664,9 @@ public class PrettyPrinter {
       printDebugIndent()
       print("[VERBATIM Length: \(length) Idx: \(idx)]")
       print(verbatim.print(indent: debugIndent))
+
+    case .printerControl(let kind):
+      print("[PRINTER CONTROL Kind: \(kind)]")
     }
   }
 
