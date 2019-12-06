@@ -313,7 +313,10 @@ extension IfConfigTests {
     static let __allTests__IfConfigTests = [
         ("testBasicIfConfig", testBasicIfConfig),
         ("testIfConfigNoIndentation", testIfConfigNoIndentation),
+        ("testInvalidDiscretionaryLineBreaksRemoved", testInvalidDiscretionaryLineBreaksRemoved),
         ("testPoundIfAroundMembers", testPoundIfAroundMembers),
+        ("testPrettyPrintLineBreaksDisabled", testPrettyPrintLineBreaksDisabled),
+        ("testValidDiscretionaryLineBreaksRetained", testValidDiscretionaryLineBreaksRetained),
     ]
 }
 

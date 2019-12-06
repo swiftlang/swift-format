@@ -141,4 +141,93 @@ public class IfConfigTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
+
+  public func testPrettyPrintLineBreaksDisabled() {
+    let input =
+      """
+      #if canImport(SwiftUI) && !(os(iOS)&&arch( arm ) )&&( (canImport(AppKit) || canImport(UIKit)) && !os(watchOS))
+        conditionalFunc(foo, bar, baz)
+      #endif
+      """
+
+    let expected =
+      """
+      #if canImport(SwiftUI) && !(os(iOS) && arch(arm)) && ((canImport(AppKit) || canImport(UIKit)) && !os(watchOS))
+        conditionalFunc(foo, bar, baz)
+      #endif
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+  }
+
+  public func testInvalidDiscretionaryLineBreaksRemoved() {
+    let input =
+         """
+         #if (canImport(SwiftUI) &&
+         !(os(iOS) &&
+          arch(arm)) &&
+            ((canImport(AppKit) ||
+         canImport(UIKit)) && !os(watchOS)))
+         conditionalFunc(foo, bar, baz)
+           #endif
+         """
+
+       let expected =
+         """
+         #if (canImport(SwiftUI) && !(os(iOS) && arch(arm)) && ((canImport(AppKit) || canImport(UIKit)) && !os(watchOS)))
+           conditionalFunc(foo, bar, baz)
+         #endif
+
+         """
+
+       assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+  }
+
+  public func testValidDiscretionaryLineBreaksRetained() {
+    let input =
+      """
+      #if (canImport(SwiftUI)
+      && !(os(iOS)
+      && arch(arm))
+      && ((canImport(AppKit)
+      || canImport(UIKit)) && !os(watchOS))
+      && canImport(Foundation))
+        conditionalFunc(foo, bar, baz)
+      #endif
+
+      #if (canImport(SwiftUI)
+        && os(iOS)
+        && arch(arm)
+        && canImport(AppKit)
+        || canImport(UIKit) && !os(watchOS)
+        && canImport(Foundation))
+        conditionalFunc(foo, bar, baz)
+      #endif
+      """
+
+    let expected =
+      """
+      #if (canImport(SwiftUI)
+        && !(os(iOS)
+          && arch(arm))
+          && ((canImport(AppKit)
+            || canImport(UIKit)) && !os(watchOS))
+          && canImport(Foundation))
+        conditionalFunc(foo, bar, baz)
+      #endif
+
+      #if (canImport(SwiftUI)
+        && os(iOS)
+          && arch(arm)
+          && canImport(AppKit)
+          || canImport(UIKit) && !os(watchOS)
+          && canImport(Foundation))
+        conditionalFunc(foo, bar, baz)
+      #endif
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+  }
 }
