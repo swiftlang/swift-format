@@ -601,13 +601,26 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: TupleExprSyntax) -> SyntaxVisitorContinueKind {
-    after(node.leftParen, tokens: .break(.open, size: 0), .open)
-    before(node.rightParen, tokens: .close, .break(.close, size: 0))
+    // We'll do nothing if it's a zero-element tuple, because we just want to keep the empty `()`
+    // together.
+    let elementCount = node.elementList.count
 
-    insertTokens(.break(.same), betweenElementsOf: node.elementList)
+    if elementCount == 1 {
+      // A tuple with one element is a parenthesized expression; add a group around it to keep it
+      // together when possible, but breaks are handled elsewhere (see calls to
+      // `stackedIndentationBehavior`).
+      after(node.leftParen, tokens: .open)
+      before(node.rightParen, tokens: .close)
+    } else if elementCount > 1 {
+      // Tuples with more than one element are "true" tuples, and should indent as block structures.
+      after(node.leftParen, tokens: .break(.open, size: 0), .open)
+      before(node.rightParen, tokens: .close, .break(.close, size: 0))
 
-    for element in node.elementList {
-      arrangeAsTupleExprElement(element)
+      insertTokens(.break(.same), betweenElementsOf: node.elementList)
+
+      for element in node.elementList {
+        arrangeAsTupleExprElement(element)
+      }
     }
 
     return .visitChildren
@@ -1296,35 +1309,47 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
       if shouldRequireWhitespace(around: binOp) {
         if isAssigningOperator(binOp) {
-          var beforeTokens: [Token] = [.break(.open(kind: .continuation))]
-          var afterTokens: [Token] = [.break(.close(mustBreak: false), size: 0)]
+          var beforeTokens: [Token]
+
+          // If the rhs starts with a parenthesized expression, stack indentation around it.
+          // Otherwise, use regular continuation breaks.
+          if let (unindentingNode, _) = stackedIndentationBehavior(after: binOp, rhs: rhs) {
+            beforeTokens = [.break(.open(kind: .continuation))]
+            after(unindentingNode.lastToken, tokens: [.break(.close(mustBreak: false), size: 0)])
+          } else {
+            beforeTokens = [.break(.continue)]
+          }
 
           // When the RHS is a simple expression, even if is requires multiple lines, we don't add a
           // group so that as much of the expression as possible can stay on the same line as the
           // operator token.
           if isCompoundExpression(rhs) {
             beforeTokens.append(.open)
-            afterTokens.append(.close)
+            after(rhs.lastToken, tokens: .close)
           }
+
           after(binOp.lastToken, tokens: beforeTokens)
-          after(rhs.lastToken, tokens: afterTokens)
-        } else if shouldStackIndentation(after: binOp) {
-          // For certain operators like `&&` and `||`, we don't want to treat all continue breaks
-          // the same. If we did, then all operators would line up at the same alignment regardless
-          // of whether they were, for example, `&&` or something between a pair of `&&`. To make
-          // long conditionals format more cleanly, we use open-continuation/close pairs around such
-          // operators and their right-hand sides so that the continuation breaks inside those
-          // scopes "stack", instead of receiving the usual single-level "continuation line or not"
-          // behavior.
+        } else if let (unindentingNode, shouldReset) =
+          stackedIndentationBehavior(after: binOp, rhs: rhs)
+        {
+          // For parenthesized expressions and for unparenthesized usages of `&&` and `||`, we don't
+          // want to treat all continue breaks the same. If we did, then all operators would line up
+          // at the same alignment regardless of whether they were, for example, `&&` or something
+          // between a pair of `&&`. To make long expressions/conditionals format more cleanly, we
+          // use open-continuation/close pairs around such operators and their right-hand sides so
+          // that the continuation breaks inside those scopes "stack", instead of receiving the
+          // usual single-level "continuation line or not" behavior.
           let openBreakTokens: [Token] = [.break(.open(kind: .continuation)), .open]
           if wrapsBeforeOperator {
             before(binOp.firstToken, tokens: openBreakTokens)
           } else {
             after(binOp.lastToken, tokens: openBreakTokens)
           }
-          after(
-            rhs.lastToken,
-            tokens: [.break(.reset, size: 0), .break(.close(mustBreak: false), size: 0), .close])
+
+          let closeBreakTokens: [Token] =
+            (shouldReset ? [.break(.reset, size: 0)] : [])
+            + [.break(.close(mustBreak: false), size: 0), .close]
+          after(unindentingNode.lastToken, tokens: closeBreakTokens)
         } else {
           if wrapsBeforeOperator {
             before(binOp.firstToken, tokens: .break(.continue))
@@ -1422,14 +1447,19 @@ private final class TokenStreamCreator: SyntaxVisitor {
       closeAfterToken = typeAnnotation.lastToken
     }
     if let initializer = node.initializer {
-      after(initializer.equal, tokens: .break(.open(kind: .continuation)))
-      closesNeeded += 1
+      let expr = initializer.value
+
+      if let (unindentingNode, _) = stackedIndentationBehavior(rhs: expr) {
+        after(initializer.equal, tokens: .break(.open(kind: .continuation)))
+        after(unindentingNode.lastToken, tokens: .break(.close(mustBreak: false), size: 0))
+      } else {
+        after(initializer.equal, tokens: .break(.continue))
+      }
       closeAfterToken = initializer.lastToken
 
       // When the RHS is a simple expression, even if is requires multiple lines, we don't add a
       // group so that as much of the expression as possible can stay on the same line as the
       // operator token.
-      let expr = initializer.value
       if isCompoundExpression(expr) {
         before(expr.firstToken, tokens: .open)
         after(expr.lastToken, tokens: .close)
@@ -2474,13 +2504,16 @@ private final class TokenStreamCreator: SyntaxVisitor {
   /// that are known to wrap an expressions, e.g. try expressions, are handled by checking the
   /// expression that they contain.
   private func isCompoundExpression(_ expr: ExprSyntax) -> Bool {
-    if let sequenceExpr = expr as? SequenceExprSyntax {
+    switch expr {
+    case let sequenceExpr as SequenceExprSyntax:
       return sequenceExpr.elements.count > 1
-    }
-    if let tryExpr = expr as? TryExprSyntax {
+    case let tryExpr as TryExprSyntax:
       return isCompoundExpression(tryExpr.expression)
+    case let tupleExpr as TupleExprSyntax where tupleExpr.elementList.count == 1:
+      return isCompoundExpression(tupleExpr.elementList.first!.expression)
+    default:
+      return false
     }
-    return false
   }
 
   /// Returns whether the given operator behaves as an assignment, to assign a right-hand-side to a
@@ -2503,24 +2536,65 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return false
   }
 
-  /// Returns a value indicating whether indentation should be stacked within subexpressions to the
-  /// right of the given operator.
+  /// Walks the expression and returns the leftmost subexpression if it is parenthesized (which
+  /// might be the expression itself).
   ///
-  /// Operators that are good candidates for this behavior are ones that have low precedence and
-  /// may occur in chains, such as logical AND (`&&`) and OR (`||`) in conditional statements, where
-  /// the extra level of indentation helps to improve readability with the operators inside those
-  /// conditions.
-  private func shouldStackIndentation(after operatorExpr: ExprSyntax) -> Bool {
+  /// - Parameter expr: The expression whose parenthesized leftmost subexpression should be
+  ///   returned.
+  /// - Returns: The parenthesized leftmost subexpression, or nil if the leftmost subexpression was
+  ///   not parenthesized.
+  private func parenthesizedLeftmostExpr(of expr: ExprSyntax) -> TupleExprSyntax? {
+    switch expr {
+    case let tupleExpr as TupleExprSyntax where tupleExpr.elementList.count == 1:
+      return tupleExpr
+    case let sequenceExpr as SequenceExprSyntax:
+      return parenthesizedLeftmostExpr(of: sequenceExpr.elements.first!)
+    case let ternaryExpr as TernaryExprSyntax:
+      return parenthesizedLeftmostExpr(of: ternaryExpr.conditionExpression)
+    default:
+      return nil
+    }
+  }
+
+  /// Determines if indentation should be stacked around a subexpression to the right of the given
+  /// operator, and, if so, returns the node after which indentation stacking should be closed and
+  /// whether or not the continuation state should be reset as well.
+  ///
+  /// Stacking is applied around parenthesized expressions, but also for low-precedence operators
+  /// that frequently occur in long chains, such as logical AND (`&&`) and OR (`||`) in conditional
+  /// statements. In this case, the extra level of indentation helps to improve readability with the
+  /// operators inside those conditions even when parentheses are not used.
+  private func stackedIndentationBehavior(
+    after operatorExpr: ExprSyntax? = nil,
+    rhs: ExprSyntax
+  ) -> (unindentingNode: ExprSyntax, shouldReset: Bool)? {
+    // Check for logical operators first, and if it's that kind of operator, stack indentation
+    // around the entire right-hand-side. We have to do this check before checking the RHS for
+    // parentheses because if the user writes something like `... && (foo) > bar || ...`, we don't
+    // want the indentation stacking that starts before the `&&` to stop after the closing
+    // parenthesis in `(foo)`.
+    //
+    // We also want to reset after undoing the stacked indentation so that we have a visual
+    // indication that the subexpression has ended.
     if let binaryOperator = operatorExpr as? BinaryOperatorExprSyntax {
       let operatorText = binaryOperator.operatorToken.text
       if let precedence = operatorContext.infixOperator(named: operatorText)?.precedenceGroup,
         precedence === operatorContext.precedenceGroup(named: .logicalConjunction)
           || precedence === operatorContext.precedenceGroup(named: .logicalDisjunction)
       {
-        return true
+        return (unindentingNode: rhs, shouldReset: true)
       }
     }
-    return false
+
+    // If the right-hand-side of the operator is or starts with a parenthesized expression, stack
+    // indentation around the operator and those parentheses. We don't need to reset here because
+    // the parentheses are sufficient to provide a visual indication of the nesting relationship.
+    if let parenthesizedExpr = parenthesizedLeftmostExpr(of: rhs) {
+      return (unindentingNode: parenthesizedExpr, shouldReset: false)
+    }
+
+    // Otherwise, don't stack--use regular continuation breaks instead.
+    return nil
   }
 
   /// Returns a value indicating whether whitespace should be required around the given operator.

@@ -32,13 +32,13 @@ public class AssignmentExprTests: PrettyPrintTestCase {
       """
       someVeryLongVariableName =
         anotherPrettyLongVariableName
-          && someOtherOperand
+        && someOtherOperand
       shortName =
         wxyz + aaaaaa + bbbbbb
-          + cccccc
+        + cccccc
       longerName =
         wxyz + aaaaaa + bbbbbb
-          + cccccc || zzzzzzz
+        + cccccc || zzzzzzz
 
       """
 
@@ -60,8 +60,8 @@ public class AssignmentExprTests: PrettyPrintTestCase {
         """
         result =
           firstOp + secondOp
-            + someOpFetchingFunc(
-              foo, bar: bar, baz: baz)
+          + someOpFetchingFunc(
+            foo, bar: bar, baz: baz)
         result = someOpFetchingFunc(
           foo, bar: bar, baz: baz)
         result += someOpFetchingFunc(
@@ -69,18 +69,18 @@ public class AssignmentExprTests: PrettyPrintTestCase {
         result =
           someOpFetchingFunc(
             foo, bar: bar, baz: baz)
-            + someOtherOperand
-            + andAThirdOneForReasons
+          + someOtherOperand
+          + andAThirdOneForReasons
         result =
           firstOp + secondOp + thirdOp
-            + someOpFetchingFunc(
-              foo, bar, baz) + nextOp
-            + lastOp
+          + someOpFetchingFunc(
+            foo, bar, baz) + nextOp
+          + lastOp
         result +=
           firstOp + secondOp + thirdOp
-            + someOpFetchingFunc(
-              foo, bar, baz) + nextOp
-            + lastOp
+          + someOpFetchingFunc(
+            foo, bar, baz) + nextOp
+          + lastOp
 
         """
 
@@ -93,11 +93,11 @@ public class AssignmentExprTests: PrettyPrintTestCase {
         """
         result =
           firstOp + secondOp
-            + someOpFetchingFunc(
-              foo,
-              bar: bar,
-              baz: baz
-            )
+          + someOpFetchingFunc(
+            foo,
+            bar: bar,
+            baz: baz
+          )
         result = someOpFetchingFunc(
           foo,
           bar: bar,
@@ -114,21 +114,21 @@ public class AssignmentExprTests: PrettyPrintTestCase {
             bar: bar,
             baz: baz
           ) + someOtherOperand
-            + andAThirdOneForReasons
+          + andAThirdOneForReasons
         result =
           firstOp + secondOp + thirdOp
-            + someOpFetchingFunc(
-              foo,
-              bar,
-              baz
-            ) + nextOp + lastOp
+          + someOpFetchingFunc(
+            foo,
+            bar,
+            baz
+          ) + nextOp + lastOp
         result +=
           firstOp + secondOp + thirdOp
-            + someOpFetchingFunc(
-              foo,
-              bar,
-              baz
-            ) + nextOp + lastOp
+          + someOpFetchingFunc(
+            foo,
+            bar,
+            baz
+          ) + nextOp + lastOp
 
         """
       config.lineBreakBeforeEachArgument = true
@@ -149,20 +149,20 @@ public class AssignmentExprTests: PrettyPrintTestCase {
       """
       let result =
         firstOp + secondOp
-          + someOpFetchingFunc(
-            foo, bar: bar, baz: baz)
+        + someOpFetchingFunc(
+          foo, bar: bar, baz: baz)
       let result = someOpFetchingFunc(
         foo, bar: bar, baz: baz)
       let result =
         someOpFetchingFunc(
           foo, bar: bar, baz: baz)
-          + someOtherOperand
-          + andAThirdOneForReasons
+        + someOtherOperand
+        + andAThirdOneForReasons
       let result =
         firstOp + secondOp + thirdOp
-          + someOpFetchingFunc(
-            foo, bar, baz) + nextOp
-          + lastOp
+        + someOpFetchingFunc(
+          foo, bar, baz) + nextOp
+        + lastOp
 
       """
 
@@ -175,11 +175,11 @@ public class AssignmentExprTests: PrettyPrintTestCase {
       """
       let result =
         firstOp + secondOp
-          + someOpFetchingFunc(
-            foo,
-            bar: bar,
-            baz: baz
-          )
+        + someOpFetchingFunc(
+          foo,
+          bar: bar,
+          baz: baz
+        )
       let result = someOpFetchingFunc(
         foo,
         bar: bar,
@@ -191,14 +191,14 @@ public class AssignmentExprTests: PrettyPrintTestCase {
           bar: bar,
           baz: baz
         ) + someOtherOperand
-          + andAThirdOneForReasons
+        + andAThirdOneForReasons
       let result =
         firstOp + secondOp + thirdOp
-          + someOpFetchingFunc(
-            foo,
-            bar,
-            baz
-          ) + nextOp + lastOp
+        + someOpFetchingFunc(
+          foo,
+          bar,
+          baz
+        ) + nextOp + lastOp
 
       """
     config.lineBreakBeforeEachArgument = true

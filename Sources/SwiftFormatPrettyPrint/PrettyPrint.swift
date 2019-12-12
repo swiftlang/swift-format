@@ -292,7 +292,6 @@ public class PrettyPrinter {
         // scope. Additionally, continuation open breaks must indent when the break fires.
         let continuationBreakWillFire = openKind == .continuation
           && (isAtStartOfLine || length > spaceRemaining || mustBreak)
-          && !isBreakingSupressed
         let contributesContinuationIndent = currentLineIsContinuation || continuationBreakWillFire
 
         activeOpenBreaks.append(

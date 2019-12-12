@@ -43,10 +43,10 @@ public class TernaryExprTests: PrettyPrintTestCase {
       """
       let someLocalizedText =
         shouldUseTheFirstOption
-          ? stringFunc(name: "Name1", comment: "short comment")
-          : stringFunc(
-            name: "Name2", comment: "Some very, extremely long comment",
-            details: "Another comment")
+        ? stringFunc(name: "Name1", comment: "short comment")
+        : stringFunc(
+          name: "Name2", comment: "Some very, extremely long comment",
+          details: "Another comment")
 
       """
 

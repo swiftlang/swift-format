@@ -219,7 +219,7 @@ public class FunctionCallTests: PrettyPrintTestCase {
       """
       let result =
         firstObj.someOptionalReturningFunc(foo: arg)
-          ?? (someOtherObj as SomeUsefulType).someGetterFunc()
+        ?? (someOtherObj as SomeUsefulType).someGetterFunc()
 
       """
 

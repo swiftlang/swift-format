@@ -11,9 +11,9 @@ public class VariableDeclarationTests: PrettyPrintTestCase {
       """
       let x =
         firstVariable
-          + secondVariable
-          / thirdVariable
-          + fourthVariable
+        + secondVariable
+        / thirdVariable
+        + fourthVariable
       let y: Int =
         anotherVar + moreVar
       let (w, z, s):
@@ -54,6 +54,7 @@ public class VariableDeclarationTests: PrettyPrintTestCase {
       let a = 100, b = 200, c = 300, d = 400, e = 500, f = 600
       let a = 5, anotherReallyLongVariableName = something, longVariableName = longFunctionCall()
       let a = letsForceTheFirstOneToWrapAsWell, longVariableName = longFunctionCall()
+      let a = firstThing + secondThing + thirdThing, b = firstThing + secondThing + thirdThing
       """
 
     let expected =
@@ -67,6 +68,13 @@ public class VariableDeclarationTests: PrettyPrintTestCase {
       let
         a = letsForceTheFirstOneToWrapAsWell,
         longVariableName = longFunctionCall()
+      let
+        a =
+          firstThing + secondThing
+          + thirdThing,
+        b =
+          firstThing + secondThing
+          + thirdThing
 
       """
 

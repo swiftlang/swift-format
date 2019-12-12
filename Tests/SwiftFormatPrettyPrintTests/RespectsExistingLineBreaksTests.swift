@@ -16,10 +16,10 @@ class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
       """
       a =
         b + c
-          + d
-          + e + f
-          + g
-          + h + i
+        + d
+        + e + f
+        + g
+        + h + i
 
       """
 
@@ -31,7 +31,7 @@ class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
       """
       a =
         b + c + d + e + f + g
-          + h + i
+        + h + i
 
       """
 

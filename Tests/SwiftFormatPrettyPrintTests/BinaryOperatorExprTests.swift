@@ -18,7 +18,7 @@ public class BinaryOperatorExprTests: PrettyPrintTestCase {
       """
       x =
         1 + 8
-          - 9
+        - 9
         ^*^ 5
         * 4 / 10
 
@@ -76,16 +76,16 @@ public class BinaryOperatorExprTests: PrettyPrintTestCase {
       """
       x =
         1++
-          ... 100
+        ... 100
       x =
         1--
-          ..< 100
+        ..< 100
       x =
         1++
-          ... 100
+        ... 100
       x =
         1--
-          ..< 100
+        ..< 100
 
       """
 
@@ -116,16 +116,16 @@ public class BinaryOperatorExprTests: PrettyPrintTestCase {
       """
       x =
         1
-          ... -100
+        ... -100
       x =
         1
-          ..< -100
+        ..< -100
       x =
         1
-          ... √100
+        ... √100
       x =
         1
-          ..< √100
+        ..< √100
 
       """
 
@@ -156,16 +156,16 @@ public class BinaryOperatorExprTests: PrettyPrintTestCase {
       """
       x =
         1++
-          ... -100
+        ... -100
       x =
         1--
-          ..< -100
+        ..< -100
       x =
         1++
-          ... √100
+        ... √100
       x =
         1--
-          ..< √100
+        ..< √100
 
       """
 
@@ -196,16 +196,16 @@ public class BinaryOperatorExprTests: PrettyPrintTestCase {
       """
       x =
         .first
-          ... .last
+        ... .last
       x =
         .first
-          ..< .last
+        ..< .last
       x =
         .first
-          ... .last
+        ... .last
       x =
         .first
-          ..< .last
+        ..< .last
 
       """
 
