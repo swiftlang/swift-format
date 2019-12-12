@@ -352,7 +352,8 @@ public class InitializerDeclTests: PrettyPrintTestCase {
     let expected =
       """
       struct Struct {
-        @objc @inlinable public init<
+        @objc @inlinable
+        public init<
           Elements: Collection, Element
         >(
           element: Element,
@@ -388,7 +389,8 @@ public class InitializerDeclTests: PrettyPrintTestCase {
     let expected =
     """
       struct Struct {
-        @objc @inlinable public init<
+        @objc @inlinable
+        public init<
           Elements: Collection, Element
         >(
           element: Element,

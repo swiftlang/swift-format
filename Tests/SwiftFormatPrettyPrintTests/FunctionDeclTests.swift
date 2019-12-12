@@ -1019,4 +1019,24 @@ public class FunctionDeclTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: input, linelength: 80)
   }
+
+  func testDoesNotBreakInsideEmptyParens() {
+    // If the function name is so long that the parentheses of a no-argument parameter list would
+    // be pushed past the margin, don't break inside them.
+    let input =
+      """
+      func fooBarBaz() {}
+
+      """
+
+    let expected =
+      """
+      func
+        fooBarBaz()
+      {}
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 14)
+  }
 }
