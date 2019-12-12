@@ -264,6 +264,7 @@ extension FunctionDeclTests {
         ("testBreaksBeforeOrInsideOutputWithAttributes_prioritizingKeepingOutputTogether", testBreaksBeforeOrInsideOutputWithAttributes_prioritizingKeepingOutputTogether),
         ("testBreaksBeforeOrInsideOutputWithWhereClause", testBreaksBeforeOrInsideOutputWithWhereClause),
         ("testBreaksBeforeOrInsideOutputWithWhereClause_prioritizingKeepingOutputTogether", testBreaksBeforeOrInsideOutputWithWhereClause_prioritizingKeepingOutputTogether),
+        ("testDoesNotBreakInsideEmptyParens", testDoesNotBreakInsideEmptyParens),
         ("testDoesNotCollapseFunctionParameterAttributes", testDoesNotCollapseFunctionParameterAttributes),
         ("testDoesNotCollapseStackedFunctionParameterAttributes", testDoesNotCollapseStackedFunctionParameterAttributes),
         ("testEmptyFunction", testEmptyFunction),

@@ -246,16 +246,27 @@ private final class TokenStreamCreator: SyntaxVisitor {
   // MARK: - Function and function-like declaration nodes (initializers, deinitializers, subscripts)
 
   func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
-    // Prioritize keeping "<modifiers> func <name>" together.
+    let hasArguments = !node.signature.input.parameterList.isEmpty
+
+    // Prioritize keeping ") throws -> <return_type>" together. We can only do this if the function
+    // has arguments.
+    if hasArguments && config.prioritizeKeepingFunctionOutputTogether {
+      // Due to visitation order, the matching .open break is added in ParameterClauseSyntax.
+      after(node.signature.lastToken, tokens: .close)
+    }
+
+    let mustBreak = node.body != nil || node.signature.output != nil
+    arrangeParameterClause(node.signature.input, forcesBreakBeforeRightParen: mustBreak)
+
+    // Prioritize keeping "<modifiers> func <name>(" together. Also include the ")" if the parameter
+    // list is empty.
     let firstTokenAfterAttributes = node.modifiers?.firstToken ?? node.funcKeyword
     before(firstTokenAfterAttributes, tokens: .open)
     after(node.funcKeyword, tokens: .break)
-    after(node.identifier, tokens: .close)
-
-    // Prioritize keeping ") throws -> <return_type>" together.
-    if config.prioritizeKeepingFunctionOutputTogether {
-      // Due to visitation order, the matching .open break is added in ParameterClauseSyntax.
-      after(node.signature.lastToken, tokens: .close)
+    if hasArguments || node.genericParameterClause != nil {
+      after(node.signature.input.leftParen, tokens: .close)
+    } else {
+      after(node.signature.input.rightParen, tokens: .close)
     }
 
     // Add a non-breaking space after the identifier if it's an operator, to separate it visually
@@ -265,9 +276,6 @@ private final class TokenStreamCreator: SyntaxVisitor {
     if case .spacedBinaryOperator = node.identifier.tokenKind {
       after(node.identifier.lastToken, tokens: .space)
     }
-
-    let mustBreak = node.body != nil || node.signature.output != nil
-    arrangeParameterClause(node.signature.input, forcesBreakBeforeRightParen: mustBreak)
 
     arrangeFunctionLikeDecl(
       node,
@@ -280,17 +288,21 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: InitializerDeclSyntax) -> SyntaxVisitorContinueKind {
+    let hasArguments = !node.parameters.parameterList.isEmpty
+
+    arrangeParameterClause(node.parameters, forcesBreakBeforeRightParen: node.body != nil)
+
     // Prioritize keeping "<modifiers> init<punctuation>" together.
     let firstTokenAfterAttributes = node.modifiers?.firstToken ?? node.initKeyword
-    let lastTokenOfName = node.optionalMark ?? node.initKeyword
-    if firstTokenAfterAttributes != lastTokenOfName {
-      before(firstTokenAfterAttributes, tokens: .open)
-      after(lastTokenOfName, tokens: .close)
+    before(firstTokenAfterAttributes, tokens: .open)
+
+    if hasArguments || node.genericParameterClause != nil {
+      after(node.parameters.leftParen, tokens: .close)
+    } else {
+      after(node.parameters.rightParen, tokens: .close)
     }
 
     before(node.throwsOrRethrowsKeyword, tokens: .break)
-
-    arrangeParameterClause(node.parameters, forcesBreakBeforeRightParen: node.body != nil)
 
     arrangeFunctionLikeDecl(
       node,
@@ -313,16 +325,24 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: SubscriptDeclSyntax) -> SyntaxVisitorContinueKind {
+    let hasArguments = !node.indices.parameterList.isEmpty
+
     before(node.firstToken, tokens: .open)
 
     // Prioritize keeping "<modifiers> subscript" together.
     if let firstModifierToken = node.modifiers?.firstToken {
       before(firstModifierToken, tokens: .open)
-      after(node.subscriptKeyword, tokens: .close)
+
+      if hasArguments || node.genericParameterClause != nil {
+        after(node.indices.leftParen, tokens: .close)
+      } else {
+        after(node.indices.rightParen, tokens: .close)
+      }
     }
 
-    // Prioritize keeping ") -> <return_type>" together.
-    if config.prioritizeKeepingFunctionOutputTogether {
+    // Prioritize keeping ") -> <return_type>" together. We can only do this if the subscript has
+    // arguments.
+    if hasArguments && config.prioritizeKeepingFunctionOutputTogether {
       // Due to visitation order, the matching .open break is added in ParameterClauseSyntax.
       after(node.result.lastToken, tokens: .close)
     }
@@ -905,8 +925,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: ParameterClauseSyntax) -> SyntaxVisitorContinueKind {
-    // Prioritize keeping ") throws -> <return_type>" together.
-    if config.prioritizeKeepingFunctionOutputTogether {
+    // Prioritize keeping ") throws -> <return_type>" together. We can only do this if the function
+    // has arguments.
+    if !node.parameterList.isEmpty && config.prioritizeKeepingFunctionOutputTogether {
       // Due to visitation order, this .open corresponds to a .close added in FunctionDeclSyntax
       // or SubscriptDeclSyntax.
       before(node.rightParen, tokens: .open)
@@ -2072,6 +2093,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
   private func arrangeParameterClause(
     _ parameters: ParameterClauseSyntax, forcesBreakBeforeRightParen: Bool
   ) {
+    guard !parameters.parameterList.isEmpty else { return }
+
     after(parameters.leftParen, tokens: .break(.open, size: 0), .open(argumentListConsistency()))
     before(
       parameters.rightParen,
