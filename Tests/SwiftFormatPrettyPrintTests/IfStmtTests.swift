@@ -326,6 +326,39 @@ public class IfStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
+  public func testConditionExpressionOperatorGroupingMixedWithParentheses() {
+    let input =
+      """
+      if (someObj is SuperVerboselyNamedType || someObj is AnotherPrettyLongType  || someObjc == "APlainString" || someObj == 4) {
+        // do something
+      }
+      if (someVeryLongFirstCondition || (aCombination + ofVariousVariables + andOperators - thatBreak * onto % differentLines) || anotherPrettyLongCondition || thatBinPacks) {
+        // do something else
+      }
+      """
+
+    let expected =
+      """
+      if (someObj is SuperVerboselyNamedType
+        || someObj is AnotherPrettyLongType
+        || someObjc == "APlainString" || someObj == 4)
+      {
+        // do something
+      }
+      if (someVeryLongFirstCondition
+        || (aCombination + ofVariousVariables
+          + andOperators - thatBreak * onto
+          % differentLines)
+        || anotherPrettyLongCondition || thatBinPacks)
+      {
+        // do something else
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+  }
+
   public func testOptionalBindingConditions() {
     let input =
       """

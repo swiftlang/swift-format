@@ -211,17 +211,17 @@ public class IfConfigTests: PrettyPrintTestCase {
       #if (canImport(SwiftUI)
         && !(os(iOS)
           && arch(arm))
-          && ((canImport(AppKit)
-            || canImport(UIKit)) && !os(watchOS))
-          && canImport(Foundation))
+        && ((canImport(AppKit)
+          || canImport(UIKit)) && !os(watchOS))
+        && canImport(Foundation))
         conditionalFunc(foo, bar, baz)
       #endif
 
       #if (canImport(SwiftUI)
         && os(iOS)
-          && arch(arm)
-          && canImport(AppKit)
-          || canImport(UIKit) && !os(watchOS)
+        && arch(arm)
+        && canImport(AppKit)
+        || canImport(UIKit) && !os(watchOS)
           && canImport(Foundation))
         conditionalFunc(foo, bar, baz)
       #endif

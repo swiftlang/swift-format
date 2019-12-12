@@ -11,10 +11,10 @@ public class MemberAccessExprTests: PrettyPrintTestCase {
       let a = one.two
         .three.four
         .five
-      let b = (
-        c as TypeD
-      ).one.two.three
-        .four
+      let b =
+        (c as TypeD)
+        .one.two
+        .three.four
 
       """
 
@@ -117,7 +117,7 @@ public class MemberAccessExprTests: PrettyPrintTestCase {
       """
       let totalHeight =
         Constants.textFieldHeight + Constants.borderHeight
-          + Constants.importantLabelHeight
+        + Constants.importantLabelHeight
 
       """
 
