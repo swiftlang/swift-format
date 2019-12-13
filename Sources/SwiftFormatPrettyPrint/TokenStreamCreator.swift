@@ -1015,6 +1015,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: MemberDeclListItemSyntax) -> SyntaxVisitorContinueKind {
+    if shouldFormatterIgnore(node: node) {
+      appendFormatterIgnored(node: node)
+      return .skipChildren
+    }
+
     before(node.firstToken, tokens: .open)
     let resetSize = node.semicolon != nil ? 1 : 0
     after(node.lastToken, tokens: .close, .break(.reset, size: resetSize))
@@ -1117,6 +1122,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: CodeBlockItemSyntax) -> SyntaxVisitorContinueKind {
+    if shouldFormatterIgnore(node: node) {
+      appendFormatterIgnored(node: node)
+      return .skipChildren
+    }
+
     before(node.firstToken, tokens: .open)
     let resetSize = node.semicolon != nil ? 1 : 0
     after(node.lastToken, tokens: .close, .break(.reset, size: resetSize))
@@ -2654,6 +2664,86 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // to be concerned about the user writing "4+-5" when they meant "4 + -5", because Swift would
     // always parse the former as "4 +- 5".
     return true
+  }
+
+  /// Appends the given node to the token stream without applying any formatting or printing tokens.
+  ///
+  /// - Parameter node: A node that is ignored by the formatter.
+  private func appendFormatterIgnored(node: Syntax) {
+    // The first line of text in the `verbatim` token is printed with correct indentation, based on
+    // the previous tokens. The leading trivia of the first token needs to be excluded from the
+    // `verbatim` token in order for the first token to be printed with correct indentation. All
+    // following lines in the ignored node are printed as-is with no changes to indentation.
+    var nodeText = node.description
+    if let firstToken = node.firstToken {
+      extractLeadingTrivia(firstToken)
+      let leadingTriviaText = firstToken.leadingTrivia.reduce(into: "") { $1.write(to: &$0) }
+      nodeText = String(nodeText.dropFirst(leadingTriviaText.count))
+    }
+
+    // The leading trivia of the next token, after the ignored node, may contain content that
+    // belongs with the ignored node. The trivia extraction that is performed for `lastToken` later
+    // excludes that content so it needs to be extracted and added to the token stream here.
+    if let next = node.lastToken?.nextToken, let trivia = next.leadingTrivia.first {
+      switch trivia {
+      case .lineComment, .blockComment:
+        trivia.write(to: &nodeText)
+        break
+      default:
+        // All other kinds of trivia are inserted into the token stream by `extractLeadingTrivia`
+        // when the relevant token is visited.
+        break
+      }
+    }
+
+    appendToken(.verbatim(Verbatim(text: nodeText, indentingBehavior: .firstLine)))
+
+    // Add this break so that trivia parsing will allow discretionary newlines after the node.
+    appendToken(.break(.same, size: 0))
+  }
+
+  /// Returns whether the given trivia includes a directive to ignore formatting for the next node.
+  ///
+  /// - Parameter trivia: Leading trivia for a node that the formatter supports ignoring.
+  private func isFormatterIgnorePresent(inTrivia trivia: Trivia) -> Bool {
+    func isFormatterIgnore(in commentText: String, prefix: String, suffix: String) -> Bool {
+      let trimmed =
+          commentText.dropFirst(prefix.count)
+            .dropLast(suffix.count)
+            .trimmingCharacters(in: .whitespaces)
+      return trimmed == "swift-format-ignore"
+    }
+
+    for piece in trivia {
+      switch piece {
+      case .lineComment(let text):
+        if isFormatterIgnore(in: text, prefix: "//", suffix: "") { return true }
+        break
+      case .blockComment(let text):
+        if isFormatterIgnore(in: text, prefix: "/*", suffix: "*/") { return true }
+        break
+      default:
+        break
+      }
+    }
+    return false
+  }
+
+  /// Returns whether the formatter should ignore the given node by printing it without changing the
+  /// node's internal text representation (i.e. print all text inside of the node as it was in the
+  /// original source).
+  ///
+  /// - Note: The caller is responsible for ensuring that the given node is a type of node that can
+  /// be safely ignored.
+  ///
+  /// - Parameter node: A node that can be safely ignored.
+  private func shouldFormatterIgnore(node: Syntax) -> Bool {
+    // Regardless of the level of nesting, if the ignore directive is present on the first token
+    // contained within the node then the entire node is eligible for ignoring.
+    if let firstTrivia = node.firstToken?.leadingTrivia {
+      return isFormatterIgnorePresent(inTrivia: firstTrivia)
+    }
+    return false
   }
 }
 

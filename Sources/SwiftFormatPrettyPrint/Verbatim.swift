@@ -13,11 +13,25 @@
 import Foundation
 import SwiftFormatConfiguration
 
+/// Describes options for behavior when applying the indentation of the current context when
+/// printing a verbatim token.
+enum IndentingBehavior {
+  /// The indentation of the current context is completely ignored.
+  case none
+  /// The indentation of the current context is applied to every line.
+  case allLines
+  /// The indentation of the current context is applied to the first line, and ignored on any
+  /// additional lines.
+  case firstLine
+}
+
 struct Verbatim {
+  let indentingBehavior: IndentingBehavior
   var lines: [String] = []
   var leadingWhitespaceCounts: [Int] = []
 
-  init(text: String) {
+  init(text: String, indentingBehavior: IndentingBehavior = .allLines) {
+    self.indentingBehavior = indentingBehavior
     tokenizeTextAndTrimWhitespace(text: text)
   }
 
@@ -43,7 +57,13 @@ struct Verbatim {
     var output = ""
     for i in 0..<lines.count {
       if lines[i] != "" {
-        output += indent.indentation()
+        switch indentingBehavior {
+        case .firstLine where i == 0, .allLines:
+          output += indent.indentation()
+          break
+        case .none, .firstLine:
+          break
+        }
         output += String(repeating: " ", count: leadingWhitespaceCounts[i])
         output += lines[i]
       }
