@@ -632,8 +632,11 @@ extension TernaryExprTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__TernaryExprTests = [
+        ("testExpressionStartsWithTernary", testExpressionStartsWithTernary),
+        ("testNestedTernaries", testNestedTernaries),
         ("testTernaryExprs", testTernaryExprs),
         ("testTernaryExprsWithMultiplePartChoices", testTernaryExprsWithMultiplePartChoices),
+        ("testTernaryWithWrappingExpressions", testTernaryWithWrappingExpressions),
     ]
 }
 
