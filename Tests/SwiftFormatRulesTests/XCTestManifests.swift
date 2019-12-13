@@ -331,7 +331,17 @@ extension UseShorthandTypeNamesTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__UseShorthandTypeNamesTests = [
-        ("testLongFormNames", testLongFormNames),
+        ("testFunctionTypesAreOnlyWrappedWhenShortenedAsOptionals", testFunctionTypesAreOnlyWrappedWhenShortenedAsOptionals),
+        ("testModuleQualifiedNamesAreNotShortened", testModuleQualifiedNamesAreNotShortened),
+        ("testNamesInNonMemberAccessExpressionContextsAreShortened", testNamesInNonMemberAccessExpressionContextsAreShortened),
+        ("testNamesInTypeContextsAreShortened", testNamesInTypeContextsAreShortened),
+        ("testNestedNamesInNonMemberAccessExpressionContextsAreShortened", testNestedNamesInNonMemberAccessExpressionContextsAreShortened),
+        ("testNestedNamesInTypeContextsAreShortened", testNestedNamesInTypeContextsAreShortened),
+        ("testPreservesNestedGenericsForUnshortenedTypes", testPreservesNestedGenericsForUnshortenedTypes),
+        ("testTypesWeDoNotCareAboutAreUnchanged", testTypesWeDoNotCareAboutAreUnchanged),
+        ("testTypesWithEmptyTupleAsGenericArgumentAreNotShortenedInExpressionContexts", testTypesWithEmptyTupleAsGenericArgumentAreNotShortenedInExpressionContexts),
+        ("testTypesWithIncorrectNumbersOfGenericArgumentsAreNotChanged", testTypesWithIncorrectNumbersOfGenericArgumentsAreNotChanged),
+        ("testTypesWithMemberAccessesAreNotShortened", testTypesWithMemberAccessesAreNotShortened),
     ]
 }
 
