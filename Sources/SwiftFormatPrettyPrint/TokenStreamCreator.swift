@@ -1256,11 +1256,19 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: TernaryExprSyntax) -> SyntaxVisitorContinueKind {
-    before(node.questionMark, tokens: .break, .open)
+    // The order of the .open/.close tokens here is intentional. They are normally paired with the
+    // corresponding breaks, but in this case, we want to prioritize keeping the entire `? a : b`
+    // part together if some part of the ternary wraps, instead of keeping `c ? a` together and
+    // wrapping after that.
+    before(node.questionMark, tokens: .break(.open(kind: .continuation)), .open)
     after(node.questionMark, tokens: .space)
-    before(node.colonMark, tokens: .break, .open)
+    before(
+      node.colonMark,
+      tokens: .break(.close(mustBreak: false), size: 0), .break(.open(kind: .continuation)), .open)
     after(node.colonMark, tokens: .space)
-    after(node.secondChoice.lastToken, tokens: .close, .close)
+    after(
+      node.secondChoice.lastToken,
+      tokens: .break(.close(mustBreak: false), size: 0), .close, .close)
     return .visitChildren
   }
 
@@ -2540,6 +2548,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
     switch expr {
     case let sequenceExpr as SequenceExprSyntax:
       return sequenceExpr.elements.count > 1
+    case is TernaryExprSyntax:
+      return true
     case let tryExpr as TryExprSyntax:
       return isCompoundExpression(tryExpr.expression)
     case let tupleExpr as TupleExprSyntax where tupleExpr.elementList.count == 1:
@@ -2617,6 +2627,12 @@ private final class TokenStreamCreator: SyntaxVisitor {
       {
         return (unindentingNode: rhs, shouldReset: true)
       }
+    }
+
+    // If the right-hand-side is a ternary expression, stack indentation around the condition so
+    // that it is indented relative to the `?` and `:` tokens.
+    if let ternaryExpr = rhs as? TernaryExprSyntax {
+      return (unindentingNode: ternaryExpr.conditionExpression, shouldReset: false)
     }
 
     // If the right-hand-side of the operator is or starts with a parenthesized expression, stack
