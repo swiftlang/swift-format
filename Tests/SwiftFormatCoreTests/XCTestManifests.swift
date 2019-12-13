@@ -6,12 +6,12 @@ extension RuleMaskTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__RuleMaskTests = [
+        ("testDirectiveWithRulesList", testDirectiveWithRulesList),
         ("testDuplicateNested", testDuplicateNested),
-        ("testEnableBeforeDisable", testEnableBeforeDisable),
-        ("testSingleFlags", testSingleFlags),
+        ("testIgnoreTwoRules", testIgnoreTwoRules),
+        ("testNamelessDirectiveAffectsAllRules", testNamelessDirectiveAffectsAllRules),
         ("testSingleRule", testSingleRule),
         ("testSpuriousFlags", testSpuriousFlags),
-        ("testTwoRules", testTwoRules),
     ]
 }
 

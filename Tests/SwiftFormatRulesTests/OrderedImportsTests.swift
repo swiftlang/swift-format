@@ -255,9 +255,8 @@ public class OrderedImportsTests: DiagnosingTestCase {
       """
       import C
       import B
-      // swift-format-disable: OrderedImports
+      // swift-format-ignore: OrderedImports
       import A
-      // swift-format-enable: OrderedImports
       let a = 123
       import func Darwin.C.isatty
       """
@@ -269,9 +268,8 @@ public class OrderedImportsTests: DiagnosingTestCase {
 
       import func Darwin.C.isatty
 
-      // swift-format-disable: OrderedImports
+      // swift-format-ignore: OrderedImports
       import A
-      // swift-format-enable: OrderedImports
       let a = 123
       """
 
@@ -291,9 +289,8 @@ public class OrderedImportsTests: DiagnosingTestCase {
       """
       import B
       import C
-      // swift-format-disable: OrderedImports
+      // swift-format-ignore: OrderedImports
       import A
-      // swift-format-enable: OrderedImports
       import D
       """
 
@@ -301,10 +298,9 @@ public class OrderedImportsTests: DiagnosingTestCase {
       """
       import B
       import C
-      // swift-format-enable: OrderedImports
       import D
 
-      // swift-format-disable: OrderedImports
+      // swift-format-ignore: OrderedImports
       import A
       """
 
