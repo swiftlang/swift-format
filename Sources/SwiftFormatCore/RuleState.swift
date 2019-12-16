@@ -18,9 +18,6 @@ public enum RuleState {
   /// or disabled at the requested location, so the configuration default should be used.
   case `default`
 
-  /// The rule is explicitly enabled at the requested location.
-  case enabled
-
   /// The rule is explicitly disabled at the requested location.
   case disabled
 }

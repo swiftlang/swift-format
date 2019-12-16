@@ -13,73 +13,176 @@
 import Foundation
 import SwiftSyntax
 
-/// This class takes the raw source text and scans through it searching for comment pairs of the
-/// form:
+/// This class takes the raw source text and scans through it searching for comments that instruct
+/// the formatter to change the status of rules for the following node. The comments may include no
+/// rule names to affect all rules, a single rule name to affect that rule, or a comma delimited
+/// list of rule names to affect a number of rules. Ignore is the only supported operation.
 ///
-///   3. |  // swift-format-disable: RuleName
-///   4. |  let a = 123
-///   5. |  // swift-format-enable: RuleName
+///   1. |  // swift-format-ignore
+///   2. |  let a = 123
+///   Ignores all rules for line 2.
 ///
-/// This class records that `RuleName` is disabled for line 4. The rules themselves reference
-/// RuleMask to see if it is disabled for the line it is currently examining.
+///   1. |  // swift-format-ignore: RuleName
+///   2. |  let a = 123
+///   Ignores `RuleName` for line 2.
+///
+///   1. |  // swift-format-ignore: RuleName, OtherRuleName
+///   2. |  let a = 123
+///   Ignores `RuleName` and `OtherRuleName` for line 2.
+///
+/// The rules themselves reference RuleMask to see if it is disabled for the line it is currently
+/// examining.
 public class RuleMask {
+  /// Stores the source ranges in which all rules are ignored.
+  private var allRulesIgnoredRanges: [SourceRange] = []
 
-  /// Information about whether a particular lint/format rule is enabled or disabled for a range of
-  /// lines in the source file.
-  private struct LineRangeState {
-
-    /// The line range where a rule is either disabled or enabled.
-    var range: Range<Int>
-
-    /// Indicates whether the rule is enabled in this range.
-    var isEnabled: Bool
-  }
-
-  /// Each rule has a list of ranges for which it is explicitly enabled or disabled.
-  private var ruleMap: [String: [LineRangeState]] = [:]
-
-  /// Regex to match the enable comments; rule name is in the first capture group.
-  private let enablePattern = #"^\s*//\s*swift-format-enable:\s+(\S+)"#
-
-  /// Regex to match the disable comments; rule name is in the first capture group.
-  private let disablePattern = #"^\s*//\s*swift-format-disable:\s+(\S+)"#
-
-  /// Rule enable regex object.
-  private let enableRegex: NSRegularExpression
-
-  /// Rule disable regex object.
-  private let disableRegex: NSRegularExpression
+  /// Map of rule names to list ranges in the source where the rule is ignored.
+  private var ruleMap: [String: [SourceRange]] = [:]
 
   /// Used to compute line numbers of syntax nodes.
   private let sourceLocationConverter: SourceLocationConverter
 
-  /// This takes the head Syntax node of the source and generates a map of the rules specified for
-  /// disable/enable and the line ranges for which they are disabled.
+  /// Creates a `RuleMask` that can specify whether a given rule's status is explicitly modified at
+  /// a location obtained from the `SourceLocationConverter`.
+  ///
+  /// Ranges in the source where rules' statuses are modified are pre-computed during init so that
+  /// lookups later don't require parsing the source.
   public init(syntaxNode: Syntax, sourceLocationConverter: SourceLocationConverter) {
-    enableRegex = try! NSRegularExpression(pattern: enablePattern, options: [])
-    disableRegex = try! NSRegularExpression(pattern: disablePattern, options: [])
+    self.sourceLocationConverter = sourceLocationConverter
+    computeIgnoredRanges(in: syntaxNode)
+  }
+
+  /// Computes the ranges in the given node where the status of rules are explicitly modified.
+  private func computeIgnoredRanges(in node: Syntax) {
+    var visitor = RuleStatusCollectionVisitor(sourceLocationConverter: sourceLocationConverter)
+    node.walk(&visitor)
+    allRulesIgnoredRanges = visitor.allRulesIgnoredRanges
+    ruleMap = visitor.ruleMap
+  }
+
+  /// Returns the `RuleState` for the given rule at the provided location.
+  public func ruleState(_ rule: String, at location: SourceLocation) -> RuleState {
+    if allRulesIgnoredRanges.contains(where: { $0.contains(location) }) {
+      return .disabled
+    }
+    if let ignoredRanges = ruleMap[rule] {
+      return ignoredRanges.contains { $0.contains(location) } ? .disabled : .default
+    }
+    return .default
+  }
+}
+
+extension SourceRange {
+  /// Returns whether the range includes the given location.
+  fileprivate func contains(_ location: SourceLocation) -> Bool {
+    return start.offset <= location.offset && end.offset >= location.offset
+  }
+}
+
+/// A syntax visitor that finds `SourceRange`s of nodes that have rule status modifying comment
+/// directives. The changes requested in each comment is parsed and collected into a map to support
+/// status lookup per rule name.
+///
+/// The rule status comment directives implementation intentionally supports exactly the same nodes
+/// as `TokenStreamCreator` to disable pretty printing. This ensures ignore comments for pretty
+/// printing and for rules are as consistent as possible.
+private class RuleStatusCollectionVisitor: SyntaxVisitor {
+  /// Describes the possible matches for ignore directives, in comments.
+  enum RuleStatusDirectiveMatch {
+    /// There is a directive that applies to all rules.
+    case all
+
+    /// There is a directive that applies to a number of rules. The names of the rules are provided
+    /// in `ruleNames`.
+    case subset(ruleNames: [String])
+  }
+
+  /// Computes source locations and ranges for syntax nodes in a source file.
+  private let sourceLocationConverter: SourceLocationConverter
+
+  /// Regex pattern to match an ignore comment. This pattern supports 0 or more comma delimited rule
+  /// names. The rule name(s), when present, are in capture group #3.
+  private let ignorePattern =
+    #"^\s*\/\/\s*swift-format-ignore((:\s+(([A-z0-9]+[,\s]*)+))?$|\s+$)"#
+
+  /// Rule ignore regex object.
+  private let ignoreRegex: NSRegularExpression
+
+  /// Stores the source ranges in which all rules are ignored.
+  var allRulesIgnoredRanges: [SourceRange] = []
+
+  /// Map of rule names to list ranges in the source where the rule is ignored.
+  var ruleMap: [String: [SourceRange]] = [:]
+
+  init(sourceLocationConverter: SourceLocationConverter) {
+    ignoreRegex = try! NSRegularExpression(pattern: ignorePattern, options: [])
 
     self.sourceLocationConverter = sourceLocationConverter
-    generateDictionary(syntaxNode)
   }
 
-  /// Calculate the starting line number of a syntax node.
-  private func getLine(_ node: Syntax) -> Int? {
-    let loc = node.startLocation(converter: self.sourceLocationConverter)
-    return loc.line
+  // MARK: - Syntax Visitation Methods
+
+  func visit(_ node: CodeBlockItemSyntax) -> SyntaxVisitorContinueKind {
+    guard let firstToken = node.firstToken else {
+      return .visitChildren
+    }
+    return appendRuleStatusDirectives(from: firstToken, of: node)
   }
 
-  /// Check if a comment matches a disable/enable flag, and if so, returns the name of the rule.
-  private func getRule(regex: NSRegularExpression, text: String) -> String? {
-    // TODO: Support multiple rules in the same comment; e.g., a comma-delimited list.
-    let nsrange = NSRange(text.startIndex..<text.endIndex, in: text)
-    if let match = regex.firstMatch(in: text, options: [], range: nsrange) {
-      let matchRange = match.range(at: 1)
-      if matchRange.location != NSNotFound, let range = Range(matchRange, in: text) {
-        return String(text[range])
+  func visit(_ node: MemberDeclListItemSyntax) -> SyntaxVisitorContinueKind {
+    guard let firstToken = node.firstToken else {
+      return .visitChildren
+    }
+    return appendRuleStatusDirectives(from: firstToken, of: node)
+  }
+
+  // MARK: - Helper Methods
+
+  /// Searches for comments on the given token that explicitly modify the status of rules and adds
+  /// them to the appropriate collection of those changes.
+  ///
+  /// - Parameters:
+  ///   - token: A token that may have comments that modify the status of rules.
+  ///   - node: The node to which the token belongs.
+  private func appendRuleStatusDirectives(from token: TokenSyntax, of node: Syntax)
+    -> SyntaxVisitorContinueKind
+  {
+    let isFirstInFile = token.previousToken == nil
+    let matches = loneLineComments(in: token.leadingTrivia, isFirstToken: isFirstInFile)
+      .compactMap(ruleStatusDirectiveMatch)
+    let sourceRange = node.sourceRange(converter: sourceLocationConverter)
+    for match in matches {
+      switch match {
+      case .all:
+        allRulesIgnoredRanges.append(sourceRange)
+
+        // All rules are ignored for the entire node and its children. Any ignore comments in the
+        // node's children are irrelevant because all rules are suppressed by this node.
+        return .skipChildren
+      case .subset(let ruleNames):
+        ruleNames.forEach { ruleMap[$0, default: []].append(sourceRange) }
+        break
       }
     }
-    return nil
+    return .visitChildren
+  }
+
+  /// Checks if a comment containing the given text matches a rule status directive. When it does
+  /// match, its contents (e.g. list of rule names) are returned.
+  private func ruleStatusDirectiveMatch(in text: String) -> RuleStatusDirectiveMatch? {
+    let textRange = NSRange(text.startIndex..<text.endIndex, in: text)
+    guard let match = ignoreRegex.firstMatch(in: text, options: [], range: textRange) else {
+      return nil
+    }
+    guard match.numberOfRanges == 5 else { return .all }
+    let matchRange = match.range(at: 3)
+    guard matchRange.location != NSNotFound, let ruleNamesRange = Range(matchRange, in: text) else {
+      return .all
+    }
+    let rules = text[ruleNamesRange].split(separator: ",")
+      .map { $0.trimmingCharacters(in: .whitespaces) }
+      .filter { $0.count > 0 }
+    return .subset(ruleNames: rules)
   }
 
   /// Returns the list of line comments in the given trivia that are on a line by themselves
@@ -118,71 +221,5 @@ public class RuleMask {
     }
 
     return lineComments
-  }
-
-  /// Generate the dictionary (ruleMap) by walking the syntax tokens.
-  private func generateDictionary(_ node: Syntax) {
-    var disableStart: [String: Int] = [:]
-    var enableStart: [String: Int] = [:]
-
-    var isFirstToken = true
-
-    for token in node.tokens {
-      defer { isFirstToken = false }
-
-      guard let leadingTrivia = token.leadingTrivia else { continue }
-
-      for comment in loneLineComments(in: leadingTrivia, isFirstToken: isFirstToken) {
-        if let ruleName = getRule(regex: disableRegex, text: comment) {
-          guard !disableStart.keys.contains(ruleName) else { continue }
-          guard let disableStartLine = getLine(token) else { continue }
-
-          if let enableStartLine = enableStart[ruleName] {
-            // If we're processing an enable block for the rule, finalize it.
-            ruleMap[ruleName, default: []].append(
-              LineRangeState(range: enableStartLine..<disableStartLine, isEnabled: true))
-            enableStart[ruleName] = nil
-          }
-
-          disableStart[ruleName] = disableStartLine
-        }
-        else if let ruleName = getRule(regex: enableRegex, text: comment) {
-          guard !enableStart.keys.contains(ruleName) else { continue }
-          guard let enableStartLine = getLine(token) else { continue }
-
-          if let disableStartLine = disableStart[ruleName] {
-            // If we're processing a disable block for the rule, finalize it.
-            ruleMap[ruleName, default: []].append(
-              LineRangeState(range: disableStartLine..<enableStartLine, isEnabled: false))
-            disableStart[ruleName] = nil
-          }
-
-          enableStart[ruleName] = enableStartLine
-        }
-      }
-    }
-
-    // Finalize any remaining blocks by closing them off at the last line number in the file.
-    guard let lastToken = node.lastToken, let lastLine = getLine(lastToken) else { return }
-
-    for (ruleName, disableStartLine) in disableStart {
-      ruleMap[ruleName, default: []].append(
-        LineRangeState(range: disableStartLine..<lastLine + 1, isEnabled: false))
-    }
-    for (ruleName, enableStartLine) in enableStart {
-      ruleMap[ruleName, default: []].append(
-        LineRangeState(range: enableStartLine..<lastLine + 1, isEnabled: true))
-    }
-  }
-
-  /// Return if the given rule is disabled on the provided line.
-  public func ruleState(_ rule: String, atLine line: Int) -> RuleState {
-    guard let rangeStates = ruleMap[rule] else { return .default }
-    for rangeState in rangeStates {
-      if rangeState.range.contains(line) {
-        return rangeState.isEnabled ? .enabled : .disabled
-      }
-    }
-    return .default
   }
 }

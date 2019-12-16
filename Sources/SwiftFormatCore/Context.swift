@@ -75,14 +75,11 @@ public class Context {
   /// location or not.
   public func isRuleEnabled(_ ruleName: String, node: Syntax) -> Bool {
     let loc = node.startLocation(converter: self.sourceLocationConverter)
-    guard let line = loc.line else { return false }
-    switch ruleMask.ruleState(ruleName, atLine: line) {
+    switch ruleMask.ruleState(ruleName, at: loc) {
     case .default:
       return configuration.rules[ruleName] ?? false
     case .disabled:
       return false
-    case .enabled:
-      return true
     }
   }
 }
