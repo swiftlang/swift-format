@@ -14,6 +14,28 @@ import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
+// FIXME: Remove this once we've completely moved up to a version of SwiftSyntax that has
+// switched over to TupleExprElement nodes.
+#if !HAS_CONSOLIDATED_TUPLE_AND_FUNCTION_CALL_SYNTAX
+fileprivate typealias TupleExprElementListSyntax = TupleElementListSyntax
+fileprivate typealias TupleExprElementSyntax = TupleElementSyntax
+
+extension SyntaxFactory {
+  fileprivate static func makeTupleExprElementList(_ elements: [TupleExprElementSyntax])
+    -> TupleExprElementListSyntax
+  {
+    return makeTupleElementList(elements)
+  }
+
+  fileprivate static func makeTupleExprElement(
+    label: TokenSyntax?, colon: TokenSyntax?, expression: ExprSyntax, trailingComma: TokenSyntax?
+  ) -> TupleExprElementSyntax {
+    return makeTupleElement(
+      label: label, colon: colon, expression: expression, trailingComma: trailingComma)
+  }
+}
+#endif
+
 /// Shorthand type forms must be used wherever possible.
 ///
 /// Lint: Using a non-shorthand form (e.g. `Array<Element>`) yields a lint error unless the long
@@ -236,10 +258,10 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       // leading trivia to the left-paren that we're adding in this case.
       let tupleTypeElement =
         SyntaxFactory.makeTupleTypeElement(type: functionType, trailingComma: nil)
-      let tupleElementList = SyntaxFactory.makeTupleTypeElementList([tupleTypeElement])
+      let tupleTypeElementList = SyntaxFactory.makeTupleTypeElementList([tupleTypeElement])
       wrappedType = SyntaxFactory.makeTupleType(
         leftParen: SyntaxFactory.makeLeftParenToken(leadingTrivia: leadingTrivia),
-        elements: tupleElementList,
+        elements: tupleTypeElementList,
         rightParen: SyntaxFactory.makeRightParenToken())
     } else {
       // Otherwise, the argument type can safely become an optional by simply appending a "?", but
@@ -318,13 +340,13 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       // Function types must be wrapped as a tuple before using shorthand optional syntax,
       // otherwise the "?" applies to the return type instead of the function type. Attach the
       // leading trivia to the left-paren that we're adding in this case.
-      let tupleElement =
-        SyntaxFactory.makeTupleElement(
+      let tupleExprElement =
+        SyntaxFactory.makeTupleExprElement(
           label: nil, colon: nil, expression: wrappedTypeExpr, trailingComma: nil)
-      let tupleElementList = SyntaxFactory.makeTupleElementList([tupleElement])
+      let tupleExprElementList = SyntaxFactory.makeTupleExprElementList([tupleExprElement])
       wrappedTypeExpr = SyntaxFactory.makeTupleExpr(
         leftParen: SyntaxFactory.makeLeftParenToken(leadingTrivia: leadingTrivia ?? []),
-        elementList: tupleElementList,
+        elementList: tupleExprElementList,
         rightParen: SyntaxFactory.makeRightParenToken())
     } else if let leadingTrivia = leadingTrivia {
       // Otherwise, the argument type can safely become an optional by simply appending a "?". If
@@ -421,21 +443,21 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
   }
 
   private func expressionRepresentation(of tupleTypeElements: TupleTypeElementListSyntax)
-    -> TupleElementListSyntax?
+    -> TupleExprElementListSyntax?
   {
     guard !tupleTypeElements.isEmpty else { return nil }
 
-    var elementExprs = [TupleElementSyntax]()
+    var exprElements = [TupleExprElementSyntax]()
     for typeElement in tupleTypeElements {
       guard let elementExpr = expressionRepresentation(of: typeElement.type) else { return nil }
-      elementExprs.append(
-        SyntaxFactory.makeTupleElement(
+      exprElements.append(
+        SyntaxFactory.makeTupleExprElement(
           label: typeElement.name,
           colon: typeElement.colon,
           expression: elementExpr,
           trailingComma: typeElement.trailingComma))
     }
-    return SyntaxFactory.makeTupleElementList(elementExprs)
+    return SyntaxFactory.makeTupleExprElementList(exprElements)
   }
 
   private func makeFunctionTypeExpression(
