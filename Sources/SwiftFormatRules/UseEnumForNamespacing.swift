@@ -76,6 +76,18 @@ public final class UseEnumForNamespacing: SyntaxFormatRule {
         }
         // Do not append private initializer.
 
+      case let decl as IfConfigDeclSyntax:
+        let membersToKeep: [MemberDeclListSyntax] = decl.clauses
+          .compactMap { clause in
+            (clause.elements as? MemberDeclListSyntax).flatMap(membersToKeepIfUsedAsNamespace(_:))
+          }
+
+        if membersToKeep.count < decl.clauses.count {
+          return nil
+        } else {
+          declList.append(member)
+        }
+
       default:
         declList.append(member)
       }
