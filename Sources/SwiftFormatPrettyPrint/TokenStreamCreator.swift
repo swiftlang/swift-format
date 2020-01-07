@@ -447,10 +447,24 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
     arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
 
-    let elsePrecedingBreak = config.lineBreakBeforeControlFlowKeywords ? Token.newline : Token.space
-    before(node.elseKeyword, tokens: elsePrecedingBreak)
-    if node.elseBody is IfStmtSyntax {
-      after(node.elseKeyword, tokens: .space)
+    if let elseKeyword = node.elseKeyword {
+      // Add a token before the else keyword. Breaking before `else` is explicitly allowed when
+      // there's a comment.
+      if config.lineBreakBeforeControlFlowKeywords {
+        before(elseKeyword, tokens: .newline)
+      } else if elseKeyword.leadingTrivia.hasLineComment {
+        before(elseKeyword, tokens: .break(.same, size: 1))
+      } else {
+        before(elseKeyword, tokens: .space)
+      }
+
+      // Breaks are only allowed after `else` when there's a comment; otherwise there shouldn't be
+      // any newlines between `else` and the open brace or a following `if`.
+      if let tokenAfterElse = elseKeyword.nextToken, tokenAfterElse.leadingTrivia.hasLineComment {
+        after(node.elseKeyword, tokens: .break(.same, size: 1))
+      } else if node.elseBody is IfStmtSyntax {
+        after(node.elseKeyword, tokens: .space)
+      }
     }
 
     arrangeBracesAndContents(of: node.elseBody as? CodeBlockSyntax, contentsKeyPath: \.statements)
@@ -631,6 +645,14 @@ private final class TokenStreamCreator: SyntaxVisitor {
       // `stackedIndentationBehavior`).
       after(node.leftParen, tokens: .open)
       before(node.rightParen, tokens: .close)
+
+      // When there's a comment inside of a parenthesized expression, we want to allow the comment
+      // to exist at the EOL with the left paren or on its own line. The contents are always
+      // indented on the following lines, since parens always create a scope. An open/close break
+      // pair isn't used here to avoid forcing the closing paren down onto a new line.
+      if node.leftParen.nextToken?.leadingTrivia.hasLineComment ?? false {
+        after(node.leftParen, tokens: .break(.continue, size: 0))
+      }
     } else if elementCount > 1 {
       // Tuples with more than one element are "true" tuples, and should indent as block structures.
       after(node.leftParen, tokens: .break(.open, size: 0), .open)
@@ -2717,50 +2739,6 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // Add this break so that trivia parsing will allow discretionary newlines after the node.
     appendToken(.break(.same, size: 0))
   }
-
-  /// Returns whether the given trivia includes a directive to ignore formatting for the next node.
-  ///
-  /// - Parameter trivia: Leading trivia for a node that the formatter supports ignoring.
-  private func isFormatterIgnorePresent(inTrivia trivia: Trivia) -> Bool {
-    func isFormatterIgnore(in commentText: String, prefix: String, suffix: String) -> Bool {
-      let trimmed =
-          commentText.dropFirst(prefix.count)
-            .dropLast(suffix.count)
-            .trimmingCharacters(in: .whitespaces)
-      return trimmed == "swift-format-ignore"
-    }
-
-    for piece in trivia {
-      switch piece {
-      case .lineComment(let text):
-        if isFormatterIgnore(in: text, prefix: "//", suffix: "") { return true }
-        break
-      case .blockComment(let text):
-        if isFormatterIgnore(in: text, prefix: "/*", suffix: "*/") { return true }
-        break
-      default:
-        break
-      }
-    }
-    return false
-  }
-
-  /// Returns whether the formatter should ignore the given node by printing it without changing the
-  /// node's internal text representation (i.e. print all text inside of the node as it was in the
-  /// original source).
-  ///
-  /// - Note: The caller is responsible for ensuring that the given node is a type of node that can
-  /// be safely ignored.
-  ///
-  /// - Parameter node: A node that can be safely ignored.
-  private func shouldFormatterIgnore(node: Syntax) -> Bool {
-    // Regardless of the level of nesting, if the ignore directive is present on the first token
-    // contained within the node then the entire node is eligible for ignoring.
-    if let firstTrivia = node.firstToken?.leadingTrivia {
-      return isFormatterIgnorePresent(inTrivia: firstTrivia)
-    }
-    return false
-  }
 }
 
 extension Syntax {
@@ -2769,8 +2747,10 @@ extension Syntax {
     // First, fold the sequence expressions in the tree before passing it along to the token stream,
     // because we don't want to modify the tree during token stream creation.
     let folded = SequenceExprFoldingRewriter(operatorContext: operatorContext).visit(self)
+    let commentsMoved = CommentMovingRewriter().visit(folded)
     return TokenStreamCreator(
-      configuration: configuration, operatorContext: operatorContext).makeStream(from: folded)
+      configuration: configuration, operatorContext: operatorContext)
+      .makeStream(from: commentsMoved)
   }
 }
 
@@ -2792,8 +2772,138 @@ class SequenceExprFoldingRewriter: SyntaxRewriter {
   }
 }
 
+/// Rewriter that relocates comment trivia around nodes where comments are known to be better
+/// formatted when placed before or after the node.
+///
+/// For example, comments after binary operators are relocated to be before the operator, which
+/// results in fewer line breaks with the comment closer to the relevant tokens.
+class CommentMovingRewriter: SyntaxRewriter {
+  /// Map of tokens to alternate trivia to use as the token's leading trivia.
+  var rewriteTokenTriviaMap: [TokenSyntax: Trivia] = [:]
+
+  override func visit(_ node: CodeBlockItemSyntax) -> Syntax {
+    if shouldFormatterIgnore(node: node) {
+      return node
+    }
+    return super.visit(node)
+  }
+
+  override func visit(_ node: MemberDeclListItemSyntax) -> Syntax {
+    if shouldFormatterIgnore(node: node) {
+      return node
+    }
+    return super.visit(node)
+  }
+
+  override func visit(_ token: TokenSyntax) -> Syntax {
+    if let rewrittenTrivia = rewriteTokenTriviaMap[token] {
+      return token.withLeadingTrivia(rewrittenTrivia)
+    }
+    return token
+  }
+
+  override func visit(_ node: SequenceExprSyntax) -> ExprSyntax {
+    for element in node.elements {
+      if let binaryOperatorExpr = element as? BinaryOperatorExprSyntax,
+        let followingToken = binaryOperatorExpr.operatorToken.nextToken,
+        followingToken.leadingTrivia.hasLineComment
+      {
+        // Rewrite the trivia so that the comment is in the operator token's leading trivia.
+        let (remainingTrivia, extractedTrivia) = extractLineCommentTrivia(from: followingToken)
+        let combinedTrivia = binaryOperatorExpr.operatorToken.leadingTrivia + extractedTrivia
+        rewriteTokenTriviaMap[binaryOperatorExpr.operatorToken] = combinedTrivia
+        rewriteTokenTriviaMap[followingToken] = remainingTrivia
+      }
+    }
+    return super.visit(node)
+  }
+
+  /// Extracts trivia containing and related to line comments from `token`'s leading trivia. Returns
+  /// 2 trivia collections: the trivia that wasn't extracted and should remain in `token`'s leading
+  /// trivia and the trivia that meets the criteria for extraction.
+  /// - Parameter token: A token whose leading trivia should be split to extract line comments.
+  private func extractLineCommentTrivia(from token: TokenSyntax) -> (
+    remainingTrivia: Trivia, extractedTrivia: Trivia
+  ) {
+    var pendingPieces = [TriviaPiece]()
+    var keepWithTokenPieces = [TriviaPiece]()
+    var extractingPieces = [TriviaPiece]()
+
+    // Line comments and adjacent newlines are extracted so they can be moved to a different token's
+    // leading trivia, while all other kinds of tokens are left as-is.
+    var lastPiece: TriviaPiece?
+    for piece in token.leadingTrivia {
+      defer { lastPiece = piece }
+      switch piece {
+      case .lineComment:
+        extractingPieces.append(contentsOf: pendingPieces)
+        pendingPieces.removeAll()
+        extractingPieces.append(piece)
+      case .blockComment, .docLineComment, .docBlockComment:
+        keepWithTokenPieces.append(contentsOf: pendingPieces)
+        pendingPieces.removeAll()
+        keepWithTokenPieces.append(piece)
+      case .newlines, .carriageReturns, .carriageReturnLineFeeds:
+        if case .lineComment = lastPiece {
+          extractingPieces.append(piece)
+        } else {
+          pendingPieces.append(piece)
+        }
+      default:
+        pendingPieces.append(piece)
+      }
+    }
+    keepWithTokenPieces.append(contentsOf: pendingPieces)
+    return (Trivia(pieces: keepWithTokenPieces), Trivia(pieces: extractingPieces))
+  }
+}
+
 extension Collection {
   subscript(safe index: Index) -> Element? {
     return index < endIndex ? self[index] : nil
   }
 }
+
+/// Returns whether the given trivia includes a directive to ignore formatting for the next node.
+ ///
+ /// - Parameter trivia: Leading trivia for a node that the formatter supports ignoring.
+ private func isFormatterIgnorePresent(inTrivia trivia: Trivia) -> Bool {
+   func isFormatterIgnore(in commentText: String, prefix: String, suffix: String) -> Bool {
+     let trimmed =
+         commentText.dropFirst(prefix.count)
+           .dropLast(suffix.count)
+           .trimmingCharacters(in: .whitespaces)
+     return trimmed == "swift-format-ignore"
+   }
+
+   for piece in trivia {
+     switch piece {
+     case .lineComment(let text):
+       if isFormatterIgnore(in: text, prefix: "//", suffix: "") { return true }
+       break
+     case .blockComment(let text):
+       if isFormatterIgnore(in: text, prefix: "/*", suffix: "*/") { return true }
+       break
+     default:
+       break
+     }
+   }
+   return false
+ }
+
+ /// Returns whether the formatter should ignore the given node by printing it without changing the
+ /// node's internal text representation (i.e. print all text inside of the node as it was in the
+ /// original source).
+ ///
+ /// - Note: The caller is responsible for ensuring that the given node is a type of node that can
+ /// be safely ignored.
+ ///
+ /// - Parameter node: A node that can be safely ignored.
+ private func shouldFormatterIgnore(node: Syntax) -> Bool {
+   // Regardless of the level of nesting, if the ignore directive is present on the first token
+   // contained within the node then the entire node is eligible for ignoring.
+   if let firstTrivia = node.firstToken?.leadingTrivia {
+     return isFormatterIgnorePresent(inTrivia: firstTrivia)
+   }
+   return false
+ }

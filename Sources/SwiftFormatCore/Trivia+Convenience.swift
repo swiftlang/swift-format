@@ -63,6 +63,14 @@ extension Trivia {
     return count
   }
 
+  /// Returns whether the trivia contains at least 1 `lineComment`.
+  public var hasLineComment: Bool {
+    return self.contains {
+      if case .lineComment = $0 { return true }
+      return false
+    }
+  }
+
   public var hasSpaces: Bool {
     for piece in self {
       if case .tabs = piece { return true }
