@@ -146,6 +146,10 @@ extension CommentTests {
     static let __allTests__CommentTests = [
         ("testBlockComments", testBlockComments),
         ("testCommentOnContinuationLine", testCommentOnContinuationLine),
+        ("testCommentsAllowedInParenthesizedExpressions", testCommentsAllowedInParenthesizedExpressions),
+        ("testCommentsAroundIfElseStatements", testCommentsAroundIfElseStatements),
+        ("testCommentsInIfStatements", testCommentsInIfStatements),
+        ("testCommentsMoveAroundOperators", testCommentsMoveAroundOperators),
         ("testContainerLineComments", testContainerLineComments),
         ("testDocumentationBlockComments", testDocumentationBlockComments),
         ("testDocumentationComments", testDocumentationComments),
