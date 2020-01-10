@@ -665,7 +665,8 @@ public class PrettyPrinter {
       print(verbatim.print(indent: debugIndent))
 
     case .printerControl(let kind):
-      print("[PRINTER CONTROL Kind: \(kind)]")
+      printDebugIndent()
+      print("[PRINTER CONTROL Kind: \(kind) Idx: \(idx)]")
     }
   }
 
