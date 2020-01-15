@@ -429,11 +429,6 @@ public class CommentTests: PrettyPrintTestCase {
   }
 
   public func testCommentOnContinuationLine() {
-
-    // FIXME: Based on the way that continuations are handled, comment don't support indentation
-    // based on breaks *after* the comment. This results in the incorrect indentation of
-    // `// comment` in the 2nd example. There isn't a clear solution, but the issue will be
-    // addressed in a later PR.
     let input =
       """
       func foo() {
@@ -444,7 +439,7 @@ public class CommentTests: PrettyPrintTestCase {
 
       func foo() {
         return
-        // comment
+          // comment
           false
       }
 
@@ -619,9 +614,6 @@ public class CommentTests: PrettyPrintTestCase {
          }
          """
 
-    // FIXME: Based on the way that continuations are handled, comment don't support indentation
-    // based on breaks *after* the comment. There isn't a clear solution, but the issue will be
-    // addressed in a later PR.
     let expected =
       """
       if foo.bar && false  // comment about foo.bar
@@ -636,8 +628,8 @@ public class CommentTests: PrettyPrintTestCase {
       {
       }
       if foo.bar && foo.baz
-      // comment about the next line
-      // another comment line
+        // comment about the next line
+        // another comment line
         && next.line
       {
       }

@@ -226,11 +226,6 @@ public class ForInStmtTests: PrettyPrintTestCase {
       }
       """
 
-    // FIXME: Based on the way that continuations are now handled, it's not clear that we can
-    // get `// comment #2` indented correctly based on what comes *after* it. I think the right
-    // approach here is to change the handling of full-line comments (and probably doc-comments as
-    // well) so that they are deferred until either just before the next text token is printed or
-    // the next close-break. But this is a larger change that I'll revisit in a separate PR.
     let expected =
       """
       for x in someCollection
@@ -255,7 +250,7 @@ public class ForInStmtTests: PrettyPrintTestCase {
           })
         // comment #1
         && someOtherCondition
-        // comment #2
+          // comment #2
           + thatUses + operators
         && binPackable && exprs
       {
