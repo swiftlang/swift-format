@@ -47,6 +47,10 @@ private final class TokenStreamCreator: SyntaxVisitor {
   /// stream.
   private var pendingMultilineStringSegmentPrefixLengths = [TokenSyntax: Int]()
 
+  /// Lists tokens that shouldn't be appended to the token stream as `syntax` tokens. They will be
+  /// printed conditionally using a different type of token.
+  private var ignoredTokens = Set<TokenSyntax>()
+
   init(configuration: Configuration, operatorContext: OperatorContext) {
     self.config = configuration
     self.operatorContext = operatorContext
@@ -698,6 +702,13 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   func visit(_ node: ArrayElementListSyntax) -> SyntaxVisitorContinueKind {
     insertTokens(.break(.same), betweenElementsOf: node)
+    if let firstElement = node.first, let lastElement = node.last {
+      before(firstElement.firstToken, tokens: .commaDelimitedRegionStart)
+      after(lastElement.lastToken, tokens: .commaDelimitedRegionEnd)
+      if let existingTrailingComma = lastElement.trailingComma {
+        ignoredTokens.insert(existingTrailingComma)
+      }
+    }
     return .visitChildren
   }
 
@@ -715,6 +726,13 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   func visit(_ node: DictionaryElementListSyntax) -> SyntaxVisitorContinueKind {
     insertTokens(.break(.same), betweenElementsOf: node)
+    if let firstElement = node.first, let lastElement = node.last {
+      before(firstElement.firstToken, tokens: .commaDelimitedRegionStart)
+      after(lastElement.lastToken, tokens: .commaDelimitedRegionEnd)
+      if let existingTrailingComma = lastElement.trailingComma {
+        ignoredTokens.insert(existingTrailingComma)
+      }
+    }
     return .visitChildren
   }
 
@@ -1936,7 +1954,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
     if let pendingSegmentIndex = pendingMultilineStringSegmentPrefixLengths.index(forKey: token) {
       appendMultilineStringSegments(at: pendingSegmentIndex)
-    } else {
+    } else if !ignoredTokens.contains(token) {
       // Otherwise, it's just a regular token, so add the text as-is.
       appendToken(.syntax(token.text))
     }

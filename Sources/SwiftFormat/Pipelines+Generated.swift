@@ -18,11 +18,6 @@ import SwiftSyntax
 
 extension LintPipeline {
 
-  func visit(_ node: ArrayExprSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(MultiLineTrailingCommas.visit, in: context, for: node)
-    return .visitChildren
-  }
-
   func visit(_ node: AsExprSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(NeverForceUnwrap.visit, in: context, for: node)
     return .visitChildren
@@ -68,11 +63,6 @@ extension LintPipeline {
     visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, in: context, for: node)
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, in: context, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, in: context, for: node)
-    return .visitChildren
-  }
-
-  func visit(_ node: DictionaryExprSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(MultiLineTrailingCommas.visit, in: context, for: node)
     return .visitChildren
   }
 
@@ -243,8 +233,12 @@ extension LintPipeline {
     return .visitChildren
   }
 
-  func visit(_ node: SwitchStmtSyntax) -> SyntaxVisitorContinueKind {
+  func visit(_ node: SwitchCaseListSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(NoCasesWithOnlyFallthrough.visit, in: context, for: node)
+    return .visitChildren
+  }
+
+  func visit(_ node: SwitchStmtSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(NoParensAroundConditions.visit, in: context, for: node)
     return .visitChildren
   }
@@ -285,7 +279,6 @@ extension FormatPipeline {
     node = DoNotUseSemicolons(context: context).visit(node)
     node = FullyIndirectEnum(context: context).visit(node)
     node = GroupNumericLiterals(context: context).visit(node)
-    node = MultiLineTrailingCommas(context: context).visit(node)
     node = NoAccessLevelOnExtensionDeclaration(context: context).visit(node)
     node = NoBlockComments(context: context).visit(node)
     node = NoCasesWithOnlyFallthrough(context: context).visit(node)
