@@ -91,11 +91,6 @@ public class PrettyPrinter {
   /// Indicates whether or not the printer is currently at the beginning of a line.
   private var isAtStartOfLine = true
 
-  /// Indicates whether the kind of the last break was one that triggers a continuation line (i.e.,
-  /// a `.continue`, an `.open(.continuation)`, or a `.close` break that causes
-  /// `currentLineIsContinuation` to become true).
-  private var wasLastBreakKindContinue = false
-
   /// Tracks how many printer control tokens to suppress firing breaks are active.
   private var activeBreakSuppressionCount = 0
 
@@ -159,8 +154,8 @@ public class PrettyPrinter {
     outputBuffer.append(String(str))
   }
 
-  /// Ensures that the given number of newlines to the output stream (taking into account any
-  /// pre-existing consecutive newlines).
+  /// Writes newlines into the output stream, taking into account any pre-existing consecutive
+  /// newlines and the maximum allowed number of blank lines.
   ///
   /// This function does some implicit collapsing of consecutive newlines to ensure that the
   /// results are consistent when breaks and explicit newlines coincide. For example, imagine a
@@ -171,28 +166,20 @@ public class PrettyPrinter {
   /// subtract the previously written newlines during the second call so that we end up with the
   /// correct number overall.
   ///
-  /// - Parameters:
-  ///   - count: The number of newlines to write.
-  ///   - kind: Indicates whether the newlines are flexible, discretionary, or mandatory newlines.
-  ///     Refer to the documentation of `NewlineKind` for details on how each of these are printed.
-  private func writeNewlines(_ count: Int, kind: NewlineKind) {
-    // We add 1 because it takes 2 newlines to create a blank line.
+  /// - Parameter newlines: The number and type of newlines to write.
+  private func writeNewlines(_ newlines: NewlineBehavior) {
     let numberToPrint: Int
-    if kind == .mandatory {
+    switch newlines {
+    case .elective:
+      numberToPrint = consecutiveNewlineCount == 0 ? 1 : 0
+    case .soft(let count, _):
+      // We add 1 to the max blank lines because it takes 2 newlines to create the first blank line.
+      numberToPrint = min(count - consecutiveNewlineCount, configuration.maximumBlankLines + 1)
+    case .hard(let count):
       numberToPrint = count
-    } else {
-      let maximumNewlines = configuration.maximumBlankLines + 1
-      if count <= maximumNewlines {
-        numberToPrint = count - consecutiveNewlineCount
-      } else {
-        numberToPrint = maximumNewlines - consecutiveNewlineCount
-      }
-
-      guard (kind == .discretionary && numberToPrint > 0) || consecutiveNewlineCount == 0 else {
-        return
-      }
     }
 
+    guard numberToPrint > 0 else { return }
     writeRaw(String(repeating: "\n", count: numberToPrint))
     lineNumber += numberToPrint
     isAtStartOfLine = true
@@ -259,8 +246,7 @@ public class PrettyPrinter {
 
     // Create a line break if needed. Calculate the indentation required and adjust spaceRemaining
     // accordingly.
-    case .break(let kind, let size, _):
-      wasLastBreakKindContinue = false
+    case .break(let kind, let size, let newline):
       var mustBreak = forceBreakStack.last ?? false
 
       // Tracks whether the current line should be considered a continuation line, *if and only if
@@ -303,12 +289,6 @@ public class PrettyPrinter {
             contributesBlockIndent: openKind == .block))
 
         continuationStack.append(currentLineIsContinuation)
-
-        // If the open break kind is a continuation and it fired, then we don't want to set this
-        // flag because the active open break will provide the continuation indentation for the
-        // remaining lines. If the break doesn't fire, we need to set it so that the remaining lines
-        // get the appropriate indentation.
-        wasLastBreakKindContinue = openKind == .continuation && !continuationBreakWillFire
 
         // Once we've reached an open break and preserved the continuation state, the "scope" we now
         // enter is *not* a continuation scope. If it was one, we'll re-enter it when we reach the
@@ -382,11 +362,9 @@ public class PrettyPrinter {
 
         // Restore the continuation state of the scope we were in before the open break occurred.
         currentLineIsContinuation = currentLineIsContinuation || wasContinuationWhenOpened
-        wasLastBreakKindContinue = wasContinuationWhenOpened
         isContinuationIfBreakFires = wasContinuationWhenOpened
 
       case .continue:
-        wasLastBreakKindContinue = true
         isContinuationIfBreakFires = true
 
       case .same:
@@ -396,9 +374,24 @@ public class PrettyPrinter {
         mustBreak = currentLineIsContinuation
       }
 
-      if !isBreakingSupressed && ((!isAtStartOfLine && length > spaceRemaining) || mustBreak) {
+      var overrideBreakingSuppressed = false
+      switch newline {
+      case .elective: break
+      case .soft(_, let discretionary):
+        // A discretionary newline (i.e. from the source) should create a line break even if the
+        // rules for breaking are disabled.
+        overrideBreakingSuppressed = discretionary
+        mustBreak = true
+      case .hard:
+        // A hard newline must always create a line break, regardless of the context.
+        overrideBreakingSuppressed = true
+        mustBreak = true
+      }
+
+      let suppressBreaking = isBreakingSupressed && !overrideBreakingSuppressed
+      if !suppressBreaking && ((!isAtStartOfLine && length > spaceRemaining) || mustBreak) {
         currentLineIsContinuation = isContinuationIfBreakFires
-        writeNewlines(1, kind: .flexible)
+        writeNewlines(newline)
         lastBreak = true
       } else {
         if isAtStartOfLine {
@@ -416,24 +409,6 @@ public class PrettyPrinter {
     // Print out the number of spaces according to the size, and adjust spaceRemaining.
     case .space(let size, _):
       enqueueSpaces(size)
-
-    // Apply `count` line breaks, calculate the indentation required, and adjust spaceRemaining.
-    case .newlines(let count, let kind):
-      // If a newline immediately followed an open-continue break, then this is effectively the
-      // same as if it had fired. Activate it, and reset the last-break-kind flag so that the
-      // indentation of subsequent lines is contributed by that break and not by inherited
-      // continuation state.
-      if let lastActiveOpenBreak = activeOpenBreaks.last,
-        lastActiveOpenBreak.index == idx - 1,
-        lastActiveOpenBreak.kind == .continuation
-      {
-        activeOpenBreaks[activeOpenBreaks.count - 1].contributesContinuationIndent = true
-        wasLastBreakKindContinue = false
-      }
-
-      currentLineIsContinuation = wasLastBreakKindContinue
-      writeNewlines(count, kind: kind)
-      lastBreak = true
 
     // Print any indentation required, followed by the text content of the syntax token.
     case .syntax(let text):
@@ -515,41 +490,26 @@ public class PrettyPrinter {
 
       // Break lengths are equal to its size plus the token or group following it. Calculate the
       // length of any prior break tokens.
-      case .break(_, let size, _):
+      case .break(_, let size, let newline):
         if let index = delimIndexStack.last, case .break = tokens[index] {
           lengths[index] += total
           delimIndexStack.removeLast()
         }
-
         lengths.append(-total)
         delimIndexStack.append(i)
-        total += size
+
+        if case .elective = newline {
+          total += size
+        } else {
+          // `size` is never used in this case, because the break always fires. Use `maxLineLength`
+          // to ensure enclosing groups are large enough to force preceding breaks to fire.
+          total += maxLineLength
+        }
 
       // Space tokens have a length equal to its size.
       case .space(let size, _):
         lengths.append(size)
         total += size
-
-      // The length of newlines are equal to the maximum allowed line length. Calculate the length
-      // of any prior break tokens.
-      case .newlines:
-        if let index = delimIndexStack.last, case .break = tokens[index] {
-          if index == i - 1 {
-            // A break immediately preceding a newline should have a length of zero, so that it
-            // doesn't fire.
-            lengths[index] = 0
-          } else {
-            lengths[index] += total
-          }
-          delimIndexStack.removeLast()
-        }
-
-        // Since newlines must always cause a line-break, we set their length as the full allowed
-        // width of the line. This causes any enclosing groups to have a length exceeding the line
-        // limit, and so the group must break and indent. e.g. single-line versus multi-line
-        // function bodies.
-        lengths.append(maxLineLength)
-        total += maxLineLength
 
       // Syntax tokens have a length equal to the number of columns needed to print its contents.
       case .syntax(let text):
@@ -615,11 +575,9 @@ public class PrettyPrinter {
       printDebugIndent()
       print("[SYNTAX \"\(syntax)\" Length: \(length) Idx: \(idx)]")
 
-    case .break(let kind, let size, let ignoresDiscretionary):
+    case .break(let kind, let size, let newline):
       printDebugIndent()
-      print(
-        "[BREAK Kind: \(kind) Size: \(size) Length: \(length) "
-          + "Ignores Discretionary NL: \(ignoresDiscretionary) Idx: \(idx)]")
+      print("[BREAK Kind: \(kind) Size: \(size) Length: \(length) NL: \(newline) Idx: \(idx)]")
 
     case .open(let breakstyle):
       printDebugIndent()
@@ -635,10 +593,6 @@ public class PrettyPrinter {
       debugIndent.removeLast()
       printDebugIndent()
       print("[CLOSE Idx: \(idx)]")
-
-    case .newlines(let N, let required):
-      printDebugIndent()
-      print("[NEWLINES N: \(N) Required: \(required) Length: \(length) Idx: \(idx)]")
 
     case .space(let size, let flexible):
       printDebugIndent()

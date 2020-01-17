@@ -118,27 +118,32 @@ enum BreakKind: Equatable {
   static let open = BreakKind.open(kind: .block)
 }
 
-enum NewlineKind {
-  /// A newline that has been inserted by the formatter independent of the source code given by the
-  /// user (for example, between the getter and setter blocks of a computed property).
-  ///
-  /// Flexible newlines are only printed if a discretionary or mandatory newline has not yet been
-  /// printed at the same location, and only up to the maximum allowed by the formatter
-  /// configuration.
-  case flexible
+/// Behaviors for creating newlines as part of a break, i.e. where breaking onto a newline is
+/// allowed.
+enum NewlineBehavior {
+  /// Breaking onto a newline is allowed if necessary, but is not required. `ignoresDiscretionary`
+  /// specifies whether a user-entered discretionary newline should be respected.
+  case elective(ignoresDiscretionary: Bool)
 
-  /// A newline that was present in the source code given by the user (that is, at the user's
-  /// discretion).
-  ///
-  /// Discretionary newlines are printed after excluding any other consecutive newlines printed thus
-  /// far at the same location, and only up to the maximum allowed by the formatter configuration.
-  case discretionary
+  /// Breaking onto a newline `count` times is required, unless it would create more blank lines
+  /// than are allowed by the current configuration. Any blank lines over the configured limit are
+  /// discarded. `discretionary` tracks whether these newlines were created based on user-entered
+  /// discretionary newlines, from the source, or were inserted by the formatter.
+  case soft(count: Int, discretionary: Bool)
 
-  /// A mandatory newline that must always be printed (for example, in a multiline string literal).
-  ///
-  /// Mandatory newlines are never omitted by the pretty printer, even if it would result in a
-  /// number of consecutive newlines that exceeds that allowed by the formatter configuration.
-  case mandatory
+  /// Breaking onto a newline `count` times is required and any limits on blank lines are
+  /// **ignored**. Exactly `count` newlines are always printed, regardless of existing consecutive
+  /// newlines and the configured maximum number of blank lines.
+  case hard(count: Int)
+
+  /// An elective newline that respects discretionary newlines from the user-entered text.
+  static let elective = NewlineBehavior.elective(ignoresDiscretionary: false)
+
+  /// A single soft newline that is created by the formatter, i.e. *not* discretionary.
+  static let soft = NewlineBehavior.soft(count: 1, discretionary: false)
+
+  /// A single hard newline.
+  static let hard = NewlineBehavior.hard(count: 1)
 }
 
 /// Kinds of printer control tokens that can be used to customize the pretty printer's behavior in
@@ -160,9 +165,8 @@ enum Token {
   case syntax(String)
   case open(GroupBreakStyle)
   case close
-  case `break`(BreakKind, size: Int, ignoresDiscretionary: Bool)
+  case `break`(BreakKind, size: Int, newlines: NewlineBehavior)
   case space(size: Int, flexible: Bool)
-  case newlines(Int, kind: NewlineKind)
   case comment(Comment, wasEndOfLine: Bool)
   case verbatim(Verbatim)
   case printerControl(kind: PrinterControlKind)
@@ -174,24 +178,20 @@ enum Token {
     return Token.open(breakStyle)
   }
 
-  /// A single, flexible newline.
-  static let newline = Token.newlines(1, kind: .flexible)
-
-  /// Returns a single newline with the given kind.
-  static func newline(kind: NewlineKind) -> Token {
-    return Token.newlines(1, kind: kind)
-  }
-
   static let space = Token.space(size: 1, flexible: false)
 
   static func space(size: Int) -> Token {
     return .space(size: size, flexible: false)
   }
 
-  static let `break` = Token.break(.continue, size: 1, ignoresDiscretionary: false)
+  static let `break` = Token.break(.continue, size: 1, newlines: .elective)
 
   static func `break`(_ kind: BreakKind, size: Int = 1) -> Token {
-    return .break(kind, size: size, ignoresDiscretionary: false)
+    return .break(kind, size: size, newlines: .elective)
+  }
+
+  static func `break`(_ kind: BreakKind, newlines: NewlineBehavior) -> Token {
+    return .break(kind, size: 1, newlines: newlines)
   }
 
   static func verbatim(text: String) -> Token {
