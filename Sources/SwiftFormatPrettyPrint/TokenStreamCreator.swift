@@ -692,7 +692,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   func visit(_ node: ArrayExprSyntax) -> SyntaxVisitorContinueKind {
     after(node.leftSquare, tokens: .break(.open, size: 0), .open)
-    before(node.rightSquare, tokens: .close, .break(.close, size: 0))
+    before(node.rightSquare, tokens: .break(.close, size: 0), .close)
     return .visitChildren
   }
 
@@ -709,7 +709,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   func visit(_ node: DictionaryExprSyntax) -> SyntaxVisitorContinueKind {
     after(node.leftSquare, tokens: .break(.open, size: 0), .open)
-    before(node.rightSquare, tokens: .close, .break(.close, size: 0))
+    before(node.rightSquare, tokens: .break(.close, size: 0), .close)
     return .visitChildren
   }
 
