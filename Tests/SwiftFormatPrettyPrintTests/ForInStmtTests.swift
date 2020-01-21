@@ -262,4 +262,48 @@ public class ForInStmtTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
+
+  public func testExplicitTypeAnnotation() {
+    let input =
+      """
+      for i: ExplicitType in mycontainer {
+        let a = 123
+        let b = i
+      }
+
+      for i:ExplicitType in mycontainer {
+        let a = 123
+        let b = i
+      }
+
+      for i: [ExplicitKeyType: ExplicitValueType] in myverylongcontainername {
+        let a = 123
+        let b = i
+      }
+      """
+
+    let expected =
+      """
+      for i: ExplicitType in mycontainer {
+        let a = 123
+        let b = i
+      }
+
+      for i: ExplicitType in mycontainer {
+        let a = 123
+        let b = i
+      }
+
+      for i:
+        [ExplicitKeyType: ExplicitValueType]
+        in myverylongcontainername
+      {
+        let a = 123
+        let b = i
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+  }
 }
