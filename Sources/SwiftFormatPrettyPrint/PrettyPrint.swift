@@ -79,6 +79,10 @@ public class PrettyPrinter {
   /// Keeps track of the continuation line state as you go into and out of open-close break groups.
   private var continuationStack: [Bool] = []
 
+  /// Keeps track of the line number where comma regions started. Line numbers are removed as their
+  /// corresponding end token are encountered.
+  private var commaDelimitedRegionStack: [Int] = []
+
   /// Keeps track of the most recent number of consecutive newlines that have been printed.
   ///
   /// This value is reset to zero whenever non-newline content is printed.
@@ -443,6 +447,18 @@ public class PrettyPrinter {
       case .enableBreaking:
         activeBreakSuppressionCount -= 1
       }
+
+    case .commaDelimitedRegionStart:
+      commaDelimitedRegionStack.append(openCloseBreakCompensatingLineNumber)
+
+    case .commaDelimitedRegionEnd:
+      guard let startLineNumber = commaDelimitedRegionStack.popLast() else {
+        fatalError("Found trailing comma end with no corresponding start.")
+      }
+
+      if startLineNumber != openCloseBreakCompensatingLineNumber {
+        write(",")
+      }
     }
   }
 
@@ -535,6 +551,21 @@ public class PrettyPrinter {
       case .printerControl:
         // Control tokens have no length. They aren't printed.
         lengths.append(0)
+
+      case .commaDelimitedRegionStart:
+        lengths.append(0)
+
+      case .commaDelimitedRegionEnd:
+        // The trailing comma needs to be included in the length of the preceding break, but is not
+        // included in the length of the enclosing group. A trailing comma cannot cause the group
+        // to break onto multiple lines, because the comma isn't printed for a single line group.
+        if let index = delimIndexStack.last, case .break = tokens[index] {
+          lengths[index] += 1
+        }
+        // If the closest delimiter token is an open, instead of a break, then adding the comma's
+        // length isn't necessary. In that case, the comma is printed if the preceding break fires.
+
+        lengths.append(1)
       }
     }
 
@@ -621,6 +652,14 @@ public class PrettyPrinter {
     case .printerControl(let kind):
       printDebugIndent()
       print("[PRINTER CONTROL Kind: \(kind) Idx: \(idx)]")
+
+    case .commaDelimitedRegionStart:
+      printDebugIndent()
+      print("[COMMA DELIMITED START Idx: \(idx)]")
+
+      case .commaDelimitedRegionEnd:
+        printDebugIndent()
+        print("[COMMA DELIMITED END Idx: \(idx)]")
     }
   }
 

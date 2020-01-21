@@ -24,7 +24,6 @@ enum RuleRegistry {
     "FullyIndirectEnum": true,
     "GroupNumericLiterals": true,
     "IdentifiersMustBeASCII": true,
-    "MultiLineTrailingCommas": true,
     "NeverForceUnwrap": true,
     "NeverUseForceTry": true,
     "NeverUseImplicitlyUnwrappedOptionals": true,
