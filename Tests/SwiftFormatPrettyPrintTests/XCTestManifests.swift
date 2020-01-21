@@ -229,6 +229,7 @@ extension ForInStmtTests {
     // to regenerate.
     static let __allTests__ForInStmtTests = [
         ("testBasicForLoop", testBasicForLoop),
+        ("testExplicitTypeAnnotation", testExplicitTypeAnnotation),
         ("testForCase", testForCase),
         ("testForLabels", testForLabels),
         ("testForLoopFullWrap", testForLoopFullWrap),

@@ -511,6 +511,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
     before(node.inKeyword, tokens: .break)
     after(node.inKeyword, tokens: .space)
 
+    if let typeAnnotation = node.typeAnnotation {
+      after(typeAnnotation.colon, tokens: .break(.open(kind: .continuation)))
+      after(typeAnnotation.lastToken, tokens: .break(.close(mustBreak: false), size: 0))
+    }
+
     arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
 
     return .visitChildren
