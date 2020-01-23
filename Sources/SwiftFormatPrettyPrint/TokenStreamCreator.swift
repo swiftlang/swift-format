@@ -707,7 +707,12 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   func visit(_ node: ArrayElementListSyntax) -> SyntaxVisitorContinueKind {
     insertTokens(.break(.same), betweenElementsOf: node)
-    if let firstElement = node.first, let lastElement = node.last {
+
+    // The syntax library can't distinguish an array initializer (where the elements are types) from
+    // an array literal (where the elements are the contents of the array). We never want to add a
+    // trailing comma in the initializer case and there's always exactly 1 element, so we never add
+    // a trailing comma to 1 element arrays.
+    if let firstElement = node.first, let lastElement = node.last, firstElement != lastElement {
       before(firstElement.firstToken, tokens: .commaDelimitedRegionStart)
       let endToken = Token.commaDelimitedRegionEnd(
         hasTrailingComma: lastElement.trailingComma != nil, position: lastElement.endPosition)
@@ -733,7 +738,12 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   func visit(_ node: DictionaryElementListSyntax) -> SyntaxVisitorContinueKind {
     insertTokens(.break(.same), betweenElementsOf: node)
-    if let firstElement = node.first, let lastElement = node.last {
+
+    // The syntax library can't distinguish a dictionary initializer (where the elements are types)
+    // from a dictionary literal (where the elements are the contents of the dictionary). We never
+    // want to add a trailing comma in the initializer case and there's always exactly 1 element,
+    // so we never add a trailing comma to 1 element dictionaries.
+    if let firstElement = node.first, let lastElement = node.last, firstElement != lastElement {
       before(firstElement.firstToken, tokens: .commaDelimitedRegionStart)
       let endToken = Token.commaDelimitedRegionEnd(
         hasTrailingComma: lastElement.trailingComma != nil, position: lastElement.endPosition)

@@ -48,6 +48,23 @@ public class DictionaryDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
+  public func testNoTrailingCommasInTypes() {
+    let input =
+      """
+      let a = [SomeVeryLongKeyType: SomePrettyLongValueType]()
+      """
+
+    let expected =
+      """
+      let a = [
+        SomeVeryLongKeyType: SomePrettyLongValueType
+      ]()
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+  }
+
   public func testWhitespaceOnlyDoesNotChangeTrailingComma() {
     let input =
       """
