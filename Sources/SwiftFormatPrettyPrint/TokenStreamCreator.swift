@@ -709,7 +709,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
     insertTokens(.break(.same), betweenElementsOf: node)
     if let firstElement = node.first, let lastElement = node.last {
       before(firstElement.firstToken, tokens: .commaDelimitedRegionStart)
-      after(lastElement.lastToken, tokens: .commaDelimitedRegionEnd)
+      let endToken = Token.commaDelimitedRegionEnd(
+        hasTrailingComma: lastElement.trailingComma != nil, position: lastElement.endPosition)
+      after(lastElement.lastToken, tokens: endToken)
       if let existingTrailingComma = lastElement.trailingComma {
         ignoredTokens.insert(existingTrailingComma)
       }
@@ -733,7 +735,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
     insertTokens(.break(.same), betweenElementsOf: node)
     if let firstElement = node.first, let lastElement = node.last {
       before(firstElement.firstToken, tokens: .commaDelimitedRegionStart)
-      after(lastElement.lastToken, tokens: .commaDelimitedRegionEnd)
+      let endToken = Token.commaDelimitedRegionEnd(
+        hasTrailingComma: lastElement.trailingComma != nil, position: lastElement.endPosition)
+      after(lastElement.lastToken, tokens: endToken)
       if let existingTrailingComma = lastElement.trailingComma {
         ignoredTokens.insert(existingTrailingComma)
       }

@@ -1,3 +1,7 @@
+import SwiftSyntax
+
+@testable import SwiftFormatPrettyPrint
+
 public class ArrayDeclTests: PrettyPrintTestCase {
   public func testBasicArrays() {
     let input =
@@ -59,5 +63,36 @@ public class ArrayDeclTests: PrettyPrintTestCase {
       """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
+  }
+
+  public func testWhitespaceOnlyDoesNotChangeTrailingComma() {
+    let input =
+      """
+      let a = [1, 2, 3,]
+      let a: [String] = [
+        "One", "Two", "Three", "Four", "Five",
+        "Six", "Seven", "Eight"
+      ]
+      """
+
+    assertPrettyPrintEqual(
+      input: input, expected: input + "\n", linelength: 45, whitespaceOnly: true)
+  }
+
+  public func testTrailingCommaDiagnostics() {
+    let input =
+      """
+      let a = [1, 2, 3,]
+      let a: [String] = [
+        "One", "Two", "Three", "Four", "Five",
+        "Six", "Seven", "Eight"
+      ]
+      """
+
+    assertPrettyPrintEqual(
+      input: input, expected: input + "\n", linelength: 45, whitespaceOnly: true)
+
+    XCTAssertDiagnosed(Diagnostic.Message.removeTrailingComma, line: 1, column: 18)
+    XCTAssertDiagnosed(Diagnostic.Message.addTrailingComma, line: 4, column: 26)
   }
 }

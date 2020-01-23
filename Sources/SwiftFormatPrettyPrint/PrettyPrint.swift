@@ -66,6 +66,11 @@ public class PrettyPrinter {
   /// If true, the token stream is printed to the console for debugging purposes.
   private var printTokenStream: Bool
 
+  /// Whether the pretty printer should restrict its changes to whitespace. When true, only
+  /// whitespace (e.g. spaces, newlines) are modified. Otherwise, text changes (e.g. add/remove
+  /// trailing commas) are performed in addition to whitespace.
+  private let whitespaceOnly: Bool
+
   /// Keeps track of the line numbers and indentation states of the open (and unclosed) breaks seen
   /// so far.
   private var activeOpenBreaks: [ActiveOpenBreak] = []
@@ -139,8 +144,10 @@ public class PrettyPrinter {
   ///   - node: The node to be pretty printed.
   ///   - printTokenStream: Indicates whether debug information about the token stream should be
   ///     printed to standard output.
+  ///   - whitespaceOnly: Whether only whitespace changes should be made.
   public init(
-    context: Context, operatorContext: OperatorContext, node: Syntax, printTokenStream: Bool
+    context: Context, operatorContext: OperatorContext, node: Syntax, printTokenStream: Bool,
+    whitespaceOnly: Bool
   ) {
     self.context = context
     let configuration = context.configuration
@@ -149,6 +156,7 @@ public class PrettyPrinter {
     self.maxLineLength = configuration.lineLength
     self.spaceRemaining = self.maxLineLength
     self.printTokenStream = printTokenStream
+    self.whitespaceOnly = whitespaceOnly
   }
 
   /// Append the given string to the output buffer.
@@ -451,12 +459,20 @@ public class PrettyPrinter {
     case .commaDelimitedRegionStart:
       commaDelimitedRegionStack.append(openCloseBreakCompensatingLineNumber)
 
-    case .commaDelimitedRegionEnd:
+    case .commaDelimitedRegionEnd(let hasTrailingComma, let position):
       guard let startLineNumber = commaDelimitedRegionStack.popLast() else {
         fatalError("Found trailing comma end with no corresponding start.")
       }
 
-      if startLineNumber != openCloseBreakCompensatingLineNumber {
+      let shouldHaveTrailingComma = startLineNumber != openCloseBreakCompensatingLineNumber
+      if shouldHaveTrailingComma && !hasTrailingComma {
+        diagnose(.addTrailingComma, at: position)
+      } else if !shouldHaveTrailingComma && hasTrailingComma {
+        diagnose(.removeTrailingComma, at: position)
+      }
+
+      let shouldWriteComma = whitespaceOnly ? hasTrailingComma : shouldHaveTrailingComma
+      if shouldWriteComma {
         write(",")
       }
     }
@@ -679,4 +695,10 @@ extension Diagnostic.Message {
 
   static let moveEndOfLineComment = Diagnostic.Message(
     .warning, "move end-of-line comment that exceeds the line length")
+
+  static let addTrailingComma = Diagnostic.Message(
+    .warning, "add trailing comma to the last element in multiline collection literal")
+
+  static let removeTrailingComma = Diagnostic.Message(
+    .warning, "remove trailing comma from the last element in single line collection literal")
 }
