@@ -72,6 +72,51 @@ extension Syntax {
 
     return startLocation.line == endLocation.line
   }
+
+  /// Returns the absolute position of the trivia piece at the given index in the receiver's leading
+  /// trivia collection.
+  ///
+  /// If the trivia piece spans multiple characters, the value returned is the position of the first
+  /// character.
+  ///
+  /// - Precondition: `index` is a valid index in the receiver's leading trivia collection.
+  ///
+  /// - Parameter index: The index of the trivia piece in the leading trivia whose position should
+  ///   be returned.
+  /// - Returns: The absolute position of the trivia piece.
+  public func position(ofLeadingTriviaAt index: Trivia.Index) -> AbsolutePosition {
+    let leadingTrivia = self.leadingTrivia ?? []
+    guard leadingTrivia.indices.contains(index) else {
+      preconditionFailure("Index was out of bounds in the node's leading trivia.")
+    }
+
+    var offset = SourceLength.zero
+    for currentIndex in leadingTrivia.startIndex..<index {
+      offset += leadingTrivia[currentIndex].sourceLength
+    }
+    return self.position + offset
+  }
+
+  /// Returns the source location of the trivia piece at the given index in the receiver's leading
+  /// trivia collection.
+  ///
+  /// If the trivia piece spans multiple characters, the value returned is the location of the first
+  /// character.
+  ///
+  /// - Precondition: `index` is a valid index in the receiver's leading trivia collection.
+  ///
+  /// - Parameters:
+  ///   - index: The index of the trivia piece in the leading trivia whose location should be
+  ///     returned.
+  ///   - converter: The `SourceLocationConverter` that was previously initialized using the root
+  ///     tree of this node.
+  /// - Returns: The source location of the trivia piece.
+  public func startLocation(
+    ofLeadingTriviaAt index: Trivia.Index,
+    converter: SourceLocationConverter
+  ) -> SourceLocation {
+    return converter.location(for: position(ofLeadingTriviaAt: index))
+  }
 }
 
 extension SyntaxCollection {

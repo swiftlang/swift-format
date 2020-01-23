@@ -157,7 +157,7 @@ extension NoBlockCommentsTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__NoBlockCommentsTests = [
-        ("testRemoveBlockComments", testRemoveBlockComments),
+        ("testDiagnoseBlockComments", testDiagnoseBlockComments),
     ]
 }
 

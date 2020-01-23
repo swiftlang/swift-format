@@ -30,17 +30,25 @@ extension Rule {
   ///
   /// - Parameters:
   ///   - message: The diagnostic message to emit.
-  ///   - location: The source location which the diagnostic should be attached.
+  ///   - node: The syntax node to which the diagnostic should be attached. The diagnostic will be
+  ///     placed at the start of the node (excluding leading trivia).
+  ///   - leadingTriviaIndex: If non-nil, the index of a trivia piece in the node's leading trivia
+  ///     that should be used to determine the location of the diagnostic. Otherwise, the
+  ///     diagnostic's location will be the start of the node after any leading trivia.
   ///   - actions: A set of actions to add notes, highlights, and fix-its to diagnostics.
   public func diagnose(
     _ message: Diagnostic.Message,
     on node: Syntax?,
+    leadingTriviaIndex: Trivia.Index? = nil,
     actions: ((inout Diagnostic.Builder) -> Void)? = nil
   ) {
-    context.diagnosticEngine?.diagnose(
-      message.withRule(self),
-      location: node?.startLocation(converter: context.sourceLocationConverter),
-      actions: actions
-    )
+    let location: SourceLocation?
+    if let leadingTriviaIndex = leadingTriviaIndex {
+      location = node?.startLocation(
+        ofLeadingTriviaAt: leadingTriviaIndex, converter: context.sourceLocationConverter)
+    } else {
+      location = node?.startLocation(converter: context.sourceLocationConverter)
+    }
+    context.diagnosticEngine?.diagnose(message.withRule(self), location: location, actions: actions)
   }
 }

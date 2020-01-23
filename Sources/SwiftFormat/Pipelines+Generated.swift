@@ -280,7 +280,6 @@ extension FormatPipeline {
     node = FullyIndirectEnum(context: context).visit(node)
     node = GroupNumericLiterals(context: context).visit(node)
     node = NoAccessLevelOnExtensionDeclaration(context: context).visit(node)
-    node = NoBlockComments(context: context).visit(node)
     node = NoCasesWithOnlyFallthrough(context: context).visit(node)
     node = NoEmptyTrailingClosureParentheses(context: context).visit(node)
     node = NoLabelsInCasePatterns(context: context).visit(node)
