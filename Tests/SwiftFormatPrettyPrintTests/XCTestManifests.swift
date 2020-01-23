@@ -24,6 +24,7 @@ extension ArrayDeclTests {
     static let __allTests__ArrayDeclTests = [
         ("testArrayOfFunctions", testArrayOfFunctions),
         ("testBasicArrays", testBasicArrays),
+        ("testNoTrailingCommasInTypes", testNoTrailingCommasInTypes),
         ("testTrailingCommaDiagnostics", testTrailingCommaDiagnostics),
         ("testWhitespaceOnlyDoesNotChangeTrailingComma", testWhitespaceOnlyDoesNotChangeTrailingComma),
     ]
@@ -178,6 +179,7 @@ extension DictionaryDeclTests {
     // to regenerate.
     static let __allTests__DictionaryDeclTests = [
         ("testBasicDictionaries", testBasicDictionaries),
+        ("testNoTrailingCommasInTypes", testNoTrailingCommasInTypes),
         ("testTrailingCommaDiagnostics", testTrailingCommaDiagnostics),
         ("testWhitespaceOnlyDoesNotChangeTrailingComma", testWhitespaceOnlyDoesNotChangeTrailingComma),
     ]

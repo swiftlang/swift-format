@@ -65,6 +65,23 @@ public class ArrayDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
 
+  public func testNoTrailingCommasInTypes() {
+    let input =
+      """
+      let a = [SomeSuperMegaLongTypeName]()
+      """
+
+    let expected =
+      """
+      let a = [
+        SomeSuperMegaLongTypeName
+      ]()
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
+  }
+
   public func testWhitespaceOnlyDoesNotChangeTrailingComma() {
     let input =
       """
