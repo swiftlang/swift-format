@@ -177,7 +177,7 @@ enum Token {
 
   /// Marks the end of a comma delimited collection, where a trailing comma should be inserted
   /// if and only if the collection spans multiple lines.
-  case commaDelimitedRegionEnd
+  case commaDelimitedRegionEnd(hasTrailingComma: Bool, position: AbsolutePosition)
 
   // Convenience overloads for the enum types
   static let open = Token.open(.inconsistent, 0)
