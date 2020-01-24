@@ -92,7 +92,7 @@ public class DictionaryDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(
       input: input, expected: input + "\n", linelength: 50, whitespaceOnly: true)
 
-    XCTAssertDiagnosed(Diagnostic.Message.removeTrailingComma, line: 1, column: 33)
+    XCTAssertDiagnosed(Diagnostic.Message.removeTrailingComma, line: 1, column: 32)
     XCTAssertDiagnosed(Diagnostic.Message.addTrailingComma, line: 4, column: 17)
   }
 }

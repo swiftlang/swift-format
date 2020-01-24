@@ -714,8 +714,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // a trailing comma to 1 element arrays.
     if let firstElement = node.first, let lastElement = node.last, firstElement != lastElement {
       before(firstElement.firstToken, tokens: .commaDelimitedRegionStart)
-      let endToken = Token.commaDelimitedRegionEnd(
-        hasTrailingComma: lastElement.trailingComma != nil, position: lastElement.endPosition)
+      let endToken =
+        Token.commaDelimitedRegionEnd(hasTrailingComma: lastElement.trailingComma != nil)
       after(lastElement.lastToken, tokens: endToken)
       if let existingTrailingComma = lastElement.trailingComma {
         ignoredTokens.insert(existingTrailingComma)
@@ -745,8 +745,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // so we never add a trailing comma to 1 element dictionaries.
     if let firstElement = node.first, let lastElement = node.last, firstElement != lastElement {
       before(firstElement.firstToken, tokens: .commaDelimitedRegionStart)
-      let endToken = Token.commaDelimitedRegionEnd(
-        hasTrailingComma: lastElement.trailingComma != nil, position: lastElement.endPosition)
+      let endToken =
+        Token.commaDelimitedRegionEnd(hasTrailingComma: lastElement.trailingComma != nil)
       after(lastElement.lastToken, tokens: endToken)
       if let existingTrailingComma = lastElement.trailingComma {
         ignoredTokens.insert(existingTrailingComma)
@@ -2320,15 +2320,13 @@ private final class TokenStreamCreator: SyntaxVisitor {
       return (false, [])
     }
 
-    let position = token.endPosition
-
     switch firstPiece {
     case .lineComment(let text):
       return (
         true,
         [
           .space(size: 2, flexible: true),
-          .comment(Comment(kind: .line, text: text, position: position), wasEndOfLine: true),
+          .comment(Comment(kind: .line, text: text), wasEndOfLine: true),
           // There must be a break with a soft newline after the comment, but it's impossible to
           // know which kind of break must be used. Adding this newline is deferred until the
           // comment is added to the token stream.
@@ -2339,7 +2337,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
         false,
         [
           .space(size: 1, flexible: true),
-          .comment(Comment(kind: .block, text: text, position: position), wasEndOfLine: false),
+          .comment(Comment(kind: .block, text: text), wasEndOfLine: false),
           // We place a size-0 break after the comment to allow a discretionary newline after
           // the comment if the user places one here but the comment is otherwise adjacent to a
           // text token.
