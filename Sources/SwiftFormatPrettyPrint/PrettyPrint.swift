@@ -435,7 +435,7 @@ public class PrettyPrinter {
       write(comment.print(indent: currentIndentation))
       if wasEndOfLine {
         if comment.length > spaceRemaining {
-          diagnose(.moveEndOfLineComment, at: comment.position)
+          diagnose(.moveEndOfLineComment)
         }
       } else {
         spaceRemaining -= comment.length
@@ -459,21 +459,22 @@ public class PrettyPrinter {
     case .commaDelimitedRegionStart:
       commaDelimitedRegionStack.append(openCloseBreakCompensatingLineNumber)
 
-    case .commaDelimitedRegionEnd(let hasTrailingComma, let position):
+    case .commaDelimitedRegionEnd(let hasTrailingComma):
       guard let startLineNumber = commaDelimitedRegionStack.popLast() else {
         fatalError("Found trailing comma end with no corresponding start.")
       }
 
       let shouldHaveTrailingComma = startLineNumber != openCloseBreakCompensatingLineNumber
       if shouldHaveTrailingComma && !hasTrailingComma {
-        diagnose(.addTrailingComma, at: position)
+        diagnose(.addTrailingComma)
       } else if !shouldHaveTrailingComma && hasTrailingComma {
-        diagnose(.removeTrailingComma, at: position)
+        diagnose(.removeTrailingComma)
       }
 
       let shouldWriteComma = whitespaceOnly ? hasTrailingComma : shouldHaveTrailingComma
       if shouldWriteComma {
         write(",")
+        spaceRemaining -= 1
       }
     }
   }
@@ -679,14 +680,13 @@ public class PrettyPrinter {
     }
   }
 
-  private func diagnose(_ message: Diagnostic.Message, at position: AbsolutePosition?) {
-    let location: SourceLocation?
-    if let position = position {
-      location
-        = SourceLocation(offset: position.utf8Offset, converter: context.sourceLocationConverter)
-    } else {
-      location = nil
-    }
+  /// Diagnoses the given message at the current location in `outputBuffer`.
+  private func diagnose(_ message: Diagnostic.Message) {
+    // Add 1 since columns uses 1-based indices.
+    let column = maxLineLength - spaceRemaining + 1
+    let offset = outputBuffer.utf8.count
+    let location =
+      SourceLocation(line: lineNumber, column: column, offset: offset, file: context.fileURL.path)
     context.diagnosticEngine?.diagnose(message, location: location)
   }
 }

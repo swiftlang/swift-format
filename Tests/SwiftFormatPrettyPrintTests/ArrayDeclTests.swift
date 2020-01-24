@@ -109,7 +109,7 @@ public class ArrayDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(
       input: input, expected: input + "\n", linelength: 45, whitespaceOnly: true)
 
-    XCTAssertDiagnosed(Diagnostic.Message.removeTrailingComma, line: 1, column: 18)
+    XCTAssertDiagnosed(Diagnostic.Message.removeTrailingComma, line: 1, column: 17)
     XCTAssertDiagnosed(Diagnostic.Message.addTrailingComma, line: 4, column: 26)
   }
 }

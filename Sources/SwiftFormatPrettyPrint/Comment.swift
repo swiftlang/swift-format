@@ -40,12 +40,10 @@ struct Comment {
 
   let kind: Kind
   var text: [String]
-  let position: AbsolutePosition?
   public var length: Int
 
-  init(kind: Kind, text: String, position: AbsolutePosition? = nil) {
+  init(kind: Kind, text: String) {
     self.kind = kind
-    self.position = position
 
     switch kind {
     case .line, .docLine:
