@@ -26,31 +26,69 @@ enum IndentingBehavior {
 }
 
 struct Verbatim {
-  let indentingBehavior: IndentingBehavior
-  var lines: [String] = []
-  var leadingWhitespaceCounts: [Int] = []
+  /// The behavior used to adjust indentation when printing verbatim content.
+  private let indentingBehavior: IndentingBehavior
 
-  init(text: String, indentingBehavior: IndentingBehavior = .allLines) {
+  /// The lines of verbatim text.
+  private let lines: [String]
+
+  /// The number of leading whitespaces to print for each line of verbatim content, not including
+  /// any additional indentation requested externally.
+  private let leadingWhitespaceCounts: [Int]
+
+  init(text: String, indentingBehavior: IndentingBehavior) {
     self.indentingBehavior = indentingBehavior
-    tokenizeTextAndTrimWhitespace(text: text)
-  }
 
-  mutating func tokenizeTextAndTrimWhitespace(text: String) {
-    lines = text.split(separator: "\n", omittingEmptySubsequences: false).map { String($0) }
+    var originalLines = text.split(separator: "\n", omittingEmptySubsequences: false)
 
     // Prevents an extra leading new line from being created.
-    if lines[0] == "" {
-      lines.remove(at: 0)
+    if originalLines[0].isEmpty {
+      originalLines.remove(at: 0)
     }
 
-    guard lines.count > 0, let index = lines.firstIndex(where: { $0 != "" }) else { return }
+    // If we have no lines left (or none with any content), just initialize everything empty and
+    // exit.
+    guard
+      !originalLines.isEmpty,
+      let index = originalLines.firstIndex(where: { !$0.isEmpty })
+    else {
+      self.lines = []
+      self.leadingWhitespaceCounts = []
+      return
+    }
 
-    // Get the number of leading whitespaces of the first line, and subract this from the number of
-    // leading whitespaces for subsequent lines (if possible). Record the new leading whitespaces
-    // counts, and trim off whitespace from the ends of the strings.
-    let count = countLeadingWhitespaces(text: lines[index])
-    leadingWhitespaceCounts = lines.map { max(countLeadingWhitespaces(text: $0) - count, 0) }
-    lines = lines.map { $0.trimmingCharacters(in: CharacterSet(charactersIn: " ")) }
+    // If our indenting behavior is `none`, then keep the original lines _exactly_ as is---don't
+    // attempt to calculate or trim their leading indentation.
+    guard indentingBehavior != .none else {
+      self.lines = originalLines.map(String.init)
+      self.leadingWhitespaceCounts = [Int](repeating: 0, count: originalLines.count)
+      return
+    }
+
+    // Otherwise, we're in one of the indentation compensating modes. Get the number of leading
+    // whitespaces of the first line, and subtract this from the number of leading whitespaces for
+    // subsequent lines (if possible). Record the new leading whitespaces counts, and trim off
+    // whitespace from the ends of the strings.
+    let firstLineLeadingSpaceCount = numberOfLeadingSpaces(in: originalLines[index])
+    self.leadingWhitespaceCounts = originalLines.map {
+      max(numberOfLeadingSpaces(in: $0) - firstLineLeadingSpaceCount, 0)
+    }
+    self.lines = originalLines.map { $0.trimmingCharacters(in: CharacterSet(charactersIn: " ")) }
+  }
+
+  /// Returns the length that the pretty printer should use when determining layout for this
+  /// verbatim content.
+  ///
+  /// Specifically, multiline content should have a length equal to the maximum (to force breaking),
+  /// while single-line content should have its natural length.
+  func prettyPrintingLength(maximum: Int) -> Int {
+    if lines.isEmpty {
+      return 0
+    }
+    if lines.count > 1 {
+      return maximum
+    }
+    return lines[0].count
   }
 
   func print(indent: [Indent]) -> String {
@@ -60,11 +98,12 @@ struct Verbatim {
         switch indentingBehavior {
         case .firstLine where i == 0, .allLines:
           output += indent.indentation()
-          break
         case .none, .firstLine:
           break
         }
-        output += String(repeating: " ", count: leadingWhitespaceCounts[i])
+        if leadingWhitespaceCounts[i] > 0 {
+          output += String(repeating: " ", count: leadingWhitespaceCounts[i])
+        }
         output += lines[i]
       }
       if i < lines.count - 1 {
@@ -73,12 +112,13 @@ struct Verbatim {
     }
     return output
   }
+}
 
-  func countLeadingWhitespaces(text: String) -> Int {
-    var count = 0
-    for char in text {
-      if char == " " { count += 1 } else { break }
-    }
-    return count
+/// Returns the leading number of spaces in the given string.
+fileprivate func numberOfLeadingSpaces(in text: Substring) -> Int {
+  var count = 0
+  for char in text {
+    if char == " " { count += 1 } else { break }
   }
+  return count
 }

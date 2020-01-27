@@ -201,8 +201,4 @@ enum Token {
   static func `break`(_ kind: BreakKind, newlines: NewlineBehavior) -> Token {
     return .break(kind, size: 1, newlines: newlines)
   }
-
-  static func verbatim(text: String) -> Token {
-    return Token.verbatim(Verbatim(text: text))
-  }
 }
