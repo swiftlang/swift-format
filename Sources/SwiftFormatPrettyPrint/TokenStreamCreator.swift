@@ -51,6 +51,10 @@ private final class TokenStreamCreator: SyntaxVisitor {
   /// printed conditionally using a different type of token.
   private var ignoredTokens = Set<TokenSyntax>()
 
+  /// Lists the expressions that have been visited, from the outermost expression, where contextual
+  /// breaks and start/end contextual breaking tokens have been inserted.
+  private var preVisitedExprs = [ExprSyntax]()
+
   init(configuration: Configuration, operatorContext: OperatorContext) {
     self.config = configuration
     self.operatorContext = operatorContext
@@ -768,15 +772,14 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: MemberAccessExprSyntax) -> SyntaxVisitorContinueKind {
-    if node.base != nil {
-      // Only insert a break before the dot if there is something preceding the dot (i.e., it is not
-      // an implicit member access).
-      before(node.dot, tokens: .break(.continue, size: 0))
-    }
+    preVisitInsertingContextualBreaks(node)
+
     return .visitChildren
   }
 
   func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
+    preVisitInsertingContextualBreaks(node)
+
     if let calledMemberAccessExpr = node.calledExpression as? MemberAccessExprSyntax {
       if let base = calledMemberAccessExpr.base, base is IdentifierExprSyntax {
         before(base.firstToken, tokens: .open)
@@ -788,8 +791,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
     // If there is a trailing closure, force the right parenthesis down to the next line so it
     // stays with the open curly brace.
-    let breakBeforeRightParen = node.trailingClosure != nil
-      && !isCompactSingleFunctionCallArgument(arguments)
+    let breakBeforeRightParen =
+      (node.trailingClosure != nil && !isCompactSingleFunctionCallArgument(arguments))
+      || mustBreakBeforeClosingDelimiter(of: node, argumentListPath: \.argumentList)
 
     before(node.trailingClosure?.leftBrace, tokens: .break(.same))
 
@@ -942,11 +946,22 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: SubscriptExprSyntax) -> SyntaxVisitorContinueKind {
+    preVisitInsertingContextualBreaks(node)
+
+    if let calledMemberAccessExpr = node.calledExpression as? MemberAccessExprSyntax {
+      if let base = calledMemberAccessExpr.base, base is IdentifierExprSyntax {
+        before(base.firstToken, tokens: .open)
+        after(calledMemberAccessExpr.name.lastToken, tokens: .close)
+      }
+    }
+
     let arguments = node.argumentList
 
     // If there is a trailing closure, force the right bracket down to the next line so it stays
     // with the open curly brace.
-    let breakBeforeRightBracket = node.trailingClosure != nil
+    let breakBeforeRightBracket =
+      node.trailingClosure != nil
+      || mustBreakBeforeClosingDelimiter(of: node, argumentListPath: \.argumentList)
 
     before(node.trailingClosure?.leftBrace, tokens: .space)
 
@@ -1084,7 +1099,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
-    before(node.eofToken, tokens: .break(.same, newlines: .soft))
+    after(node.eofToken, tokens: .break(.same, newlines: .soft))
     return .visitChildren
   }
 
@@ -2364,7 +2379,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // Find the first index of a non-opening-scope token, and split into the two sections.
     for (index, beforeToken) in beforeTokens.enumerated() {
       switch beforeToken {
-      case .break(.open, _, _), .break(.continue, _, _), .open:
+      case .break(.open, _, _), .break(.continue, _, _), .break(.same, _, _),
+        .break(.contextual, _, _), .open:
         break
       default:
         if index > 0 {
@@ -2530,8 +2546,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
     switch kind {
     case .open, .close, .reset, .same:
       compatibleKind = .same
-    case .continue:
-      compatibleKind = .continue
+    case .continue, .contextual:
+      compatibleKind = kind
     }
     appendToken(.break(compatibleKind, size: 0, newlines: newlines))
   }
@@ -2566,7 +2582,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     case .break:
       lastBreakIndex = tokens.endIndex
       canMergeNewlinesIntoLastBreak = true
-    case .open, .printerControl:
+    case .open, .printerControl, .contextualBreakingStart:
       break
     default:
       canMergeNewlinesIntoLastBreak = false
@@ -2596,6 +2612,22 @@ private final class TokenStreamCreator: SyntaxVisitor {
     if argumentCount > 1 { return true }
 
     return !isCompactSingleFunctionCallArgument(arguments)
+  }
+
+  /// Returns whether the `reset` break before an expression's closing delimiter must break when
+  /// it's on a different line than the opening delimiter.
+  /// - Parameters:
+  ///   - expr: An expression that includes opening and closing delimiters and arguments.
+  ///   - argumentListPath: A key path for accessing the expression's function call argument list.
+  private func mustBreakBeforeClosingDelimiter<T: ExprSyntax>(
+    of expr: T, argumentListPath: KeyPath<T, FunctionCallArgumentListSyntax>
+  ) -> Bool {
+    guard expr.parent is MemberAccessExprSyntax else { return false }
+    let argumentList = expr[keyPath: argumentListPath]
+
+    // When there's a single compact argument, there is no extra indentation for the argument and
+    // the argument's own internal reset break will reset indentation.
+    return !isCompactSingleFunctionCallArgument(argumentList)
   }
 
   /// Returns true if the argument list can be compacted, even if it spans multiple lines (where
@@ -2831,6 +2863,88 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // Add this break so that trivia parsing will allow discretionary newlines after the node.
     appendToken(.break(.same, size: 0))
   }
+
+  /// Visits the given expression node and all of the nested expression nodes, inserting tokens
+  /// necessary for contextual breaking throughout the expression. Records the nodes that were
+  /// visited so that they can be skipped later.
+  private func preVisitInsertingContextualBreaks<T: ExprSyntax & Equatable>(_ expr: T) {
+    if !hasPreVisited(expr) {
+      let (visited, _, _) = insertContextualBreaks(expr, isTopLevel: true)
+      preVisitedExprs.append(contentsOf: visited)
+    }
+  }
+
+  /// Returns whether the given expression node has been pre-visited, from a parent expression.
+  private func hasPreVisited<T: ExprSyntax & Equatable>(_ expr: T) -> Bool {
+    for item in preVisitedExprs {
+      if item == expr { return true }
+    }
+    return false
+  }
+
+  /// Recursively visits nested expressions from the given expression inserting contextual breaking
+  /// tokens. When visiting an expression node, `preVisitInsertingContextualBreaks(_:)` should be
+  /// called instead of this helper.
+  private func insertContextualBreaks(_ expr: ExprSyntax, isTopLevel: Bool) -> (
+    [ExprSyntax], hasCompoundExpression: Bool, hasMemberAccess: Bool
+  ) {
+    if let memberAccessExpr = expr as? MemberAccessExprSyntax {
+      // When the member access is part of a calling expression, the break before the dot is
+      // inserted when visiting the parent node instead so that the break is inserted before any
+      // scoping tokens (e.g. `contextualBreakingStart`, `open`).
+      if memberAccessExpr.base != nil && !(expr.parent is CallingExprSyntax) {
+        before(memberAccessExpr.dot, tokens: .break(.contextual, size: 0))
+      }
+      let children: [ExprSyntax]
+      var hasCompoundExpression = false
+      if let base = memberAccessExpr.base {
+        (children, hasCompoundExpression, _) = insertContextualBreaks(base, isTopLevel: false)
+      } else {
+        children = []
+      }
+      if isTopLevel {
+        before(expr.firstToken, tokens: .contextualBreakingStart)
+        after(expr.lastToken, tokens: .contextualBreakingEnd)
+      }
+      return ([expr] + children, hasCompoundExpression, true)
+    } else if let callingExpr = expr as? CallingExprSyntax {
+      let calledExpression = callingExpr.calledExpression
+      let (children, hasCompoundExpression, hasMemberAccess) =
+        insertContextualBreaks(calledExpression, isTopLevel: false)
+
+      let shouldGroup =
+        hasMemberAccess && (hasCompoundExpression || !isTopLevel)
+        && config.lineBreakAroundMultilineExpressionChainComponents
+      let beforeTokens: [Token] =
+        shouldGroup ? [.contextualBreakingStart, .open] : [.contextualBreakingStart]
+      let afterTokens: [Token] =
+        shouldGroup ? [.contextualBreakingEnd, .close] : [.contextualBreakingEnd]
+
+      if let calledMemberAccessExpr = calledExpression as? MemberAccessExprSyntax {
+        if calledMemberAccessExpr.base != nil {
+          before(calledMemberAccessExpr.dot, tokens: [.break(.contextual, size: 0)])
+        }
+        before(calledMemberAccessExpr.dot, tokens: beforeTokens)
+        after(expr.lastToken, tokens: afterTokens)
+        if isTopLevel {
+          before(expr.firstToken, tokens: .contextualBreakingStart)
+          after(expr.lastToken, tokens: .contextualBreakingEnd)
+        }
+      } else {
+        before(expr.firstToken, tokens: beforeTokens)
+        after(expr.lastToken, tokens: afterTokens)
+      }
+      return ([expr] + children, true, hasMemberAccess)
+    }
+
+    // Otherwise, it's an expression that isn't calling another expression (e.g. array or
+    // dictionary, identifier, etc.). Wrap it in a breaking context but don't try to pre-visit
+    // children nodes.
+    before(expr.firstToken, tokens: .contextualBreakingStart)
+    after(expr.lastToken, tokens: .contextualBreakingEnd)
+    let hasCompoundExpression = !(expr is IdentifierExprSyntax)
+    return ([expr], hasCompoundExpression, false)
+  }
 }
 
 extension Syntax {
@@ -3032,3 +3146,11 @@ extension NewlineBehavior {
     }
   }
 }
+
+/// Common protocol implemented by expression syntax types that support calling another expression.
+protocol CallingExprSyntax: Syntax {
+  var calledExpression: ExprSyntax { get }
+}
+
+extension FunctionCallExprSyntax: CallingExprSyntax { }
+extension SubscriptExprSyntax: CallingExprSyntax { }

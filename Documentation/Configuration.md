@@ -80,6 +80,13 @@ top-level keys and values:
     conditional compilation blocks are indented. If this setting is `false` the body
     of `#if`, `#elseif`, and `#else` is not indented. Defaults to `true`.
 
+*  `lineBreakAroundMultilineExpressionChainComponents` _(boolean)_:  Determines whether
+   line breaks should be forced before and after multiline components of dot-chained
+   expressions, such as function calls and subscripts chained together through member
+   access (i.e. "." expressions). When any component is multiline and this option is
+   true, a line break is forced before the "." of the component and after the component's
+   closing delimiter (i.e. right paren, right bracket, right brace, etc.).
+
 > TODO: Add support for enabling/disabling specific syntax transformations in
 > the pipeline.
 

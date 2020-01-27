@@ -111,6 +111,19 @@ enum BreakKind: Equatable {
   /// ```
   case reset
 
+  /// A `contextual` break acts as either a `continue` break or maintains the existing level of
+  /// indentation when it fires. The contextual breaking beahvior of a given contextual breaking
+  /// scope (i.e. inside a `contextualBreakingStart`/`contextualBreakingEnd` region) is set by the
+  /// first child `contextualBreakingStart`/`contextualBreakingEnd` pair. When the first child is
+  /// multiline the contextual breaks maintain indentation and they are continuations otherwise.
+  ///
+  /// These are used when multiple related breaks need to exhibit the same behavior based the
+  /// context in which they appear. For example, when breaks exist between expressions that are
+  /// chained together (e.g. member access) and indenting the line *after* a closing paren/brace
+  /// looks better indented when the previous expr was 1 line but not indented when the expr was
+  /// multiline.
+  case contextual
+
   /// A `close` break that defaults to forced breaking behavior.
   static let close = BreakKind.close(mustBreak: true)
 
@@ -178,6 +191,12 @@ enum Token {
   /// Marks the end of a comma delimited collection, where a trailing comma should be inserted
   /// if and only if the collection spans multiple lines.
   case commaDelimitedRegionEnd(hasTrailingComma: Bool)
+
+  /// Starts a scope where `contextual` breaks have consistent behavior.
+  case contextualBreakingStart
+
+  /// Ends a scope where `contextual` breaks have consistent behavior.
+  case contextualBreakingEnd
 
   // Convenience overloads for the enum types
   static let open = Token.open(.inconsistent, 0)
