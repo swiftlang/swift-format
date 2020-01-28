@@ -132,7 +132,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
       appendBeforeTokens(firstToken)
     }
 
-    appendToken(.verbatim(Verbatim(text: node.description)))
+    appendToken(.verbatim(Verbatim(text: node.description, indentingBehavior: .allLines)))
 
     if let lastToken = node.lastToken {
       // Extract any comments that trail the verbatim block since they belong to the next syntax
@@ -1978,6 +1978,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
       appendToken(.syntax(token.text))
     }
 
+    appendTrailingTrivia(token)
     appendAfterTokensAndTrailingComments(token)
 
     // It doesn't matter what we return here, tokens do not have children.
@@ -2031,6 +2032,43 @@ private final class TokenStreamCreator: SyntaxVisitor {
     if let before = beforeMap[token] {
       before.forEach(appendToken)
     }
+  }
+
+  /// Handle trailing trivia that might contain garbage text that we don't want to indiscriminantly
+  /// discard.
+  ///
+  /// In syntactically valid code, trailing trivia will only contain spaces or tabs, so we can
+  /// usually ignore it entirely. If there is garbage text after a token, however, then we preserve
+  /// it (and any whitespace immediately before it) and "glue" it to the end of the preceding token
+  /// using a `verbatim` formatting token. Any whitespace following the last garbage text in the
+  /// trailing trivia will be discarded, with the assumption that the formatter will have inserted
+  /// some kind of break there that would be more appropriate (and we want to avoid inserting
+  /// trailing whitespace on a line).
+  ///
+  /// The choices above are admittedly somewhat arbitrary, but given that garbage text in trailing
+  /// trivia represents a malformed input (as opposed to garbage text in leading trivia, which has
+  /// some legitimate uses), this is a reasonable compromise to keep the garbage text roughly in the
+  /// same place but still let surrounding formatting occur somewhat as expected.
+  private func appendTrailingTrivia(_ token: TokenSyntax) {
+    let trailingTrivia = Array(token.trailingTrivia)
+    guard let lastGarbageIndex = trailingTrivia.lastIndex(where: { $0.isGarbageText }) else {
+      return
+    }
+
+    var verbatimText = ""
+    for piece in trailingTrivia[...lastGarbageIndex] {
+      switch piece {
+      case .garbageText, .spaces, .tabs, .formfeeds, .verticalTabs:
+        piece.write(to: &verbatimText)
+      default:
+        // The implementation of the lexer today ensures that newlines, carriage returns, and
+        // comments will not be present in trailing trivia. Ignore them for now (rather than assert,
+        // in case that changes in a future version).
+        break
+      }
+    }
+
+    appendToken(.verbatim(Verbatim(text: verbatimText, indentingBehavior: .none)))
   }
 
   /// Appends the after-tokens and trailing comments (if present) of the given syntax token
@@ -2397,7 +2435,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
       }
     }
 
-    var lastPieceWasLineComment = false
+    // Updated throughout the loop to indicate whether the next newline *must* be honored (for
+    // example, even if discretionary newlines are discarded). This is the case when the preceding
+    // trivia was a line comment or garbage text.
+    var requiresNextNewline = false
+
     for (index, piece) in trivia.enumerated() {
       if let cutoff = cutoffIndex, index == cutoff { break }
       switch piece {
@@ -2407,7 +2449,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
           appendNewlines(.soft)
           isStartOfFile = false
         }
-        lastPieceWasLineComment = true
+        requiresNextNewline = true
 
       case .blockComment(let text):
         if index > 0 || isStartOfFile {
@@ -2418,25 +2460,24 @@ private final class TokenStreamCreator: SyntaxVisitor {
           appendToken(.break(.same, size: 0))
           isStartOfFile = false
         }
-        lastPieceWasLineComment = false
+        requiresNextNewline = false
 
       case .docLineComment(let text):
         appendToken(.comment(Comment(kind: .docLine, text: text), wasEndOfLine: false))
         appendNewlines(.soft)
         isStartOfFile = false
-        lastPieceWasLineComment = true
+        requiresNextNewline = true
 
       case .docBlockComment(let text):
         appendToken(.comment(Comment(kind: .docBlock, text: text), wasEndOfLine: false))
         appendNewlines(.soft)
         isStartOfFile = false
-        lastPieceWasLineComment = false
+        requiresNextNewline = false
 
       case .newlines(let count), .carriageReturns(let count), .carriageReturnLineFeeds(let count):
         guard !isStartOfFile else { break }
-        // Even if we aren't respecting discretionary newlines, there must always be a newline after
-        // a line comment.
-        if lastPieceWasLineComment ||
+
+        if requiresNextNewline ||
           (config.respectsExistingLineBreaks && isDiscretionaryNewlineAllowed(before: token))
         {
           appendNewlines(.soft(count: count, discretionary: true))
@@ -2444,12 +2485,25 @@ private final class TokenStreamCreator: SyntaxVisitor {
           // Even if discretionary line breaks are not being respected, we still respect multiple
           // line breaks in order to keep blank separator lines that the user might want.
           // TODO: It would be nice to restrict this to only allow multiple lines between statements
-          // and declarations; as currently implemented, multiple newlines will locally the
+          // and declarations; as currently implemented, multiple newlines will locally ignore the
           // configuration setting.
           if count > 1 {
             appendNewlines(.soft(count: count, discretionary: true))
           }
         }
+
+      case .garbageText(let text):
+        // Garbage text in leading trivia might be something meaningful that would be disruptive to
+        // throw away when formatting the file, like a hashbang line or Unicode byte-order marker at
+        // the beginning of a file, or source control conflict markers. Keep it as verbatim text so
+        // that it is printed exactly as we got it.
+        appendToken(.verbatim(Verbatim(text: text, indentingBehavior: .none)))
+
+        // Unicode byte-order markers shouldn't allow leading newlines to otherwise appear in the
+        // file, nor should they modify our detection of the beginning of the file.
+        let isBOM = text == "\u{feff}"
+        requiresNextNewline = !isBOM
+        isStartOfFile = isStartOfFile && isBOM
 
       default:
         break
@@ -2953,6 +3007,16 @@ class CommentMovingRewriter: SyntaxRewriter {
 extension Collection {
   subscript(safe index: Index) -> Element? {
     return index < endIndex ? self[index] : nil
+  }
+}
+
+extension TriviaPiece {
+  /// True if the trivia piece is garbage text.
+  fileprivate var isGarbageText: Bool {
+    switch self {
+    case .garbageText: return true
+    default: return false
+    }
   }
 }
 
