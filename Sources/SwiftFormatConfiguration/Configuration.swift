@@ -32,6 +32,7 @@ public struct Configuration: Codable, Equatable {
     case lineBreakBeforeEachGenericRequirement
     case prioritizeKeepingFunctionOutputTogether
     case indentConditionalCompilationBlocks
+    case lineBreakAroundMultilineExpressionChainComponents
     case rules
   }
 
@@ -111,6 +112,13 @@ public struct Configuration: Codable, Equatable {
   /// Determines the indentation behavior for `#if`, `#elseif`, and `#else`.
   public var indentConditionalCompilationBlocks = true
 
+  /// Determines whether line breaks should be forced before and after multiline components of
+  /// dot-chained expressions, such as function calls and subscripts chained together through member
+  /// access (i.e. "." expressions). When any component is multiline and this option is true, a line
+  /// break is forced before the "." of the component and after the component's closing delimiter
+  /// (i.e. right paren, right bracket, right brace, etc.).
+  public var lineBreakAroundMultilineExpressionChainComponents = false
+
   /// Constructs a Configuration with all default values.
   public init() {
     self.version = highestSupportedConfigurationVersion
@@ -157,6 +165,9 @@ public struct Configuration: Codable, Equatable {
       = try container.decodeIfPresent(Bool.self, forKey: .prioritizeKeepingFunctionOutputTogether) ?? false
     self.indentConditionalCompilationBlocks
       = try container.decodeIfPresent(Bool.self, forKey: .indentConditionalCompilationBlocks) ?? true
+    self.lineBreakAroundMultilineExpressionChainComponents =
+      try container.decodeIfPresent(
+        Bool.self, forKey: .lineBreakAroundMultilineExpressionChainComponents) ?? false
 
     // If the `rules` key is not present at all, default it to the built-in set
     // so that the behavior is the same as if the configuration had been
@@ -181,6 +192,9 @@ public struct Configuration: Codable, Equatable {
     try container.encode(lineBreakBeforeEachGenericRequirement, forKey: .lineBreakBeforeEachGenericRequirement)
     try container.encode(prioritizeKeepingFunctionOutputTogether, forKey: .prioritizeKeepingFunctionOutputTogether)
     try container.encode(indentConditionalCompilationBlocks, forKey: .indentConditionalCompilationBlocks)
+    try container.encode(
+      lineBreakAroundMultilineExpressionChainComponents,
+      forKey: .lineBreakAroundMultilineExpressionChainComponents)
     try container.encode(rules, forKey: .rules)
   }
 }

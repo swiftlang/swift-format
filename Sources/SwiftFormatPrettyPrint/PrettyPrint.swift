@@ -44,6 +44,25 @@ public class PrettyPrinter {
     var contributesBlockIndent: Bool
   }
 
+  /// Records state of `contextualBreakingStart` tokens.
+  private struct ActiveBreakingContext {
+    /// The line number in the `outputBuffer` where a start token appeared.
+    let lineNumber: Int
+
+    enum BreakingBehavior {
+      /// The behavior hasn't been determined. This is treated as `continuation`.
+      case unset
+      /// The break is created as a `continuation` break, setting `currentLineIsContinuation` when
+      /// it fires.
+      case continuation
+      /// The break maintains the existing value of `currentLineIsContinuation` when it fires.
+      case maintain
+    }
+
+    /// The behavior to use when a `contextual` break fires inside of this break context.
+    var contextualBreakingBehavior = BreakingBehavior.unset
+  }
+
   private let context: Context
   private var configuration: Configuration { return context.configuration }
   private let maxLineLength: Int
@@ -74,6 +93,12 @@ public class PrettyPrinter {
   /// Keeps track of the line numbers and indentation states of the open (and unclosed) breaks seen
   /// so far.
   private var activeOpenBreaks: [ActiveOpenBreak] = []
+
+  /// Stack of the active breaking contexts.
+  private var activeBreakingContexts: [ActiveBreakingContext] = []
+
+  /// The most recently ended breaking context, used to force certain following `contextual` breaks.
+  private var lastEndedBreakingContext: ActiveBreakingContext? = nil
 
   /// Keeps track of the current line number being printed.
   private var lineNumber: Int = 1
@@ -243,6 +268,24 @@ public class PrettyPrinter {
     assert(length >= 0, "Token lengths must be positive")
 
     switch token {
+    case .contextualBreakingStart:
+      activeBreakingContexts.append(ActiveBreakingContext(lineNumber: lineNumber))
+
+      // Discard the last finished breaking context to keep it from effecting breaks inside of the
+      // new context. The discarded context has already either had an impact on the contextual break
+      // after it or there was no relevant contextual break, so it's safe to discard.
+      lastEndedBreakingContext = nil
+
+    case .contextualBreakingEnd:
+      guard let closedContext = activeBreakingContexts.popLast() else {
+        fatalError("Encountered unmatched contextualBreakingEnd token.")
+      }
+
+      // Break contexts create scopes, and a breaking context should never be carried between
+      // scopes. When there's no active break context, discard the popped one to prevent carrying it
+      // into a new scope.
+      lastEndedBreakingContext = activeBreakingContexts.isEmpty ? nil : closedContext
+
     // Check if we need to force breaks in this group, and calculate the indentation to be used in
     // the group.
     case .open(let breaktype):
@@ -384,6 +427,42 @@ public class PrettyPrinter {
 
       case .reset:
         mustBreak = currentLineIsContinuation
+
+      case .contextual:
+        // When the last context spanned multiple lines, move the next context (in the same parent
+        // break context scope) onto its own line. For example, this is used when the previous
+        // context includes a multiline trailing closure or multiline function argument list.
+        if let lastBreakingContext = lastEndedBreakingContext {
+          if configuration.lineBreakAroundMultilineExpressionChainComponents {
+            mustBreak = lastBreakingContext.lineNumber != lineNumber
+          }
+        }
+
+        // Wait for a contextual break to fire and then update the breaking behavior for the rest of
+        // the contextual breaks in this scope to match the behavior of the one that fired.
+        let willFire = (!isAtStartOfLine && length > spaceRemaining) || mustBreak
+        if willFire {
+          // Update the active breaking context according to the most recently finished breaking
+          // context so all following contextual breaks in this scope to have matching behavior.
+          if let closedContext = lastEndedBreakingContext,
+            let activeContext = activeBreakingContexts.last,
+            case .unset = activeContext.contextualBreakingBehavior
+          {
+            activeBreakingContexts[activeBreakingContexts.count - 1].contextualBreakingBehavior =
+              (closedContext.lineNumber == lineNumber) ? .continuation : .maintain
+          }
+        }
+
+        if let activeBreakingContext = activeBreakingContexts.last {
+          switch activeBreakingContext.contextualBreakingBehavior {
+          case .unset, .continuation:
+            isContinuationIfBreakFires = true
+          case .maintain:
+            isContinuationIfBreakFires = currentLineIsContinuation
+          }
+        }
+
+        lastEndedBreakingContext = nil
       }
 
       var overrideBreakingSuppressed = false
@@ -494,6 +573,12 @@ public class PrettyPrinter {
     // Calculate token lengths
     for (i, token) in tokens.enumerated() {
       switch token {
+      case .contextualBreakingStart:
+        lengths.append(0)
+
+      case .contextualBreakingEnd:
+        lengths.append(0)
+
       // Open tokens have lengths equal to the total of the contents of its group. The value is
       // calcualted when close tokens are encountered.
       case .open:
@@ -667,9 +752,17 @@ public class PrettyPrinter {
       printDebugIndent()
       print("[COMMA DELIMITED START Idx: \(idx)]")
 
-      case .commaDelimitedRegionEnd:
-        printDebugIndent()
-        print("[COMMA DELIMITED END Idx: \(idx)]")
+    case .commaDelimitedRegionEnd:
+      printDebugIndent()
+      print("[COMMA DELIMITED END Idx: \(idx)]")
+
+    case .contextualBreakingStart:
+      printDebugIndent()
+      print("[START BREAKING CONTEXT Idx: \(idx)]")
+
+    case .contextualBreakingEnd:
+      printDebugIndent()
+      print("[END BREAKING CONTEXT Idx: \(idx)]")
     }
   }
 
