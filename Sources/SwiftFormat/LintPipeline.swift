@@ -16,16 +16,7 @@ import SwiftSyntax
 /// A syntax visitor that delegates to individual rules for linting.
 ///
 /// This file will be extended with `visit` methods in Pipelines+Generated.swift.
-struct LintPipeline: SyntaxVisitor {
-
-  /// The formatter context.
-  let context: Context
-
-  /// Creates a new lint pipeline.
-  init(context: Context) {
-    self.context = context
-  }
-
+extension LintPipeline {
   /// Calls the `visit` method of a rule for the given node if that rule is enabled for the node.
   ///
   /// - Parameters:
@@ -35,10 +26,10 @@ struct LintPipeline: SyntaxVisitor {
   ///     disabled.
   ///   - node: The syntax node on which the rule will be applied. This lets us check whether the
   ///     rule is enabled for the particular source range where the node occurs.
-  func visitIfEnabled<Rule: SyntaxLintRule, Node: Syntax>(
+  func visitIfEnabled<Rule: SyntaxLintRule, Node: SyntaxProtocol>(
     _ visitor: (Rule) -> (Node) -> SyntaxVisitorContinueKind, in context: Context, for node: Node
   ) {
-    guard context.isRuleEnabled(Rule.self.ruleName, node: node) else { return }
+    guard context.isRuleEnabled(Rule.self.ruleName, node: Syntax(node)) else { return }
     let rule = Rule(context: context)
     _ = visitor(rule)(node)
   }
@@ -52,14 +43,14 @@ struct LintPipeline: SyntaxVisitor {
   ///     disabled.
   ///   - node: The syntax node on which the rule will be applied. This lets us check whether the
   ///     rule is enabled for the particular source range where the node occurs.
-  func visitIfEnabled<Rule: SyntaxFormatRule, Node: Syntax>(
+  func visitIfEnabled<Rule: SyntaxFormatRule, Node: SyntaxProtocol>(
     _ visitor: (Rule) -> (Node) -> Any, in context: Context, for node: Node
   ) {
     // Note that visitor function type is expressed as `Any` because we ignore the return value, but
     // more importantly because the `visit` methods return protocol refinements of `Syntax` that
     // cannot currently be expressed as constraints without duplicating this function for each of
     // them individually.
-    guard context.isRuleEnabled(Rule.self.ruleName, node: node) else { return }
+    guard context.isRuleEnabled(Rule.self.ruleName, node: Syntax(node)) else { return }
     let rule = Rule(context: context)
     _ = visitor(rule)(node)
   }

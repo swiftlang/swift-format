@@ -14,7 +14,7 @@ import Foundation
 import SwiftSyntax
 
 /// A rule that lints a given file.
-open class SyntaxLintRule: SyntaxVisitorBase, Rule {
+open class SyntaxLintRule: SyntaxVisitor, Rule {
 
   /// The context in which the rule is executed.
   public let context: Context
@@ -36,9 +36,9 @@ extension Rule {
   ///     that should be used to determine the location of the diagnostic. Otherwise, the
   ///     diagnostic's location will be the start of the node after any leading trivia.
   ///   - actions: A set of actions to add notes, highlights, and fix-its to diagnostics.
-  public func diagnose(
+  public func diagnose<SyntaxType: SyntaxProtocol>(
     _ message: Diagnostic.Message,
-    on node: Syntax?,
+    on node: SyntaxType?,
     leadingTriviaIndex: Trivia.Index? = nil,
     actions: ((inout Diagnostic.Builder) -> Void)? = nil
   ) {

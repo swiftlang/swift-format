@@ -44,7 +44,18 @@ final class PipelineGenerator: FileGenerator {
       import SwiftFormatRules
       import SwiftSyntax
 
-      extension LintPipeline {
+      /// A syntax visitor that delegates to individual rules for linting.
+      ///
+      /// This file will be extended with `visit` methods in Pipelines+Generated.swift.
+      class LintPipeline: SyntaxVisitor {
+
+        /// The formatter context.
+        let context: Context
+
+        /// Creates a new lint pipeline.
+        init(context: Context) {
+          self.context = context
+        }
 
       """
     )
@@ -53,7 +64,7 @@ final class PipelineGenerator: FileGenerator {
       handle.write(
         """
 
-          func visit(_ node: \(nodeType)) -> SyntaxVisitorContinueKind {
+          override func visit(_ node: \(nodeType)) -> SyntaxVisitorContinueKind {
 
         """)
 

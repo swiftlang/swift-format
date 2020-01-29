@@ -18,7 +18,7 @@ extension VariableDeclSyntax {
   var identifiers: [IdentifierPatternSyntax] {
     var ids: [IdentifierPatternSyntax] = []
     for binding in bindings {
-      guard let id = binding.pattern as? IdentifierPatternSyntax else { continue }
+      guard let id = binding.pattern.as(IdentifierPatternSyntax.self) else { continue }
       ids.append(id)
     }
     return ids

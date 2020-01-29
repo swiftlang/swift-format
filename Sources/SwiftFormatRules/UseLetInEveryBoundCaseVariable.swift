@@ -28,7 +28,7 @@ public final class UseLetInEveryBoundCaseVariable: SyntaxLintRule {
 
   public override func visit(_ node: SwitchCaseLabelSyntax) -> SyntaxVisitorContinueKind {
     for item in node.caseItems {
-      guard item.pattern is ValueBindingPatternSyntax else { continue }
+      guard item.pattern.is(ValueBindingPatternSyntax.self) else { continue }
       diagnose(.useLetInBoundCaseVariables, on: node)
     }
     return .skipChildren

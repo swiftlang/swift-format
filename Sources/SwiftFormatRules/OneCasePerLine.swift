@@ -93,7 +93,7 @@ public final class OneCasePerLine: SyntaxFormatRule {
     for member in node.members.members {
       // If it's not a case declaration, or it's a case declaration with only one element, leave it
       // alone.
-      guard let caseDecl = member.decl as? EnumCaseDeclSyntax, caseDecl.elements.count > 1 else {
+      guard let caseDecl = member.decl.as(EnumCaseDeclSyntax.self), caseDecl.elements.count > 1 else {
         newMembers.append(member)
         continue
       }
@@ -109,12 +109,12 @@ public final class OneCasePerLine: SyntaxFormatRule {
           diagnose(.moveAssociatedOrRawValueCase(name: element.identifier.text), on: element)
 
           if let caseDeclForCollectedElements = collector.makeCaseDeclAndReset() {
-            newMembers.append(member.withDecl(caseDeclForCollectedElements))
+            newMembers.append(member.withDecl(DeclSyntax(caseDeclForCollectedElements)))
           }
 
           let separatedCaseDecl =
             collector.makeCaseDeclFromBasis(elements: [element.withTrailingComma(nil)])
-          newMembers.append(member.withDecl(separatedCaseDecl))
+          newMembers.append(member.withDecl(DeclSyntax(separatedCaseDecl)))
         } else {
           collector.addElement(element)
         }
@@ -122,12 +122,12 @@ public final class OneCasePerLine: SyntaxFormatRule {
 
       // Make sure to emit any trailing collected elements.
       if let caseDeclForCollectedElements = collector.makeCaseDeclAndReset() {
-        newMembers.append(member.withDecl(caseDeclForCollectedElements))
+        newMembers.append(member.withDecl(DeclSyntax(caseDeclForCollectedElements)))
       }
     }
 
     let newMemberBlock = node.members.withMembers(SyntaxFactory.makeMemberDeclList(newMembers))
-    return node.withMembers(newMemberBlock)
+    return DeclSyntax(node.withMembers(newMemberBlock))
   }
 }
 

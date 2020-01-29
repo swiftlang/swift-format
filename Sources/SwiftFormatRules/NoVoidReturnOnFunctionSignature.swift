@@ -26,15 +26,15 @@ public final class NoVoidReturnOnFunctionSignature: SyntaxFormatRule {
   /// it for closure signatures, because that may introduce an ambiguity when closure signatures
   /// are inferred.
   public override func visit(_ node: FunctionSignatureSyntax) -> Syntax {
-    if let ret = node.output?.returnType as? SimpleTypeIdentifierSyntax, ret.name.text == "Void" {
+    if let ret = node.output?.returnType.as(SimpleTypeIdentifierSyntax.self), ret.name.text == "Void" {
       diagnose(.removeRedundantReturn("Void"), on: ret)
-      return node.withOutput(nil)
+      return Syntax(node.withOutput(nil))
     }
-    if let tup = node.output?.returnType as? TupleTypeSyntax, tup.elements.isEmpty {
+    if let tup = node.output?.returnType.as(TupleTypeSyntax.self), tup.elements.isEmpty {
       diagnose(.removeRedundantReturn("()"), on: tup)
-      return node.withOutput(nil)
+      return Syntax(node.withOutput(nil))
     }
-    return node
+    return Syntax(node)
   }
 }
 

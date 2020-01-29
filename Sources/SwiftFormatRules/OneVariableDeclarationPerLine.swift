@@ -32,7 +32,7 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
 
     var needsWork = false
     for codeBlockItem in items {
-      if let varDecl = codeBlockItem.item as? VariableDeclSyntax, varDecl.bindings.count > 1 {
+      if let varDecl = codeBlockItem.item.as(VariableDeclSyntax.self), varDecl.bindings.count > 1 {
         needsWork = true
       }
     }
@@ -42,7 +42,7 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
     for codeBlockItem in items {
       // If we're not looking at a VariableDecl with more than 1 binding, visit the item and
       // skip it.
-      guard let varDecl = codeBlockItem.item as? VariableDeclSyntax,
+      guard let varDecl = codeBlockItem.item.as(VariableDeclSyntax.self),
         varDecl.bindings.count > 1
       else {
         newItems.append(codeBlockItem)
@@ -64,7 +64,7 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
         }
         let newDecl = varDecl.withBindings(
           SyntaxFactory.makePatternBindingList([newBinding]))
-        var finalDecl: Syntax = newDecl
+        var finalDecl = Syntax(newDecl)
         // Only add a newline if this is a brand new binding.
         if !isFirst {
           let firstTok = newDecl.firstToken
@@ -87,21 +87,21 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
     guard let newStmts = splitVariableDecls(node.statements) else {
       return super.visit(node)
     }
-    return node.withStatements(newStmts)
+    return Syntax(node.withStatements(newStmts))
   }
 
   public override func visit(_ node: ClosureExprSyntax) -> ExprSyntax {
     guard let newStmts = splitVariableDecls(node.statements) else {
       return super.visit(node)
     }
-    return node.withStatements(newStmts)
+    return ExprSyntax(node.withStatements(newStmts))
   }
 
   public override func visit(_ node: SourceFileSyntax) -> Syntax {
     guard let newStmts = splitVariableDecls(node.statements) else {
       return super.visit(node)
     }
-    return node.withStatements(newStmts)
+    return Syntax(node.withStatements(newStmts))
   }
 }
 

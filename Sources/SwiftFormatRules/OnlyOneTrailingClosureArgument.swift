@@ -23,7 +23,7 @@ import SwiftSyntax
 public final class OnlyOneTrailingClosureArgument: SyntaxLintRule {
 
   public override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
-    guard (node.argumentList.contains { $0.expression is ClosureExprSyntax }) else {
+    guard (node.argumentList.contains { $0.expression.is(ClosureExprSyntax.self) }) else {
       return .skipChildren
     }
     guard node.trailingClosure != nil else { return .skipChildren }

@@ -25,21 +25,21 @@ public final class UseSingleLinePropertyGetter: SyntaxFormatRule {
 
   public override func visit(_ node: PatternBindingSyntax) -> Syntax {
     guard
-      let accessorBlock = node.accessor as? AccessorBlockSyntax,
+      let accessorBlock = node.accessor?.as(AccessorBlockSyntax.self),
       let acc = accessorBlock.accessors.first,
       let body = acc.body,
       accessorBlock.accessors.count == 1,
       acc.accessorKind.tokenKind == .contextualKeyword("get"),
       acc.attributes == nil,
       acc.modifier == nil
-    else { return node }
+    else { return Syntax(node) }
 
     diagnose(.removeExtraneousGetBlock, on: acc)
 
     let newBlock = SyntaxFactory.makeCodeBlock(
       leftBrace: accessorBlock.leftBrace, statements: body.statements,
       rightBrace: accessorBlock.rightBrace)
-    return node.withAccessor(newBlock)
+    return Syntax(node.withAccessor(Syntax(newBlock)))
   }
 }
 

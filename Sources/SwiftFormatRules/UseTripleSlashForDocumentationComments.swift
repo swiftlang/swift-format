@@ -27,47 +27,47 @@ import SwiftSyntax
 /// - SeeAlso: https://google.github.io/swift#general-format
 public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
   public override func visit(_ node: FunctionDeclSyntax) -> DeclSyntax {
-    return convertDocBlockCommentToDocLineComment(node)
+    return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 
   public override func visit(_ node: EnumDeclSyntax) -> DeclSyntax {
-    return convertDocBlockCommentToDocLineComment(node)
+    return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 
   public override func visit(_ node: InitializerDeclSyntax) -> DeclSyntax {
-    return convertDocBlockCommentToDocLineComment(node)
+    return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 
   public override func visit(_ node: DeinitializerDeclSyntax) -> DeclSyntax {
-    return convertDocBlockCommentToDocLineComment(node)
+    return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 
   public override func visit(_ node: SubscriptDeclSyntax) -> DeclSyntax {
-    return convertDocBlockCommentToDocLineComment(node)
+    return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 
   public override func visit(_ node: ClassDeclSyntax) -> DeclSyntax {
-    return convertDocBlockCommentToDocLineComment(node)
+    return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 
   public override func visit(_ node: VariableDeclSyntax) -> DeclSyntax {
-    return convertDocBlockCommentToDocLineComment(node)
+    return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 
   public override func visit(_ node: StructDeclSyntax) -> DeclSyntax {
-    return convertDocBlockCommentToDocLineComment(node)
+    return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 
   public override func visit(_ node: ProtocolDeclSyntax) -> DeclSyntax {
-    return convertDocBlockCommentToDocLineComment(node)
+    return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 
   public override func visit(_ node: TypealiasDeclSyntax) -> DeclSyntax {
-    return convertDocBlockCommentToDocLineComment(node)
+    return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 
   public override func visit(_ node: ExtensionDeclSyntax) -> DeclSyntax {
-    return convertDocBlockCommentToDocLineComment(node)
+    return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 
   /// In the case the given declaration has a docBlockComment as it's documentation
@@ -96,7 +96,7 @@ public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
         on: decl,
         token: decl.firstToken,
         leadingTrivia: Trivia(pieces: pieces.reversed())
-      ) as! DeclSyntax
+      )
   }
 
   /// Breaks down the docBlock comment into the correct trivia pieces

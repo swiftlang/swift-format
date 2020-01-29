@@ -48,10 +48,10 @@ public final class DontRepeatTypeInStaticProperties: SyntaxLintRule {
   public override func visit(_ node: ExtensionDeclSyntax) -> SyntaxVisitorContinueKind {
     let members = node.members.members
 
-    switch node.extendedType {
-    case let simpleType as SimpleTypeIdentifierSyntax:
+    switch Syntax(node.extendedType).as(SyntaxEnum.self) {
+    case .simpleTypeIdentifier(let simpleType):
       diagnoseStaticMembers(members, endingWith: simpleType.name.text)
-    case let memberType as MemberTypeIdentifierSyntax:
+    case .memberTypeIdentifier(let memberType):
       // We don't need to drill recursively into this structure because types with more than two
       // components are constructed left-heavy; that is, `A.B.C.D` is structured as `((A.B).C).D`,
       // and the final component of the top type is what we want.
@@ -71,7 +71,7 @@ public final class DontRepeatTypeInStaticProperties: SyntaxLintRule {
   private func diagnoseStaticMembers(_ members: MemberDeclListSyntax, endingWith typeName: String) {
     for member in members {
       guard
-        let varDecl = member.decl as? VariableDeclSyntax,
+        let varDecl = member.decl.as(VariableDeclSyntax.self),
         let modifiers = varDecl.modifiers,
         modifiers.has(modifier: "static") || modifiers.has(modifier: "class")
       else { continue }

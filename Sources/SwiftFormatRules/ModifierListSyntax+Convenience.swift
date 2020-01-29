@@ -65,7 +65,7 @@ extension ModifierListSyntax {
       ? replaceTrivia(
         on: modifier,
         token: modifier.name,
-        trailingTrivia: .spaces(1)) as! DeclModifierSyntax : modifier
+        trailingTrivia: .spaces(1)) : modifier
 
     if index == 0 {
       guard formatTrivia else { return inserting(modifier, at: index) }
@@ -75,12 +75,12 @@ extension ModifierListSyntax {
       let formattedMod = replaceTrivia(
         on: modifier,
         token: modifier.firstToken,
-        leadingTrivia: firstTok.leadingTrivia) as! DeclModifierSyntax
+        leadingTrivia: firstTok.leadingTrivia)
       newModifiers[0] = replaceTrivia(
         on: firstMod,
         token: firstTok,
         leadingTrivia: [],
-        trailingTrivia: .spaces(1)) as! DeclModifierSyntax
+        trailingTrivia: .spaces(1))
       newModifiers.insert(formattedMod, at: 0)
       return SyntaxFactory.makeModifierList(newModifiers)
     } else {

@@ -25,7 +25,7 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
 
   public override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
     for binding in node.bindings {
-      guard let pat = binding.pattern as? IdentifierPatternSyntax else {
+      guard let pat = binding.pattern.as(IdentifierPatternSyntax.self) else {
         continue
       }
       diagnoseLowerCamelCaseViolations(pat.identifier)

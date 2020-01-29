@@ -15,16 +15,16 @@ import SwiftFormatCore
 import SwiftSyntax
 
 /// Visitor that determines if the target source file imports XCTest
-private struct ImportsXCTestVisitor: SyntaxVisitor {
+private class ImportsXCTestVisitor: SyntaxVisitor {
   let context: Context
 
   init(context: Context) {
     self.context = context
   }
 
-  mutating func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
     for statement in node.statements {
-      guard let importDecl = statement.item as? ImportDeclSyntax else { continue }
+      guard let importDecl = statement.item.as(ImportDeclSyntax.self) else { continue }
       for component in importDecl.path {
         guard component.name.text == "XCTest" else { continue }
         context.importsXCTest = .importsXCTest
@@ -47,6 +47,6 @@ private struct ImportsXCTestVisitor: SyntaxVisitor {
 ///   - sourceFile: The file to be visited.
 func setImportsXCTest(context: Context, sourceFile: SourceFileSyntax) {
   guard context.importsXCTest == .notDetermined else { return }
-  var visitor = ImportsXCTestVisitor(context: context)
-  sourceFile.walk(&visitor)
+  let visitor = ImportsXCTestVisitor(context: context)
+  visitor.walk(sourceFile)
 }

@@ -42,7 +42,7 @@ public final class AmbiguousTrailingClosureOverload: SyntaxLintRule {
     for fn in functions {
       let params = fn.signature.input.parameterList
       guard let firstParam = params.firstAndOnly else { continue }
-      guard firstParam.type is FunctionTypeSyntax else { continue }
+      guard let type = firstParam.type, type.is(FunctionTypeSyntax.self) else { continue }
       if let mods = fn.modifiers, mods.has(modifier: "static") || mods.has(modifier: "class") {
         staticOverloads[fn.identifier.text, default: []].append(fn)
       } else {
@@ -55,19 +55,19 @@ public final class AmbiguousTrailingClosureOverload: SyntaxLintRule {
   }
 
   public override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
-    let functions = node.statements.compactMap { $0.item as? FunctionDeclSyntax }
+    let functions = node.statements.compactMap { $0.item.as(FunctionDeclSyntax.self) }
     discoverAndDiagnoseOverloads(functions)
     return .visitChildren
   }
 
   public override func visit(_ node: CodeBlockSyntax) -> SyntaxVisitorContinueKind {
-    let functions = node.statements.compactMap { $0.item as? FunctionDeclSyntax }
+    let functions = node.statements.compactMap { $0.item.as(FunctionDeclSyntax.self) }
     discoverAndDiagnoseOverloads(functions)
     return .visitChildren
   }
 
   public override func visit(_ decls: MemberDeclBlockSyntax) -> SyntaxVisitorContinueKind {
-    let functions = decls.members.compactMap { $0.decl as? FunctionDeclSyntax }
+    let functions = decls.members.compactMap { $0.decl.as(FunctionDeclSyntax.self) }
     discoverAndDiagnoseOverloads(functions)
     return .visitChildren
   }

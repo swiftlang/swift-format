@@ -66,7 +66,7 @@ public class Context {
     self.sourceLocationConverter = SourceLocationConverter(
       file: fileURL.path, tree: sourceFileSyntax)
     self.ruleMask = RuleMask(
-      syntaxNode: sourceFileSyntax,
+      syntaxNode: Syntax(sourceFileSyntax),
       sourceLocationConverter: sourceLocationConverter
     )
   }

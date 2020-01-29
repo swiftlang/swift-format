@@ -26,48 +26,50 @@ public final class UseWhereClausesInForLoops: SyntaxFormatRule {
 
   public override func visit(_ node: ForInStmtSyntax) -> StmtSyntax {
     // Extract IfStmt node if it's the only node in the function's body.
-    guard !node.body.statements.isEmpty else { return node }
+    guard !node.body.statements.isEmpty else { return StmtSyntax(node) }
     let stmt = node.body.statements.first!
 
     // Ignore for-loops with a `where` clause already.
     // FIXME: Create an `&&` expression with both conditions?
-    guard node.whereClause == nil else { return node }
+    guard node.whereClause == nil else { return StmtSyntax(node) }
 
     // Match:
     //  - If the for loop has 1 statement, and it is an IfStmt, with a single
     //    condition.
     //  - If the for loop has 1 or more statement, and the first is a GuardStmt
     //    with a single condition whose body is just `continue`.
-    switch stmt.item {
-    case let ifStmt as IfStmtSyntax
+    switch stmt.item.as(SyntaxEnum.self) {
+    case .ifStmt(let ifStmt)
     where ifStmt.conditions.count == 1 && node.body.statements.count == 1:
       // Extract the condition of the IfStmt.
       let conditionElement = ifStmt.conditions.first!
-      guard let condition = conditionElement.condition as? ExprSyntax else {
-        return node
+      guard let condition = conditionElement.condition.as(ExprSyntax.self) else {
+        return StmtSyntax(node)
       }
       diagnose(.useWhereInsteadOfIf, on: ifStmt)
-      return updateWithWhereCondition(
+      let result = updateWithWhereCondition(
         node: node,
         condition: condition,
         statements: ifStmt.body.statements
       )
-    case let guardStmt as GuardStmtSyntax
+      return StmtSyntax(result)
+    case .guardStmt(let guardStmt)
     where guardStmt.conditions.count == 1 && guardStmt.body.statements.count == 1 && guardStmt.body
-      .statements.first!.item is ContinueStmtSyntax:
+      .statements.first!.item.is(ContinueStmtSyntax.self):
       // Extract the condition of the GuardStmt.
       let conditionElement = guardStmt.conditions.first!
-      guard let condition = conditionElement.condition as? ExprSyntax else {
-        return node
+      guard let condition = conditionElement.condition.as(ExprSyntax.self) else {
+        return StmtSyntax(node)
       }
       diagnose(.useWhereInsteadOfGuard, on: guardStmt)
-      return updateWithWhereCondition(
+      let result = updateWithWhereCondition(
         node: node,
         condition: condition,
         statements: node.body.statements.removingFirst()
       )
+      return StmtSyntax(result)
     default:
-      return node
+      return StmtSyntax(node)
     }
   }
 }

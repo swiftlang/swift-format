@@ -25,13 +25,13 @@ import SwiftSyntax
 public final class NoEmptyTrailingClosureParentheses: SyntaxFormatRule {
 
   public override func visit(_ node: FunctionCallExprSyntax) -> ExprSyntax {
-    guard node.argumentList.count == 0 else { return node }
+    guard node.argumentList.count == 0 else { return ExprSyntax(node) }
 
     guard node.trailingClosure != nil && node.argumentList.isEmpty && node.leftParen != nil else {
-      return node
+      return ExprSyntax(node)
     }
     guard let name = node.calledExpression.lastToken?.withoutTrivia() else {
-      return node
+      return ExprSyntax(node)
     }
 
     diagnose(.removeEmptyTrailingParentheses(name: "\(name)"), on: node)
@@ -39,8 +39,9 @@ public final class NoEmptyTrailingClosureParentheses: SyntaxFormatRule {
     let formattedExp = replaceTrivia(
       on: node.calledExpression,
       token: node.calledExpression.lastToken,
-      trailingTrivia: .spaces(1)) as! ExprSyntax
-    return node.withLeftParen(nil).withRightParen(nil).withCalledExpression(formattedExp)
+      trailingTrivia: .spaces(1))
+    let result = node.withLeftParen(nil).withRightParen(nil).withCalledExpression(formattedExp)
+    return ExprSyntax(result)
   }
 }
 

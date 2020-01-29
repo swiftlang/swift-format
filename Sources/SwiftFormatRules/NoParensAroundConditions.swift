@@ -35,8 +35,8 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
 
     // If the condition is a function with a trailing closure, removing the
     // outer set of parentheses introduces a parse ambiguity.
-    if let fnCall = expr as? FunctionCallExprSyntax, fnCall.trailingClosure != nil {
-      return tuple
+    if let fnCall = expr.as(FunctionCallExprSyntax.self), fnCall.trailingClosure != nil {
+      return ExprSyntax(tuple)
     }
 
     diagnose(.removeParensAroundExpression, on: expr) {
@@ -48,43 +48,44 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
       token: expr.lastToken,
       leadingTrivia: tuple.leftParen.leadingTrivia,
       trailingTrivia: tuple.rightParen.trailingTrivia
-    ) as! ExprSyntax
+    )
   }
 
   public override func visit(_ node: IfStmtSyntax) -> StmtSyntax {
-    let conditions = visit(node.conditions) as! ConditionElementListSyntax
-    return node.withIfKeyword(node.ifKeyword.withOneTrailingSpace())
+    let conditions = visit(node.conditions).as(ConditionElementListSyntax.self)!
+    let result = node.withIfKeyword(node.ifKeyword.withOneTrailingSpace())
       .withConditions(conditions)
+    return StmtSyntax(result)
   }
 
   public override func visit(_ node: ConditionElementSyntax) -> Syntax {
-    guard let tup = node.condition as? TupleExprSyntax,
+    guard let tup = node.condition.as(TupleExprSyntax.self),
       tup.elementList.firstAndOnly != nil
     else {
-      return node
+      return Syntax(node)
     }
-    return node.withCondition(extractExpr(tup))
+    return Syntax(node.withCondition(Syntax(extractExpr(tup))))
   }
 
   /// FIXME(hbh): Parsing for SwitchStmtSyntax is not implemented.
   public override func visit(_ node: SwitchStmtSyntax) -> StmtSyntax {
-    guard let tup = node.expression as? TupleExprSyntax,
+    guard let tup = node.expression.as(TupleExprSyntax.self),
       tup.elementList.firstAndOnly != nil
     else {
-      return node
+      return StmtSyntax(node)
     }
-    return node.withExpression(extractExpr(tup))
+    return StmtSyntax(node.withExpression(extractExpr(tup)))
   }
 
   public override func visit(_ node: RepeatWhileStmtSyntax) -> StmtSyntax {
-    guard let tup = node.condition as? TupleExprSyntax,
+    guard let tup = node.condition.as(TupleExprSyntax.self),
       tup.elementList.firstAndOnly != nil
     else {
-      return node
+      return StmtSyntax(node)
     }
     let newNode = node.withCondition(extractExpr(tup))
       .withWhileKeyword(node.whileKeyword.withOneTrailingSpace())
-    return newNode
+    return StmtSyntax(newNode)
   }
 }
 

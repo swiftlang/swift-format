@@ -38,7 +38,7 @@ extension SequenceExprSyntax {
     // TODO: Look at adding true structural nodes (like BinaryExpr) to
     // SwiftSyntax that would be used to represent the result of folding so that
     // we don't have to distinguish between "shapes" of SequenceExpr.
-    guard mayChangeByFolding else { return self }
+    guard mayChangeByFolding else { return ExprSyntax(self) }
 
     let normalizedElements = elements.reduce(into: []) { result, expr in
       normalizeExpression(expr, into: &result)
@@ -82,7 +82,7 @@ extension SequenceExprSyntax {
     case 1:
       // A sequence with one element will not be changed by folding unless that
       // element is a ternary expression.
-      return elements.first! is TernaryExprSyntax
+      return elements.first!.is(TernaryExprSyntax.self)
 
     case 2:
       // A sequence with two elements might be changed by folding if the first
@@ -91,16 +91,16 @@ extension SequenceExprSyntax {
       var elementsIterator = elements.makeIterator()
       let first = elementsIterator.next()!
       let second = elementsIterator.next()!
-      return first is TernaryExprSyntax
-        || !(second is AsExprSyntax || second is IsExprSyntax)
+      return first.is(TernaryExprSyntax.self)
+        || !(second.is(AsExprSyntax.self) || second.is(IsExprSyntax.self))
 
     case 3:
       // A sequence with three elements will not be changed by folding unless
       // it contains a cast expression, ternary, or `try`. (This may be more
       // inclusive than it needs to be.)
       return elements.contains {
-        $0 is AsExprSyntax || $0 is IsExprSyntax || $0 is TernaryExprSyntax
-          || $0 is TryExprSyntax
+        $0.is(AsExprSyntax.self) || $0.is(IsExprSyntax.self) || $0.is(TernaryExprSyntax.self)
+          || $0.is(TryExprSyntax.self)
       }
 
     default:
@@ -154,7 +154,7 @@ extension SequenceExprSyntax {
 
       // If the operator is a cast operator, the RHS can't extend past the type
       // that's part of the cast production.
-      if op1.operatorExpr is AsExprSyntax || op1.operatorExpr is IsExprSyntax {
+      if op1.operatorExpr.is(AsExprSyntax.self) || op1.operatorExpr.is(IsExprSyntax.self) {
         lhs = makeExpression(
           operator: op1.operatorExpr, lhs: lhs, rhs: rhs, context: context)
 
@@ -275,14 +275,14 @@ extension SequenceExprSyntax {
     // <https://github.com/apple/swift/blob/d6c92dcfca5b81dc7433b8c5efc9513461598894/lib/Sema/TypeCheckExpr.cpp#L729-L741>.
     // This layout differs from the syntax tree that SwiftSyntax emits in a
     // couple subtle ways that are described below.
-    if expr is AsExprSyntax || expr is IsExprSyntax {
+    if expr.is(AsExprSyntax.self) || expr.is(IsExprSyntax.self) {
       // Cast operators (`as`, `is`) appear twice in the list to preserve the
       // even/odd property of the rest of the sequence; that is, that each
       // even-indexed element is an operand and each odd-indexed element is
       // (or begins with) an operator.
       elements.append(expr)
       elements.append(expr)
-    } else if let ternaryExpr = expr as? TernaryExprSyntax {
+    } else if let ternaryExpr = expr.as(TernaryExprSyntax.self) {
       // In the compiler implementation, ternary expressions have their
       // condition and false choice appear in the main sequence, with the true
       // choice nested inside an `if-expr` with null values for the other two
@@ -293,7 +293,7 @@ extension SequenceExprSyntax {
       // ternary in that slot and the rest of the algorithm will ignore
       // everything except for the true choice.
       normalizeExpression(ternaryExpr.conditionExpression, into: &elements)
-      elements.append(ternaryExpr)
+      elements.append(ExprSyntax(ternaryExpr))
       normalizeExpression(ternaryExpr.secondChoice, into: &elements)
     } else {
       elements.append(expr)
@@ -306,17 +306,17 @@ extension SequenceExprSyntax {
     forInfixOperator infixOp: ExprSyntax,
     context: OperatorContext
   ) -> PrecedenceGroup? {
-    switch infixOp {
-    case is ArrowExprSyntax:
+    switch Syntax(infixOp).as(SyntaxEnum.self) {
+    case .arrowExpr:
       return context.precedenceGroup(named: .functionArrow)
-    case is AsExprSyntax, is IsExprSyntax:
+    case .asExpr, .isExpr:
       return context.precedenceGroup(named: .casting)
-    case is AssignmentExprSyntax:
+    case .assignmentExpr:
       return context.precedenceGroup(named: .assignment)
-    case let binOpExpr as BinaryOperatorExprSyntax:
+    case .binaryOperatorExpr(let binOpExpr):
       let infixOpName = binOpExpr.operatorToken.text
       return context.infixOperator(named: infixOpName)?.precedenceGroup
-    case is TernaryExprSyntax:
+    case .ternaryExpr:
       return context.precedenceGroup(named: .ternary)
     default:
       // This branch will cover any potential new nodes that might arise in the
@@ -354,7 +354,7 @@ extension SequenceExprSyntax {
     // didn't parse as part of the right operand. The compiler handles that case
     // so that it can emit an error, but for the purposes of the syntax tree, we
     // can leave it alone.
-    let maybeTryExpr = lhs as? TryExprSyntax
+    let maybeTryExpr = lhs.as(TryExprSyntax.self)
     if let tryExpr = maybeTryExpr {
       lhs = tryExpr.expression
     }
@@ -363,32 +363,33 @@ extension SequenceExprSyntax {
       // Fold the result back into the `try` if it was present; otherwise, just
       // return the result itself.
       if let tryExpr = maybeTryExpr {
-        return tryExpr.withExpression(expr)
+        return ExprSyntax(tryExpr.withExpression(expr))
       }
       return expr
     }
 
-    switch op {
-    case let ternaryExpr as TernaryExprSyntax:
+    switch Syntax(op).as(SyntaxEnum.self) {
+    case .ternaryExpr(let ternaryExpr):
       // Resolve the ternary expression by pulling the LHS and RHS that we
       // actually want into it.
-      return makeResultExpression(
-        ternaryExpr
-          .withConditionExpression(lhs)
-          .withSecondChoice(rhs))
-    case is AsExprSyntax, is IsExprSyntax:
+
+      let result = ternaryExpr
+        .withConditionExpression(lhs)
+        .withSecondChoice(rhs)
+      return makeResultExpression(ExprSyntax(result))
+    case .asExpr, .isExpr:
       // A normalized cast expression will have a regular LHS, then `as/is Type`
       // as the operator *and* the RHS. We resolve it by returning a new
       // sequence expression that discards the extra RHS.
-      return makeResultExpression(
-        SyntaxFactory.makeSequenceExpr(
-          elements: SyntaxFactory.makeExprList([lhs, op])))
+      let result = SyntaxFactory.makeSequenceExpr(
+        elements: SyntaxFactory.makeExprList([lhs, op]))
+      return makeResultExpression(ExprSyntax(result))
     default:
       // For any other binary operator, we simply return a sequence that has the
       // three elements.
-      return makeResultExpression(
-        SyntaxFactory.makeSequenceExpr(
-          elements: SyntaxFactory.makeExprList([lhs, op, rhs])))
+      let result = SyntaxFactory.makeSequenceExpr(
+        elements: SyntaxFactory.makeExprList([lhs, op, rhs]))
+      return makeResultExpression(ExprSyntax(result))
     }
   }
 

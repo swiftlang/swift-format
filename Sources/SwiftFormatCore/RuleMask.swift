@@ -54,8 +54,8 @@ public class RuleMask {
 
   /// Computes the ranges in the given node where the status of rules are explicitly modified.
   private func computeIgnoredRanges(in node: Syntax) {
-    var visitor = RuleStatusCollectionVisitor(sourceLocationConverter: sourceLocationConverter)
-    node.walk(&visitor)
+    let visitor = RuleStatusCollectionVisitor(sourceLocationConverter: sourceLocationConverter)
+    visitor.walk(node)
     allRulesIgnoredRanges = visitor.allRulesIgnoredRanges
     ruleMap = visitor.ruleMap
   }
@@ -122,18 +122,18 @@ private class RuleStatusCollectionVisitor: SyntaxVisitor {
 
   // MARK: - Syntax Visitation Methods
 
-  func visit(_ node: CodeBlockItemSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: CodeBlockItemSyntax) -> SyntaxVisitorContinueKind {
     guard let firstToken = node.firstToken else {
       return .visitChildren
     }
-    return appendRuleStatusDirectives(from: firstToken, of: node)
+    return appendRuleStatusDirectives(from: firstToken, of: Syntax(node))
   }
 
-  func visit(_ node: MemberDeclListItemSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: MemberDeclListItemSyntax) -> SyntaxVisitorContinueKind {
     guard let firstToken = node.firstToken else {
       return .visitChildren
     }
-    return appendRuleStatusDirectives(from: firstToken, of: node)
+    return appendRuleStatusDirectives(from: firstToken, of: Syntax(node))
   }
 
   // MARK: - Helper Methods
