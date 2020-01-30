@@ -4,6 +4,7 @@ public class TupleDeclTests: PrettyPrintTestCase {
       """
       let a = (1, 2, 3)
       let a: (Int, Int, Int) = (1, 2, 3)
+      let a = (1, 2, 3, 4, 5, 6, 70, 80, 90)
       let a = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10)
       let a = (1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12)
       """
@@ -12,6 +13,9 @@ public class TupleDeclTests: PrettyPrintTestCase {
       """
       let a = (1, 2, 3)
       let a: (Int, Int, Int) = (1, 2, 3)
+      let a = (
+        1, 2, 3, 4, 5, 6, 70, 80, 90
+      )
       let a = (
         1, 2, 3, 4, 5, 6, 7, 8, 9, 10
       )
