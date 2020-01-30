@@ -44,12 +44,12 @@ set of rules, add a comment of the form:
 `// swift-format-ignore: [comma delimited list of rule names]`.
 
 ```swift
-// swift-format-ignore: BlankLineBetweenMembers
+// swift-format-ignore: DoNotUseSemicolons
 struct Foo {
 	   var bar = true
 }
 
-// swift-format-ignore: BlankLineBetweenMembers, FullyIndirectEnum, UseEarlyExits
+// swift-format-ignore: DoNotUseSemicolons, FullyIndirectEnum, UseEarlyExits
 func foo() {
 	    var bar = true
 }

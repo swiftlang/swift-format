@@ -38,14 +38,6 @@ top-level keys and values:
     line breaks where absolutely necessary and removing any others, effectively
     canonicalizing the output.
 
-*   `blankLineBetweenMembers` _(object)_: Controls logic specific to the
-    enforcement of blank lines between type members. The object value of this
-    property has the following properties:
-
-    *   `ignoreSingleLineProperties` _(boolean)_: If `true`, then single-line
-        property declarations are allowed to appear consecutively without a
-        blank line separating them.
-
 *   `lineBreakBeforeControlFlowKeywords` _(boolean)_: Determines the
     line-breaking behavior for control flow keywords that follow a closing
     brace, like `else` and `catch`. If true, a line break will be added before
@@ -103,9 +95,6 @@ An example `.swift-format` configuration file is shown below.
     },
     "maximumBlankLines": 1,
     "respectsExistingLineBreaks": true,
-    "blankLineBetweenMembers": {
-        "ignoreSingleLineProperties": true
-    },
     "lineBreakBeforeControlFlowKeywords": true,
     "lineBreakBeforeEachArgument": true
 }
