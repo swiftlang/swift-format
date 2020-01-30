@@ -34,17 +34,18 @@ public final class UseEnumForNamespacing: SyntaxFormatRule {
     guard node.genericParameterClause == nil, node.inheritanceClause == nil,
       let memberDecls = membersToKeepIfUsedAsNamespace(node.members.members)
     else {
-      return node
+      return DeclSyntax(node)
     }
 
     diagnose(.convertToEnum(kind: "struct", name: node.identifier), on: node)
 
-    return EnumDeclSyntax { builder in
+    let result = EnumDeclSyntax { builder in
       node.modifiers?.forEach { builder.addModifier($0) }
       builder.useEnumKeyword(node.structKeyword.withKind(.enumKeyword))
       builder.useIdentifier(node.identifier)
       builder.useMembers(node.members.withMembers(memberDecls))
     }
+    return DeclSyntax(result)
   }
 
   /// Returns the list of members that should be retained if all of them satisfy conditions that
@@ -59,16 +60,16 @@ public final class UseEnumForNamespacing: SyntaxFormatRule {
     var declList = [MemberDeclListItemSyntax]()
 
     for member in members {
-      switch member.decl {
-      case let decl as FunctionDeclSyntax:
+      switch Syntax(member.decl).as(SyntaxEnum.self) {
+      case .functionDecl(let decl):
         guard let modifiers = decl.modifiers, modifiers.has(modifier: "static") else { return nil }
         declList.append(member)
 
-      case let decl as VariableDeclSyntax:
+      case .variableDecl(let decl):
         guard let modifiers = decl.modifiers, modifiers.has(modifier: "static") else { return nil }
         declList.append(member)
 
-      case let decl as InitializerDeclSyntax:
+      case .initializerDecl(let decl):
         guard let modifiers = decl.modifiers, modifiers.has(modifier: "private"),
           decl.parameters.parameterList.isEmpty
         else {
@@ -76,10 +77,10 @@ public final class UseEnumForNamespacing: SyntaxFormatRule {
         }
         // Do not append private initializer.
 
-      case let decl as IfConfigDeclSyntax:
+      case .ifConfigDecl(let decl):
         let membersToKeep: [MemberDeclListSyntax] = decl.clauses
           .compactMap { clause in
-            (clause.elements as? MemberDeclListSyntax).flatMap(membersToKeepIfUsedAsNamespace(_:))
+            (clause.elements.as(MemberDeclListSyntax.self)).flatMap(membersToKeepIfUsedAsNamespace(_:))
           }
 
         if membersToKeep.count < decl.clauses.count {

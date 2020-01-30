@@ -27,9 +27,10 @@ private final class ReplaceTrivia: SyntaxRewriter {
   }
 
   override func visit(_ token: TokenSyntax) -> Syntax {
-    guard token == self.token else { return token }
-    return token.withLeadingTrivia(leadingTrivia ?? token.leadingTrivia)
+    guard token == self.token else { return Syntax(token) }
+    let newNode = token.withLeadingTrivia(leadingTrivia ?? token.leadingTrivia)
       .withTrailingTrivia(trailingTrivia ?? token.trailingTrivia)
+    return Syntax(newNode)
   }
 }
 
@@ -47,16 +48,16 @@ private final class ReplaceTrivia: SyntaxRewriter {
 ///         `node.lastToken`, which is almost always not `nil`. But in some very rare cases, like a
 ///         collection, it may be empty and not have a `firstToken`. Since there's nothing to
 ///         replace if token is `nil`, this function just exits early.
-func replaceTrivia(
-  on node: Syntax,
+func replaceTrivia<SyntaxType: SyntaxProtocol>(
+  on node: SyntaxType,
   token: TokenSyntax?,
   leadingTrivia: Trivia? = nil,
   trailingTrivia: Trivia? = nil
-) -> Syntax {
+) -> SyntaxType {
   guard let token = token else { return node }
   return ReplaceTrivia(
     token: token,
     leadingTrivia: leadingTrivia,
     trailingTrivia: trailingTrivia
-  ).visit(node)
+  ).visit(Syntax(node)).as(SyntaxType.self)!
 }

@@ -39,7 +39,7 @@ public final class NeverUseImplicitlyUnwrappedOptionals: SyntaxLintRule {
     // Ignores IBOutlet variables
     if let attributes = node.attributes {
       for attribute in attributes {
-        if (attribute as? AttributeSyntax)?.attributeName.text == "IBOutlet" {
+        if (attribute.as(AttributeSyntax.self))?.attributeName.text == "IBOutlet" {
           return .skipChildren
         }
       }
@@ -53,7 +53,7 @@ public final class NeverUseImplicitlyUnwrappedOptionals: SyntaxLintRule {
   }
 
   func diagnoseImplicitWrapViolation(_ type: TypeSyntax) {
-    guard let violation = type as? ImplicitlyUnwrappedOptionalTypeSyntax else { return }
+    guard let violation = type.as(ImplicitlyUnwrappedOptionalTypeSyntax.self) else { return }
     diagnose(.doNotUseImplicitUnwrapping(identifier: "\(violation.wrappedType)"), on: type)
   }
 }

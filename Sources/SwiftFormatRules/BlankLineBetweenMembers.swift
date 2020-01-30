@@ -43,7 +43,7 @@ public final class BlankLineBetweenMembers: SyntaxFormatRule {
 
     // The first comment may not be "attached" to the first member. Ignore any comments that are
     // separated from the member by a newline.
-    let shouldIncludeLeadingComment = !isLeadingTriviaSeparate(from: firstMember)
+    let shouldIncludeLeadingComment = !isLeadingTriviaSeparate(from: Syntax(firstMember))
     var previousMemberWasSingleLine = firstMember.isSingleLine(
       includingLeadingComment: shouldIncludeLeadingComment,
       sourceLocationConverter: context.sourceLocationConverter
@@ -60,12 +60,12 @@ public final class BlankLineBetweenMembers: SyntaxFormatRule {
         sourceLocationConverter: context.sourceLocationConverter)
 
       let ignoreMember = ignoreSingleLine && isMemberSingleLine
-      if (!previousMemberWasSingleLine || !ignoreMember) && !isLeadingBlankLinePresent(on: member) {
+      if (!previousMemberWasSingleLine || !ignoreMember) && !isLeadingBlankLinePresent(on: Syntax(member)) {
         memberToAdd = replaceTrivia(
           on: memberToAdd,
           token: memberToAdd.firstToken,
           leadingTrivia: blankLinePrefixedTrivia(member.leadingTrivia)
-        ) as! MemberDeclListItemSyntax
+        )
         diagnose(.addBlankLine, on: member)
       }
 
@@ -73,10 +73,10 @@ public final class BlankLineBetweenMembers: SyntaxFormatRule {
 
       // Consider the member single line if the trivia was separate so that non-member-specific
       // comments won't cause blank lines between members that are otherwise single line.
-      previousMemberWasSingleLine = isMemberSingleLine || isLeadingTriviaSeparate(from: memberToAdd)
+      previousMemberWasSingleLine = isMemberSingleLine || isLeadingTriviaSeparate(from: Syntax(memberToAdd))
     }
 
-    return node.withMembers(SyntaxFactory.makeMemberDeclList(membersList))
+    return Syntax(node.withMembers(SyntaxFactory.makeMemberDeclList(membersList)))
   }
 
   /// Returns new trivia with a blank line inserted at the "beginning" of the given trivia, but
@@ -121,23 +121,23 @@ public final class BlankLineBetweenMembers: SyntaxFormatRule {
 
   /// Recursively ensures all nested member types follows the BlankLineBetweenMembers rule.
   func visitNestedDecls(of member: MemberDeclListItemSyntax) -> MemberDeclListItemSyntax {
-    switch member.decl {
-    case let nestedEnum as EnumDeclSyntax:
+    switch Syntax(member.decl).as(SyntaxEnum.self) {
+    case .enumDecl(let nestedEnum):
       let nestedMembers = visit(nestedEnum.members)
-      let newDecl = nestedEnum.withMembers(nestedMembers as? MemberDeclBlockSyntax)
-      return member.withDecl(newDecl)
-    case let nestedStruct as StructDeclSyntax:
+      let newDecl = nestedEnum.withMembers(nestedMembers.as(MemberDeclBlockSyntax.self))
+      return member.withDecl(DeclSyntax(newDecl))
+    case .structDecl(let nestedStruct):
       let nestedMembers = visit(nestedStruct.members)
-      let newDecl = nestedStruct.withMembers(nestedMembers as? MemberDeclBlockSyntax)
-      return member.withDecl(newDecl)
-    case let nestedClass as ClassDeclSyntax:
+      let newDecl = nestedStruct.withMembers(nestedMembers.as(MemberDeclBlockSyntax.self))
+      return member.withDecl(DeclSyntax(newDecl))
+    case .classDecl(let nestedClass):
       let nestedMembers = visit(nestedClass.members)
-      let newDecl = nestedClass.withMembers(nestedMembers as? MemberDeclBlockSyntax)
-      return member.withDecl(newDecl)
-    case let nestedExtension as ExtensionDeclSyntax:
+      let newDecl = nestedClass.withMembers(nestedMembers.as(MemberDeclBlockSyntax.self))
+      return member.withDecl(DeclSyntax(newDecl))
+    case .extensionDecl(let nestedExtension):
       let nestedMembers = visit(nestedExtension.members)
-      let newDecl = nestedExtension.withMembers(nestedMembers as? MemberDeclBlockSyntax)
-      return member.withDecl(newDecl)
+      let newDecl = nestedExtension.withMembers(nestedMembers.as(MemberDeclBlockSyntax.self))
+      return member.withDecl(DeclSyntax(newDecl))
     default:
       return member
     }

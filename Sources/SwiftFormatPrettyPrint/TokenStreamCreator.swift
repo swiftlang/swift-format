@@ -15,16 +15,6 @@ import SwiftFormatConfiguration
 import SwiftFormatCore
 import SwiftSyntax
 
-// FIXME: Remove this once we've completely moved up to a version of SwiftSyntax that has
-// consolidated the TupleExprElement and FunctionCallArgument nodes.
-#if HAS_CONSOLIDATED_TUPLE_AND_FUNCTION_CALL_SYNTAX
-fileprivate typealias FunctionCallArgumentSyntax = TupleExprElementSyntax
-fileprivate typealias FunctionCallArgumentListSyntax = TupleExprElementListSyntax
-#else
-fileprivate typealias TupleExprElementListSyntax = TupleElementListSyntax
-fileprivate typealias TupleExprElementSyntax = TupleElementSyntax
-#endif
-
 /// Visits the nodes of a syntax tree and constructs a linear stream of formatting tokens that
 /// tell the pretty printer how the source text should be laid out.
 private final class TokenStreamCreator: SyntaxVisitor {
@@ -64,8 +54,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
   func makeStream(from node: Syntax) -> [Token] {
     // Because `walk` takes an `inout` argument, and we're a class, we have to do the following
     // dance to pass ourselves in.
-    var mutableSelf = self
-    node.walk(&mutableSelf)
+    self.walk(node)
     defer { tokens = [] }
     return tokens
   }
@@ -114,7 +103,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
   private func insertTokens<Node: SyntaxCollection>(
     _ tokens: Token...,
     betweenElementsOf collectionNode: Node
-  ) where Node.Element: Syntax {
+  ) where Node.Element: SyntaxProtocol {
     for element in collectionNode.dropLast() {
       after(element.lastToken, tokens: tokens)
     }
@@ -148,9 +137,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   // MARK: - Type declaration nodes
 
-  func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
     arrangeTypeDeclBlock(
-      node,
+      Syntax(node),
       attributes: node.attributes,
       modifiers: node.modifiers,
       typeKeyword: node.classKeyword,
@@ -162,9 +151,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
     arrangeTypeDeclBlock(
-      node,
+      Syntax(node),
       attributes: node.attributes,
       modifiers: node.modifiers,
       typeKeyword: node.structKeyword,
@@ -176,9 +165,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
     arrangeTypeDeclBlock(
-      node,
+      Syntax(node),
       attributes: node.attributes,
       modifiers: node.modifiers,
       typeKeyword: node.enumKeyword,
@@ -190,9 +179,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
     arrangeTypeDeclBlock(
-      node,
+      Syntax(node),
       attributes: node.attributes,
       modifiers: node.modifiers,
       typeKeyword: node.protocolKeyword,
@@ -204,12 +193,12 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: ExtensionDeclSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ExtensionDeclSyntax) -> SyntaxVisitorContinueKind {
     guard let lastTokenOfExtendedType = node.extendedType.lastToken else {
       fatalError("ExtensionDeclSyntax.extendedType must have at least one token")
     }
     arrangeTypeDeclBlock(
-      node,
+      Syntax(node),
       attributes: node.attributes,
       modifiers: node.modifiers,
       typeKeyword: node.extensionKeyword,
@@ -260,7 +249,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   // MARK: - Function and function-like declaration nodes (initializers, deinitializers, subscripts)
 
-  func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
     let hasArguments = !node.signature.input.parameterList.isEmpty
 
     // Prioritize keeping ") throws -> <return_type>" together. We can only do this if the function
@@ -293,7 +282,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     }
 
     arrangeFunctionLikeDecl(
-      node,
+      Syntax(node),
       attributes: node.attributes,
       genericWhereClause: node.genericWhereClause,
       body: node.body,
@@ -302,7 +291,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: InitializerDeclSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: InitializerDeclSyntax) -> SyntaxVisitorContinueKind {
     let hasArguments = !node.parameters.parameterList.isEmpty
 
     arrangeParameterClause(node.parameters, forcesBreakBeforeRightParen: node.body != nil)
@@ -320,7 +309,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     before(node.throwsOrRethrowsKeyword, tokens: .break)
 
     arrangeFunctionLikeDecl(
-      node,
+      Syntax(node),
       attributes: node.attributes,
       genericWhereClause: node.genericWhereClause,
       body: node.body,
@@ -329,9 +318,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: DeinitializerDeclSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: DeinitializerDeclSyntax) -> SyntaxVisitorContinueKind {
     arrangeFunctionLikeDecl(
-      node,
+      Syntax(node),
       attributes: node.attributes,
       genericWhereClause: nil,
       body: node.body,
@@ -339,7 +328,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: SubscriptDeclSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: SubscriptDeclSyntax) -> SyntaxVisitorContinueKind {
     let hasArguments = !node.indices.parameterList.isEmpty
 
     before(node.firstToken, tokens: .open)
@@ -387,10 +376,10 @@ private final class TokenStreamCreator: SyntaxVisitor {
   ///
   /// - Parameter node: The syntax node to arrange.
   private func arrangeAccessorOrCodeBlock(_ node: Syntax) {
-    switch node {
-    case let accessorBlock as AccessorBlockSyntax:
+    switch node.as(SyntaxEnum.self) {
+    case .accessorBlock(let accessorBlock):
       arrangeBracesAndContents(of: accessorBlock)
-    case let codeBlock as CodeBlockSyntax:
+    case .codeBlock(let codeBlock):
       arrangeBracesAndContents(of: codeBlock, contentsKeyPath: \.statements)
     default:
       preconditionFailure(
@@ -410,7 +399,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     genericWhereClause: GenericWhereClauseSyntax?,
     body: Node?,
     bodyContentsKeyPath: KeyPath<Node, BodyContents>?
-  ) where BodyContents.Element: Syntax {
+  ) where BodyContents.Element: SyntaxProtocol {
     before(node.firstToken, tokens: .open)
 
     arrangeAttributeList(attributes)
@@ -426,7 +415,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   // MARK: - Property and subscript accessor block nodes
 
-  func visit(_ node: AccessorListSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: AccessorListSyntax) -> SyntaxVisitorContinueKind {
     for child in node.dropLast() {
       // If the child doesn't have a body (it's just the `get`/`set` keyword), then we're in a
       // protocol and we want to let them be placed on the same line if possible. Otherwise, we
@@ -437,19 +426,19 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: AccessorDeclSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: AccessorDeclSyntax) -> SyntaxVisitorContinueKind {
     arrangeAttributeList(node.attributes)
     arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
     return .visitChildren
   }
 
-  func visit(_ node: AccessorParameterSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: AccessorParameterSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
   // MARK: - Control flow statement nodes
 
-  func visit(_ node: IfStmtSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: IfStmtSyntax) -> SyntaxVisitorContinueKind {
     after(node.ifKeyword, tokens: .space)
 
     // Add break groups, using open continuation breaks, around any conditions after the first so
@@ -478,17 +467,17 @@ private final class TokenStreamCreator: SyntaxVisitor {
       // any newlines between `else` and the open brace or a following `if`.
       if let tokenAfterElse = elseKeyword.nextToken, tokenAfterElse.leadingTrivia.hasLineComment {
         after(node.elseKeyword, tokens: .break(.same, size: 1))
-      } else if node.elseBody is IfStmtSyntax {
+      } else if let elseBody = node.elseBody, elseBody.is(IfStmtSyntax.self) {
         after(node.elseKeyword, tokens: .space)
       }
     }
 
-    arrangeBracesAndContents(of: node.elseBody as? CodeBlockSyntax, contentsKeyPath: \.statements)
+    arrangeBracesAndContents(of: node.elseBody?.as(CodeBlockSyntax.self), contentsKeyPath: \.statements)
 
     return .visitChildren
   }
 
-  func visit(_ node: GuardStmtSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: GuardStmtSyntax) -> SyntaxVisitorContinueKind {
     after(node.guardKeyword, tokens: .space)
 
     // Add break groups, using open continuation breaks, around all conditions so that continuations
@@ -508,7 +497,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: ForInStmtSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ForInStmtSyntax) -> SyntaxVisitorContinueKind {
     after(node.labelColon, tokens: .space)
     after(node.forKeyword, tokens: .space)
     after(node.caseKeyword, tokens: .space)
@@ -525,7 +514,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: WhileStmtSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: WhileStmtSyntax) -> SyntaxVisitorContinueKind {
     after(node.labelColon, tokens: .space)
     after(node.whileKeyword, tokens: .space)
 
@@ -534,7 +523,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: RepeatWhileStmtSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: RepeatWhileStmtSyntax) -> SyntaxVisitorContinueKind {
     arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
 
     let whilePrecedingBreak = config.lineBreakBeforeControlFlowKeywords
@@ -545,12 +534,12 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: DoStmtSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: DoStmtSyntax) -> SyntaxVisitorContinueKind {
     arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
     return .visitChildren
   }
 
-  func visit(_ node: CatchClauseSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: CatchClauseSyntax) -> SyntaxVisitorContinueKind {
     let catchPrecedingBreak = config.lineBreakBeforeControlFlowKeywords
       ? Token.break(.same, newlines: .soft) : Token.space
     before(node.catchKeyword, tokens: catchPrecedingBreak)
@@ -561,32 +550,32 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: DeferStmtSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: DeferStmtSyntax) -> SyntaxVisitorContinueKind {
     arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
     return .visitChildren
   }
 
-  func visit(_ node: BreakStmtSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: BreakStmtSyntax) -> SyntaxVisitorContinueKind {
     before(node.label, tokens: .break)
     return .visitChildren
   }
 
-  func visit(_ node: ReturnStmtSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ReturnStmtSyntax) -> SyntaxVisitorContinueKind {
     before(node.expression?.firstToken, tokens: .break)
     return .visitChildren
   }
 
-  func visit(_ node: ThrowStmtSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ThrowStmtSyntax) -> SyntaxVisitorContinueKind {
     before(node.expression.firstToken, tokens: .break)
     return .visitChildren
   }
 
-  func visit(_ node: ContinueStmtSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ContinueStmtSyntax) -> SyntaxVisitorContinueKind {
     before(node.label, tokens: .break)
     return .visitChildren
   }
 
-  func visit(_ node: SwitchStmtSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: SwitchStmtSyntax) -> SyntaxVisitorContinueKind {
     before(node.switchKeyword, tokens: .open)
     after(node.switchKeyword, tokens: .space)
     before(node.leftBrace, tokens: .break(.reset))
@@ -599,7 +588,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: SwitchCaseSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: SwitchCaseSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .break(.same, newlines: .soft))
     after(node.unknownAttr?.lastToken, tokens: .space)
     after(node.label.lastToken, tokens: .break(.reset, size: 0), .break(.open), .open)
@@ -607,7 +596,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: SwitchCaseLabelSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: SwitchCaseLabelSyntax) -> SyntaxVisitorContinueKind {
     before(node.caseKeyword, tokens: .open)
     after(node.caseKeyword, tokens: .space)
 
@@ -634,18 +623,18 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: YieldStmtSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: YieldStmtSyntax) -> SyntaxVisitorContinueKind {
     after(node.yieldKeyword, tokens: .break)
     return .visitChildren
   }
 
   // TODO: - Other nodes (yet to be organized)
 
-  func visit(_ node: DeclNameArgumentsSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: DeclNameArgumentsSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: TupleExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: TupleExprSyntax) -> SyntaxVisitorContinueKind {
     // We'll do nothing if it's a zero-element tuple, because we just want to keep the empty `()`
     // together.
     let elementCount = node.elementList.count
@@ -679,14 +668,14 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: TupleExprElementListSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: TupleExprElementListSyntax) -> SyntaxVisitorContinueKind {
     // Intentionally do nothing here. Since `TupleExprElement`s are used both in tuple expressions
     // and function argument lists, which need to be formatted, differently, those nodes manually
     // loop over the nodes and arrange them in those contexts.
     return .visitChildren
   }
 
-  func visit(_ node: TupleExprElementSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: TupleExprElementSyntax) -> SyntaxVisitorContinueKind {
     // Intentionally do nothing here. Since `TupleExprElement`s are used both in tuple expressions
     // and function argument lists, which need to be formatted, differently, those nodes manually
     // loop over the nodes and arrange them in those contexts.
@@ -703,13 +692,13 @@ private final class TokenStreamCreator: SyntaxVisitor {
     after(node.lastToken, tokens: .close)
   }
 
-  func visit(_ node: ArrayExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ArrayExprSyntax) -> SyntaxVisitorContinueKind {
     after(node.leftSquare, tokens: .break(.open, size: 0), .open)
     before(node.rightSquare, tokens: .break(.close, size: 0), .close)
     return .visitChildren
   }
 
-  func visit(_ node: ArrayElementListSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ArrayElementListSyntax) -> SyntaxVisitorContinueKind {
     insertTokens(.break(.same), betweenElementsOf: node)
 
     // The syntax library can't distinguish an array initializer (where the elements are types) from
@@ -728,19 +717,19 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: ArrayElementSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ArrayElementSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
     after(node.lastToken, tokens: .close)
     return .visitChildren
   }
 
-  func visit(_ node: DictionaryExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: DictionaryExprSyntax) -> SyntaxVisitorContinueKind {
     after(node.leftSquare, tokens: .break(.open, size: 0), .open)
     before(node.rightSquare, tokens: .break(.close, size: 0), .close)
     return .visitChildren
   }
 
-  func visit(_ node: DictionaryElementListSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: DictionaryElementListSyntax) -> SyntaxVisitorContinueKind {
     insertTokens(.break(.same), betweenElementsOf: node)
 
     // The syntax library can't distinguish a dictionary initializer (where the elements are types)
@@ -759,29 +748,29 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: DictionaryTypeSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: DictionaryTypeSyntax) -> SyntaxVisitorContinueKind {
     after(node.colon, tokens: .break)
     return .visitChildren
   }
 
-  func visit(_ node: DictionaryElementSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: DictionaryElementSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
     after(node.colon, tokens: .break)
     after(node.lastToken, tokens: .close)
     return .visitChildren
   }
 
-  func visit(_ node: MemberAccessExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: MemberAccessExprSyntax) -> SyntaxVisitorContinueKind {
     preVisitInsertingContextualBreaks(node)
 
     return .visitChildren
   }
 
-  func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
     preVisitInsertingContextualBreaks(node)
 
-    if let calledMemberAccessExpr = node.calledExpression as? MemberAccessExprSyntax {
-      if let base = calledMemberAccessExpr.base, base is IdentifierExprSyntax {
+    if let calledMemberAccessExpr = node.calledExpression.as(MemberAccessExprSyntax.self) {
+      if let base = calledMemberAccessExpr.base, base.is(IdentifierExprSyntax.self) {
         before(base.firstToken, tokens: .open)
         after(calledMemberAccessExpr.name.lastToken, tokens: .close)
       }
@@ -817,7 +806,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
   ///     right delimiter if a line break occurred after the left delimiter, or false if the right
   ///     delimiter is allowed to hang on the same line as the final argument.
   private func arrangeFunctionCallArgumentList(
-    _ arguments: FunctionCallArgumentListSyntax,
+    _ arguments: TupleExprElementListSyntax,
     leftDelimiter: TokenSyntax?,
     rightDelimiter: TokenSyntax?,
     forcesBreakBeforeRightDelimiter: Bool
@@ -849,7 +838,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
   ///   - node: The tuple expression element.
   ///   - shouldGroup: If true, group around the argument to prefer keeping it together if possible.
   private func arrangeAsFunctionCallArgument(
-    _ node: FunctionCallArgumentSyntax,
+    _ node: TupleExprElementSyntax,
     shouldGroup: Bool
   ) {
     if shouldGroup {
@@ -859,7 +848,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // If we have an open delimiter following the colon, use a space instead of a continuation
     // break so that we don't awkwardly shift the delimiter down and indent it further if it
     // wraps.
-    let tokenAfterColon: Token = startsWithOpenDelimiter(node.expression) ? .space : .break
+    let tokenAfterColon: Token = startsWithOpenDelimiter(Syntax(node.expression)) ? .space : .break
     after(node.colon, tokens: tokenAfterColon)
 
     if let trailingComma = node.trailingComma {
@@ -873,7 +862,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     }
   }
 
-  func visit(_ node: ClosureExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ClosureExprSyntax) -> SyntaxVisitorContinueKind {
     if let signature = node.signature {
       after(node.leftBrace, tokens: .break(.open))
       if node.statements.count > 0 {
@@ -894,14 +883,14 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: ClosureParamSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ClosureParamSyntax) -> SyntaxVisitorContinueKind {
     after(node.trailingComma, tokens: .break(.same))
     return .visitChildren
   }
 
-  func visit(_ node: ClosureSignatureSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ClosureSignatureSyntax) -> SyntaxVisitorContinueKind {
     let consistency: GroupBreakStyle
-    if node.input is ClosureParamListSyntax {
+    if let input = node.input, input.is(ClosureParamListSyntax.self) {
       consistency = argumentListConsistency()
     } else {
       consistency = .inconsistent
@@ -925,13 +914,13 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: ClosureCaptureSignatureSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ClosureCaptureSignatureSyntax) -> SyntaxVisitorContinueKind {
     after(node.leftSquare, tokens: .break(.open, size: 0), .open)
     before(node.rightSquare, tokens: .break(.close, size: 0), .close)
     return .visitChildren
   }
 
-  func visit(_ node: ClosureCaptureItemSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ClosureCaptureItemSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
     after(node.specifier?.lastToken, tokens: .break)
     before(node.assignToken, tokens: .break)
@@ -945,11 +934,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: SubscriptExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: SubscriptExprSyntax) -> SyntaxVisitorContinueKind {
     preVisitInsertingContextualBreaks(node)
 
-    if let calledMemberAccessExpr = node.calledExpression as? MemberAccessExprSyntax {
-      if let base = calledMemberAccessExpr.base, base is IdentifierExprSyntax {
+    if let calledMemberAccessExpr = node.calledExpression.as(MemberAccessExprSyntax.self) {
+      if let base = calledMemberAccessExpr.base, base.is(IdentifierExprSyntax.self) {
         before(base.firstToken, tokens: .open)
         after(calledMemberAccessExpr.name.lastToken, tokens: .close)
       }
@@ -974,7 +963,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: ExpressionSegmentSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ExpressionSegmentSyntax) -> SyntaxVisitorContinueKind {
     // TODO: For now, just use the raw text of the node and don't try to format it deeper. In the
     // future, we should find a way to format the expression but without wrapping so that at least
     // internal whitespace is fixed.
@@ -983,11 +972,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .skipChildren
   }
 
-  func visit(_ node: ObjcKeyPathExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ObjcKeyPathExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: ObjectLiteralExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ObjectLiteralExprSyntax) -> SyntaxVisitorContinueKind {
     arrangeFunctionCallArgumentList(
       node.arguments,
       leftDelimiter: node.leftParen,
@@ -996,7 +985,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: ParameterClauseSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ParameterClauseSyntax) -> SyntaxVisitorContinueKind {
     // Prioritize keeping ") throws -> <return_type>" together. We can only do this if the function
     // has arguments.
     if !node.parameterList.isEmpty && config.prioritizeKeepingFunctionOutputTogether {
@@ -1008,7 +997,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: FunctionParameterSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: FunctionParameterSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
     arrangeAttributeList(node.attributes)
     after(node.colon, tokens: .break)
@@ -1022,16 +1011,16 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: ReturnClauseSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ReturnClauseSyntax) -> SyntaxVisitorContinueKind {
     after(node.arrow, tokens: .space)
     return .visitChildren
   }
 
-  func visit(_ node: IfConfigDeclSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: IfConfigDeclSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: IfConfigClauseSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: IfConfigClauseSyntax) -> SyntaxVisitorContinueKind {
     switch node.poundKeyword.tokenKind {
     case .poundIfKeyword, .poundElseifKeyword:
       after(node.poundKeyword, tokens: .space)
@@ -1073,14 +1062,14 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: MemberDeclBlockSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: MemberDeclBlockSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: MemberDeclListSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: MemberDeclListSyntax) -> SyntaxVisitorContinueKind {
     // Skip ignored items, because the tokens after `item.lastToken` would be ignored and leave
     // unclosed open tokens.
-    for item in node where !shouldFormatterIgnore(node: item) {
+    for item in node where !shouldFormatterIgnore(node: Syntax(item)) {
       before(item.firstToken, tokens: .open)
       let newlines: NewlineBehavior =
         item != node.last && shouldInsertNewline(basedOn: item.semicolon) ? .soft : .elective
@@ -1090,20 +1079,20 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: MemberDeclListItemSyntax) -> SyntaxVisitorContinueKind {
-    if shouldFormatterIgnore(node: node) {
-      appendFormatterIgnored(node: node)
+  override func visit(_ node: MemberDeclListItemSyntax) -> SyntaxVisitorContinueKind {
+    if shouldFormatterIgnore(node: Syntax(node)) {
+      appendFormatterIgnored(node: Syntax(node))
       return .skipChildren
     }
     return .visitChildren
   }
 
-  func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
     after(node.eofToken, tokens: .break(.same, newlines: .soft))
     return .visitChildren
   }
 
-  func visit(_ node: EnumCaseDeclSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: EnumCaseDeclSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
 
     arrangeAttributeList(node.attributes)
@@ -1113,12 +1102,12 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: OperatorDeclSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: OperatorDeclSyntax) -> SyntaxVisitorContinueKind {
     after(node.operatorKeyword, tokens: .break)
     return .visitChildren
   }
 
-  func visit(_ node: OperatorPrecedenceAndTypesSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: OperatorPrecedenceAndTypesSyntax) -> SyntaxVisitorContinueKind {
     // Despite being an `IdentifierListSyntax`, the language grammar currently only allows a single
     // precedence group here, so we don't worry about breaks at any interior commas.
     after(node.colon, tokens: .break(.open))
@@ -1126,7 +1115,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: EnumCaseElementSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: EnumCaseElementSyntax) -> SyntaxVisitorContinueKind {
     after(node.trailingComma, tokens: .break)
 
     if let associatedValue = node.associatedValue {
@@ -1136,16 +1125,16 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: ObjcSelectorExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ObjcSelectorExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: ObjCSelectorSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ObjCSelectorSyntax) -> SyntaxVisitorContinueKind {
     insertTokens(.break(.same, size: 0), betweenElementsOf: node)
     return .visitChildren
   }
 
-  func visit(_ node: PrecedenceGroupDeclSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: PrecedenceGroupDeclSyntax) -> SyntaxVisitorContinueKind {
     after(node.precedencegroupKeyword, tokens: .break)
     after(node.identifier, tokens: .break(.reset))
     after(node.leftBrace, tokens: .break(.open, newlines: .soft))
@@ -1153,41 +1142,41 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: PrecedenceGroupRelationSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: PrecedenceGroupRelationSyntax) -> SyntaxVisitorContinueKind {
     after(node.colon, tokens: .break(.open))
     after(node.lastToken, tokens: .break(.close, newlines: .soft))
     return .visitChildren
   }
 
-  func visit(_ node: PrecedenceGroupAssignmentSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: PrecedenceGroupAssignmentSyntax) -> SyntaxVisitorContinueKind {
     after(node.colon, tokens: .break(.open))
     after(node.lastToken, tokens: .break(.close, newlines: .soft))
     return .visitChildren
   }
 
-  func visit(_ node: PrecedenceGroupNameElementSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: PrecedenceGroupNameElementSyntax) -> SyntaxVisitorContinueKind {
     after(node.trailingComma, tokens: .break(.same))
     return .visitChildren
   }
 
-  func visit(_ node: PrecedenceGroupAssociativitySyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: PrecedenceGroupAssociativitySyntax) -> SyntaxVisitorContinueKind {
     after(node.colon, tokens: .break(.open))
     after(node.lastToken, tokens: .break(.close, newlines: .soft))
     return .visitChildren
   }
 
-  func visit(_ node: AccessLevelModifierSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: AccessLevelModifierSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: CodeBlockSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: CodeBlockSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: CodeBlockItemListSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: CodeBlockItemListSyntax) -> SyntaxVisitorContinueKind {
     // Skip ignored items, because the tokens after `item.lastToken` would be ignored and leave
     // unclosed open tokens.
-    for item in node where !shouldFormatterIgnore(node: item) {
+    for item in node where !shouldFormatterIgnore(node: Syntax(item)) {
       before(item.firstToken, tokens: .open)
       let newlines: NewlineBehavior =
         item != node.last && shouldInsertNewline(basedOn: item.semicolon) ? .soft : .elective
@@ -1197,31 +1186,31 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: CodeBlockItemSyntax) -> SyntaxVisitorContinueKind {
-    if shouldFormatterIgnore(node: node) {
-      appendFormatterIgnored(node: node)
+  override func visit(_ node: CodeBlockItemSyntax) -> SyntaxVisitorContinueKind {
+    if shouldFormatterIgnore(node: Syntax(node)) {
+      appendFormatterIgnored(node: Syntax(node))
       return .skipChildren
     }
     return .visitChildren
   }
 
-  func visit(_ node: GenericParameterClauseSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: GenericParameterClauseSyntax) -> SyntaxVisitorContinueKind {
     after(node.leftAngleBracket, tokens: .break(.open, size: 0), .open(argumentListConsistency()))
     before(node.rightAngleBracket, tokens: .break(.close, size: 0), .close)
     return .visitChildren
   }
 
-  func visit(_ node: ArrayTypeSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ArrayTypeSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: TupleTypeSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: TupleTypeSyntax) -> SyntaxVisitorContinueKind {
     after(node.leftParen, tokens: .break(.open, size: 0), .open)
     before(node.rightParen, tokens: .break(.close, size: 0), .close)
     return .visitChildren
   }
 
-  func visit(_ node: TupleTypeElementSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: TupleTypeElementSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
     after(node.colon, tokens: .break)
     after(node.inOut, tokens: .break)
@@ -1235,7 +1224,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: FunctionTypeSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: FunctionTypeSyntax) -> SyntaxVisitorContinueKind {
     after(node.leftParen, tokens: .break(.open, size: 0), .open)
     before(node.rightParen, tokens: .break(.close, size: 0), .close)
     before(node.throwsOrRethrowsKeyword, tokens: .break)
@@ -1244,28 +1233,28 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: GenericArgumentClauseSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: GenericArgumentClauseSyntax) -> SyntaxVisitorContinueKind {
     after(node.leftAngleBracket, tokens: .break(.open, size: 0), .open)
     before(node.rightAngleBracket, tokens: .break(.close, size: 0), .close)
     return .visitChildren
   }
 
-  func visit(_ node: TuplePatternSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: TuplePatternSyntax) -> SyntaxVisitorContinueKind {
     after(node.leftParen, tokens: .break(.open, size: 0), .open)
     before(node.rightParen, tokens: .break(.close, size: 0), .close)
     return .visitChildren
   }
 
-  func visit(_ node: TryExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: TryExprSyntax) -> SyntaxVisitorContinueKind {
     before(node.expression.firstToken, tokens: .break)
     return .visitChildren
   }
 
-  func visit(_ node: TypeExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: TypeExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: AttributeSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: AttributeSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
     if node.argument != nil {
       // Wrap the attribute's arguments in their own group, so arguments stay together with a higher
@@ -1279,30 +1268,30 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: AvailabilitySpecListSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: AvailabilitySpecListSyntax) -> SyntaxVisitorContinueKind {
     insertTokens(.break(.same, size: 1), betweenElementsOf: node)
     return .visitChildren
   }
 
-  func visit(_ node: AvailabilityLabeledArgumentSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: AvailabilityLabeledArgumentSyntax) -> SyntaxVisitorContinueKind {
     before(node.label, tokens: .open)
     after(node.colon, tokens: .break(.continue, size: 1))
     after(node.value.lastToken, tokens: .close)
     return .visitChildren
   }
 
-  func visit(_ node: AvailabilityVersionRestrictionSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: AvailabilityVersionRestrictionSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
     after(node.platform, tokens: .break(.continue, size: 1))
     after(node.lastToken, tokens: .close)
     return .visitChildren
   }
 
-  func visit(_ node: ElseBlockSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ElseBlockSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: ConditionElementSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ConditionElementSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
     if let comma = node.trailingComma {
       after(comma, tokens: .close, .break(.same))
@@ -1312,22 +1301,22 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: InOutExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: InOutExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: ImportDeclSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ImportDeclSyntax) -> SyntaxVisitorContinueKind {
     after(node.attributes?.lastToken, tokens: .space)
     after(node.importTok, tokens: .space)
     after(node.importKind, tokens: .space)
     return .visitChildren
   }
 
-  func visit(_ node: KeyPathExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: KeyPathExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: TernaryExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: TernaryExprSyntax) -> SyntaxVisitorContinueKind {
     // The order of the .open/.close tokens here is intentional. They are normally paired with the
     // corresponding breaks, but in this case, we want to prioritize keeping the entire `? a : b`
     // part together if some part of the ternary wraps, instead of keeping `c ? a` together and
@@ -1344,7 +1333,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: WhereClauseSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: WhereClauseSyntax) -> SyntaxVisitorContinueKind {
     // We need to special case `where`-clauses associated with `catch` blocks when
     // `lineBreakBeforeControlFlowKeywords == false`, because that's the one situation where we
     // want the `where` keyword to be treated as a continuation; that way, we get this:
@@ -1363,7 +1352,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     //     }
     //
     let wherePrecedingBreak: Token
-    if !config.lineBreakBeforeControlFlowKeywords && node.parent is CatchClauseSyntax {
+    if !config.lineBreakBeforeControlFlowKeywords, let parent = node.parent, parent.is(CatchClauseSyntax.self) {
       wherePrecedingBreak = .break(.continue)
     } else {
       wherePrecedingBreak = .break(.same)
@@ -1374,26 +1363,26 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: DeclModifierSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: DeclModifierSyntax) -> SyntaxVisitorContinueKind {
     after(node.lastToken, tokens: .break)
     return .visitChildren
   }
 
-  func visit(_ node: FunctionSignatureSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: FunctionSignatureSyntax) -> SyntaxVisitorContinueKind {
     before(node.throwsOrRethrowsKeyword, tokens: .break)
     before(node.output?.firstToken, tokens: .break)
     return .visitChildren
   }
 
-  func visit(_ node: MetatypeTypeSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: MetatypeTypeSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: OptionalTypeSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: OptionalTypeSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: SequenceExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: SequenceExprSyntax) -> SyntaxVisitorContinueKind {
     let elementCount = node.elements.count
     assert(elementCount > 0 && elementCount <= 3, "SequenceExpr should have already been folded.")
 
@@ -1480,17 +1469,17 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: AssignmentExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: AssignmentExprSyntax) -> SyntaxVisitorContinueKind {
     // Breaks and spaces are inserted at the `SequenceExpr` level.
     return .visitChildren
   }
 
-  func visit(_ node: BinaryOperatorExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: BinaryOperatorExprSyntax) -> SyntaxVisitorContinueKind {
     // Breaks and spaces are inserted at the `SequenceExpr` level.
     return .visitChildren
   }
 
-  func visit(_ node: AsExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: AsExprSyntax) -> SyntaxVisitorContinueKind {
     // The break before the `as` keyword is inserted at the `SequenceExpr` level so that it is
     // placed in the correct relative position to the group surrounding the cast operator and type
     // expression.
@@ -1498,7 +1487,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: IsExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: IsExprSyntax) -> SyntaxVisitorContinueKind {
     // The break before the `is` keyword is inserted at the `SequenceExpr` level so that it is
     // placed in the correct relative position to the group surrounding the cast operator and type
     // expression.
@@ -1506,18 +1495,18 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: ArrowExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ArrowExprSyntax) -> SyntaxVisitorContinueKind {
     // The break before the `throws` keyword is inserted at the `SequenceExpr` level so that it is
     // placed in the correct relative position to the group surrounding the "operator".
     after(node.throwsToken, tokens: .break)
     return .visitChildren
   }
 
-  func visit(_ node: SuperRefExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: SuperRefExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
     arrangeAttributeList(node.attributes)
 
     if node.bindings.count == 1 {
@@ -1544,7 +1533,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: PatternBindingSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: PatternBindingSyntax) -> SyntaxVisitorContinueKind {
     // If the type annotation and/or the initializer clause need to wrap, we want those
     // continuations to stack to improve readability. So, we need to keep track of how many open
     // breaks we create (so we can close them at the end of the binding) and also keep track of the
@@ -1593,33 +1582,33 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: AsTypePatternSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: AsTypePatternSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: InheritedTypeSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: InheritedTypeSyntax) -> SyntaxVisitorContinueKind {
     after(node.trailingComma, tokens: .break(.same))
     return .visitChildren
   }
 
-  func visit(_ node: IsTypePatternSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: IsTypePatternSyntax) -> SyntaxVisitorContinueKind {
     after(node.isKeyword, tokens: .space)
     return .visitChildren
   }
 
-  func visit(_ node: ObjcNamePieceSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ObjcNamePieceSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: PoundFileExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: PoundFileExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: PoundLineExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: PoundLineExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: TypealiasDeclSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: TypealiasDeclSyntax) -> SyntaxVisitorContinueKind {
     arrangeAttributeList(node.attributes)
 
     after(node.typealiasKeyword, tokens: .break)
@@ -1631,74 +1620,74 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: TypeInitializerClauseSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: TypeInitializerClauseSyntax) -> SyntaxVisitorContinueKind {
     before(node.equal, tokens: .space)
     after(node.equal, tokens: .break)
     return .visitChildren
   }
 
-  func visit(_ node: AttributedTypeSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: AttributedTypeSyntax) -> SyntaxVisitorContinueKind {
     arrangeAttributeList(node.attributes)
     after(node.specifier, tokens: .break)
     return .visitChildren
   }
 
-  func visit(_ node: ExpressionStmtSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ExpressionStmtSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: IdentifierExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: IdentifierExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: NilLiteralExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: NilLiteralExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: PoundErrorDeclSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: PoundErrorDeclSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: SpecializeExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: SpecializeExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: TypeAnnotationSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: TypeAnnotationSyntax) -> SyntaxVisitorContinueKind {
     before(node.type.firstToken, tokens: .open)
     after(node.type.lastToken, tokens: .close)
     return .visitChildren
   }
 
-  func visit(_ node: UnknownPatternSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: UnknownPatternSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: SomeTypeSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: SomeTypeSyntax) -> SyntaxVisitorContinueKind {
     after(node.someSpecifier, tokens: .space)
     return .visitChildren
   }
 
-  func visit(_ node: CompositionTypeSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: CompositionTypeSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: DeclarationStmtSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: DeclarationStmtSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: EnumCasePatternSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: EnumCasePatternSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: FallthroughStmtSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: FallthroughStmtSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: ForcedValueExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ForcedValueExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: GenericArgumentSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: GenericArgumentSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
     if let trailingComma = node.trailingComma {
       after(trailingComma, tokens: .close, .break(.same))
@@ -1708,27 +1697,27 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: OptionalPatternSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: OptionalPatternSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: PoundColumnExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: PoundColumnExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: WildcardPatternSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: WildcardPatternSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: DeclNameArgumentSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: DeclNameArgumentSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: FloatLiteralExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: FloatLiteralExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: GenericParameterSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: GenericParameterSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
     after(node.colon, tokens: .break)
     if let trailingComma = node.trailingComma {
@@ -1739,48 +1728,48 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: PostfixUnaryExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: PostfixUnaryExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: PoundWarningDeclSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: PoundWarningDeclSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: ExpressionPatternSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ExpressionPatternSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: ValueBindingPatternSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ValueBindingPatternSyntax) -> SyntaxVisitorContinueKind {
     after(node.letOrVarKeyword, tokens: .break)
     return .visitChildren
   }
 
-  func visit(_ node: IdentifierPatternSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: IdentifierPatternSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: InitializerClauseSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: InitializerClauseSyntax) -> SyntaxVisitorContinueKind {
     before(node.equal, tokens: .space)
 
     // InitializerClauses that are children of a PatternBindingSyntax are already handled in the
     // latter node, to ensure that continuations stack appropriately.
-    if !(node.parent is PatternBindingSyntax) {
+    if node.parent == nil || !node.parent!.is(PatternBindingSyntax.self) {
       after(node.equal, tokens: .break)
     }
     return .visitChildren
   }
 
-  func visit(_ node: PoundFunctionExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: PoundFunctionExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: StringLiteralExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: StringLiteralExprSyntax) -> SyntaxVisitorContinueKind {
     if node.openQuote.tokenKind == .multilineStringQuote {
       // If it's a multiline string, the last segment of the literal will end with a newline and
       // zero or more whitespace that indicates the amount of whitespace stripped from each line of
       // the string literal.
-      if let lastSegment = node.segments.last as? StringSegmentSyntax,
+      if let lastSegment = node.segments.last?.as(StringSegmentSyntax.self),
         let lastLine
           = lastSegment.content.text.split(separator: "\n", omittingEmptySubsequences: false).last
       {
@@ -1788,7 +1777,10 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
         // Segments may be `StringSegmentSyntax` or `ExpressionSegmentSyntax`; for the purposes of
         // newline handling and whitespace stripping, we only need to handle the former.
-        for case let segment as StringSegmentSyntax in node.segments {
+        for segmentSyntax in node.segments {
+          guard let segment = segmentSyntax.as(StringSegmentSyntax.self) else {
+            continue
+          }
           // Register the content tokens of the segments and the amount of leading whitespace to
           // strip; this will be retrieved when we visit the token.
           pendingMultilineStringSegmentPrefixLengths[segment.content] = prefixCount
@@ -1798,11 +1790,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: StringSegmentSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: StringSegmentSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: AssociatedtypeDeclSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: AssociatedtypeDeclSyntax) -> SyntaxVisitorContinueKind {
     arrangeAttributeList(node.attributes)
 
     after(node.associatedtypeKeyword, tokens: .break)
@@ -1814,15 +1806,15 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: BooleanLiteralExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: BooleanLiteralExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: ElseIfContinuationSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ElseIfContinuationSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: GenericWhereClauseSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: GenericWhereClauseSyntax) -> SyntaxVisitorContinueKind {
     after(node.whereKeyword, tokens: .break(.open))
     after(node.lastToken, tokens: .break(.close, size: 0))
 
@@ -1832,25 +1824,23 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: IntegerLiteralExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: IntegerLiteralExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: PoundDsohandleExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: PoundDsohandleExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: PrefixOperatorExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: PrefixOperatorExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: AccessPathComponentSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: AccessPathComponentSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  // FIXME: Remove once the changes around `GenericRequirementSyntax` and its children have settled.
-  #if !HAS_UNCONSOLIDATED_GENERIC_REQUIREMENTS
-  func visit(_ node: GenericRequirementSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: GenericRequirementSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
     if let trailingComma = node.trailingComma {
       after(trailingComma, tokens: .close, .break(.same))
@@ -1859,72 +1849,55 @@ private final class TokenStreamCreator: SyntaxVisitor {
     }
     return .visitChildren
   }
-  #endif
-
-  func visit(_ node: SameTypeRequirementSyntax) -> SyntaxVisitorContinueKind {
+  
+  override func visit(_ node: SameTypeRequirementSyntax) -> SyntaxVisitorContinueKind {
     before(node.equalityToken, tokens: .break)
     after(node.equalityToken, tokens: .space)
 
-    #if HAS_UNCONSOLIDATED_GENERIC_REQUIREMENTS
-    before(node.firstToken, tokens: .open)
-    if let trailingComma = node.trailingComma {
-      after(trailingComma, tokens: .close, .break(.same))
-    } else {
-      after(node.lastToken, tokens: .close)
-    }
-    #endif
     return .visitChildren
   }
 
-  func visit(_ node: ConformanceRequirementSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ConformanceRequirementSyntax) -> SyntaxVisitorContinueKind {
     after(node.colon, tokens: .break)
 
-    #if HAS_UNCONSOLIDATED_GENERIC_REQUIREMENTS
-    before(node.firstToken, tokens: .open)
-    if let trailingComma = node.trailingComma {
-      after(trailingComma, tokens: .close, .break(.same))
-    } else {
-      after(node.lastToken, tokens: .close)
-    }
-    #endif
     return .visitChildren
   }
 
-  func visit(_ node: TuplePatternElementSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: TuplePatternElementSyntax) -> SyntaxVisitorContinueKind {
     after(node.trailingComma, tokens: .break(.same))
     return .visitChildren
   }
 
-  func visit(_ node: MemberTypeIdentifierSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: MemberTypeIdentifierSyntax) -> SyntaxVisitorContinueKind {
     before(node.period, tokens: .break(.continue, size: 0))
     return .visitChildren
   }
 
-  func visit(_ node: OptionalChainingExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: OptionalChainingExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: SimpleTypeIdentifierSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: SimpleTypeIdentifierSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: AvailabilityConditionSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: AvailabilityConditionSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: DiscardAssignmentExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: DiscardAssignmentExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: EditorPlaceholderExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: EditorPlaceholderExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: SymbolicReferenceExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: SymbolicReferenceExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: TypeInheritanceClauseSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: TypeInheritanceClauseSyntax) -> SyntaxVisitorContinueKind {
     after(node.colon, tokens: .break(.open, size: 1))
     before(node.inheritedTypeCollection.firstToken, tokens: .open)
     after(node.inheritedTypeCollection.lastToken, tokens: .close)
@@ -1932,24 +1905,24 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: UnresolvedPatternExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: UnresolvedPatternExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: CompositionTypeElementSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: CompositionTypeElementSyntax) -> SyntaxVisitorContinueKind {
     before(node.ampersand, tokens: .break)
     after(node.ampersand, tokens: .space)
     return .visitChildren
   }
 
-  func visit(_ node: MatchingPatternConditionSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: MatchingPatternConditionSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
     after(node.caseKeyword, tokens: .break)
     after(node.lastToken, tokens: .close)
     return .visitChildren
   }
 
-  func visit(_ node: OptionalBindingConditionSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: OptionalBindingConditionSyntax) -> SyntaxVisitorContinueKind {
     after(node.letOrVarKeyword, tokens: .break)
 
     if let typeAnnotation = node.typeAnnotation {
@@ -1960,23 +1933,23 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  func visit(_ node: ImplicitlyUnwrappedOptionalTypeSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ImplicitlyUnwrappedOptionalTypeSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  func visit(_ node: UnknownDeclSyntax) -> SyntaxVisitorContinueKind {
-    verbatimToken(node)
+  override func visit(_ node: UnknownDeclSyntax) -> SyntaxVisitorContinueKind {
+    verbatimToken(Syntax(node))
     // Visiting children is not needed here.
     return .skipChildren
   }
 
-  func visit(_ node: UnknownStmtSyntax) -> SyntaxVisitorContinueKind {
-    verbatimToken(node)
+  override func visit(_ node: UnknownStmtSyntax) -> SyntaxVisitorContinueKind {
+    verbatimToken(Syntax(node))
     // Visiting children is not needed here.
     return .skipChildren
   }
 
-  func visit(_ token: TokenSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ token: TokenSyntax) -> SyntaxVisitorContinueKind {
     // Arrange the tokens and trivia such that before tokens that start a new "scope" (which may
     // increase indentation) are inserted in the stream *before* the leading trivia, but tokens
     // that end an existing "scope" (which may reduce indentation) are inserted *after* the leading
@@ -2165,7 +2138,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
   private func areBracesCompletelyEmpty<Node: BracedSyntax, BodyContents: SyntaxCollection>(
     _ node: Node,
     contentsKeyPath: KeyPath<Node, BodyContents>
-  ) -> Bool where BodyContents.Element: Syntax {
+  ) -> Bool where BodyContents.Element: SyntaxProtocol {
     // If the collection is empty, then any comments that might be present in the block must be
     // leading trivia of the right brace.
     let commentPrecedesRightBrace = node.rightBrace.leadingTrivia.numberOfComments > 0
@@ -2250,7 +2223,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     of node: Node?,
     contentsKeyPath: KeyPath<Node, BodyContents>?,
     shouldResetBeforeLeftBrace: Bool = true
-  ) where BodyContents.Element: Syntax {
+  ) where BodyContents.Element: SyntaxProtocol {
     guard let node = node, let contentsKeyPath = contentsKeyPath else { return }
 
     if shouldResetBeforeLeftBrace {
@@ -2656,7 +2629,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   /// Returns true if open/close breaks should be inserted around the entire function call argument
   /// list.
-  private func shouldGroupAroundArgumentList(_ arguments: FunctionCallArgumentListSyntax) -> Bool {
+  private func shouldGroupAroundArgumentList(_ arguments: TupleExprElementListSyntax) -> Bool {
     let argumentCount = arguments.count
 
     // If there are no arguments, there's no reason to break.
@@ -2673,10 +2646,10 @@ private final class TokenStreamCreator: SyntaxVisitor {
   /// - Parameters:
   ///   - expr: An expression that includes opening and closing delimiters and arguments.
   ///   - argumentListPath: A key path for accessing the expression's function call argument list.
-  private func mustBreakBeforeClosingDelimiter<T: ExprSyntax>(
-    of expr: T, argumentListPath: KeyPath<T, FunctionCallArgumentListSyntax>
+  private func mustBreakBeforeClosingDelimiter<T: ExprSyntaxProtocol>(
+    of expr: T, argumentListPath: KeyPath<T, TupleExprElementListSyntax>
   ) -> Bool {
-    guard expr.parent is MemberAccessExprSyntax else { return false }
+    guard let parent = expr.parent, parent.is(MemberAccessExprSyntax.self) else { return false }
     let argumentList = expr[keyPath: argumentListPath]
 
     // When there's a single compact argument, there is no extra indentation for the argument and
@@ -2689,12 +2662,12 @@ private final class TokenStreamCreator: SyntaxVisitor {
   ///
   /// This is true for any argument list that contains a single argument (labeled or unlabeled) that
   /// is an array, dictionary, or closure literal.
-  func isCompactSingleFunctionCallArgument(_ argumentList: FunctionCallArgumentListSyntax) -> Bool {
+  func isCompactSingleFunctionCallArgument(_ argumentList: TupleExprElementListSyntax) -> Bool {
     guard argumentList.count == 1 else { return false }
 
     let expression = argumentList.first!.expression
-    return expression is ArrayExprSyntax || expression is DictionaryExprSyntax
-      || expression is ClosureExprSyntax
+    return expression.is(ArrayExprSyntax.self) || expression.is(DictionaryExprSyntax.self)
+      || expression.is(ClosureExprSyntax.self)
   }
 
   /// Returns a value indicating whether a statement or member declaration should have a newline
@@ -2721,8 +2694,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
   private func maybeGroupAroundSubexpression(
     _ expr: ExprSyntax, combiningOperator operatorExpr: ExprSyntax? = nil
   ) {
-    switch expr {
-    case is MemberAccessExprSyntax, is SubscriptExprSyntax:
+    switch Syntax(expr).as(SyntaxEnum.self) {
+    case .memberAccessExpr, .subscriptExpr:
       before(expr.firstToken, tokens: .open)
       after(expr.lastToken, tokens: .close)
     default:
@@ -2733,7 +2706,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // function call so that the callee and open parenthesis can remain on the same line, if they
     // fit. This is a frequent enough case that the outcome looks better with the exception in
     // place.
-    if expr is FunctionCallExprSyntax,
+    if expr.is(FunctionCallExprSyntax.self),
       let operatorExpr = operatorExpr, !isAssigningOperator(operatorExpr)
     {
       before(expr.firstToken, tokens: .open)
@@ -2745,14 +2718,14 @@ private final class TokenStreamCreator: SyntaxVisitor {
   /// that are known to wrap an expressions, e.g. try expressions, are handled by checking the
   /// expression that they contain.
   private func isCompoundExpression(_ expr: ExprSyntax) -> Bool {
-    switch expr {
-    case let sequenceExpr as SequenceExprSyntax:
+    switch Syntax(expr).as(SyntaxEnum.self) {
+    case .sequenceExpr(let sequenceExpr):
       return sequenceExpr.elements.count > 1
-    case is TernaryExprSyntax:
+    case .ternaryExpr:
       return true
-    case let tryExpr as TryExprSyntax:
+    case .tryExpr(let tryExpr):
       return isCompoundExpression(tryExpr.expression)
-    case let tupleExpr as TupleExprSyntax where tupleExpr.elementList.count == 1:
+    case .tupleExpr(let tupleExpr) where tupleExpr.elementList.count == 1:
       return isCompoundExpression(tupleExpr.elementList.first!.expression)
     default:
       return false
@@ -2765,10 +2738,10 @@ private final class TokenStreamCreator: SyntaxVisitor {
   /// Assignment is defined as either being an assignment operator (i.e. `=`) or any operator that
   /// uses "assignment" precedence.
   private func isAssigningOperator(_ operatorExpr: ExprSyntax) -> Bool {
-    if operatorExpr is AssignmentExprSyntax {
+    if operatorExpr.is(AssignmentExprSyntax.self) {
       return true
     }
-    if let binaryOperator = operatorExpr as? BinaryOperatorExprSyntax {
+    if let binaryOperator = operatorExpr.as(BinaryOperatorExprSyntax.self) {
       let operatorText = binaryOperator.operatorToken.text
       if let precedence = operatorContext.infixOperator(named: operatorText)?.precedenceGroup,
         precedence === operatorContext.precedenceGroup(named: .assignment)
@@ -2787,12 +2760,12 @@ private final class TokenStreamCreator: SyntaxVisitor {
   /// - Returns: The parenthesized leftmost subexpression, or nil if the leftmost subexpression was
   ///   not parenthesized.
   private func parenthesizedLeftmostExpr(of expr: ExprSyntax) -> TupleExprSyntax? {
-    switch expr {
-    case let tupleExpr as TupleExprSyntax where tupleExpr.elementList.count == 1:
+    switch Syntax(expr).as(SyntaxEnum.self) {
+    case .tupleExpr(let tupleExpr) where tupleExpr.elementList.count == 1:
       return tupleExpr
-    case let sequenceExpr as SequenceExprSyntax:
+    case .sequenceExpr(let sequenceExpr):
       return parenthesizedLeftmostExpr(of: sequenceExpr.elements.first!)
-    case let ternaryExpr as TernaryExprSyntax:
+    case .ternaryExpr(let ternaryExpr):
       return parenthesizedLeftmostExpr(of: ternaryExpr.conditionExpression)
     default:
       return nil
@@ -2819,7 +2792,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     //
     // We also want to reset after undoing the stacked indentation so that we have a visual
     // indication that the subexpression has ended.
-    if let binaryOperator = operatorExpr as? BinaryOperatorExprSyntax {
+    if let binaryOperator = operatorExpr?.as(BinaryOperatorExprSyntax.self) {
       let operatorText = binaryOperator.operatorToken.text
       if let precedence = operatorContext.infixOperator(named: operatorText)?.precedenceGroup,
         precedence === operatorContext.precedenceGroup(named: .logicalConjunction)
@@ -2831,7 +2804,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
     // If the right-hand-side is a ternary expression, stack indentation around the condition so
     // that it is indented relative to the `?` and `:` tokens.
-    if let ternaryExpr = rhs as? TernaryExprSyntax {
+    if let ternaryExpr = rhs.as(TernaryExprSyntax.self) {
       return (unindentingNode: ternaryExpr.conditionExpression, shouldReset: false)
     }
 
@@ -2839,7 +2812,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // indentation around the operator and those parentheses. We don't need to reset here because
     // the parentheses are sufficient to provide a visual indication of the nesting relationship.
     if let parenthesizedExpr = parenthesizedLeftmostExpr(of: rhs) {
-      return (unindentingNode: parenthesizedExpr, shouldReset: false)
+      return (unindentingNode: ExprSyntax(parenthesizedExpr), shouldReset: false)
     }
 
     // Otherwise, don't stack--use regular continuation breaks instead.
@@ -2856,7 +2829,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // Note that we look at the operator itself to make this determination, not the token kind.
     // The token kind (spaced or unspaced operator) represents how the *user* wrote it, and we want
     // to ignore that and apply our own rules.
-    if let binaryOperator = operatorExpr as? BinaryOperatorExprSyntax {
+    if let binaryOperator = operatorExpr.as(BinaryOperatorExprSyntax.self) {
       let token = binaryOperator.operatorToken
       if let precedence = operatorContext.infixOperator(named: token.text)?.precedenceGroup,
         precedence === operatorContext.precedenceGroup(named: .rangeFormation)
@@ -2921,17 +2894,17 @@ private final class TokenStreamCreator: SyntaxVisitor {
   /// Visits the given expression node and all of the nested expression nodes, inserting tokens
   /// necessary for contextual breaking throughout the expression. Records the nodes that were
   /// visited so that they can be skipped later.
-  private func preVisitInsertingContextualBreaks<T: ExprSyntax & Equatable>(_ expr: T) {
+  private func preVisitInsertingContextualBreaks<T: ExprSyntaxProtocol & Equatable>(_ expr: T) {
     if !hasPreVisited(expr) {
-      let (visited, _, _) = insertContextualBreaks(expr, isTopLevel: true)
+      let (visited, _, _) = insertContextualBreaks(ExprSyntax(expr), isTopLevel: true)
       preVisitedExprs.append(contentsOf: visited)
     }
   }
 
   /// Returns whether the given expression node has been pre-visited, from a parent expression.
-  private func hasPreVisited<T: ExprSyntax & Equatable>(_ expr: T) -> Bool {
+  private func hasPreVisited<T: ExprSyntaxProtocol & Equatable>(_ expr: T) -> Bool {
     for item in preVisitedExprs {
-      if item == expr { return true }
+      if item == ExprSyntax(expr) { return true }
     }
     return false
   }
@@ -2942,11 +2915,12 @@ private final class TokenStreamCreator: SyntaxVisitor {
   private func insertContextualBreaks(_ expr: ExprSyntax, isTopLevel: Bool) -> (
     [ExprSyntax], hasCompoundExpression: Bool, hasMemberAccess: Bool
   ) {
-    if let memberAccessExpr = expr as? MemberAccessExprSyntax {
+    if let memberAccessExpr = expr.as(MemberAccessExprSyntax.self) {
       // When the member access is part of a calling expression, the break before the dot is
       // inserted when visiting the parent node instead so that the break is inserted before any
       // scoping tokens (e.g. `contextualBreakingStart`, `open`).
-      if memberAccessExpr.base != nil && !(expr.parent is CallingExprSyntax) {
+      if memberAccessExpr.base != nil &&
+          expr.parent?.isProtocol(CallingExprSyntaxProtocol.self) != true {
         before(memberAccessExpr.dot, tokens: .break(.contextual, size: 0))
       }
       let children: [ExprSyntax]
@@ -2961,7 +2935,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
         after(expr.lastToken, tokens: .contextualBreakingEnd)
       }
       return ([expr] + children, hasCompoundExpression, true)
-    } else if let callingExpr = expr as? CallingExprSyntax {
+    } else if let callingExpr = expr.asProtocol(CallingExprSyntaxProtocol.self) {
       let calledExpression = callingExpr.calledExpression
       let (children, hasCompoundExpression, hasMemberAccess) =
         insertContextualBreaks(calledExpression, isTopLevel: false)
@@ -2974,7 +2948,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
       let afterTokens: [Token] =
         shouldGroup ? [.contextualBreakingEnd, .close] : [.contextualBreakingEnd]
 
-      if let calledMemberAccessExpr = calledExpression as? MemberAccessExprSyntax {
+      if let calledMemberAccessExpr = calledExpression.as(MemberAccessExprSyntax.self) {
         if calledMemberAccessExpr.base != nil {
           before(calledMemberAccessExpr.dot, tokens: [.break(.contextual, size: 0)])
         }
@@ -2996,7 +2970,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // children nodes.
     before(expr.firstToken, tokens: .contextualBreakingStart)
     after(expr.lastToken, tokens: .contextualBreakingEnd)
-    let hasCompoundExpression = !(expr is IdentifierExprSyntax)
+    let hasCompoundExpression = !expr.is(IdentifierExprSyntax.self)
     return ([expr], hasCompoundExpression, false)
   }
 }
@@ -3024,7 +2998,7 @@ class SequenceExprFoldingRewriter: SyntaxRewriter {
 
   override func visit(_ node: SequenceExprSyntax) -> ExprSyntax {
     let rewrittenBySuper = super.visit(node)
-    if let sequence = rewrittenBySuper as? SequenceExprSyntax {
+    if let sequence = rewrittenBySuper.as(SequenceExprSyntax.self) {
       return sequence.folded(context: operatorContext)
     } else {
       return rewrittenBySuper
@@ -3042,29 +3016,29 @@ class CommentMovingRewriter: SyntaxRewriter {
   var rewriteTokenTriviaMap: [TokenSyntax: Trivia] = [:]
 
   override func visit(_ node: CodeBlockItemSyntax) -> Syntax {
-    if shouldFormatterIgnore(node: node) {
-      return node
+    if shouldFormatterIgnore(node: Syntax(node)) {
+      return Syntax(node)
     }
     return super.visit(node)
   }
 
   override func visit(_ node: MemberDeclListItemSyntax) -> Syntax {
-    if shouldFormatterIgnore(node: node) {
-      return node
+    if shouldFormatterIgnore(node: Syntax(node)) {
+      return Syntax(node)
     }
     return super.visit(node)
   }
 
   override func visit(_ token: TokenSyntax) -> Syntax {
     if let rewrittenTrivia = rewriteTokenTriviaMap[token] {
-      return token.withLeadingTrivia(rewrittenTrivia)
+      return Syntax(token.withLeadingTrivia(rewrittenTrivia))
     }
-    return token
+    return Syntax(token)
   }
 
   override func visit(_ node: SequenceExprSyntax) -> ExprSyntax {
     for element in node.elements {
-      if let binaryOperatorExpr = element as? BinaryOperatorExprSyntax,
+      if let binaryOperatorExpr = element.as(BinaryOperatorExprSyntax.self),
         let followingToken = binaryOperatorExpr.operatorToken.nextToken,
         followingToken.leadingTrivia.hasLineComment
       {
@@ -3212,9 +3186,27 @@ extension NewlineBehavior {
 }
 
 /// Common protocol implemented by expression syntax types that support calling another expression.
-protocol CallingExprSyntax: Syntax {
+protocol CallingExprSyntaxProtocol: ExprSyntaxProtocol {
   var calledExpression: ExprSyntax { get }
 }
 
-extension FunctionCallExprSyntax: CallingExprSyntax { }
-extension SubscriptExprSyntax: CallingExprSyntax { }
+extension FunctionCallExprSyntax: CallingExprSyntaxProtocol { }
+extension SubscriptExprSyntax: CallingExprSyntaxProtocol { }
+
+extension Syntax {
+  func asProtocol(_: CallingExprSyntaxProtocol.Protocol) -> CallingExprSyntaxProtocol? {
+    return self.asProtocol(SyntaxProtocol.self) as? CallingExprSyntaxProtocol
+  }
+  func isProtocol(_: CallingExprSyntaxProtocol.Protocol) -> Bool {
+    return self.asProtocol(CallingExprSyntaxProtocol.self) != nil
+  }
+}
+
+extension ExprSyntax {
+  func asProtocol(_: CallingExprSyntaxProtocol.Protocol) -> CallingExprSyntaxProtocol? {
+    return Syntax(self).asProtocol(SyntaxProtocol.self) as? CallingExprSyntaxProtocol
+  }
+  func isProtocol(_: CallingExprSyntaxProtocol.Protocol) -> Bool {
+    return self.asProtocol(CallingExprSyntaxProtocol.self) != nil
+  }
+}

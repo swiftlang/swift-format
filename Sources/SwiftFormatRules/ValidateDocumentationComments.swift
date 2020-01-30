@@ -26,12 +26,12 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
 
   public override func visit(_ node: InitializerDeclSyntax) -> SyntaxVisitorContinueKind {
     return checkFunctionLikeDocumentation(
-      node, name: "init", parameters: node.parameters.parameterList)
+      DeclSyntax(node), name: "init", parameters: node.parameters.parameterList)
   }
 
   public override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
     return checkFunctionLikeDocumentation(
-      node, name: node.identifier.text, parameters: node.signature.input.parameterList,
+      DeclSyntax(node), name: node.identifier.text, parameters: node.signature.input.parameterList,
       returnClause: node.signature.output)
   }
 

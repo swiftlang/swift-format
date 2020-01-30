@@ -14,20 +14,6 @@ import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
-// FIXME: Remove this once we've completely moved up to a version of SwiftSyntax that has
-// consolidated the TupleExprElement and FunctionCallArgument nodes.
-#if HAS_CONSOLIDATED_TUPLE_AND_FUNCTION_CALL_SYNTAX
-fileprivate typealias FunctionCallArgumentSyntax = TupleExprElementSyntax
-
-extension SyntaxFactory {
-  fileprivate static func makeFunctionCallArgumentList(_ arguments: [TupleExprElementSyntax])
-    -> TupleExprElementListSyntax
-  {
-    return makeTupleExprElementList(arguments)
-  }
-}
-#endif
-
 /// Redundant labels are forbidden in case patterns.
 ///
 /// In practice, *all* case pattern labels should be redundant.
@@ -43,24 +29,24 @@ public final class NoLabelsInCasePatterns: SyntaxFormatRule {
 
     var newCaseItems: [CaseItemSyntax] = []
     for item in node.caseItems {
-      guard let expPat = item.pattern as? ExpressionPatternSyntax else {
+      guard let expPat = item.pattern.as(ExpressionPatternSyntax.self) else {
         newCaseItems.append(item)
         continue
       }
-      guard let funcCall = expPat.expression as? FunctionCallExprSyntax else {
+      guard let funcCall = expPat.expression.as(FunctionCallExprSyntax.self) else {
         newCaseItems.append(item)
         continue
       }
 
       // Search function call argument list for violations
-      var newArgs: [FunctionCallArgumentSyntax] = []
+      var newArgs: [TupleExprElementSyntax] = []
       for argument in funcCall.argumentList {
         guard let label = argument.label else {
           newArgs.append(argument)
           continue
         }
-        guard let unresolvedPat = argument.expression as? UnresolvedPatternExprSyntax,
-          let valueBinding = unresolvedPat.pattern as? ValueBindingPatternSyntax
+        guard let unresolvedPat = argument.expression.as(UnresolvedPatternExprSyntax.self),
+          let valueBinding = unresolvedPat.pattern.as(ValueBindingPatternSyntax.self)
         else {
           newArgs.append(argument)
           continue
@@ -76,14 +62,14 @@ public final class NoLabelsInCasePatterns: SyntaxFormatRule {
         newArgs.append(argument.withLabel(nil).withColon(nil))
       }
 
-      let newArgList = SyntaxFactory.makeFunctionCallArgumentList(newArgs)
+      let newArgList = SyntaxFactory.makeTupleExprElementList(newArgs)
       let newFuncCall = funcCall.withArgumentList(newArgList)
-      let newExpPat = expPat.withExpression(newFuncCall)
-      let newItem = item.withPattern(newExpPat)
+      let newExpPat = expPat.withExpression(ExprSyntax(newFuncCall))
+      let newItem = item.withPattern(PatternSyntax(newExpPat))
       newCaseItems.append(newItem)
     }
     let newCaseItemList = SyntaxFactory.makeCaseItemList(newCaseItems)
-    return node.withCaseItems(newCaseItemList)
+    return Syntax(node.withCaseItems(newCaseItemList))
   }
 }
 

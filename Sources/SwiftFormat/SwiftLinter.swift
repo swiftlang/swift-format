@@ -78,8 +78,8 @@ public final class SwiftLinter {
     let context = Context(
       configuration: configuration, diagnosticEngine: diagnosticEngine, fileURL: url,
       sourceFileSyntax: syntax)
-    var pipeline = LintPipeline(context: context)
-    syntax.walk(&pipeline)
+    let pipeline = LintPipeline(context: context)
+    pipeline.walk(Syntax(syntax))
 
     if debugOptions.contains(.disablePrettyPrint) {
       return
@@ -91,7 +91,7 @@ public final class SwiftLinter {
     let printer = PrettyPrinter(
       context: context,
       operatorContext: operatorContext,
-      node: syntax,
+      node: Syntax(syntax),
       printTokenStream: debugOptions.contains(.dumpTokenStream),
       whitespaceOnly: true)
     let formatted = printer.prettyPrint()

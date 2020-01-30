@@ -32,7 +32,7 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
     for memberItem in node.members.members {
       let member = memberItem.decl
       // Collect all stored variables into a list
-      if let varDecl = member as? VariableDeclSyntax {
+      if let varDecl = member.as(VariableDeclSyntax.self) {
         guard let modifiers = varDecl.modifiers else {
           storedProperties.append(varDecl)
           continue
@@ -40,7 +40,7 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
         guard !modifiers.has(modifier: "static") else { continue }
         storedProperties.append(varDecl)
         // Collect any possible redundant initializers into a list
-      } else if let initDecl = member as? InitializerDeclSyntax {
+      } else if let initDecl = member.as(InitializerDeclSyntax.self) {
         guard initDecl.modifiers == nil || initDecl.modifiers!.has(modifier: "internal") else {
           continue
         }
@@ -70,7 +70,7 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
     // The synthesized memberwise initializer(s) are only created when there are no initializers.
     // If there are other initializers that cannot be replaced by a synthesized memberwise
     // initializer, then all of the initializers must remain.
-    let initializersCount = node.members.members.filter { $0.decl is InitializerDeclSyntax }.count
+    let initializersCount = node.members.members.filter { $0.decl.is(InitializerDeclSyntax.self) }.count
     if extraneousInitializers.count == initializersCount {
       extraneousInitializers.forEach { diagnose(.removeRedundantInitializer, on: $0) }
     }
@@ -122,22 +122,22 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
 
     var statements: [String] = []
     for statement in initBody.statements {
-      guard let exp = statement.item as? SequenceExprSyntax else { return false }
+      guard let exp = statement.item.as(SequenceExprSyntax.self) else { return false }
       var leftName = ""
       var rightName = ""
 
       for element in exp.elements {
-        switch element {
-        case let element as MemberAccessExprSyntax:
+        switch Syntax(element).as(SyntaxEnum.self) {
+        case .memberAccessExpr(let element):
           guard let base = element.base,
             base.description.trimmingCharacters(in: .whitespacesAndNewlines) == "self"
           else {
             return false
           }
           leftName = element.name.text
-        case let element as AssignmentExprSyntax:
+        case .assignmentExpr(let element):
           guard element.assignToken.tokenKind == .equal else { return false }
-        case let element as IdentifierExprSyntax:
+        case .identifierExpr(let element):
           rightName = element.identifier.text
         default:
           return false

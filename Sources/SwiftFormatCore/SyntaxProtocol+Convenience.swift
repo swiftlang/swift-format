@@ -12,13 +12,13 @@
 
 import SwiftSyntax
 
-extension Syntax {
+extension SyntaxProtocol {
   /// Walks up from the current node to find the nearest node that is an
   /// Expr, Stmt, or Decl.
   public var containingExprStmtOrDecl: Syntax? {
-    var node: Syntax? = self
+    var node: Syntax? = Syntax(self)
     while let parent = node?.parent {
-      if parent is ExprSyntax || parent is StmtSyntax || parent is DeclSyntax {
+      if parent.is(ExprSyntax.self) || parent.is(StmtSyntax.self) || parent.is(DeclSyntax.self) {
         return parent
       }
       node = parent
@@ -120,36 +120,11 @@ extension Syntax {
 }
 
 extension SyntaxCollection {
-
-  /// Indicates whether the syntax collection is empty.
-  public var isEmpty: Bool {
-    var iterator = makeIterator()
-    return iterator.next() == nil
-  }
-
-  /// The first element in the syntax collection, or nil if it is empty.
-  public var first: Element? {
-    var iterator = makeIterator()
-    guard let first = iterator.next() else { return nil }
-    return first
-  }
-
   /// The first element in the syntax collection if it is the *only* element, or nil otherwise.
   public var firstAndOnly: Element? {
     var iterator = makeIterator()
     guard let first = iterator.next() else { return nil }
     guard iterator.next() == nil else { return nil }
     return first
-  }
-
-  /// The last element in the syntax collection, or nil if it is empty.
-  ///
-  /// TODO: This is currently O(n). We should make the syntax collections `BidirectionalCollection`
-  /// instead of `Sequence` so that we can provide these operations more efficiently.
-  public var last: Element? {
-    var last: Element? = nil
-    var iterator = makeIterator()
-    while let current = iterator.next() { last = current }
-    return last
   }
 }

@@ -37,7 +37,7 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
     }
 
     for element in node {
-      guard let switchCase = element as? SwitchCaseSyntax else {
+      guard let switchCase = element.as(SwitchCaseSyntax.self) else {
         // If the element isn't a `SwitchCaseSyntax`, it might be an `#if` block surrounding some
         // conditional cases. Just add it to the list of new cases and then reset our current list
         // of violations because this partitions the cases into sets that we can't merge between.
@@ -46,7 +46,7 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
         continue
       }
 
-      if isFallthroughOnly(switchCase), let label = switchCase.label as? SwitchCaseLabelSyntax {
+      if isFallthroughOnly(switchCase), let label = switchCase.label.as(SwitchCaseLabelSyntax.self) {
         // If the case is fallthrough-only, store it as a violation that we will merge later.
         diagnose(.collapseCase(name: "\(label)"), on: switchCase)
         fallthroughOnlyCases.append(switchCase)
@@ -64,7 +64,7 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
         // if any of the patterns in those cases have side effects, removing those cases would
         // change the program's behavior. Nobody should ever write code like this, but we don't want
         // to risk changing behavior just by reformatting.
-        guard switchCase.label is SwitchCaseLabelSyntax else {
+        guard switchCase.label.is(SwitchCaseLabelSyntax.self) else {
           flushViolations()
           newChildren.append(visit(switchCase))
           continue
@@ -93,7 +93,7 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
     // anything.
     flushViolations()
 
-    return SyntaxFactory.makeSwitchCaseList(newChildren)
+    return Syntax(SyntaxFactory.makeSwitchCaseList(newChildren))
   }
 
   /// Returns whether the given `SwitchCaseSyntax` contains only a fallthrough statement.
@@ -102,7 +102,7 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
   private func isFallthroughOnly(_ switchCase: SwitchCaseSyntax) -> Bool {
     // When there are any additional or non-fallthrough statements, it isn't only a fallthrough.
     guard let onlyStatement = switchCase.statements.firstAndOnly,
-      onlyStatement.item is FallthroughStmtSyntax
+      onlyStatement.item.is(FallthroughStmtSyntax.self)
     else {
       return false
     }
@@ -136,7 +136,7 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
   {
     var newCaseItems: [CaseItemSyntax] = []
 
-    for label in violations.lazy.compactMap({ $0.label as? SwitchCaseLabelSyntax }) {
+    for label in violations.lazy.compactMap({ $0.label.as(SwitchCaseLabelSyntax.self) }) {
       let caseItems = Array(label.caseItems)
 
       // We can blindly append all but the last case item because they must already have a trailing
@@ -148,12 +148,12 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
           SyntaxFactory.makeCommaToken(trailingTrivia: .spaces(1))))
     }
 
-    let validCaseLabel = validCase.label as! SwitchCaseLabelSyntax
+    let validCaseLabel = validCase.label.as(SwitchCaseLabelSyntax.self)!
     newCaseItems.append(contentsOf: validCaseLabel.caseItems)
 
-    return validCase.withLabel(
-      validCaseLabel.withCaseItems(
-        SyntaxFactory.makeCaseItemList(newCaseItems)))
+    let label = validCaseLabel.withCaseItems(
+      SyntaxFactory.makeCaseItemList(newCaseItems))
+    return validCase.withLabel(Syntax(label))
   }
 }
 

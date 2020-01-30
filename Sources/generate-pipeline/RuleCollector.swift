@@ -83,11 +83,11 @@ final class RuleCollector {
     let members: MemberDeclListSyntax
     let maybeInheritanceClause: TypeInheritanceClauseSyntax?
 
-    if let classDecl = statement.item as? ClassDeclSyntax {
+    if let classDecl = statement.item.as(ClassDeclSyntax.self) {
       typeName = classDecl.identifier.text
       members = classDecl.members.members
       maybeInheritanceClause = classDecl.inheritanceClause
-    } else if let structDecl = statement.item as? StructDeclSyntax {
+    } else if let structDecl = statement.item.as(StructDeclSyntax.self) {
       typeName = structDecl.identifier.text
       members = structDecl.members.members
       maybeInheritanceClause = structDecl.inheritanceClause
@@ -102,7 +102,7 @@ final class RuleCollector {
 
     // Scan through the inheritance clause to find one of the protocols/types we're interested in.
     for inheritance in inheritanceClause.inheritedTypeCollection {
-      guard let identifier = inheritance.typeName as? SimpleTypeIdentifierSyntax else {
+      guard let identifier = inheritance.typeName.as(SimpleTypeIdentifierSyntax.self) else {
         continue
       }
 
@@ -120,10 +120,10 @@ final class RuleCollector {
       // Now that we know it's a format or lint rule, collect the `visit` methods.
       var visitedNodes = [String]()
       for member in members {
-        guard let function = member.decl as? FunctionDeclSyntax else { continue }
+        guard let function = member.decl.as(FunctionDeclSyntax.self) else { continue }
         guard function.identifier.text == "visit" else { continue }
         let params = function.signature.input.parameterList
-        guard let firstType = params.firstAndOnly?.type as? SimpleTypeIdentifierSyntax else {
+        guard let firstType = params.firstAndOnly?.type?.as(SimpleTypeIdentifierSyntax.self) else {
           continue
         }
         visitedNodes.append(firstType.name.text)

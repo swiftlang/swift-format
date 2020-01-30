@@ -110,7 +110,7 @@ public class PrettyPrintTestCase: XCTestCase {
     let printer = PrettyPrinter(
       context: context,
       operatorContext: OperatorContext.makeBuiltinOperatorContext(),
-      node: sourceFileSyntax,
+      node: Syntax(sourceFileSyntax),
       printTokenStream: false,
       whitespaceOnly: whitespaceOnly)
     return printer.prettyPrint()

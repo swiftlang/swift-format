@@ -14,7 +14,7 @@ public class RuleMaskTests: XCTestCase {
     let fileURL = URL(fileURLWithPath: "/tmp/test.swift")
     converter = SourceLocationConverter(file: fileURL.path, source: sourceText)
     let syntax = try! SyntaxParser.parse(source: sourceText)
-    return RuleMask(syntaxNode: syntax, sourceLocationConverter: converter)
+    return RuleMask(syntaxNode: Syntax(syntax), sourceLocationConverter: converter)
   }
 
   /// Returns the source location that corresponds to the given line and column numbers.

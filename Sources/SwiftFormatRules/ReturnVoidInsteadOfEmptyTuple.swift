@@ -26,16 +26,16 @@ import SwiftSyntax
 /// - SeeAlso: https://google.github.io/swift#types-with-shorthand-names
 public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
   public override func visit(_ node: FunctionTypeSyntax) -> TypeSyntax {
-    guard let returnType = node.returnType as? TupleTypeSyntax,
+    guard let returnType = node.returnType.as(TupleTypeSyntax.self),
       returnType.elements.count == 0
-    else { return node }
+    else { return TypeSyntax(node) }
     diagnose(.returnVoid, on: node.returnType)
     let voidKeyword = SyntaxFactory.makeSimpleTypeIdentifier(
       name: SyntaxFactory.makeIdentifier(
         "Void",
         trailingTrivia: returnType.rightParen.trailingTrivia),
       genericArgumentClause: nil)
-    return node.withReturnType(voidKeyword)
+    return TypeSyntax(node.withReturnType(TypeSyntax(voidKeyword)))
   }
 }
 

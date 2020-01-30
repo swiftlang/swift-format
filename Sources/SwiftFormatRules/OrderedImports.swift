@@ -64,7 +64,7 @@ public final class OrderedImports: SyntaxFormatRule {
       var lineType = line.type
 
       // Set the line type to codeBlock if the rule is disabled.
-      if let codeblock = line.codeBlock, !context.isRuleEnabled(Self.ruleName, node: codeblock) {
+      if let codeblock = line.codeBlock, !context.isRuleEnabled(Self.ruleName, node: Syntax(codeblock)) {
         switch lineType {
         case .comment: ()
         default:
@@ -114,9 +114,10 @@ public final class OrderedImports: SyntaxFormatRule {
 
     let joined = joinLines(fileHeader, regularImports, declImports, testableImports, codeBlocks)
 
-    return node.withStatements(
+    let newNode = node.withStatements(
       SyntaxFactory.makeCodeBlockItemList(convertToCodeBlockItems(lines: joined))
     )
+    return Syntax(newNode)
   }
 
   /// Raise lint errors if the different import types appear in the wrong order, and if import
@@ -130,7 +131,7 @@ public final class OrderedImports: SyntaxFormatRule {
       var lineType = line.type
 
       // Set the line type to codeBlock if the rule is disabled.
-      if let codeblock = line.codeBlock, !context.isRuleEnabled(Self.ruleName, node: codeblock) {
+      if let codeblock = line.codeBlock, !context.isRuleEnabled(Self.ruleName, node: Syntax(codeblock)) {
         switch lineType {
         case .comment: ()
         default:
@@ -306,7 +307,7 @@ func convertToCodeBlockItems(lines: [Line]) -> [CodeBlockItemSyntax] {
           on: block,
           token: block.firstToken,
           leadingTrivia: Trivia(pieces: triviaBuffer)
-        ) as! CodeBlockItemSyntax
+        )
       )
       triviaBuffer = []
       triviaBuffer += line.trailingTrivia
@@ -373,7 +374,7 @@ class Line {
 
   var type: LineType {
     if let block = codeBlock {
-      if let importdecl = block.item as? ImportDeclSyntax {
+      if let importdecl = block.item.as(ImportDeclSyntax.self) {
         if let attr = importdecl.attributes?.firstToken,
           attr.tokenKind == .atSign,
           attr.nextToken?.text == "testable"
@@ -397,7 +398,7 @@ class Line {
   var importName: String {
     let importTypes: [LineType] = [.regularImport, .declImport, .testableImport]
     guard importTypes.contains(type), let block = codeBlock else { return "" }
-    return (block.item as? ImportDeclSyntax)?.path.description ?? ""
+    return (block.item.as(ImportDeclSyntax.self))?.path.description ?? ""
   }
 }
 

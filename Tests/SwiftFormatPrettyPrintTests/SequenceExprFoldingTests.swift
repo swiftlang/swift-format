@@ -216,8 +216,8 @@ final class SequenceExprFoldingTests: XCTestCase {
     let expr = sequenceExpr(source)
     let folded = expr.folded(context: context)
 
-    var writer = SequenceExprStructureWriter()
-    folded.walk(&writer)
+    let writer = SequenceExprStructureWriter()
+    writer.walk(folded)
     XCTAssertEqual(writer.result, expected, file: file, line: line)
   }
 
@@ -227,7 +227,7 @@ final class SequenceExprFoldingTests: XCTestCase {
   ///   a `SequenceExprSyntax`. All subsequent code blocks are ignored.
   private func sequenceExpr(_ source: String) -> SequenceExprSyntax {
     let sourceFileSyntax = try! SyntaxParser.parse(source: source)
-    return sourceFileSyntax.statements.first!.item as! SequenceExprSyntax
+    return sourceFileSyntax.statements.first!.item.as(SequenceExprSyntax.self)!
   }
 }
 
@@ -237,43 +237,43 @@ final class SequenceExprFoldingTests: XCTestCase {
 /// Any `SequenceExpr` or `TernaryExpr` in the syntax tree will be surrounded by
 /// curly braces (`{ ... }`). Other tokens will be printed with a preceding
 /// space (except for the first character in the output).
-fileprivate struct SequenceExprStructureWriter: SyntaxVisitor {
+fileprivate class SequenceExprStructureWriter: SyntaxVisitor {
 
   /// The string containing the concatenated output.
   private(set) var result = ""
 
-  mutating func visit(_ node: SequenceExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: SequenceExprSyntax) -> SyntaxVisitorContinueKind {
     open()
     return .visitChildren
   }
 
-  mutating func visitPost(_ node: SequenceExprSyntax) {
+  override func visitPost(_ node: SequenceExprSyntax) {
     close()
   }
 
-  mutating func visit(_ node: TernaryExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: TernaryExprSyntax) -> SyntaxVisitorContinueKind {
     open()
     return .visitChildren
   }
 
-  mutating func visitPost(_ node: TernaryExprSyntax) {
+  override func visitPost(_ node: TernaryExprSyntax) {
     close()
   }
 
-  mutating func visit(_ token: TokenSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ token: TokenSyntax) -> SyntaxVisitorContinueKind {
     if !result.isEmpty { result += " " }
     result += token.text
     return .skipChildren
   }
 
-  mutating func visitPost(_ node: TokenSyntax) {}
+  override func visitPost(_ node: TokenSyntax) {}
 
-  private mutating func open() {
+  private func open() {
     if let last = result.last, last != "{" { result += " " }
     result += "{"
   }
 
-  private mutating func close() {
+  private func close() {
     if let last = result.last, last != "}" { result += " " }
     result += "}"
   }

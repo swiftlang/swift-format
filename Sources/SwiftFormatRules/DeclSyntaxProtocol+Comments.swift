@@ -12,7 +12,7 @@
 
 import SwiftSyntax
 
-extension DeclSyntax {
+extension DeclSyntaxProtocol {
   /// Searches through the leading trivia of this decl for a documentation comment.
   public var docComment: String? {
     guard let tok = firstToken else { return nil }

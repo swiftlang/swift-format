@@ -81,8 +81,8 @@ public class DiagnosingTestCase: XCTestCase {
     // is torn down.
     shouldCheckForUnassertedDiagnostics = true
 
-    var linter = type.init(context: context!)
-    sourceFileSyntax.walk(&linter)
+    let linter = type.init(context: context!)
+    linter.walk(sourceFileSyntax)
   }
 
   /// Asserts that the result of applying a formatter to the provided input code yields the output.

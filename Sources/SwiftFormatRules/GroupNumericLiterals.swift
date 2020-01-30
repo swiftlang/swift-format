@@ -31,7 +31,7 @@ import SwiftSyntax
 public final class GroupNumericLiterals: SyntaxFormatRule {
   public override func visit(_ node: IntegerLiteralExprSyntax) -> ExprSyntax {
     var originalDigits = node.digits.text
-    guard !originalDigits.contains("_") else { return node }
+    guard !originalDigits.contains("_") else { return ExprSyntax(node) }
 
     let isNegative = originalDigits.first == "-"
     originalDigits = isNegative ? String(originalDigits.dropFirst()) : originalDigits
@@ -42,31 +42,32 @@ public final class GroupNumericLiterals: SyntaxFormatRule {
     case "0x":
       // Hexadecimal
       let digitsNoPrefix = String(originalDigits.dropFirst(2))
-      guard digitsNoPrefix.count >= 8 else { return node }
+      guard digitsNoPrefix.count >= 8 else { return ExprSyntax(node) }
       diagnose(.groupNumericLiteral(every: 4), on: node)
       newDigits = "0x" + digits(digitsNoPrefix, groupedEvery: 4)
     case "0b":
       // Binary
       let digitsNoPrefix = String(originalDigits.dropFirst(2))
-      guard digitsNoPrefix.count >= 10 else { return node }
+      guard digitsNoPrefix.count >= 10 else { return ExprSyntax(node) }
       diagnose(.groupNumericLiteral(every: 8), on: node)
       newDigits = "0b" + digits(digitsNoPrefix, groupedEvery: 8)
     case "0o":
       // Octal
-      return node
+      return ExprSyntax(node)
     default:
       // Decimal
-      guard originalDigits.count >= 7 else { return node }
+      guard originalDigits.count >= 7 else { return ExprSyntax(node) }
       diagnose(.groupNumericLiteral(every: 3), on: node)
       newDigits = digits(originalDigits, groupedEvery: 3)
     }
 
     newDigits = isNegative ? "-" + newDigits : newDigits
-    return node.withDigits(
+    let result = node.withDigits(
       SyntaxFactory.makeIntegerLiteral(
         newDigits,
         leadingTrivia: node.digits.leadingTrivia,
         trailingTrivia: node.digits.trailingTrivia))
+    return ExprSyntax(result)
   }
 
   /// Returns a copy of the given string with an underscore (`_`) inserted between every group of

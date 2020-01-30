@@ -97,7 +97,7 @@ public final class SwiftFormatter {
       configuration: configuration, diagnosticEngine: diagnosticEngine, fileURL: assumedURL,
       sourceFileSyntax: syntax)
     let pipeline = FormatPipeline(context: context)
-    let transformedSyntax = pipeline.visit(syntax)
+    let transformedSyntax = pipeline.visit(Syntax(syntax))
 
     if debugOptions.contains(.disablePrettyPrint) {
       outputStream.write(transformedSyntax.description)

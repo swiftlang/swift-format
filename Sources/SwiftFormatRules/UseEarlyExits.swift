@@ -50,16 +50,16 @@ public final class UseEarlyExits: SyntaxFormatRule {
   public override func visit(_ node: CodeBlockItemListSyntax) -> Syntax {
     // Continue recursing down the tree first, so that any nested/child nodes get transformed first.
     let nodeAfterTransformingChildren = super.visit(node)
-    guard let codeBlockItems = nodeAfterTransformingChildren as? CodeBlockItemListSyntax else {
+    guard let codeBlockItems = nodeAfterTransformingChildren.as(CodeBlockItemListSyntax.self) else {
       return nodeAfterTransformingChildren
     }
 
-    return SyntaxFactory.makeCodeBlockItemList(
+    let result = SyntaxFactory.makeCodeBlockItemList(
       codeBlockItems.flatMap { (codeBlockItem: CodeBlockItemSyntax) -> [CodeBlockItemSyntax] in
         // The `elseBody` of an `IfStmtSyntax` will be a `CodeBlockSyntax` if it's an `else` block,
         // or another `IfStmtSyntax` if it's an `else if` block. We only want to handle the former.
-        guard let ifStatement = codeBlockItem.item as? IfStmtSyntax,
-          let elseBody = ifStatement.elseBody as? CodeBlockSyntax,
+        guard let ifStatement = codeBlockItem.item.as(IfStmtSyntax.self),
+          let elseBody = ifStatement.elseBody?.as(CodeBlockSyntax.self),
           codeBlockEndsWithEarlyExit(elseBody)
         else {
           return [codeBlockItem]
@@ -79,10 +79,11 @@ public final class UseEarlyExits: SyntaxFormatRule {
           body: elseBody)
 
         return [
-          SyntaxFactory.makeCodeBlockItem(item: guardStatement, semicolon: nil, errorTokens: nil),
-          SyntaxFactory.makeCodeBlockItem(item: trueBlock, semicolon: nil, errorTokens: nil),
+          SyntaxFactory.makeCodeBlockItem(item: Syntax(guardStatement), semicolon: nil, errorTokens: nil),
+          SyntaxFactory.makeCodeBlockItem(item: Syntax(trueBlock), semicolon: nil, errorTokens: nil),
         ]
       })
+    return Syntax(result)
   }
 
   /// Returns true if the last statement in the given code block is one that will cause an early
@@ -90,8 +91,8 @@ public final class UseEarlyExits: SyntaxFormatRule {
   private func codeBlockEndsWithEarlyExit(_ codeBlock: CodeBlockSyntax) -> Bool {
     guard let lastStatement = codeBlock.statements.last else { return false }
 
-    switch lastStatement.item {
-    case is ReturnStmtSyntax, is ThrowStmtSyntax, is BreakStmtSyntax, is ContinueStmtSyntax:
+    switch lastStatement.item.as(SyntaxEnum.self) {
+    case .returnStmt, .throwStmt, .breakStmt, .continueStmt:
       return true
     default:
       return false

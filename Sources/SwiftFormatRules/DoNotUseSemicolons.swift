@@ -31,7 +31,7 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
   ///   - node: A node that contains items which may have semicolons or nested code blocks.
   ///   - nodeCreator: A closure that creates a new node given an array of items.
   private func nodeByRemovingSemicolons<
-    ItemType: Syntax & SemicolonSyntax & Equatable, NodeType: SyntaxCollection
+    ItemType: SyntaxProtocol & SemicolonSyntaxProtocol & Equatable, NodeType: SyntaxCollection
   >(from node: NodeType, nodeCreator: ([ItemType]) -> NodeType) -> NodeType
   where NodeType.Element == ItemType {
     var newItems = Array(node)
@@ -46,7 +46,7 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
 
       // Check for semicolons in statements inside of the item, because code blocks may be nested
       // inside of other code blocks.
-      guard let visitedItem = visit(item) as? ItemType else {
+      guard let visitedItem = visit(Syntax(item)).as(ItemType.self) else {
         return node
       }
 
@@ -66,7 +66,7 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
           on: newItem,
           token: firstToken,
           leadingTrivia: leadingTrivia
-        ) as! ItemType
+        )
       }
 
       // If there's a semicolon, diagnose and remove it.
@@ -86,11 +86,11 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
   }
 
   public override func visit(_ node: CodeBlockItemListSyntax) -> Syntax {
-    return nodeByRemovingSemicolons(from: node, nodeCreator: SyntaxFactory.makeCodeBlockItemList)
+    return Syntax(nodeByRemovingSemicolons(from: node, nodeCreator: SyntaxFactory.makeCodeBlockItemList))
   }
 
   public override func visit(_ node: MemberDeclListSyntax) -> Syntax {
-    return nodeByRemovingSemicolons(from: node, nodeCreator: SyntaxFactory.makeMemberDeclList)
+    return Syntax(nodeByRemovingSemicolons(from: node, nodeCreator: SyntaxFactory.makeMemberDeclList))
   }
 }
 

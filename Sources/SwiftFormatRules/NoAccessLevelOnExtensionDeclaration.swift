@@ -28,8 +28,8 @@ import SwiftSyntax
 public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
 
   public override func visit(_ node: ExtensionDeclSyntax) -> DeclSyntax {
-    guard let modifiers = node.modifiers, modifiers.count != 0 else { return node }
-    guard let accessKeyword = modifiers.accessLevelModifier else { return node }
+    guard let modifiers = node.modifiers, modifiers.count != 0 else { return DeclSyntax(node) }
+    guard let accessKeyword = modifiers.accessLevelModifier else { return DeclSyntax(node) }
 
     let keywordKind = accessKeyword.name.tokenKind
     switch keywordKind {
@@ -54,10 +54,11 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
       let newKeyword = replaceTrivia(
         on: node.extensionKeyword,
         token: node.extensionKeyword,
-        leadingTrivia: accessKeyword.leadingTrivia) as! TokenSyntax
-      return node.withMembers(newMembers)
+        leadingTrivia: accessKeyword.leadingTrivia)
+      let result = node.withMembers(newMembers)
         .withModifiers(modifiers.remove(name: accessKeyword.name.text))
         .withExtensionKeyword(newKeyword)
+      return DeclSyntax(result)
 
     // Internal keyword redundant, delete
     case .internalKeyword:
@@ -67,14 +68,15 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
       let newKeyword = replaceTrivia(
         on: node.extensionKeyword,
         token: node.extensionKeyword,
-        leadingTrivia: accessKeyword.leadingTrivia) as! TokenSyntax
-      return node.withModifiers(modifiers.remove(name: accessKeyword.name.text))
+        leadingTrivia: accessKeyword.leadingTrivia)
+      let result = node.withModifiers(modifiers.remove(name: accessKeyword.name.text))
         .withExtensionKeyword(newKeyword)
+      return DeclSyntax(result)
 
     default:
       break
     }
-    return node
+    return DeclSyntax(node)
   }
 
   // Adds given keyword to all members in declaration block
@@ -87,14 +89,13 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
       on: keyword,
       token: keyword.name,
       leadingTrivia: [])
-      as! DeclModifierSyntax
 
     for memberItem in memDeclBlock.members {
       let member = memberItem.decl
       guard
         // addModifier relocates trivia for any token(s) displaced by the new modifier.
         let newDecl = addModifier(declaration: member, modifierKeyword: formattedKeyword)
-        as? DeclSyntax
+          .as(DeclSyntax.self)
       else { continue }
       newMembers.append(memberItem.withDecl(newDecl))
     }
