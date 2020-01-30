@@ -889,13 +889,6 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: ClosureSignatureSyntax) -> SyntaxVisitorContinueKind {
-    let consistency: GroupBreakStyle
-    if let input = node.input, input.is(ClosureParamListSyntax.self) {
-      consistency = argumentListConsistency()
-    } else {
-      consistency = .inconsistent
-    }
-
     before(node.firstToken, tokens: .open)
 
     if let input = node.input {
@@ -903,8 +896,36 @@ private final class TokenStreamCreator: SyntaxVisitor {
       // after the capture list's right bracket if there are arguments following it or we'll end up
       // with an extra space if the line doesn't wrap.
       after(node.capture?.rightSquare, tokens: .break(.same))
-      before(input.firstToken, tokens: .open(consistency))
-      after(input.lastToken, tokens: .close)
+
+      // When it's parenthesized, the input is a `ParameterClauseSyntax`. Otherwise, it's a
+      // `ClosureParamListSyntax`. The parenthesized version is wrapped in open/close breaks so that
+      // the parens create an extra level of indentation.
+      if let parameterClause = input.as(ParameterClauseSyntax.self) {
+        // Whether we should prioritize keeping ") throws -> <return_type>" together. We can only do
+        // this if the closure has arguments.
+        let keepOutputTogether =
+          !parameterClause.parameterList.isEmpty && config.prioritizeKeepingFunctionOutputTogether
+
+        // Keep the output together by grouping from the right paren to the end of the output.
+        if keepOutputTogether {
+          // Due to visitation order, the matching .open break is added in ParameterClauseSyntax.
+          // Since the output clause is optional but the in-token is required, placing the .close
+          // before `inTok` ensures the close gets into the token stream.
+          before(node.inTok, tokens: .close)
+        } else  {
+          // Group outside of the parens, so that the argument list together, preferring to break
+          // between the argument list and the output.
+          before(input.firstToken, tokens: .open)
+          after(input.lastToken, tokens: .close)
+        }
+
+        arrangeParameterClause(parameterClause, forcesBreakBeforeRightParen: true)
+      } else {
+        // Group around the arguments, but don't use open/close breaks because there are no parens
+        // to create a new scope.
+        before(input.firstToken, tokens: .open(argumentListConsistency()))
+        after(input.lastToken, tokens: .close)
+      }
     }
 
     before(node.throwsTok, tokens: .break)
