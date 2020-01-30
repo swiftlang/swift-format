@@ -1840,8 +1840,6 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  // FIXME: Remove once the changes around `GenericRequirementSyntax` and its children have settled.
-  #if !HAS_UNCONSOLIDATED_GENERIC_REQUIREMENTS
   override func visit(_ node: GenericRequirementSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
     if let trailingComma = node.trailingComma {
@@ -1851,34 +1849,17 @@ private final class TokenStreamCreator: SyntaxVisitor {
     }
     return .visitChildren
   }
-  #endif
-
+  
   override func visit(_ node: SameTypeRequirementSyntax) -> SyntaxVisitorContinueKind {
     before(node.equalityToken, tokens: .break)
     after(node.equalityToken, tokens: .space)
 
-    #if HAS_UNCONSOLIDATED_GENERIC_REQUIREMENTS
-    before(node.firstToken, tokens: .open)
-    if let trailingComma = node.trailingComma {
-      after(trailingComma, tokens: .close, .break(.same))
-    } else {
-      after(node.lastToken, tokens: .close)
-    }
-    #endif
     return .visitChildren
   }
 
   override func visit(_ node: ConformanceRequirementSyntax) -> SyntaxVisitorContinueKind {
     after(node.colon, tokens: .break)
 
-    #if HAS_UNCONSOLIDATED_GENERIC_REQUIREMENTS
-    before(node.firstToken, tokens: .open)
-    if let trailingComma = node.trailingComma {
-      after(trailingComma, tokens: .close, .break(.same))
-    } else {
-      after(node.lastToken, tokens: .close)
-    }
-    #endif
     return .visitChildren
   }
 
