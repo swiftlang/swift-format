@@ -26,7 +26,6 @@ public struct Configuration: Codable, Equatable {
     case tabWidth
     case indentation
     case respectsExistingLineBreaks
-    case blankLineBetweenMembers
     case lineBreakBeforeControlFlowKeywords
     case lineBreakBeforeEachArgument
     case lineBreakBeforeEachGenericRequirement
@@ -71,9 +70,6 @@ public struct Configuration: Codable, Equatable {
   public var respectsExistingLineBreaks = true
 
   /// MARK: Rule-specific configuration
-
-  /// Rules for limiting blank lines between members.
-  public var blankLineBetweenMembers = BlankLineBetweenMembersConfiguration()
 
   /// Determines the line-breaking behavior for control flow keywords that follow a closing brace,
   /// like `else` and `catch`.
@@ -152,9 +148,6 @@ public struct Configuration: Codable, Equatable {
       = try container.decodeIfPresent(Indent.self, forKey: .indentation) ?? .spaces(2)
     self.respectsExistingLineBreaks
       = try container.decodeIfPresent(Bool.self, forKey: .respectsExistingLineBreaks) ?? true
-    self.blankLineBetweenMembers = try container.decodeIfPresent(
-      BlankLineBetweenMembersConfiguration.self, forKey: .blankLineBetweenMembers)
-      ?? BlankLineBetweenMembersConfiguration()
     self.lineBreakBeforeControlFlowKeywords
       = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeControlFlowKeywords) ?? false
     self.lineBreakBeforeEachArgument
@@ -186,7 +179,6 @@ public struct Configuration: Codable, Equatable {
     try container.encode(tabWidth, forKey: .tabWidth)
     try container.encode(indentation, forKey: .indentation)
     try container.encode(respectsExistingLineBreaks, forKey: .respectsExistingLineBreaks)
-    try container.encode(blankLineBetweenMembers, forKey: .blankLineBetweenMembers)
     try container.encode(lineBreakBeforeControlFlowKeywords, forKey: .lineBreakBeforeControlFlowKeywords)
     try container.encode(lineBreakBeforeEachArgument, forKey: .lineBreakBeforeEachArgument)
     try container.encode(lineBreakBeforeEachGenericRequirement, forKey: .lineBreakBeforeEachGenericRequirement)
@@ -196,16 +188,6 @@ public struct Configuration: Codable, Equatable {
       lineBreakAroundMultilineExpressionChainComponents,
       forKey: .lineBreakAroundMultilineExpressionChainComponents)
     try container.encode(rules, forKey: .rules)
-  }
-}
-
-/// Configuration for the BlankLineBetweenMembers rule.
-public struct BlankLineBetweenMembersConfiguration: Codable, Equatable {
-  /// If true, blank lines are not required between single-line properties.
-  public let ignoreSingleLineProperties: Bool
-
-  public init(ignoreSingleLineProperties: Bool = true) {
-    self.ignoreSingleLineProperties = ignoreSingleLineProperties
   }
 }
 

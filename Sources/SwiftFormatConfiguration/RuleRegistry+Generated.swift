@@ -18,7 +18,6 @@ enum RuleRegistry {
     "AlwaysUseLowerCamelCase": true,
     "AmbiguousTrailingClosureOverload": true,
     "BeginDocumentationCommentWithOneLineSummary": true,
-    "BlankLineBetweenMembers": true,
     "DoNotUseSemicolons": true,
     "DontRepeatTypeInStaticProperties": true,
     "FullyIndirectEnum": true,
