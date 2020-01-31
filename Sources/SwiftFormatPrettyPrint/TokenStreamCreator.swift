@@ -1658,10 +1658,6 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: UnknownPatternSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
   override func visit(_ node: SomeTypeSyntax) -> SyntaxVisitorContinueKind {
     after(node.someSpecifier, tokens: .space)
     return .visitChildren
@@ -1937,17 +1933,44 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
+  // MARK: - Nodes representing unknown or malformed syntax
+
   override func visit(_ node: UnknownDeclSyntax) -> SyntaxVisitorContinueKind {
     verbatimToken(Syntax(node))
-    // Visiting children is not needed here.
+    return .skipChildren
+  }
+
+  override func visit(_ node: UnknownExprSyntax) -> SyntaxVisitorContinueKind {
+    verbatimToken(Syntax(node))
+    return .skipChildren
+  }
+
+  override func visit(_ node: UnknownPatternSyntax) -> SyntaxVisitorContinueKind {
+    verbatimToken(Syntax(node))
     return .skipChildren
   }
 
   override func visit(_ node: UnknownStmtSyntax) -> SyntaxVisitorContinueKind {
     verbatimToken(Syntax(node))
-    // Visiting children is not needed here.
     return .skipChildren
   }
+
+  override func visit(_ node: UnknownSyntax) -> SyntaxVisitorContinueKind {
+    verbatimToken(Syntax(node))
+    return .skipChildren
+  }
+
+  override func visit(_ node: UnknownTypeSyntax) -> SyntaxVisitorContinueKind {
+    verbatimToken(Syntax(node))
+    return .skipChildren
+  }
+
+  override func visit(_ node: NonEmptyTokenListSyntax) -> SyntaxVisitorContinueKind {
+    verbatimToken(Syntax(node))
+    return .skipChildren
+  }
+
+  // MARK: - Token handling
 
   override func visit(_ token: TokenSyntax) -> SyntaxVisitorContinueKind {
     // Arrange the tokens and trivia such that before tokens that start a new "scope" (which may
