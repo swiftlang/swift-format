@@ -1933,6 +1933,56 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
+  override func visit(_ node: DifferentiableAttributeArgumentsSyntax) -> SyntaxVisitorContinueKind {
+    // This node encapsulates the entire list of arguments in a `@differentiable(...)` attribute.
+    if let vjp = node.maybeVJP {
+      before(vjp.firstToken, tokens: .break(.same), .open)
+      after(vjp.lastToken, tokens: .close)
+    }
+    if let jvp = node.maybeJVP {
+      before(jvp.firstToken, tokens: .break(.same), .open)
+      after(jvp.lastToken, tokens: .close)
+    }
+    if let whereClause = node.whereClause {
+      before(whereClause.firstToken, tokens: .break(.same), .open)
+      after(whereClause.lastToken, tokens: .close)
+    }
+    return .visitChildren
+  }
+
+  override func visit(_ node: DifferentiableAttributeFuncSpecifierSyntax)
+    -> SyntaxVisitorContinueKind
+  {
+    // This node encapsulates the `vjp:` or `jvp:` label and decl name in a `@differentiable`
+    // attribute.
+    after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
+    return .visitChildren
+  }
+
+  override func visit(_ node: DerivativeRegistrationAttributeArgumentsSyntax)
+    -> SyntaxVisitorContinueKind
+  {
+    // This node encapsulates the entire list of arguments in a `@derivative(...)` or
+    // `@transpose(...)` attribute.
+    before(node.ofLabel, tokens: .open)
+    after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
+    after(node.comma, tokens: .close)
+
+    if let diffParams = node.diffParams {
+      before(diffParams.firstToken, tokens: .break(.same), .open)
+      after(diffParams.lastToken, tokens: .close)
+    }
+
+    return .visitChildren
+  }
+
+  override func visit(_ node: DifferentiationParamsClauseSyntax) -> SyntaxVisitorContinueKind {
+    // This node encapsulates the `wrt:` label and value/variable in a `@differentiable`,
+    // `@derivative`, or `@transpose` attribute.
+    after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
+    return .visitChildren
+  }
+
   // MARK: - Nodes representing unknown or malformed syntax
 
   override func visit(_ node: UnknownDeclSyntax) -> SyntaxVisitorContinueKind {
