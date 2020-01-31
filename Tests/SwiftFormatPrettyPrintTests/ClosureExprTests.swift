@@ -14,6 +14,7 @@ public class ClosureExprTests: PrettyPrintTestCase {
       funcCall(closure: { s1, s2, s3, s4, s5, s6, s7, s8, s9, s10 in return s1 })
       funcCall(param1: 123, closure: { s1, s2, s3 in return s1 })
       funcCall(closure: { (s1: String, s2: String) -> Bool in return s1 > s2 })
+      funcCall(closure: { (s1: String, s2: String, s3: String, s4: String, s5: String) -> Bool in return s1 > s2 })
       """
 
     let expected =
@@ -53,6 +54,15 @@ public class ClosureExprTests: PrettyPrintTestCase {
         (s1: String, s2: String) -> Bool in
         return s1 > s2
       })
+      funcCall(closure: {
+        (
+          s1: String,
+          s2: String,
+          s3: String,
+          s4: String,
+          s5: String
+        ) -> Bool in return s1 > s2
+      })
 
       """
 
@@ -73,6 +83,7 @@ public class ClosureExprTests: PrettyPrintTestCase {
       funcCall(closure: { s1, s2, s3, s4, s5, s6, s7, s8, s9, s10 in return s1 })
       funcCall(param1: 123, closure: { s1, s2, s3 in return s1 })
       funcCall(closure: { (s1: String, s2: String) -> Bool in return s1 > s2 })
+      funcCall(closure: { (s1: String, s2: String, s3: String, s4: String, s5: String) -> Bool in return s1 > s2 })
       """
 
     let expected =
@@ -98,6 +109,12 @@ public class ClosureExprTests: PrettyPrintTestCase {
         (s1: String, s2: String) -> Bool in
         return s1 > s2
       })
+      funcCall(closure: {
+        (
+          s1: String, s2: String, s3: String,
+          s4: String, s5: String
+        ) -> Bool in return s1 > s2
+      })
 
       """
 
@@ -113,6 +130,7 @@ public class ClosureExprTests: PrettyPrintTestCase {
       funcCall(param1: 2) { $1 < $2 }
       funcCall(param1: 2) { s1, s2, s3 in return s1}
       funcCall(param1: 2) { s1, s2, s3, s4, s5 in return s1}
+      funcCall(param1: 2) { (s1: String, s2: String, s3: String, s4: String, s5: String) -> Bool in return s1 > s2 }
       """
 
     let expected =
@@ -124,6 +142,12 @@ public class ClosureExprTests: PrettyPrintTestCase {
       }
       funcCall(param1: 2) {
         s1, s2, s3, s4, s5 in return s1
+      }
+      funcCall(param1: 2) {
+        (
+          s1: String, s2: String, s3: String,
+          s4: String, s5: String
+        ) -> Bool in return s1 > s2
       }
 
       """
@@ -344,5 +368,77 @@ public class ClosureExprTests: PrettyPrintTestCase {
       """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
+  }
+
+  public func testClosureOutputGrouping() {
+    let input =
+      """
+      funcCall(closure: {
+      (s1: String, s2: String, s3: String) throws -> Bool in return s1 > s2
+      })
+      funcCall(closure: {
+      (s1: String, s2: String, s3: String) throws -> AVeryLongReturnTypeThatOverflowsFiftyColumns in return s1 > s2
+      })
+      funcCall(closure: {
+      () throws -> Bool in return s1 > s2
+      })
+      funcCall(closure: {
+      () throws -> AVeryLongReturnTypeThatOverflowsFiftyColumns in return s1 > s2
+      })
+      """
+
+    let expectedNotGroupingOutput =
+      """
+      funcCall(closure: {
+        (s1: String, s2: String, s3: String) throws
+          -> Bool in return s1 > s2
+      })
+      funcCall(closure: {
+        (s1: String, s2: String, s3: String) throws
+          -> AVeryLongReturnTypeThatOverflowsFiftyColumns
+        in return s1 > s2
+      })
+      funcCall(closure: {
+        () throws -> Bool in return s1 > s2
+      })
+      funcCall(closure: {
+        () throws
+          -> AVeryLongReturnTypeThatOverflowsFiftyColumns
+        in return s1 > s2
+      })
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expectedNotGroupingOutput, linelength: 50)
+
+    let expectedKeepingOutputTogether =
+      """
+      funcCall(closure: {
+        (
+          s1: String, s2: String, s3: String
+        ) throws -> Bool in return s1 > s2
+      })
+      funcCall(closure: {
+        (
+          s1: String, s2: String, s3: String
+        ) throws
+          -> AVeryLongReturnTypeThatOverflowsFiftyColumns
+        in return s1 > s2
+      })
+      funcCall(closure: {
+        () throws -> Bool in return s1 > s2
+      })
+      funcCall(closure: {
+        () throws
+          -> AVeryLongReturnTypeThatOverflowsFiftyColumns
+        in return s1 > s2
+      })
+
+      """
+
+    var config = Configuration()
+    config.prioritizeKeepingFunctionOutputTogether = true
+    assertPrettyPrintEqual(
+      input: input, expected: expectedKeepingOutputTogether, linelength: 50, configuration: config)
   }
 }
