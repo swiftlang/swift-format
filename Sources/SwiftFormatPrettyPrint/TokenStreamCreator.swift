@@ -656,7 +656,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     } else if elementCount > 1 {
       // Tuples with more than one element are "true" tuples, and should indent as block structures.
       after(node.leftParen, tokens: .break(.open, size: 0), .open)
-      before(node.rightParen, tokens: .close, .break(.close, size: 0))
+      before(node.rightParen, tokens: .break(.close, size: 0), .close)
 
       insertTokens(.break(.same), betweenElementsOf: node.elementList)
 
