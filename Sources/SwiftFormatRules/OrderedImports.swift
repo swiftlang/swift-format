@@ -24,8 +24,6 @@ import SwiftSyntax
 ///       raised.
 ///
 /// Format: Imports will be reordered and grouped at the top of the file.
-///
-/// - SeeAlso: https://google.github.io/swift#import-statements
 public final class OrderedImports: SyntaxFormatRule {
 
   public override func visit(_ node: SourceFileSyntax) -> Syntax {

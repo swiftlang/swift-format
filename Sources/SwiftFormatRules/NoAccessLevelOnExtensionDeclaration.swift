@@ -23,8 +23,6 @@ import SwiftSyntax
 ///         `internal`, as that is the default access level) have the explicit access level removed.
 ///
 /// TODO: Find a better way to access modifiers and keyword tokens besides casting each declaration
-///
-/// - SeeAlso: https://google.github.io/swift#access-levels
 public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
 
   public override func visit(_ node: ExtensionDeclSyntax) -> DeclSyntax {

@@ -26,8 +26,6 @@ import SwiftSyntax
 /// Format: Parentheses around such expressions are removed, if they do not cause a parse ambiguity.
 ///         Specifically, parentheses are allowed if and only if the expression contains a function
 ///         call with a trailing closure.
-///
-/// - SeeAlso: https://google.github.io/swift#parentheses
 public final class NoParensAroundConditions: SyntaxFormatRule {
   func extractExpr(_ tuple: TupleExprSyntax) -> ExprSyntax {
     assert(tuple.elementList.count == 1)

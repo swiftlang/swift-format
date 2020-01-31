@@ -17,8 +17,6 @@ import SwiftSyntax
 /// Block comments should be avoided in favor of line comments.
 ///
 /// Lint: If a block comment appears, a lint error is raised.
-///
-/// - SeeAlso: https://google.github.io/swift#non-documentation-comments
 public final class NoBlockComments: SyntaxLintRule {
   public override func visit(_ token: TokenSyntax) -> SyntaxVisitorContinueKind {
     for triviaIndex in token.leadingTrivia.indices {

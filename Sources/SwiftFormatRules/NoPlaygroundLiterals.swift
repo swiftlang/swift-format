@@ -26,8 +26,6 @@ import SwiftSyntax
 ///         `#colorLiteral(...)` becomes `UIColor(...)`
 ///
 /// Configuration: resolveAmbiguousColor
-///
-/// - SeeAlso: https://google.github.io/swift#playground-literals
 public final class NoPlaygroundLiterals: SyntaxFormatRule {
 
 }

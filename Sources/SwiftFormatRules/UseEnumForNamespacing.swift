@@ -26,8 +26,6 @@ import SwiftSyntax
 /// Lint: `struct`s consisting of only `static let/func`s will yield a lint error.
 ///
 /// Format: Rewrite the `struct` as an `enum`.
-///
-/// - SeeAlso: https://google.github.io/swift#nesting-and-namespacing
 public final class UseEnumForNamespacing: SyntaxFormatRule {
 
   public override func visit(_ node: StructDeclSyntax) -> DeclSyntax {

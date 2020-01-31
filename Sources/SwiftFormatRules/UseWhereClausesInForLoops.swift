@@ -20,8 +20,6 @@ import SwiftSyntax
 ///
 /// Format: `for` loops that consist of a single `if` statement have the conditional of that
 ///         statement factored out to a `where` clause.
-///
-/// - SeeAlso: https://google.github.io/swift#for-where-loops
 public final class UseWhereClausesInForLoops: SyntaxFormatRule {
 
   public override func visit(_ node: ForInStmtSyntax) -> StmtSyntax {

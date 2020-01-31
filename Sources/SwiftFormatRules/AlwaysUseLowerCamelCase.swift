@@ -19,8 +19,6 @@ import SwiftSyntax
 ///
 /// Lint: If an identifier contains underscores or begins with a capital letter, a lint error is
 ///       raised.
-///
-/// - SeeAlso: https://google.github.io/swift#identifiers
 public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
 
   public override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {

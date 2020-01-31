@@ -22,8 +22,6 @@ import SwiftSyntax
 /// Lint: Using `try!` results in a lint error.
 ///
 /// TODO: Create exception for NSRegularExpression
-///
-/// - SeeAlso: https://google.github.io/swift#error-types
 public final class NeverUseForceTry: SyntaxLintRule {
 
   public override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {

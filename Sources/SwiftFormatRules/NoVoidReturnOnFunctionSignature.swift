@@ -19,8 +19,6 @@ import SwiftSyntax
 ///
 /// Format: Function declarations with explicit returns of `()` or `Void` will have their return
 ///         signature stripped.
-///
-/// - SeeAlso: https://google.github.io/swift#types-with-shorthand-names
 public final class NoVoidReturnOnFunctionSignature: SyntaxFormatRule {
   /// Remove the `-> Void` return type for function signatures. Do not remove
   /// it for closure signatures, because that may introduce an ambiguity when closure signatures

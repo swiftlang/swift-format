@@ -20,8 +20,6 @@ import SwiftSyntax
 ///
 /// Lint: Documentation comments that are incomplete (e.g. missing parameter documentation) or
 ///       invalid (uses `Parameters` when there is only one parameter) will yield a lint error.
-///
-/// - SeeAlso: https://google.github.io/swift#parameter-returns-and-throws-tags
 public final class ValidateDocumentationComments: SyntaxLintRule {
 
   public override func visit(_ node: InitializerDeclSyntax) -> SyntaxVisitorContinueKind {
