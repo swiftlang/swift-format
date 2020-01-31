@@ -24,8 +24,6 @@ import SwiftSyntax
 /// TODO: Create exceptions for other UI elements (ex: viewDidLoad)
 ///
 /// Lint: Declaring a property with an implicitly unwrapped type yields a lint error.
-///
-/// - SeeAlso: https://google.github.io/swift#implicitly-unwrapped-optionals
 public final class NeverUseImplicitlyUnwrappedOptionals: SyntaxLintRule {
 
   // Checks if "XCTest" is an import statement

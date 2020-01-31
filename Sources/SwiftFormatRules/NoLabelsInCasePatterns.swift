@@ -22,8 +22,6 @@ import SwiftSyntax
 ///       binding identifier.
 ///
 /// Format: Redundant labels in case patterns are removed.
-///
-/// - SeeAlso: https://google.github.io/swift#pattern-matching
 public final class NoLabelsInCasePatterns: SyntaxFormatRule {
   public override func visit(_ node: SwitchCaseLabelSyntax) -> Syntax {
 

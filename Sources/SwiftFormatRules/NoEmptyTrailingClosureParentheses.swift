@@ -20,8 +20,6 @@ import SwiftSyntax
 ///       a lint error is raised.
 ///
 /// Format: Empty parentheses in function calls with trailing closures will be removed.
-///
-/// - SeeAlso: https://google.github.io/swift#trailing-closures
 public final class NoEmptyTrailingClosureParentheses: SyntaxFormatRule {
 
   public override func visit(_ node: FunctionCallExprSyntax) -> ExprSyntax {

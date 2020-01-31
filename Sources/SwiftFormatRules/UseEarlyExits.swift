@@ -43,8 +43,6 @@ import SwiftSyntax
 ///
 /// Format: `if ... else { return/throw/break/continue }` constructs will be replaced with
 ///         equivalent `guard ... else { return/throw/break/continue }` constructs.
-///
-/// - SeeAlso: https://google.github.io/swift#guards-for-early-exits
 public final class UseEarlyExits: SyntaxFormatRule {
 
   public override func visit(_ node: CodeBlockItemListSyntax) -> Syntax {

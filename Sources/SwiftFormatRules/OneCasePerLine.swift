@@ -21,8 +21,6 @@ import SwiftSyntax
 ///
 /// Format: All case declarations with associated values or raw values will be moved to their own
 ///         case declarations.
-///
-/// - SeeAlso: https://google.github.io/swift#enum-cases
 public final class OneCasePerLine: SyntaxFormatRule {
 
   /// A state machine that collects case elements encountered during visitation and allows new case

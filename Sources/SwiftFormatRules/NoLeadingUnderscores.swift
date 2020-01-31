@@ -24,8 +24,6 @@ import SwiftSyntax
 /// sites.
 ///
 /// Lint: Declaring an identifier with a leading underscore yields a lint error.
-///
-/// - SeeAlso: https://google.github.io/swift#naming-conventions-are-not-access-control
 public final class NoLeadingUnderscores: SyntaxLintRule {
 
   public override func visit(_ node: AssociatedtypeDeclSyntax) -> SyntaxVisitorContinueKind {

@@ -21,8 +21,6 @@ import SwiftSyntax
 /// `public class var redColor: UIColor` would trigger this rule.
 ///
 /// Lint: Static properties of a type that return that type will yield a lint error.
-///
-/// - SeeAlso: https://google.github.io/swift#static-and-class-properties
 public final class DontRepeatTypeInStaticProperties: SyntaxLintRule {
 
   public override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {

@@ -20,8 +20,6 @@ import SwiftSyntax
 ///
 /// Format: If a variable declaration declares multiple variables, it will be split into multiple
 ///         declarations, each declaring one of the variables.
-///
-/// - SeeAlso: https://google.github.io/swift#properties
 public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
   func splitVariableDecls(
     _ items: CodeBlockItemListSyntax

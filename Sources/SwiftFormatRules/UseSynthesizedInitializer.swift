@@ -21,8 +21,6 @@ import SwiftSyntax
 ///
 /// Lint: (Non-public) memberwise initializers with the same structure as the synthesized
 ///       initializer will yield a lint error.
-///
-/// - SeeAlso: https://google.github.io/swift#initializers-2
 public final class UseSynthesizedInitializer: SyntaxLintRule {
 
   public override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {

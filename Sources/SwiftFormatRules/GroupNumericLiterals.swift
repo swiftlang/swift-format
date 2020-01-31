@@ -26,8 +26,6 @@ import SwiftSyntax
 /// TODO: Minimum numeric literal length bounds and numeric groupings have been selected arbitrarily;
 /// these could be reevaluated.
 /// TODO: Handle floating point literals.
-///
-/// - SeeAlso: https://google.github.io/swift#numeric-literals
 public final class GroupNumericLiterals: SyntaxFormatRule {
   public override func visit(_ node: IntegerLiteralExprSyntax) -> ExprSyntax {
     var originalDigits = node.digits.text

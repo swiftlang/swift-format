@@ -21,8 +21,6 @@ import SwiftSyntax
 ///
 /// Format: Where possible, shorthand types replace long form types; e.g. `Array<Element>` is
 ///         converted to `[Element]`.
-///
-/// - SeeAlso: https://google.github.io/swift#types-with-shorthand-names
 public final class UseShorthandTypeNames: SyntaxFormatRule {
 
   public override func visit(_ node: SimpleTypeIdentifierSyntax) -> TypeSyntax {
