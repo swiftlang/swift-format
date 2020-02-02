@@ -2435,7 +2435,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   {
     let nextToken = token.nextToken
     guard let trivia = nextToken?.leadingTrivia,
-      let firstPiece = trivia[safe: 0]
+      let firstPiece = trivia.first
     else {
       return (false, [])
     }
@@ -3183,12 +3183,6 @@ class CommentMovingRewriter: SyntaxRewriter {
     }
     keepWithTokenPieces.append(contentsOf: pendingPieces)
     return (Trivia(pieces: keepWithTokenPieces), Trivia(pieces: extractingPieces))
-  }
-}
-
-extension Collection {
-  subscript(safe index: Index) -> Element? {
-    return index < endIndex ? self[index] : nil
   }
 }
 

@@ -13,43 +13,6 @@
 import SwiftSyntax
 
 extension Trivia {
-  /// Returns the number of non-newline whitespace characters in this trivia.
-  public var numberOfSpaces: Int {
-    var count = 0
-    for piece in self {
-      switch piece {
-      case .tabs(let n), .spaces(let n): count += n
-      default: continue
-      }
-    }
-    return count
-  }
-
-  /// Returns the number of newlines in this trivia.
-  public var numberOfNewlines: Int {
-    var count = 0
-    for piece in self {
-      if case .newlines(let n) = piece {
-        count += n
-      }
-    }
-    return count
-  }
-
-  /// Returns the number of leading newlines in this trivia.
-  public var numberOfLeadingNewlines: Int {
-    var count = 0
-    loop: for piece in self {
-      switch piece {
-      case .newlines(let n): count += n
-      case .carriageReturns(let n): count += n
-      case .carriageReturnLineFeeds(let n): count += n
-      default: break loop
-      }
-    }
-    return count
-  }
-
   public var numberOfComments: Int {
     var count = 0
     for piece in self {
@@ -71,14 +34,6 @@ extension Trivia {
     }
   }
 
-  public var hasSpaces: Bool {
-    for piece in self {
-      if case .tabs = piece { return true }
-      if case .spaces = piece { return true }
-    }
-    return false
-  }
-
   /// Returns this set of trivia, without any whitespace characters.
   public func withoutSpaces() -> Trivia {
     return Trivia(
@@ -87,50 +42,6 @@ extension Trivia {
         if case .tabs = $0 { return false }
         return true
       })
-  }
-
-  /// Returns this set of trivia without any trailing whitespace characters.
-  public func withoutTrailingSpaces() -> Trivia {
-    var pieces = [TriviaPiece]()
-    guard var prev = first else { return self }
-    for piece in dropFirst() {
-      switch (prev, piece) {
-      case (.spaces(_), .newlines(_)),
-        (.tabs(_), .newlines(_)):
-        prev = piece
-      default:
-        pieces.append(prev)
-        prev = piece
-      }
-    }
-    pieces.append(prev)
-    return Trivia(pieces: pieces).condensed()
-  }
-
-  /// Returns this set of trivia, without any leading newline characters.
-  public func withoutLeadingNewlines() -> Trivia {
-    let triviaCondensed = self.condensed()
-    guard let firstPieceOfTrivia = triviaCondensed.first else { return self }
-    if case .newlines(_) = firstPieceOfTrivia {
-      var pieces = [TriviaPiece]()
-      for piece in triviaCondensed.dropFirst() {
-        pieces.append(piece)
-      }
-      return Trivia(pieces: pieces)
-    } else {
-      return self
-    }
-  }
-
-  /// Returns this set of trivia, without any trailing newline characters.
-  public func withoutTrailingNewlines() -> Trivia {
-    let triviaCondensed = self.condensed()
-    guard let lastPieceOfTrivia = triviaCondensed.suffix(1).first else { return self }
-    if case .newlines(_) = lastPieceOfTrivia {
-      return Trivia(pieces: triviaCondensed.dropLast())
-    } else {
-      return self
-    }
   }
 
   /// Returns this set of trivia, without any newlines.
