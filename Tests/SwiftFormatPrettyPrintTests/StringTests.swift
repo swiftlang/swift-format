@@ -1,5 +1,5 @@
-public class StringTests: PrettyPrintTestCase {
-  public func testStrings() {
+final class StringTests: PrettyPrintTestCase {
+  func testStrings() {
     let input =
       """
       let a = "abc"
@@ -22,7 +22,7 @@ public class StringTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 35)
   }
 
-  public func testMultilineStringOpenQuotesDoNotWrapIfStringIsVeryLong() {
+  func testMultilineStringOpenQuotesDoNotWrapIfStringIsVeryLong() {
     let input =
       #"""
       let someString = """
@@ -38,7 +38,7 @@ public class StringTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 30)
   }
 
-  public func testMultilineStringIsReindentedCorrectly() {
+  func testMultilineStringIsReindentedCorrectly() {
     let input =
       #"""
       functionCall(longArgument, anotherLongArgument, """
@@ -62,7 +62,7 @@ public class StringTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 25)
   }
 
-  public func testMultilineStringInterpolations() {
+  func testMultilineStringInterpolations() {
     let input =
       #"""
       let x = """
@@ -75,7 +75,7 @@ public class StringTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 25)
   }
 
-  public func testMultilineRawString() {
+  func testMultilineRawString() {
     let input =
       ##"""
       let x = #"""
@@ -87,7 +87,7 @@ public class StringTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 25)
   }
 
-  public func testMultilineRawStringOpenQuotesWrap() {
+  func testMultilineRawStringOpenQuotesWrap() {
     let input =
       #"""
       let aLongVariableName = """
@@ -113,7 +113,7 @@ public class StringTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 25)
   }
 
-  public func testMultilineStringAutocorrectMisalignedLines() {
+  func testMultilineStringAutocorrectMisalignedLines() {
     let input =
       #"""
       let x = """
@@ -138,7 +138,7 @@ public class StringTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 25)
   }
 
-  public func testMultilineStringKeepsBlankLines() {
+  func testMultilineStringKeepsBlankLines() {
     // This test not only ensures that the blank lines are retained in the first place, but that
     // the newlines are mandatory and not collapsed to the maximum number allowed by the formatter
     // configuration.

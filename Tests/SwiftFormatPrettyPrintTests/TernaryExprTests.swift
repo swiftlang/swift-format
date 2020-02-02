@@ -1,5 +1,5 @@
-public class TernaryExprTests: PrettyPrintTestCase {
-  public func testTernaryExprs() {
+final class TernaryExprTests: PrettyPrintTestCase {
+  func testTernaryExprs() {
     let input =
       """
       let x = a ? b : c
@@ -35,7 +35,7 @@ public class TernaryExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
 
-  public func testTernaryExprsWithMultiplePartChoices() {
+  func testTernaryExprsWithMultiplePartChoices() {
     let input =
       """
       let someLocalizedText =
@@ -56,7 +56,7 @@ public class TernaryExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
   }
 
-  public func testTernaryWithWrappingExpressions() {
+  func testTernaryWithWrappingExpressions() {
     let input =
       """
       foo = firstTerm + secondTerm + thirdTerm ? firstTerm + secondTerm + thirdTerm : firstTerm + secondTerm + thirdTerm
@@ -113,7 +113,7 @@ public class TernaryExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 15)
   }
 
-  public func testNestedTernaries() {
+  func testNestedTernaries() {
     let input =
       """
       a = b ? c : d ? e : f
@@ -176,7 +176,7 @@ public class TernaryExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 15)
   }
 
-  public func testExpressionStartsWithTernary() {
+  func testExpressionStartsWithTernary() {
     // When the ternary itself doesn't already start on a continuation line, we don't have a way
     // to indent the continuation of the condition differently from the first and second choices,
     // because we don't want to double-indent the condition's continuation lines, and we don't want

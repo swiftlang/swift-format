@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -496,7 +495,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 }
 
 extension Diagnostic.Message {
-  static func useTypeShorthand(type: String) -> Diagnostic.Message {
+  public static func useTypeShorthand(type: String) -> Diagnostic.Message {
     return .init(.warning, "use \(type) type shorthand form")
   }
 }

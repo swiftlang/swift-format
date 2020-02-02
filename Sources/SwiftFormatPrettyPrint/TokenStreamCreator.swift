@@ -17,7 +17,7 @@ import SwiftSyntax
 
 /// Visits the nodes of a syntax tree and constructs a linear stream of formatting tokens that
 /// tell the pretty printer how the source text should be laid out.
-private final class TokenStreamCreator: SyntaxVisitor {
+fileprivate final class TokenStreamCreator: SyntaxVisitor {
   private var tokens = [Token]()
   private var beforeMap = [TokenSyntax: [Token]]()
   private var afterMap = [TokenSyntax: [[Token]]]()
@@ -3205,7 +3205,7 @@ extension TriviaPiece {
 /// Returns whether the given trivia includes a directive to ignore formatting for the next node.
 ///
 /// - Parameter trivia: Leading trivia for a node that the formatter supports ignoring.
-private func isFormatterIgnorePresent(inTrivia trivia: Trivia) -> Bool {
+fileprivate func isFormatterIgnorePresent(inTrivia trivia: Trivia) -> Bool {
   func isFormatterIgnore(in commentText: String, prefix: String, suffix: String) -> Bool {
     let trimmed =
       commentText.dropFirst(prefix.count)
@@ -3237,7 +3237,7 @@ private func isFormatterIgnorePresent(inTrivia trivia: Trivia) -> Bool {
 /// be safely ignored.
 ///
 /// - Parameter node: A node that can be safely ignored.
-private func shouldFormatterIgnore(node: Syntax) -> Bool {
+fileprivate func shouldFormatterIgnore(node: Syntax) -> Bool {
   // Regardless of the level of nesting, if the ignore directive is present on the first token
   // contained within the node then the entire node is eligible for ignoring.
   if let firstTrivia = node.firstToken?.leadingTrivia {

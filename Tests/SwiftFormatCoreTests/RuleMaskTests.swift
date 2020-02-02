@@ -1,10 +1,8 @@
+import SwiftFormatCore
 import SwiftSyntax
 import XCTest
 
-@testable import SwiftFormatCore
-
-public class RuleMaskTests: XCTestCase {
-
+final class RuleMaskTests: XCTestCase {
   /// The source converter for the text in the current test. This is implicitly unwrapped because
   /// each test case must prepare some source text before performing any assertions, otherwise
   /// there's a developer error.
@@ -22,7 +20,7 @@ public class RuleMaskTests: XCTestCase {
     return converter.location(for: converter.position(ofLine: line, column: column))
   }
 
-  public func testSingleRule() {
+  func testSingleRule() {
     let text =
       """
       let a = 123
@@ -38,7 +36,7 @@ public class RuleMaskTests: XCTestCase {
     XCTAssertEqual(mask.ruleState("rule1", at: location(ofLine: 4)), .default)
   }
 
-  public func testIgnoreTwoRules() {
+  func testIgnoreTwoRules() {
     let text =
       """
       let a = 123
@@ -66,7 +64,7 @@ public class RuleMaskTests: XCTestCase {
     XCTAssertEqual(mask.ruleState("rule2", at: location(ofLine: 8)), .default)
   }
 
-  public func testDuplicateNested() {
+  func testDuplicateNested() {
     let text =
       """
       // swift-format-ignore: rule1
@@ -98,7 +96,7 @@ public class RuleMaskTests: XCTestCase {
 
   }
 
-  public func testSpuriousFlags() {
+  func testSpuriousFlags() {
     let text1 =
       """
       let a = 123
@@ -137,7 +135,7 @@ public class RuleMaskTests: XCTestCase {
     XCTAssertEqual(mask2.ruleState("rule1", at: location(ofLine: 8)), .disabled)
   }
 
-  public func testNamelessDirectiveAffectsAllRules() {
+  func testNamelessDirectiveAffectsAllRules() {
     let text =
       """
       let a = 123
@@ -154,7 +152,7 @@ public class RuleMaskTests: XCTestCase {
     XCTAssertEqual(mask.ruleState("rule1", at: location(ofLine: 4)), .default)
   }
 
-  public func testDirectiveWithRulesList() {
+  func testDirectiveWithRulesList() {
     let text =
       """
       let a = 123

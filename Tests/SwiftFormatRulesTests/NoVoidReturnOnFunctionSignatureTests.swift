@@ -1,11 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class NoVoidReturnOnFunctionSignatureTests: DiagnosingTestCase {
-  public func testVoidReturns() {
+final class NoVoidReturnOnFunctionSignatureTests: DiagnosingTestCase {
+  func testVoidReturns() {
     XCTAssertFormatting(
       NoVoidReturnOnFunctionSignature.self,
       input: """

@@ -1,7 +1,7 @@
 import SwiftFormatConfiguration
 
-public class TryCatchTests: PrettyPrintTestCase {
-  public func testBasicTries() {
+final class TryCatchTests: PrettyPrintTestCase {
+  func testBasicTries() {
     let input =
       """
       let a = try possiblyFailingFunc()
@@ -20,7 +20,7 @@ public class TryCatchTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
 
-  public func testDoTryCatch_noBreakBeforeCatch() {
+  func testDoTryCatch_noBreakBeforeCatch() {
     let input =
       """
       do { try thisFuncMightFail() } catch error1 { print("Nope") }
@@ -68,7 +68,7 @@ public class TryCatchTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
 
-  public func testDoTryCatch_breakBeforeCatch() {
+  func testDoTryCatch_breakBeforeCatch() {
     let input =
       """
       do { try thisFuncMightFail() } catch error1 { print("Nope") }
@@ -110,7 +110,7 @@ public class TryCatchTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: config)
   }
 
-  public func testCatchWhere_noBreakBeforeCatch() {
+  func testCatchWhere_noBreakBeforeCatch() {
     let input =
       """
       do { try thisFuncMightFail() } catch error1 where error1 is ErrorType { print("Nope") }
@@ -135,7 +135,7 @@ public class TryCatchTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 42)
   }
 
-  public func testCatchWhere_breakBeforeCatch() {
+  func testCatchWhere_breakBeforeCatch() {
     let input =
       """
       do { try thisFuncMightFail() } catch error1 where error1 is ErrorType { print("Nope") }
@@ -161,7 +161,7 @@ public class TryCatchTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 42, configuration: config)
   }
 
-  public func testNestedDo() {
+  func testNestedDo() {
     // Avoid regressions in the case where a nested `do` block was getting shifted all the way left.
     let input = """
       func foo() {

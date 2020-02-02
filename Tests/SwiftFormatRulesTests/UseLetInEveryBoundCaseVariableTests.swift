@@ -1,11 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class UseLetInEveryBoundCaseVariableTests: DiagnosingTestCase {
-  public func testInvalidLetBoundCase() {
+final class UseLetInEveryBoundCaseVariableTests: DiagnosingTestCase {
+  func testInvalidLetBoundCase() {
     let input =
       """
       switch DataPoint.labeled("hello", 100) {

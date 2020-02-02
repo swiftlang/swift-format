@@ -1,6 +1,5 @@
-public class BinaryOperatorExprTests: PrettyPrintTestCase {
-
-  public func testNonRangeFormationOperatorsAreSurroundedByBreaks() {
+final class BinaryOperatorExprTests: PrettyPrintTestCase {
+  func testNonRangeFormationOperatorsAreSurroundedByBreaks() {
     let input =
       """
       x=1+8-9  ^*^  5*4/10
@@ -27,7 +26,7 @@ public class BinaryOperatorExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected10, linelength: 10)
   }
 
-  public func testRangeFormationOperatorsAreCompactedWhenPossible() {
+  func testRangeFormationOperatorsAreCompactedWhenPossible() {
     let input =
       """
       x = 1...100
@@ -52,7 +51,7 @@ public class BinaryOperatorExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
   }
 
-  public func testRangeFormationOperatorsAreNotCompactedWhenFollowingAPostfixOperator() {
+  func testRangeFormationOperatorsAreNotCompactedWhenFollowingAPostfixOperator() {
     let input =
       """
       x = 1++ ... 100
@@ -92,7 +91,7 @@ public class BinaryOperatorExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected10, linelength: 10)
   }
 
-  public func testRangeFormationOperatorsAreNotCompactedWhenPrecedingAPrefixOperator() {
+  func testRangeFormationOperatorsAreNotCompactedWhenPrecedingAPrefixOperator() {
     let input =
       """
       x = 1 ... -100
@@ -132,7 +131,7 @@ public class BinaryOperatorExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected10, linelength: 10)
   }
 
-  public func testRangeFormationOperatorsAreNotCompactedWhenUnaryOperatorsAreOnEachSide() {
+  func testRangeFormationOperatorsAreNotCompactedWhenUnaryOperatorsAreOnEachSide() {
     let input =
       """
       x = 1++ ... -100
@@ -172,7 +171,7 @@ public class BinaryOperatorExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected10, linelength: 10)
   }
 
-  public func testRangeFormationOperatorsAreNotCompactedWhenPrecedingPrefixDot() {
+  func testRangeFormationOperatorsAreNotCompactedWhenPrecedingPrefixDot() {
     let input =
       """
       x = .first   ...   .last

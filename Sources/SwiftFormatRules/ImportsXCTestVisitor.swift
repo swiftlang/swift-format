@@ -10,13 +10,12 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
 /// Visitor that determines if the target source file imports XCTest
-private class ImportsXCTestVisitor: SyntaxVisitor {
-  let context: Context
+fileprivate class ImportsXCTestVisitor: SyntaxVisitor {
+  private let context: Context
 
   init(context: Context) {
     self.context = context

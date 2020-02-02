@@ -1,5 +1,5 @@
-public class MemberTypeIdentifierTests: PrettyPrintTestCase {
-  public func testMemberTypes() {
+final class MemberTypeIdentifierTests: PrettyPrintTestCase {
+  func testMemberTypes() {
     let input =
       """
       let a: One.Two.Three.Four.Five

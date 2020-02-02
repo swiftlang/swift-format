@@ -1,8 +1,7 @@
 import SwiftFormatConfiguration
 
-public class FunctionDeclTests: PrettyPrintTestCase {
-
-  public func testBasicFunctionDeclarations_noPackArguments() {
+final class FunctionDeclTests: PrettyPrintTestCase {
+  func testBasicFunctionDeclarations_noPackArguments() {
     let input =
       """
       func myFun(var1: Int, var2: Double) {
@@ -47,7 +46,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 
-  public func testBasicFunctionDeclarations_packArguments() {
+  func testBasicFunctionDeclarations_packArguments() {
     let input =
       """
       func myFun(var1: Int, var2: Double) {
@@ -90,7 +89,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 
-  public func testFunctionDeclReturns() {
+  func testFunctionDeclReturns() {
     // TODO: The tuple return case needs a lot of work.
     let input =
       """
@@ -134,7 +133,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 
-  public func testFunctionDeclThrows() {
+  func testFunctionDeclThrows() {
     let input =
       """
       func myFun(var1: Int) throws -> Double {
@@ -179,7 +178,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 
-  public func testFunctionGenericParameters_noPackArguments() {
+  func testFunctionGenericParameters_noPackArguments() {
     let input =
       """
       func myFun<S, T>(var1: S, var2: T) {
@@ -226,7 +225,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: config)
   }
 
-  public func testFunctionGenericParameters_packArguments() {
+  func testFunctionGenericParameters_packArguments() {
     let input =
       """
       func myFun<S, T>(var1: S, var2: T) {
@@ -272,7 +271,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: config)
   }
 
-  public func testFunctionWhereClause() {
+  func testFunctionWhereClause() {
     let input =
       """
       public func index<Elements: Collection, Element>(
@@ -339,7 +338,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 
-  public func testFunctionWhereClause_lineBreakBeforeEachGenericRequirement() {
+  func testFunctionWhereClause_lineBreakBeforeEachGenericRequirement() {
     let input =
     """
       public func index<Elements: Collection, Element>(
@@ -409,7 +408,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 
-  public func testFunctionWithDefer() {
+  func testFunctionWithDefer() {
     let input =
       """
       func myFun() {
@@ -455,7 +454,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 48)
   }
 
-  public func testFunctionAttributes() {
+  func testFunctionAttributes() {
     let input =
       """
       @discardableResult public func MyFun() {
@@ -505,7 +504,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
-  public func testBodilessFunctionDecl() {
+  func testBodilessFunctionDecl() {
     let input =
       """
       func myFun()
@@ -536,7 +535,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
-  public func testFunctionFullWrap() {
+  func testFunctionFullWrap() {
     let input =
     """
     @discardableResult @objc
@@ -569,7 +568,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
 
-  public func testFunctionFullWrap_lineBreakBeforeEachGenericRequirement() {
+  func testFunctionFullWrap_lineBreakBeforeEachGenericRequirement() {
     let input =
     """
     @discardableResult @objc
@@ -605,7 +604,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30, configuration: config)
   }
 
-  public func testEmptyFunction() {
+  func testEmptyFunction() {
     let input = "func foo() {}"
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 50)
     
@@ -617,7 +616,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: wrapped, linelength: 12)
   }
 
-  public func testOperatorOverloads() {
+  func testOperatorOverloads() {
     let input =
       """
       struct X {
@@ -658,7 +657,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
   }
 
-  public func testBreaksBeforeOrInsideOutput() {
+  func testBreaksBeforeOrInsideOutput() {
     let input =
       """
       func name<R>(_ x: Int) throws -> R
@@ -701,7 +700,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 33)
   }
 
-  public func testBreaksBeforeOrInsideOutput_prioritizingKeepingOutputTogether() {
+  func testBreaksBeforeOrInsideOutput_prioritizingKeepingOutputTogether() {
     let input =
     """
       func name<R>(_ x: Int) throws -> R
@@ -748,7 +747,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 33, configuration: config)
   }
 
-  public func testBreaksBeforeOrInsideOutputWithAttributes() {
+  func testBreaksBeforeOrInsideOutputWithAttributes() {
     let input =
       """
       @objc @discardableResult
@@ -781,7 +780,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 23)
   }
 
-  public func testBreaksBeforeOrInsideOutputWithAttributes_prioritizingKeepingOutputTogether() {
+  func testBreaksBeforeOrInsideOutputWithAttributes_prioritizingKeepingOutputTogether() {
     let input =
     """
       @objc @discardableResult
@@ -817,7 +816,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 23, configuration: config)
   }
 
-  public func testBreaksBeforeOrInsideOutputWithWhereClause() {
+  func testBreaksBeforeOrInsideOutputWithWhereClause() {
     var input =
       """
       func name<R>(_ x: Int) throws -> R where Foo == Bar
@@ -874,7 +873,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 23)
   }
 
-  public func testBreaksBeforeOrInsideOutputWithWhereClause_prioritizingKeepingOutputTogether() {
+  func testBreaksBeforeOrInsideOutputWithWhereClause_prioritizingKeepingOutputTogether() {
     var input =
     """
       func name<R>(_ x: Int) throws -> R where Foo == Bar
@@ -937,7 +936,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 23, configuration: config)
   }
 
-  public func testAttributedTypes() {
+  func testAttributedTypes() {
     let input =
       """
       func MyFun(myvar: @escaping MyType)
@@ -967,7 +966,7 @@ public class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 35, configuration: config)
   }
 
-  public func testRemovesLineBreakBeforeOpenBraceUnlessAbsolutelyNecessary() {
+  func testRemovesLineBreakBeforeOpenBraceUnlessAbsolutelyNecessary() {
     let input =
       """
       func foo(bar: Int)

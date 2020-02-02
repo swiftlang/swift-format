@@ -1,5 +1,5 @@
-public class WhileStmtTests: PrettyPrintTestCase {
-  public func testBasicWhileLoops() {
+final class WhileStmtTests: PrettyPrintTestCase {
+  func testBasicWhileLoops() {
     let input =
       """
       while condition {
@@ -48,7 +48,7 @@ public class WhileStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
   }
 
-  public func testLabeledWhileLoops() {
+  func testLabeledWhileLoops() {
     let input =
       """
       myLabel: while condition {

@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -78,7 +77,7 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
   }
 
   // Adds given keyword to all members in declaration block
-  func addMemberAccessKeywords(
+  private func addMemberAccessKeywords(
     memDeclBlock: MemberDeclBlockSyntax,
     keyword: DeclModifierSyntax
   ) -> MemberDeclListSyntax {
@@ -102,11 +101,11 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
 }
 
 extension Diagnostic.Message {
-  static func removeRedundantAccessKeyword(name: String) -> Diagnostic.Message {
+  public static func removeRedundantAccessKeyword(name: String) -> Diagnostic.Message {
     return .init(.warning, "remove redundant 'internal' access keyword from \(name)")
   }
 
-  static func moveAccessKeyword(keyword: String) -> Diagnostic.Message {
+  public static func moveAccessKeyword(keyword: String) -> Diagnostic.Message {
     return .init(.warning, "specify \(keyword) access level for each member inside the extension")
   }
 }

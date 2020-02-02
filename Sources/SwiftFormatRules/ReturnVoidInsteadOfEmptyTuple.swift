@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -38,5 +37,5 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
 }
 
 extension Diagnostic.Message {
-  static let returnVoid = Diagnostic.Message(.warning, "replace '()' with 'Void'")
+  public static let returnVoid = Diagnostic.Message(.warning, "replace '()' with 'Void'")
 }

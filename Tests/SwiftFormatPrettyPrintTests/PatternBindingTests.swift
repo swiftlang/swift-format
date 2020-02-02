@@ -1,7 +1,7 @@
 import SwiftFormatConfiguration
 
-public class PatternBindingTests: PrettyPrintTestCase {
-  public func testBindingIncludingTypeAnnotation() {
+final class PatternBindingTests: PrettyPrintTestCase {
+  func testBindingIncludingTypeAnnotation() {
     let input =
       """
       let someObject: Foo = object

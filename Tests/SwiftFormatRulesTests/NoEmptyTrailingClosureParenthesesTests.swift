@@ -1,11 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class NoEmptyTrailingClosureParenthesesTests: DiagnosingTestCase {
-  public func testInvalidEmptyParenTrailingClosure() {
+final class NoEmptyTrailingClosureParenthesesTests: DiagnosingTestCase {
+  func testInvalidEmptyParenTrailingClosure() {
     XCTAssertFormatting(
       NoEmptyTrailingClosureParentheses.self,
       input: """

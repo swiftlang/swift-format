@@ -1,9 +1,8 @@
+import SwiftFormatPrettyPrint
 import SwiftSyntax
 
-@testable import SwiftFormatPrettyPrint
-
-public class ArrayDeclTests: PrettyPrintTestCase {
-  public func testBasicArrays() {
+final class ArrayDeclTests: PrettyPrintTestCase {
+  func testBasicArrays() {
     let input =
       """
       let a = [1, 2, 3,]
@@ -48,7 +47,7 @@ public class ArrayDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
 
-  public func testArrayOfFunctions() {
+  func testArrayOfFunctions() {
     let input =
       """
       let A = [(Int, Double) -> Bool]()
@@ -65,7 +64,7 @@ public class ArrayDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
 
-  public func testNoTrailingCommasInTypes() {
+  func testNoTrailingCommasInTypes() {
     let input =
       """
       let a = [SomeSuperMegaLongTypeName]()
@@ -82,7 +81,7 @@ public class ArrayDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
 
-  public func testWhitespaceOnlyDoesNotChangeTrailingComma() {
+  func testWhitespaceOnlyDoesNotChangeTrailingComma() {
     let input =
       """
       let a = [1, 2, 3,]
@@ -96,7 +95,7 @@ public class ArrayDeclTests: PrettyPrintTestCase {
       input: input, expected: input + "\n", linelength: 45, whitespaceOnly: true)
   }
 
-  public func testTrailingCommaDiagnostics() {
+  func testTrailingCommaDiagnostics() {
     let input =
       """
       let a = [1, 2, 3,]
@@ -109,7 +108,7 @@ public class ArrayDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(
       input: input, expected: input + "\n", linelength: 45, whitespaceOnly: true)
 
-    XCTAssertDiagnosed(Diagnostic.Message.removeTrailingComma, line: 1, column: 17)
-    XCTAssertDiagnosed(Diagnostic.Message.addTrailingComma, line: 4, column: 26)
+    XCTAssertDiagnosed(.removeTrailingComma, line: 1, column: 17)
+    XCTAssertDiagnosed(.addTrailingComma, line: 4, column: 26)
   }
 }

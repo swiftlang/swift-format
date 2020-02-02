@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -30,6 +29,6 @@ public final class NoBlockComments: SyntaxLintRule {
 }
 
 extension Diagnostic.Message {
-  static let avoidBlockComment = Diagnostic.Message(
+  public static let avoidBlockComment = Diagnostic.Message(
     .warning, "replace block comment with line comments")
 }

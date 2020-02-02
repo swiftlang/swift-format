@@ -24,7 +24,6 @@ import SwiftSyntax
 /// Format: Redundant labels in case patterns are removed.
 public final class NoLabelsInCasePatterns: SyntaxFormatRule {
   public override func visit(_ node: SwitchCaseLabelSyntax) -> Syntax {
-
     var newCaseItems: [CaseItemSyntax] = []
     for item in node.caseItems {
       guard let expPat = item.pattern.as(ExpressionPatternSyntax.self) else {
@@ -72,7 +71,7 @@ public final class NoLabelsInCasePatterns: SyntaxFormatRule {
 }
 
 extension Diagnostic.Message {
-  static func removeRedundantLabel(name: String) -> Diagnostic.Message {
+  public static func removeRedundantLabel(name: String) -> Diagnostic.Message {
     return .init(.warning, "remove \(name) label from case argument")
   }
 }

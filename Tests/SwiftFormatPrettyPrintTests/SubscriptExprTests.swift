@@ -1,5 +1,5 @@
-public class SubscriptExprTests: PrettyPrintTestCase {
-  public func testBasicSubscriptGetters() {
+final class SubscriptExprTests: PrettyPrintTestCase {
+  func testBasicSubscriptGetters() {
     let input =
       """
       let a = myCollection[index]
@@ -19,7 +19,7 @@ public class SubscriptExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
 
-  public func testBasicSubscriptSetters() {
+  func testBasicSubscriptSetters() {
     let input =
       """
       myCollection[index] = someValue
@@ -40,7 +40,7 @@ public class SubscriptExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
 
-  public func testSubscriptGettersWithTrailingClosures() {
+  func testSubscriptGettersWithTrailingClosures() {
     let input =
       """
       let a = myCollection[index] { $0 < $1 }
@@ -63,7 +63,7 @@ public class SubscriptExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
 
-  public func testSubscriptSettersWithTrailingClosures() {
+  func testSubscriptSettersWithTrailingClosures() {
     let input =
     """
       myCollection[index] { $0 < $1 } = someValue

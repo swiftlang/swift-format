@@ -40,7 +40,7 @@ struct Comment {
 
   let kind: Kind
   var text: [String]
-  public var length: Int
+  var length: Int
 
   init(kind: Kind, text: String) {
     self.kind = kind

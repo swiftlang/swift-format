@@ -779,12 +779,12 @@ public class PrettyPrinter {
 
 extension Diagnostic.Message {
 
-  static let moveEndOfLineComment = Diagnostic.Message(
+  public static let moveEndOfLineComment = Diagnostic.Message(
     .warning, "move end-of-line comment that exceeds the line length")
 
-  static let addTrailingComma = Diagnostic.Message(
+  public static let addTrailingComma = Diagnostic.Message(
     .warning, "add trailing comma to the last element in multiline collection literal")
 
-  static let removeTrailingComma = Diagnostic.Message(
+  public static let removeTrailingComma = Diagnostic.Message(
     .warning, "remove trailing comma from the last element in single line collection literal")
 }

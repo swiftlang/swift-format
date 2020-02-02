@@ -1,11 +1,6 @@
-import Foundation
-import SwiftSyntax
-import XCTest
-
-@testable import SwiftFormatRules
+import SwiftFormatRules
 
 final class NoCasesWithOnlyFallthroughTests: DiagnosingTestCase {
-
   func testFallthroughCases() {
     XCTAssertFormatting(
       NoCasesWithOnlyFallthrough.self,

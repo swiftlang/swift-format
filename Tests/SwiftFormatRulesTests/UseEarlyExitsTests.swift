@@ -1,12 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class UseEarlyExitsTests: DiagnosingTestCase {
-
-  public func testBasicIfElse() {
+final class UseEarlyExitsTests: DiagnosingTestCase {
+  func testBasicIfElse() {
     // In this and other tests, the indentation of the true block in the expected output is
     // explicitly incorrect because this formatting rule does not fix it up with the assumption that
     // the pretty-printer will handle it.
@@ -29,7 +24,7 @@ public class UseEarlyExitsTests: DiagnosingTestCase {
         """)
   }
 
-  public func testIfElseWithBothEarlyExiting() {
+  func testIfElseWithBothEarlyExiting() {
     XCTAssertFormatting(
       UseEarlyExits.self,
       input: """
@@ -51,7 +46,7 @@ public class UseEarlyExitsTests: DiagnosingTestCase {
         """)
   }
 
-  public func testElseIfsDoNotChange() {
+  func testElseIfsDoNotChange() {
     let input = """
       if condition {
         trueBlock()
@@ -63,7 +58,7 @@ public class UseEarlyExitsTests: DiagnosingTestCase {
     XCTAssertFormatting(UseEarlyExits.self, input: input, expected: input)
   }
 
-  public func testElsesAtEndOfElseIfsDoNotChange() {
+  func testElsesAtEndOfElseIfsDoNotChange() {
     let input = """
       if condition {
         trueBlock()
@@ -78,7 +73,7 @@ public class UseEarlyExitsTests: DiagnosingTestCase {
     XCTAssertFormatting(UseEarlyExits.self, input: input, expected: input)
   }
 
-  public func testComplex() {
+  func testComplex() {
     XCTAssertFormatting(
       UseEarlyExits.self,
       input: """

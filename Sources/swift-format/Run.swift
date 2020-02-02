@@ -116,7 +116,7 @@ func formatMain(
 }
 
 /// Makes and returns a new configured diagnostic engine.
-private func makeDiagnosticEngine() -> DiagnosticEngine {
+fileprivate func makeDiagnosticEngine() -> DiagnosticEngine {
   let engine = DiagnosticEngine()
   let consumer = PrintingDiagnosticConsumer()
   engine.addConsumer(consumer)
@@ -125,7 +125,7 @@ private func makeDiagnosticEngine() -> DiagnosticEngine {
 
 /// Reads from the given file handle until EOF is reached, then returns the contents as a UTF8
 /// encoded string.
-private func readSource(from fileHandle: FileHandle) -> String? {
+fileprivate func readSource(from fileHandle: FileHandle) -> String? {
   let sourceData = fileHandle.readDataToEndOfFile()
   return String(data: sourceData, encoding: .utf8)
 }

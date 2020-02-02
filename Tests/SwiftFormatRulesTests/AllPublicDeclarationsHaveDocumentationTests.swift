@@ -1,10 +1,7 @@
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class AllPublicDeclarationsHaveDocumentationTests: DiagnosingTestCase {
-  public func testPublicDeclsWithoutDocs() {
+final class AllPublicDeclarationsHaveDocumentationTests: DiagnosingTestCase {
+  func testPublicDeclsWithoutDocs() {
     let input =
       """
       public func lightswitchRave() {

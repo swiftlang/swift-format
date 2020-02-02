@@ -1,5 +1,5 @@
-public class NewlineTests: PrettyPrintTestCase {
-  public func testLeadingNewlines() {
+final class NewlineTests: PrettyPrintTestCase {
+  func testLeadingNewlines() {
     let input =
       """
 
@@ -16,7 +16,7 @@ public class NewlineTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
 
-  public func testLeadingNewlinesWithComments() {
+  func testLeadingNewlinesWithComments() {
     let input =
       """
 
@@ -37,7 +37,7 @@ public class NewlineTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
 
-  public func testTrailingNewlines() {
+  func testTrailingNewlines() {
     let input =
       """
       let a = 123
@@ -54,7 +54,7 @@ public class NewlineTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
 
-  public func testTrailingNewlinesWithComments() {
+  func testTrailingNewlinesWithComments() {
     let input =
       """
       let a = 123

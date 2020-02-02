@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -40,5 +39,5 @@ public final class NeverUseForceTry: SyntaxLintRule {
 }
 
 extension Diagnostic.Message {
-  static let doNotForceTry = Diagnostic.Message(.warning, "do not use force try")
+  public static let doNotForceTry = Diagnostic.Message(.warning, "do not use force try")
 }

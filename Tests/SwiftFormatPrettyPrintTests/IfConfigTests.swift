@@ -1,7 +1,7 @@
 import SwiftFormatConfiguration
 
-public class IfConfigTests: PrettyPrintTestCase {
-  public func testBasicIfConfig() {
+final class IfConfigTests: PrettyPrintTestCase {
+  func testBasicIfConfig() {
     let input =
       """
       #if someCondition
@@ -58,7 +58,7 @@ public class IfConfigTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
 
-  public func testIfConfigNoIndentation() {
+  func testIfConfigNoIndentation() {
     let input =
       """
       #if someCondition
@@ -117,7 +117,7 @@ public class IfConfigTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45, configuration: config)
   }
 
-  public func testPoundIfAroundMembers() {
+  func testPoundIfAroundMembers() {
     let input =
       """
       class Foo {
@@ -142,7 +142,7 @@ public class IfConfigTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
 
-  public func testPrettyPrintLineBreaksDisabled() {
+  func testPrettyPrintLineBreaksDisabled() {
     let input =
       """
       #if canImport(SwiftUI) && !(os(iOS)&&arch( arm ) )&&( (canImport(AppKit) || canImport(UIKit)) && !os(watchOS))
@@ -161,7 +161,7 @@ public class IfConfigTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
 
-  public func testInvalidDiscretionaryLineBreaksRemoved() {
+  func testInvalidDiscretionaryLineBreaksRemoved() {
     let input =
          """
          #if (canImport(SwiftUI) &&
@@ -184,7 +184,7 @@ public class IfConfigTests: PrettyPrintTestCase {
        assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
 
-  public func testValidDiscretionaryLineBreaksRetained() {
+  func testValidDiscretionaryLineBreaksRetained() {
     let input =
       """
       #if (canImport(SwiftUI)

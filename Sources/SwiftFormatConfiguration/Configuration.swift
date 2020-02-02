@@ -14,7 +14,7 @@ import Foundation
 
 /// A version number that can be specified in the configuration file, which allows us to change the
 /// format in the future if desired and still support older files.
-private let highestSupportedConfigurationVersion = 1
+fileprivate let highestSupportedConfigurationVersion = 1
 
 /// Holds the complete set of configured values and defaults.
 public struct Configuration: Codable, Equatable {

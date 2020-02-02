@@ -1,8 +1,8 @@
 import SwiftFormatConfiguration
-@testable import SwiftFormatWhitespaceLinter
+import SwiftFormatWhitespaceLinter
 
-public class WhitespaceLintTests: WhitespaceTestCase {
-  public func testSpacing() {
+final class WhitespaceLintTests: WhitespaceTestCase {
+  func testSpacing() {
     let input =
       """
       let a : Int = 123
@@ -22,7 +22,7 @@ public class WhitespaceLintTests: WhitespaceTestCase {
     XCTAssertDiagnosed(.spacingError(1), line: 2, column: 8)
   }
 
-  public func testTabSpacing() {
+  func testTabSpacing() {
     let input =
       """
       let a\t: Int = 123
@@ -39,7 +39,7 @@ public class WhitespaceLintTests: WhitespaceTestCase {
     XCTAssertDiagnosed(.spacingCharError, line: 1, column: 6)
   }
 
-  public func testSpaceIndentation() {
+  func testSpaceIndentation() {
     let input =
       """
         let a = 123
@@ -71,7 +71,7 @@ public class WhitespaceLintTests: WhitespaceTestCase {
       column: 1)
   }
 
-  public func testTabIndentation() {
+  func testTabIndentation() {
      let input =
        """
        \t\tlet a = 123
@@ -103,7 +103,7 @@ public class WhitespaceLintTests: WhitespaceTestCase {
       column: 1)
    }
 
-  public func testHeterogeneousIndentation() {
+  func testHeterogeneousIndentation() {
      let input =
        """
        \t\t  \t let a = 123
@@ -157,7 +157,7 @@ public class WhitespaceLintTests: WhitespaceTestCase {
       column: 1)
    }
 
-  public func testTrailingWhitespace() {
+  func testTrailingWhitespace() {
     let input =
       """
       let a = 123\u{20}\u{20}
@@ -185,7 +185,7 @@ public class WhitespaceLintTests: WhitespaceTestCase {
     XCTAssertDiagnosed(.trailingWhitespaceError, line: 5, column: 12)
   }
 
-  public func testAddLines() {
+  func testAddLines() {
     let input =
       """
       let a = 123
@@ -211,7 +211,7 @@ public class WhitespaceLintTests: WhitespaceTestCase {
     XCTAssertDiagnosed(.addLinesError(1), line: 3, column: 22)
   }
 
-  public func testRemoveLines() {
+  func testRemoveLines() {
     let input =
       """
       let a = 123
@@ -243,7 +243,7 @@ public class WhitespaceLintTests: WhitespaceTestCase {
     XCTAssertDiagnosed(.removeLineError, line: 9, column: 0)
   }
 
-  public func testLineLength() {
+  func testLineLength() {
     let input =
       """
       func myFunc(longVar1: Bool, longVar2: Bool, longVar3: Bool, longVar4: Bool) {

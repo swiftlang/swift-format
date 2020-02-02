@@ -1,7 +1,7 @@
 import SwiftFormatConfiguration
 
-public class MemberAccessExprTests: PrettyPrintTestCase {
-  public func testMemberAccess() {
+final class MemberAccessExprTests: PrettyPrintTestCase {
+  func testMemberAccess() {
     let input =
       """
       let a = one.two.three.four.five
@@ -23,7 +23,7 @@ public class MemberAccessExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 15)
   }
 
-  public func testImplicitMemberAccess() {
+  func testImplicitMemberAccess() {
     let input =
       """
       let array = [.first, .second, .third]
@@ -42,7 +42,7 @@ public class MemberAccessExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 15)
   }
 
-  public func testMethodChainingWithClosures() {
+  func testMethodChainingWithClosures() {
     let input =
       """
       let result = [1, 2, 3, 4, 5]
@@ -61,7 +61,7 @@ public class MemberAccessExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
 
-  public func testMethodChainingWithClosuresFullWrap() {
+  func testMethodChainingWithClosuresFullWrap() {
     let input =
       """
       let result = [1, 2, 3, 4, 5].filter { $0 % 2 == 0 }.map { $0 * $0 }
@@ -125,7 +125,7 @@ public class MemberAccessExprTests: PrettyPrintTestCase {
       configuration: configuration)
   }
 
-  public func testContinuationRestorationAfterGroup() {
+  func testContinuationRestorationAfterGroup() {
     let input =
       """
       someLongReceiverName.someEvenLongerMethodName {
@@ -154,7 +154,7 @@ public class MemberAccessExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
 
-  public func testOperatorChainedMemberAccessExprs() {
+  func testOperatorChainedMemberAccessExprs() {
     let input =
       """
       let totalHeight = Constants.textFieldHeight + Constants.borderHeight + Constants.importantLabelHeight
@@ -171,7 +171,7 @@ public class MemberAccessExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
   }
 
-  public func testBaselessMemberAccess() {
+  func testBaselessMemberAccess() {
     let input =
       """
       foo.bar(.someImplicitlyTypedMemberFunc(
@@ -189,7 +189,7 @@ public class MemberAccessExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
   }
 
-  public func testChainsUsingNonTrailingClosures() {
+  func testChainsUsingNonTrailingClosures() {
     let input =
       """
       myWeirdFunc(foo: bar, withClosure: { abc in
@@ -242,7 +242,7 @@ public class MemberAccessExprTests: PrettyPrintTestCase {
       configuration: configuration)
   }
 
-  public func testMemberItemClosureChaining() {
+  func testMemberItemClosureChaining() {
     let input =
       """
       struct ContentView: View {
@@ -336,7 +336,7 @@ public class MemberAccessExprTests: PrettyPrintTestCase {
       configuration: configuration)
   }
 
-  public func testChainedTrailingClosureMethods() {
+  func testChainedTrailingClosureMethods() {
     let input =
       """
       var button =  View.Button { Text("ABC") }.action { presentAction() }.background(.red).text(.blue).text(.red).font(.appleSans)
@@ -429,7 +429,7 @@ public class MemberAccessExprTests: PrettyPrintTestCase {
       configuration: configuration)
   }
 
-  public func testChainedSubscriptExprs() {
+  func testChainedSubscriptExprs() {
     let input =
       """
       var button =  View.Button[5, 4, 3] { Text("ABC") }.action { presentAction() }.background(.red).text(.blue).text(.red).font(.appleSans)

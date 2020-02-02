@@ -77,7 +77,7 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
   }
 
   // Compares initializer parameters to stored properties of the struct
-  func matchesPropertyList(
+  private func matchesPropertyList(
     parameters: FunctionParameterListSyntax,
     properties: [VariableDeclSyntax]
   ) -> Bool {
@@ -111,7 +111,7 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
   }
 
   // Evaluates if all, and only, the stored properties are initialized in the body
-  func matchesAssignmentBody(
+  private func matchesAssignmentBody(
     variables: [VariableDeclSyntax],
     initBody: CodeBlockSyntax?
   ) -> Bool {
@@ -156,7 +156,7 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
 }
 
 extension Diagnostic.Message {
-  static let removeRedundantInitializer = Diagnostic.Message(
+  public static let removeRedundantInitializer = Diagnostic.Message(
     .warning,
     "remove initializer and use the synthesized initializer")
 }

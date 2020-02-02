@@ -1,11 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class AlwaysUseLowerCamelCaseTests: DiagnosingTestCase {
-  public func testInvalidVariableCasing() {
+final class AlwaysUseLowerCamelCaseTests: DiagnosingTestCase {
+  func testInvalidVariableCasing() {
     let input =
       """
       let Test = 1

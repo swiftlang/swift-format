@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -41,7 +40,7 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
     return .skipChildren
   }
 
-  func diagnoseLowerCamelCaseViolations(_ identifier: TokenSyntax) {
+  private func diagnoseLowerCamelCaseViolations(_ identifier: TokenSyntax) {
     guard case .identifier(let text) = identifier.tokenKind else { return }
     if text.isEmpty { return }
     if text.dropFirst().contains("_") || ("A"..."Z").contains(text.first!) {
@@ -53,7 +52,7 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
 }
 
 extension Diagnostic.Message {
-  static func variableNameMustBeLowerCamelCase(_ name: String) -> Diagnostic.Message {
+  public static func variableNameMustBeLowerCamelCase(_ name: String) -> Diagnostic.Message {
     return .init(.warning, "rename variable '\(name)' using lower-camel-case")
   }
 }

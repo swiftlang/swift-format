@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -178,7 +177,7 @@ extension TriviaPiece {
 }
 
 extension Diagnostic.Message {
-  static func collapseCase(name: String) -> Diagnostic.Message {
+  public static func collapseCase(name: String) -> Diagnostic.Message {
     return .init(.warning, "combine fallthrough-only case \(name) with a following case")
   }
 }

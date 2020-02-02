@@ -1,11 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class OneVariableDeclarationPerLineTests: DiagnosingTestCase {
-  public func testMultipleVariableBindings() {
+final class OneVariableDeclarationPerLineTests: DiagnosingTestCase {
+  func testMultipleVariableBindings() {
     XCTAssertFormatting(
       OneVariableDeclarationPerLine.self,
       input: """
@@ -28,7 +24,7 @@ public class OneVariableDeclarationPerLineTests: DiagnosingTestCase {
                 """)
   }
 
-  public func testNestedVariableBindings() {
+  func testNestedVariableBindings() {
     XCTAssertFormatting(
       OneVariableDeclarationPerLine.self,
       input: """

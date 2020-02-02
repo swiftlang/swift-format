@@ -1,11 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class OnlyOneTrailingClosureArgumentTests: DiagnosingTestCase {
-  public func testInvalidTrailingClosureCall() {
+final class OnlyOneTrailingClosureArgumentTests: DiagnosingTestCase {
+  func testInvalidTrailingClosureCall() {
     let input =
       """
       callWithBoth(someClosure: {}) {

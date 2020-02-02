@@ -1,5 +1,5 @@
-public class IgnoreNodeTests: PrettyPrintTestCase {
-  public func atestIgnoreCodeBlockListItems() {
+final class IgnoreNodeTests: PrettyPrintTestCase {
+  func atestIgnoreCodeBlockListItems() {
     let input =
       """
             x      = 4       + 5 // This comment stays here.
@@ -99,7 +99,7 @@ public class IgnoreNodeTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
-  public func testIgnoreMemberDeclListItems() {
+  func testIgnoreMemberDeclListItems() {
     let input =
       """
           struct Foo {
@@ -148,7 +148,7 @@ public class IgnoreNodeTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
-  public func testIgnoresNestedMembers() {
+  func testIgnoresNestedMembers() {
     let input =
       """
       // swift-format-ignore
@@ -193,7 +193,7 @@ public class IgnoreNodeTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
-  public func testInvalidComment() {
+  func testInvalidComment() {
     let input =
       """
       // swift-format-ignore: RuleName
@@ -230,7 +230,7 @@ public class IgnoreNodeTests: PrettyPrintTestCase {
        assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
-  public func testValidComment() {
+  func testValidComment() {
     let input =
       """
       // swift-format-ignore
@@ -247,27 +247,27 @@ public class IgnoreNodeTests: PrettyPrintTestCase {
       x      =    a+1+2+3+4
       """
 
-       let expected =
-         """
-         // swift-format-ignore
-         x=y+b+c
+    let expected =
+      """
+      // swift-format-ignore
+      x=y+b+c
 
-         /// Pragma mark: - Special Region
+      /// Pragma mark: - Special Region
 
-         // swift-format-ignore
-         // x is important
-         x        =                  1 +
-         2
+      // swift-format-ignore
+      // x is important
+      x        =                  1 +
+      2
 
-         /* swift-format-ignore */
-         x      =    a+1+2+3+4
+      /* swift-format-ignore */
+      x      =    a+1+2+3+4
 
-         """
+      """
 
-       assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
-  public func testIgnoreInvalidAfterFirstToken() {
+  func testIgnoreInvalidAfterFirstToken() {
     let input =
       """
       public  // swift-format-ignore
@@ -287,6 +287,6 @@ public class IgnoreNodeTests: PrettyPrintTestCase {
 
       """
 
-       assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 }

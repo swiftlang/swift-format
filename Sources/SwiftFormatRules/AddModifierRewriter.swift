@@ -10,12 +10,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
-private final class AddModifierRewriter: SyntaxRewriter {
-  let modifierKeyword: DeclModifierSyntax
+fileprivate final class AddModifierRewriter: SyntaxRewriter {
+  private let modifierKeyword: DeclModifierSyntax
 
   init(modifierKeyword: DeclModifierSyntax) {
     self.modifierKeyword = modifierKeyword
@@ -162,7 +161,7 @@ private final class AddModifierRewriter: SyntaxRewriter {
   /// this method does nothing and returns the given node as-is.
   /// - Parameter node: A node that was updated to include a new modifier.
   /// - Parameter modifiersProvider: A closure that returns all modifiers for the given node.
-  func nodeByRelocatingTrivia<NodeType: DeclSyntaxProtocol>(
+  private func nodeByRelocatingTrivia<NodeType: DeclSyntaxProtocol>(
     in node: NodeType,
     for modifiersProvider: (NodeType) -> ModifierListSyntax?
   ) -> NodeType {

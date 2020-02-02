@@ -1,11 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class GroupNumericLiteralsTests: DiagnosingTestCase {
-  public func testNumericGrouping() {
+final class GroupNumericLiteralsTests: DiagnosingTestCase {
+  func testNumericGrouping() {
     XCTAssertFormatting(
       GroupNumericLiterals.self,
       input: """

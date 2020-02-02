@@ -1,17 +1,16 @@
 import SwiftFormatConfiguration
 import SwiftFormatCore
+import SwiftFormatWhitespaceLinter
 import SwiftSyntax
 import XCTest
-
-@testable import SwiftFormatWhitespaceLinter
 
 /// This test class allows us to check for specific diagnostics emitted by the DiagnosticEngine. It
 /// is similar to SwiftFormatRulesTests/DiagnosingTestCase, except that this class also tests for
 /// the specific line and column numbers of the diagnostic location.
-public class WhitespaceTestCase: XCTestCase {
+class WhitespaceTestCase: XCTestCase {
 
   /// The context in which to run the test.
-  public private(set) var context: Context?
+  private(set) var context: Context?
 
   /// Keeps track of the linter errors queued up in the DiagnosticEngine.
   private var consumer = DiagnosticTrackingConsumer()
@@ -31,7 +30,7 @@ public class WhitespaceTestCase: XCTestCase {
     func finalize() {}
   }
 
-  public override func tearDown() {
+  override func tearDown() {
     guard shouldCheckForUnassertedDiagnostics else { return }
 
     for diag in consumer.registeredDiagnostics {
@@ -45,7 +44,7 @@ public class WhitespaceTestCase: XCTestCase {
   /// - Parameters:
   ///  - input: The user's input text.
   ///  - expected: The formatted text.
-  func performWhitespaceLint(
+  final func performWhitespaceLint(
     input: String,
     expected: String,
     linelength: Int? = nil
@@ -87,7 +86,7 @@ public class WhitespaceTestCase: XCTestCase {
   ///   - column: The column number of the diagnostic message within the user's input text.
   ///   - file: The file the test resides in (defaults to the current caller's file).
   ///   - sourceLine: The line the test resides in (defaults to the current caller's file).
-  func XCTAssertDiagnosed(
+  final func XCTAssertDiagnosed(
     _ message: Diagnostic.Message,
     line: Int? = nil,
     column: Int? = nil,

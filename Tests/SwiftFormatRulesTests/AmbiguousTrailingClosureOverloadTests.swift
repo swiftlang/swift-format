@@ -1,11 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class AmbiguousTrailingClosureOverloadTests: DiagnosingTestCase {
-  public func testAmbiguousOverloads() {
+final class AmbiguousTrailingClosureOverloadTests: DiagnosingTestCase {
+  func testAmbiguousOverloads() {
     performLint(
       AmbiguousTrailingClosureOverload.self,
       input: """

@@ -1,7 +1,4 @@
-import SwiftSyntax
-import XCTest
-
-@testable import SwiftFormatRules
+import SwiftFormatRules
 
 final class UseShorthandTypeNamesTests: DiagnosingTestCase {
   func testNamesInTypeContextsAreShortened() {

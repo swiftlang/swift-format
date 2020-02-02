@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -20,7 +19,7 @@ import SwiftSyntax
 ///       error is raised.
 public final class AmbiguousTrailingClosureOverload: SyntaxLintRule {
 
-  func diagnoseBadOverloads(_ overloads: [String: [FunctionDeclSyntax]]) {
+  private func diagnoseBadOverloads(_ overloads: [String: [FunctionDeclSyntax]]) {
     for (_, decls) in overloads where decls.count > 1 {
       let decl = decls[0]
       diagnose(.ambiguousTrailingClosureOverload(decl.fullDeclName), on: decl.identifier) {
@@ -34,7 +33,7 @@ public final class AmbiguousTrailingClosureOverload: SyntaxLintRule {
     }
   }
 
-  func discoverAndDiagnoseOverloads(_ functions: [FunctionDeclSyntax]) {
+  private func discoverAndDiagnoseOverloads(_ functions: [FunctionDeclSyntax]) {
     var overloads = [String: [FunctionDeclSyntax]]()
     var staticOverloads = [String: [FunctionDeclSyntax]]()
     for fn in functions {
@@ -72,11 +71,11 @@ public final class AmbiguousTrailingClosureOverload: SyntaxLintRule {
 }
 
 extension Diagnostic.Message {
-  static func ambiguousTrailingClosureOverload(_ decl: String) -> Diagnostic.Message {
+  public static func ambiguousTrailingClosureOverload(_ decl: String) -> Diagnostic.Message {
     return .init(.warning, "rename '\(decl)' so it is no longer ambiguous with a trailing closure")
   }
 
-  static func otherAmbiguousOverloadHere(_ decl: String) -> Diagnostic.Message {
+  public static func otherAmbiguousOverloadHere(_ decl: String) -> Diagnostic.Message {
     return .init(.note, "ambiguous overload '\(decl)' is here")
   }
 }

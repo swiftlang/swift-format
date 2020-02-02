@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -21,13 +20,11 @@ import SwiftSyntax
 /// Format: If a variable declaration declares multiple variables, it will be split into multiple
 ///         declarations, each declaring one of the variables.
 public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
-  func splitVariableDecls(
+  private func splitVariableDecls(
     _ items: CodeBlockItemListSyntax
   ) -> CodeBlockItemListSyntax? {
-
     // If we're here, then there's at least one VariableDeclSyntax that
     // needs to be split.
-
     var needsWork = false
     for codeBlockItem in items {
       if let varDecl = codeBlockItem.item.as(VariableDeclSyntax.self), varDecl.bindings.count > 1 {
@@ -104,7 +101,7 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
 }
 
 extension Diagnostic.Message {
-  static let onlyOneVariableDeclaration = Diagnostic.Message(
+  public static let onlyOneVariableDeclaration = Diagnostic.Message(
     .warning,
     "split variable binding into multiple declarations"
   )

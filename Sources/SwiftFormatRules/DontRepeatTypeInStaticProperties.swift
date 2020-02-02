@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -104,7 +103,7 @@ public final class DontRepeatTypeInStaticProperties: SyntaxLintRule {
 }
 
 extension Diagnostic.Message {
-  static func removeTypeFromName(name: String, type: Substring) -> Diagnostic.Message {
+  public static func removeTypeFromName(name: String, type: Substring) -> Diagnostic.Message {
     return .init(.warning, "remove '\(type)' from '\(name)'")
   }
 }

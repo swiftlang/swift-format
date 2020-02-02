@@ -1,8 +1,7 @@
 import SwiftFormatConfiguration
 
-public class RepeatStmtTests: PrettyPrintTestCase {
-
-  public func testBasicRepeatTests_noBreakBeforeWhile() {
+final class RepeatStmtTests: PrettyPrintTestCase {
+  func testBasicRepeatTests_noBreakBeforeWhile() {
     let input =
       """
       repeat {}
@@ -45,7 +44,7 @@ public class RepeatStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 25)
   }
 
-  public func testBasicRepeatTests_breakBeforeWhile() {
+  func testBasicRepeatTests_breakBeforeWhile() {
     let input =
       """
       repeat {} while x
@@ -88,7 +87,7 @@ public class RepeatStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 25, configuration: config)
   }
 
-  public func testNestedRepeat() {
+  func testNestedRepeat() {
     // Avoid regressions in the case where a nested `repeat` block was getting shifted all the way
     // left.
     let input = """

@@ -42,11 +42,11 @@ public final class NeverForceUnwrap: SyntaxLintRule {
 }
 
 extension Diagnostic.Message {
-  static func doNotForceUnwrap(name: String) -> Diagnostic.Message {
+  public static func doNotForceUnwrap(name: String) -> Diagnostic.Message {
     return .init(.warning, "do not force unwrap '\(name)'")
   }
 
-  static func doNotForceCast(name: String) -> Diagnostic.Message {
+  public static func doNotForceCast(name: String) -> Diagnostic.Message {
     return .init(.warning, "do not force cast to '\(name)'")
   }
 }

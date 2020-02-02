@@ -1,11 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class UseSynthesizedInitializerTests: DiagnosingTestCase {
-  public func testMemberwiseInitializerIsDiagnosed() {
+final class UseSynthesizedInitializerTests: DiagnosingTestCase {
+  func testMemberwiseInitializerIsDiagnosed() {
     let input =
       """
       public struct Person {
@@ -27,7 +23,7 @@ public class UseSynthesizedInitializerTests: DiagnosingTestCase {
     XCTAssertNotDiagnosed(.removeRedundantInitializer)
   }
 
-  public func testMemberwiseInitializerWithDefaultArgumentIsDiagnosed() {
+  func testMemberwiseInitializerWithDefaultArgumentIsDiagnosed() {
      let input =
        """
        public struct Person {
@@ -49,7 +45,7 @@ public class UseSynthesizedInitializerTests: DiagnosingTestCase {
      XCTAssertNotDiagnosed(.removeRedundantInitializer)
    }
 
-  public func testCustomInitializerVoidsSynthesizedInitializerWarning() {
+  func testCustomInitializerVoidsSynthesizedInitializerWarning() {
     // The compiler won't create a memberwise initializer when there are any other initializers.
     // It's valid to have a memberwise initializer when there are any custom initializers.
     let input =
@@ -78,7 +74,7 @@ public class UseSynthesizedInitializerTests: DiagnosingTestCase {
     XCTAssertNotDiagnosed(.removeRedundantInitializer)
   }
 
-  public func testMemberwiseInitializerWithDefaultArgument() {
+  func testMemberwiseInitializerWithDefaultArgument() {
      let input =
        """
        public struct Person {
@@ -99,7 +95,7 @@ public class UseSynthesizedInitializerTests: DiagnosingTestCase {
     XCTAssertNotDiagnosed(.removeRedundantInitializer)
   }
 
-  public func testMemberwiseInitializerWithNonMatchingDefaultValues() {
+  func testMemberwiseInitializerWithNonMatchingDefaultValues() {
      let input =
        """
        public struct Person {
@@ -120,7 +116,7 @@ public class UseSynthesizedInitializerTests: DiagnosingTestCase {
     XCTAssertNotDiagnosed(.removeRedundantInitializer)
   }
 
-  public func testMemberwiseInitializerMissingDefaultValues() {
+  func testMemberwiseInitializerMissingDefaultValues() {
     // When the initializer doesn't contain a matching default argument, then it isn't equivalent to
     // the synthesized memberwise initializer.
     let input =
@@ -143,7 +139,7 @@ public class UseSynthesizedInitializerTests: DiagnosingTestCase {
     XCTAssertNotDiagnosed(.removeRedundantInitializer)
   }
 
-  public func testCustomInitializerWithMismatchedTypes() {
+  func testCustomInitializerWithMismatchedTypes() {
     let input =
       """
       public struct Person {
@@ -164,7 +160,7 @@ public class UseSynthesizedInitializerTests: DiagnosingTestCase {
     XCTAssertNotDiagnosed(.removeRedundantInitializer)
   }
 
-  public func testCustomInitializerWithExtraParameters() {
+  func testCustomInitializerWithExtraParameters() {
     let input =
       """
       public struct Person {
@@ -185,7 +181,7 @@ public class UseSynthesizedInitializerTests: DiagnosingTestCase {
     XCTAssertNotDiagnosed(.removeRedundantInitializer)
   }
 
-  public func testCustomInitializerWithExtraStatements() {
+  func testCustomInitializerWithExtraStatements() {
     let input =
       #"""
       public struct Person {
@@ -208,7 +204,7 @@ public class UseSynthesizedInitializerTests: DiagnosingTestCase {
     XCTAssertNotDiagnosed(.removeRedundantInitializer)
   }
 
-  public func testFailableMemberwiseInitializerIsNotDiagnosed() {
+  func testFailableMemberwiseInitializerIsNotDiagnosed() {
     let input =
       """
       public struct Person {
@@ -229,7 +225,7 @@ public class UseSynthesizedInitializerTests: DiagnosingTestCase {
     XCTAssertNotDiagnosed(.removeRedundantInitializer)
   }
 
-  public func testThrowingMemberwiseInitializerIsNotDiagnosed() {
+  func testThrowingMemberwiseInitializerIsNotDiagnosed() {
     let input =
       """
       public struct Person {
@@ -250,7 +246,7 @@ public class UseSynthesizedInitializerTests: DiagnosingTestCase {
     XCTAssertNotDiagnosed(.removeRedundantInitializer)
   }
 
-  public func testPublicMemberwiseInitializerIsNotDiagnosed() {
+  func testPublicMemberwiseInitializerIsNotDiagnosed() {
     let input =
       """
       public struct Person {

@@ -2,7 +2,6 @@ import SwiftFormatConfiguration
 import XCTest
 
 final class ConfigurationTests: XCTestCase {
-
   func testDefaultConfigurationIsSameAsEmptyDecode() {
     // Since we don't use the synthesized `init(from: Decoder)` and allow fields
     // to be missing, we provide defaults there as well as in the property

@@ -5,9 +5,9 @@ import XCTest
 
 /// DiagnosingTestCase is an XCTestCase subclass meant to inject diagnostic-specific testing
 /// routines into specific formatting test cases.
-public class DiagnosingTestCase: XCTestCase {
+class DiagnosingTestCase: XCTestCase {
   /// The context each test runs in.
-  public private(set) var context: Context?
+  private(set) var context: Context?
 
   /// A helper that will keep track of the number of times a specific diagnostic was emitted.
   private var consumer = DiagnosticTrackingConsumer()
@@ -27,7 +27,7 @@ public class DiagnosingTestCase: XCTestCase {
     func finalize() {}
   }
 
-  public override func tearDown() {
+  override func tearDown() {
     guard shouldCheckForUnassertedDiagnostics else { return }
 
     // This will emit a test failure if a diagnostic is thrown but we don't explicitly call
@@ -58,7 +58,7 @@ public class DiagnosingTestCase: XCTestCase {
   ///   - input: The input code.
   ///   - file: The file the test resides in (defaults to the current caller's file)
   ///   - line:  The line the test resides in (defaults to the current caller's line)
-  func performLint<LintRule: SyntaxLintRule>(
+  final func performLint<LintRule: SyntaxLintRule>(
     _ type: LintRule.Type,
     input: String,
     file: StaticString = #file,
@@ -97,7 +97,7 @@ public class DiagnosingTestCase: XCTestCase {
   ///   - line:  The line the test resides in (defaults to the current caller's line)
   ///   - checkForUnassertedDiagnostics: Fail the test if there are any unasserted linter
   ///     diagnostics.
-  func XCTAssertFormatting(
+  final func XCTAssertFormatting(
     _ formatType: SyntaxFormatRule.Type,
     input: String,
     expected: String,
@@ -133,7 +133,7 @@ public class DiagnosingTestCase: XCTestCase {
   ///   - expected: The expected result of formatting the input code.
   ///   - file: The file the test resides in (defaults to the current caller's file)
   ///   - line:  The line the test resides in (defaults to the current caller's line)
-  func XCTAssertDiff(result: String, expected: String, file: StaticString, line: UInt) {
+  final func XCTAssertDiff(result: String, expected: String, file: StaticString, line: UInt) {
     let resultLines = result.components(separatedBy: .newlines)
     let expectedLines = expected.components(separatedBy: .newlines)
     let minCount = min(resultLines.count, expectedLines.count)
@@ -165,7 +165,7 @@ public class DiagnosingTestCase: XCTestCase {
   ///   - message: The diagnostic message to check for.
   ///   - file: The file the test resides in (defaults to the current caller's file)
   ///   - line:  The line the test resides in (defaults to the current caller's line)
-  func XCTAssertNotDiagnosed(
+  final func XCTAssertNotDiagnosed(
     _ message: Diagnostic.Message,
     file: StaticString = #file,
     line: UInt = #line
@@ -187,7 +187,7 @@ public class DiagnosingTestCase: XCTestCase {
   ///   - message: The diagnostic message to check for.
   ///   - file: The file the test resides in (defaults to the current caller's file)
   ///   - line:  The line the test resides in (defaults to the current caller's line)
-  func XCTAssertDiagnosed(
+  final func XCTAssertDiagnosed(
     _ message: Diagnostic.Message,
     file: StaticString = #file,
     line: UInt = #line

@@ -1,11 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class NoParensAroundConditionsTests: DiagnosingTestCase {
-  public func testParensAroundConditions() {
+final class NoParensAroundConditionsTests: DiagnosingTestCase {
+  func testParensAroundConditions() {
     XCTAssertFormatting(
       NoParensAroundConditions.self,
       input: """

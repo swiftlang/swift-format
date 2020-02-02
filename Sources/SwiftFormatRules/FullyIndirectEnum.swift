@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -110,8 +109,7 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
 }
 
 extension Diagnostic.Message {
-
-  static func moveIndirectKeywordToEnumDecl(name: String) -> Diagnostic.Message {
+  public static func moveIndirectKeywordToEnumDecl(name: String) -> Diagnostic.Message {
     return .init(
       .warning,
       "move 'indirect' to \(name) enum declaration when all cases are indirect"

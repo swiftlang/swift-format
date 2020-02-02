@@ -1,11 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class NeverUseImplicitlyUnwrappedOptionalsTests: DiagnosingTestCase {
-  public func testInvalidVariableUnwrapping() {
+final class NeverUseImplicitlyUnwrappedOptionalsTests: DiagnosingTestCase {
+  func testInvalidVariableUnwrapping() {
     let input =
       """
       import Core
@@ -23,7 +19,8 @@ public class NeverUseImplicitlyUnwrappedOptionalsTests: DiagnosingTestCase {
     XCTAssertNotDiagnosed(.doNotUseImplicitUnwrapping(identifier: "Float"))
     XCTAssertNotDiagnosed(.doNotUseImplicitUnwrapping(identifier: "UIButton"))
   }
-  public func testIgnoreTestCode() {
+
+  func testIgnoreTestCode() {
     let input =
       """
       import XCTest

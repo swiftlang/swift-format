@@ -1,9 +1,8 @@
+import SwiftFormatPrettyPrint
 import SwiftSyntax
 
-@testable import SwiftFormatPrettyPrint
-
-public class DictionaryDeclTests: PrettyPrintTestCase {
-  public func testBasicDictionaries() {
+final class DictionaryDeclTests: PrettyPrintTestCase {
+  func testBasicDictionaries() {
     let input =
       """
       let a = [1: "a", 2: "b", 3: "c",]
@@ -48,7 +47,7 @@ public class DictionaryDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
-  public func testNoTrailingCommasInTypes() {
+  func testNoTrailingCommasInTypes() {
     let input =
       """
       let a = [SomeVeryLongKeyType: SomePrettyLongValueType]()
@@ -65,7 +64,7 @@ public class DictionaryDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
-  public func testWhitespaceOnlyDoesNotChangeTrailingComma() {
+  func testWhitespaceOnlyDoesNotChangeTrailingComma() {
     let input =
       """
       let a = [1: "a", 2: "b", 3: "c",]
@@ -79,7 +78,7 @@ public class DictionaryDeclTests: PrettyPrintTestCase {
       input: input, expected: input + "\n", linelength: 50, whitespaceOnly: true)
   }
 
-  public func testTrailingCommaDiagnostics() {
+  func testTrailingCommaDiagnostics() {
     let input =
       """
       let a = [1: "a", 2: "b", 3: "c",]
@@ -92,7 +91,7 @@ public class DictionaryDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(
       input: input, expected: input + "\n", linelength: 50, whitespaceOnly: true)
 
-    XCTAssertDiagnosed(Diagnostic.Message.removeTrailingComma, line: 1, column: 32)
-    XCTAssertDiagnosed(Diagnostic.Message.addTrailingComma, line: 4, column: 17)
+    XCTAssertDiagnosed(.removeTrailingComma, line: 1, column: 32)
+    XCTAssertDiagnosed(.addTrailingComma, line: 4, column: 17)
   }
 }

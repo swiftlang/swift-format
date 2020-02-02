@@ -1,11 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class NoAccessLevelOnExtensionDeclarationTests: DiagnosingTestCase {
-  public func testExtensionDeclarationAccessLevel() {
+final class NoAccessLevelOnExtensionDeclarationTests: DiagnosingTestCase {
+  func testExtensionDeclarationAccessLevel() {
     XCTAssertFormatting(
       NoAccessLevelOnExtensionDeclaration.self,
       input: """
@@ -55,7 +51,7 @@ public class NoAccessLevelOnExtensionDeclarationTests: DiagnosingTestCase {
     )
   }
 
-  public func testPreservesCommentOnRemovedModifier() {
+  func testPreservesCommentOnRemovedModifier() {
     XCTAssertFormatting(
       NoAccessLevelOnExtensionDeclaration.self,
       input: """
@@ -91,7 +87,7 @@ public class NoAccessLevelOnExtensionDeclarationTests: DiagnosingTestCase {
     )
   }
 
-  public func testPrivateIsEffectivelyFileprivate() {
+  func testPrivateIsEffectivelyFileprivate() {
     XCTAssertFormatting(
       NoAccessLevelOnExtensionDeclaration.self,
       input: """
@@ -107,7 +103,7 @@ public class NoAccessLevelOnExtensionDeclarationTests: DiagnosingTestCase {
     )
   }
 
-  public func testExtensionWithAnnotation() {
+  func testExtensionWithAnnotation() {
     XCTAssertFormatting(
       NoAccessLevelOnExtensionDeclaration.self,
       input:
@@ -125,7 +121,7 @@ public class NoAccessLevelOnExtensionDeclarationTests: DiagnosingTestCase {
     )
   }
 
-  public func testPreservesInlineAnnotationsBeforeAddedAccessLevelModifiers() {
+  func testPreservesInlineAnnotationsBeforeAddedAccessLevelModifiers() {
     XCTAssertFormatting(
       NoAccessLevelOnExtensionDeclaration.self,
       input: """
@@ -169,7 +165,7 @@ public class NoAccessLevelOnExtensionDeclarationTests: DiagnosingTestCase {
     )
   }
 
-  public func testPreservesMultiLineAnnotationsBeforeAddedAccessLevelModifiers() {
+  func testPreservesMultiLineAnnotationsBeforeAddedAccessLevelModifiers() {
     XCTAssertFormatting(
       NoAccessLevelOnExtensionDeclaration.self,
       input: """

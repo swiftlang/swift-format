@@ -1,8 +1,7 @@
 import SwiftFormatConfiguration
 
-public class ObjectLiteralExprTests: PrettyPrintTestCase {
-
-  public func testColorLiteral_noPackArguments() {
+final class ObjectLiteralExprTests: PrettyPrintTestCase {
+  func testColorLiteral_noPackArguments() {
     let input =
       """
       #colorLiteral()
@@ -33,7 +32,7 @@ public class ObjectLiteralExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 25, configuration: config)
   }
 
-  public func testColorLiteral_packArguments() {
+  func testColorLiteral_packArguments() {
     let input =
       """
       #colorLiteral()
@@ -59,7 +58,7 @@ public class ObjectLiteralExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 25, configuration: config)
   }
 
-  public func testImageLiteral_noPackArguments() {
+  func testImageLiteral_noPackArguments() {
     let input =
       """
       #imageLiteral()
@@ -86,7 +85,7 @@ public class ObjectLiteralExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 38, configuration: config)
   }
 
-  public func testImageLiteral_packArguments() {
+  func testImageLiteral_packArguments() {
     let input =
       """
       #imageLiteral()

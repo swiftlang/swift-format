@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -84,7 +83,7 @@ public final class GroupNumericLiterals: SyntaxFormatRule {
 }
 
 extension Diagnostic.Message {
-  static func groupNumericLiteral(every stride: Int) -> Diagnostic.Message {
+  public static func groupNumericLiteral(every stride: Int) -> Diagnostic.Message {
     let ending = stride == 3 ? "rd" : "th"
     return .init(.warning, "group numeric literal using '_' every \(stride)\(ending) number")
   }
