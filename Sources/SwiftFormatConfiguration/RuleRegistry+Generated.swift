@@ -20,6 +20,7 @@ enum RuleRegistry {
     "BeginDocumentationCommentWithOneLineSummary": true,
     "DoNotUseSemicolons": true,
     "DontRepeatTypeInStaticProperties": true,
+    "FileprivateAtFileScope": true,
     "FullyIndirectEnum": true,
     "GroupNumericLiterals": true,
     "IdentifiersMustBeASCII": true,

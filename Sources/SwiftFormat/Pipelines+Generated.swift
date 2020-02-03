@@ -206,6 +206,7 @@ class LintPipeline: SyntaxVisitor {
 
   override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AmbiguousTrailingClosureOverload.visit, in: context, for: node)
+    visitIfEnabled(FileprivateAtFileScope.visit, in: context, for: node)
     visitIfEnabled(NeverForceUnwrap.visit, in: context, for: node)
     visitIfEnabled(NeverUseForceTry.visit, in: context, for: node)
     visitIfEnabled(NeverUseImplicitlyUnwrappedOptionals.visit, in: context, for: node)
@@ -286,6 +287,7 @@ extension FormatPipeline {
   func visit(_ node: Syntax) -> Syntax {
     var node = node
     node = DoNotUseSemicolons(context: context).visit(node)
+    node = FileprivateAtFileScope(context: context).visit(node)
     node = FullyIndirectEnum(context: context).visit(node)
     node = GroupNumericLiterals(context: context).visit(node)
     node = NoAccessLevelOnExtensionDeclaration(context: context).visit(node)
