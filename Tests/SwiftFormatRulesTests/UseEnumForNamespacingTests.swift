@@ -160,4 +160,65 @@ final class UseEnumForNamespacingTests: DiagnosingTestCase {
                 }
                 """)
   }
+
+  public func testNestedEnumsForNameSpaces() {
+     XCTAssertFormatting(
+       UseEnumForNamespacing.self,
+       input: """
+              struct A {
+                static func fooA() {}
+                struct B {
+                  static func fooB() {}
+                }
+              }
+              struct C {
+                func fooC() {}
+                struct D {
+                  static func fooB() {}
+                }
+              }
+              struct E {
+                static func fooE() {}
+                struct F {
+                  func fooF() {}
+                }
+              }
+              struct G {
+                func fooG() {}
+                #if useH
+                struct H {
+                  static func fooH() {}
+                }
+                #endif
+              }
+              """,
+       expected: """
+                 enum A {
+                   static func fooA() {}
+                   enum B {
+                     static func fooB() {}
+                   }
+                 }
+                 struct C {
+                   func fooC() {}
+                   enum D {
+                     static func fooB() {}
+                   }
+                 }
+                 enum E {
+                   static func fooE() {}
+                   struct F {
+                     func fooF() {}
+                   }
+                 }
+                 struct G {
+                   func fooG() {}
+                   #if useH
+                   enum H {
+                     static func fooH() {}
+                   }
+                   #endif
+                 }
+                 """)
+   }
 }
