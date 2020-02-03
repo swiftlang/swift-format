@@ -288,6 +288,7 @@ extension UseEnumForNamespacingTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__UseEnumForNamespacingTests = [
+        ("testNestedEnumsForNameSpaces", testNestedEnumsForNameSpaces),
         ("testNonEnumsUsedAsNamespaces", testNonEnumsUsedAsNamespaces),
     ]
 }

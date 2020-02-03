@@ -29,10 +29,18 @@ import SwiftSyntax
 public final class UseEnumForNamespacing: SyntaxFormatRule {
 
   public override func visit(_ node: StructDeclSyntax) -> DeclSyntax {
-    guard node.genericParameterClause == nil, node.inheritanceClause == nil,
-      let memberDecls = membersToKeepIfUsedAsNamespace(node.members.members)
-    else {
+    let rewrittenMembers = node.members.members.compactMap {
+      super.visit($0).as(MemberDeclListItemSyntax.self)
+    }
+    guard rewrittenMembers.count == node.members.members.count else {
+      // No members should be deleted - exit early instead of breaking the source.
       return DeclSyntax(node)
+    }
+    let rewrittenMemberDeclList = SyntaxFactory.makeMemberDeclList(rewrittenMembers)
+    guard node.genericParameterClause == nil, node.inheritanceClause == nil,
+      let memberDecls = membersToKeepIfUsedAsNamespace(rewrittenMemberDeclList)
+    else {
+      return DeclSyntax(node.withMembers(node.members.withMembers(rewrittenMemberDeclList)))
     }
 
     diagnose(.convertToEnum(kind: "struct", name: node.identifier), on: node)
@@ -76,9 +84,11 @@ public final class UseEnumForNamespacing: SyntaxFormatRule {
         // Do not append private initializer.
 
       case .ifConfigDecl(let decl):
-        let membersToKeep: [MemberDeclListSyntax] = decl.clauses
-          .compactMap { clause in
-            (clause.elements.as(MemberDeclListSyntax.self)).flatMap(membersToKeepIfUsedAsNamespace(_:))
+        // Note that the child nodes have already been rewritten, so any nested structs that should
+        // become enums have already been transformed.
+        let membersToKeep: [MemberDeclListSyntax] =
+          decl.clauses.compactMap {
+            ($0.elements.as(MemberDeclListSyntax.self)).flatMap(membersToKeepIfUsedAsNamespace(_:))
           }
 
         if membersToKeep.count < decl.clauses.count {
