@@ -1,12 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class NoLeadingUnderscoresTests: DiagnosingTestCase {
-
-  public func testVars() {
+final class NoLeadingUnderscoresTests: DiagnosingTestCase {
+  func testVars() {
     let input = """
       let _foo = foo
       var good_name = 20
@@ -21,7 +16,7 @@ public class NoLeadingUnderscoresTests: DiagnosingTestCase {
     XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_wor_sEName"))
   }
 
-  public func testClasses() {
+  func testClasses() {
     let input = """
       class Foo { let _foo = foo }
       class _Bar {}
@@ -33,7 +28,7 @@ public class NoLeadingUnderscoresTests: DiagnosingTestCase {
     XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_Bar"))
   }
 
-  public func testEnums() {
+  func testEnums() {
     let input = """
       enum Foo {
         case _case1
@@ -56,7 +51,7 @@ public class NoLeadingUnderscoresTests: DiagnosingTestCase {
     XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_Bar"))
   }
 
-  public func testProtocols() {
+  func testProtocols() {
     let input = """
       protocol Foo {
         associatedtype _Quux
@@ -74,7 +69,7 @@ public class NoLeadingUnderscoresTests: DiagnosingTestCase {
     XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "Florb"))
   }
 
-  public func testStructs() {
+  func testStructs() {
     let input = """
       struct Foo { let _foo = foo }
       struct _Bar {}
@@ -86,7 +81,7 @@ public class NoLeadingUnderscoresTests: DiagnosingTestCase {
     XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_Bar"))
   }
 
-  public func testFunctions() {
+  func testFunctions() {
     let input = """
       func _foo<T1, _T2: Equatable>(_ ok: Int, _notOK: Int, _ok _butNotThisOne: Int) {}
       func bar() {}
@@ -104,7 +99,7 @@ public class NoLeadingUnderscoresTests: DiagnosingTestCase {
     XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "bar"))
   }
 
-  public func testInitializerArguments() {
+  func testInitializerArguments() {
     let input = """
       struct X {
         init<T1, _T2: Equatable>(_ ok: Int, _notOK: Int, _ok _butNotThisOne: Int) {}
@@ -121,7 +116,7 @@ public class NoLeadingUnderscoresTests: DiagnosingTestCase {
     XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_butNotThisOne"))
   }
 
-  public func testPrecedenceGroups() {
+  func testPrecedenceGroups() {
     let input = """
       precedencegroup FooPrecedence {
         associativity: left
@@ -141,7 +136,7 @@ public class NoLeadingUnderscoresTests: DiagnosingTestCase {
     XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "_BazPrecedence"))
   }
 
-  public func testTypealiases() {
+  func testTypealiases() {
     let input = """
       typealias Foo = _Foo
       typealias _Bar = Bar
@@ -154,7 +149,7 @@ public class NoLeadingUnderscoresTests: DiagnosingTestCase {
     XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "Bar"))
   }
 
-  public func testIdentifiersAreIgnoredAtUsage() {
+  func testIdentifiersAreIgnoredAtUsage() {
     let input = """
       let x = _y + _z
       _foo(_bar)

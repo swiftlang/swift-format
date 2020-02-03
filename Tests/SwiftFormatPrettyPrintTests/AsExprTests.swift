@@ -1,5 +1,5 @@
-public class AsExprTests: PrettyPrintTestCase {
-  public func testWithoutPunctuation() {
+final class AsExprTests: PrettyPrintTestCase {
+  func testWithoutPunctuation() {
     let input =
       """
       func foo() {
@@ -26,7 +26,7 @@ public class AsExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
 
-  public func testWithPunctuation() {
+  func testWithPunctuation() {
     let input =
       """
       func foo() {

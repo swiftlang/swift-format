@@ -1,7 +1,7 @@
 import SwiftFormatConfiguration
 
-public class IfStmtTests: PrettyPrintTestCase {
-  public func testIfStatement() {
+final class IfStmtTests: PrettyPrintTestCase {
+  func testIfStatement() {
     let input =
       """
       if var1 > var2 {
@@ -61,7 +61,7 @@ public class IfStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
   }
 
-  public func testIfElseStatement_noBreakBeforeElse() {
+  func testIfElseStatement_noBreakBeforeElse() {
     let input =
       """
       if var1 < var2 {
@@ -105,7 +105,7 @@ public class IfStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 23)
   }
 
-  public func testIfElseStatement_breakBeforeElse() {
+  func testIfElseStatement_breakBeforeElse() {
     let input =
       """
       if var1 < var2 {
@@ -152,7 +152,7 @@ public class IfStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20, configuration: config)
   }
 
-  public func testMatchingPatternConditions() {
+  func testMatchingPatternConditions() {
     let input =
       """
       if case .foo = bar {
@@ -183,7 +183,7 @@ public class IfStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
 
-  public func testIfLetStatements() {
+  func testIfLetStatements() {
     let input =
       """
       if let SomeReallyLongVar = Some.More.Stuff(), let a = myfunc() {
@@ -216,7 +216,7 @@ public class IfStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 44)
   }
 
-  public func testContinuationLineBreakIndentation() {
+  func testContinuationLineBreakIndentation() {
     let input =
       """
       if let someObject = object as? Int,
@@ -272,7 +272,7 @@ public class IfStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
-  public func testHangingOpenBreakIsTreatedLikeContinuation() {
+  func testHangingOpenBreakIsTreatedLikeContinuation() {
     let input =
       """
       if let foo = someFunction(someArgumentLabel: someValue) {
@@ -293,7 +293,7 @@ public class IfStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
-  public func testConditionExpressionOperatorGrouping() {
+  func testConditionExpressionOperatorGrouping() {
     let input =
       """
       if someObj is SuperVerboselyNamedType || someObj is AnotherPrettyLongType  || someObjc == "APlainString" || someObj == 4 {
@@ -326,7 +326,7 @@ public class IfStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
-  public func testConditionExpressionOperatorGroupingMixedWithParentheses() {
+  func testConditionExpressionOperatorGroupingMixedWithParentheses() {
     let input =
       """
       if (someObj is SuperVerboselyNamedType || someObj is AnotherPrettyLongType  || someObjc == "APlainString" || someObj == 4) {
@@ -359,7 +359,7 @@ public class IfStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
-  public func testOptionalBindingConditions() {
+  func testOptionalBindingConditions() {
     let input =
       """
       if let someObject: Foo = object as? Int {

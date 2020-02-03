@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -32,9 +31,9 @@ public final class IdentifiersMustBeASCII: SyntaxLintRule {
 }
 
 extension Diagnostic.Message {
-  static func nonASCIICharsNotAllowed(_ invalidCharacters: [String], _ identifierName: String)
-    -> Diagnostic.Message
-  {
+  public static func nonASCIICharsNotAllowed(
+    _ invalidCharacters: [String], _ identifierName: String
+  ) -> Diagnostic.Message {
     return .init(
       .warning,
       "remove non-ASCII characters from '\(identifierName)': "

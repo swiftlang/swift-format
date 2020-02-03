@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -93,8 +92,8 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
 }
 
 extension Diagnostic.Message {
-  static let removeSemicolon = Diagnostic.Message(.warning, "remove ';'")
+  public static let removeSemicolon = Diagnostic.Message(.warning, "remove ';'")
 
-  static let removeSemicolonAndMove = Diagnostic.Message(
+  public static let removeSemicolonAndMove = Diagnostic.Message(
     .warning, "remove ';' and move the next statement to a new line")
 }

@@ -22,7 +22,7 @@ public protocol Rule {
   init(context: Context)
 }
 
-private var nameCache = [ObjectIdentifier: String]()
+fileprivate var nameCache = [ObjectIdentifier: String]()
 
 extension Rule {
   /// By default, the `ruleName` is just the name of the implementing rule class.

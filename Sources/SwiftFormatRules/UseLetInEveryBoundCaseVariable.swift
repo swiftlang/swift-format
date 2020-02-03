@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -31,7 +30,7 @@ public final class UseLetInEveryBoundCaseVariable: SyntaxLintRule {
 }
 
 extension Diagnostic.Message {
-  static let useLetInBoundCaseVariables = Diagnostic.Message(
+  public static let useLetInBoundCaseVariables = Diagnostic.Message(
     .warning,
     "distribute 'let' to each bound case variable")
 }

@@ -71,7 +71,7 @@ public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
   /// In the case the given declaration has a docBlockComment as it's documentation
   /// comment. Returns the declaration with the docBlockComment converted to
   /// a docLineComment.
-  func convertDocBlockCommentToDocLineComment(_ decl: DeclSyntax) -> DeclSyntax {
+  private func convertDocBlockCommentToDocLineComment(_ decl: DeclSyntax) -> DeclSyntax {
     guard let commentText = decl.docComment else { return decl }
     guard let declLeadinTrivia = decl.leadingTrivia else { return decl }
     let docComments = commentText.components(separatedBy: "\n")
@@ -99,7 +99,7 @@ public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
 
   /// Breaks down the docBlock comment into the correct trivia pieces
   /// for a docLineComment.
-  func separateDocBlockIntoPieces(_ docComments: [String]) -> [TriviaPiece] {
+  private func separateDocBlockIntoPieces(_ docComments: [String]) -> [TriviaPiece] {
     var pieces = [TriviaPiece]()
     for lineText in docComments.dropLast() {
       // Adds an space as indentation for the lines that needed it.
@@ -120,6 +120,6 @@ public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
 }
 
 extension Diagnostic.Message {
-  static let avoidDocBlockComment = Diagnostic.Message(
+  public static let avoidDocBlockComment = Diagnostic.Message(
     .warning, "replace documentation block comments with documentation line comments")
 }

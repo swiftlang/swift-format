@@ -1,7 +1,7 @@
 import SwiftFormatConfiguration
 
-public class ExtensionDeclTests: PrettyPrintTestCase {
-  public func testBasicExtensionDeclarations() {
+final class ExtensionDeclTests: PrettyPrintTestCase {
+  func testBasicExtensionDeclarations() {
     let input =
       """
       extension MyExtension {
@@ -40,7 +40,7 @@ public class ExtensionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 33)
   }
 
-  public func testExtensionInheritance() {
+  func testExtensionInheritance() {
     let input =
       """
       extension MyExtension: ProtoOne {
@@ -79,7 +79,7 @@ public class ExtensionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
-  public func testExtensionWhereClause() {
+  func testExtensionWhereClause() {
     let input =
       """
       extension MyExtension where S: Collection {
@@ -120,7 +120,7 @@ public class ExtensionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 70)
   }
 
-  public func testExtensionWhereClause_lineBreakBeforeEachGenericRequirement() {
+  func testExtensionWhereClause_lineBreakBeforeEachGenericRequirement() {
     let input =
     """
       extension MyExtension where S: Collection {
@@ -166,7 +166,7 @@ public class ExtensionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 70, configuration: config)
   }
 
-  public func testExtensionWhereClauseWithInheritance() {
+  func testExtensionWhereClauseWithInheritance() {
     let input =
       """
       extension MyExtension: ProtoOne where S: Collection {
@@ -208,7 +208,7 @@ public class ExtensionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 70)
   }
 
-  public func testExtensionWhereClauseWithInheritance_lineBreakBeforeEachGenericRequirement() {
+  func testExtensionWhereClauseWithInheritance_lineBreakBeforeEachGenericRequirement() {
     let input =
     """
       extension MyExtension: ProtoOne where S: Collection {
@@ -254,7 +254,7 @@ public class ExtensionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 70, configuration: config)
   }
 
-  public func testExtensionAttributes() {
+  func testExtensionAttributes() {
     let input =
       """
       @dynamicMemberLookup public extension MyExtension {
@@ -304,7 +304,7 @@ public class ExtensionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
   }
 
-  public func testExtensionFullWrap() {
+  func testExtensionFullWrap() {
     let input =
       """
       public extension MyContainer: MyContainerProtocolOne, MyContainerProtocolTwo, SomeoneElsesContainerProtocol, SomeFrameworkContainerProtocol where BaseCollection: Collection, BaseCollection: P, BaseCollection.Element: Equatable, BaseCollection.Element: SomeOtherProtocol {
@@ -334,7 +334,7 @@ public class ExtensionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
-  public func testExtensionFullWrap_lineBreakBeforeEachGenericRequirement() {
+  func testExtensionFullWrap_lineBreakBeforeEachGenericRequirement() {
     let input =
     """
       public extension MyContainer: MyContainerProtocolOne, MyContainerProtocolTwo, SomeoneElsesContainerProtocol, SomeFrameworkContainerProtocol where BaseCollection: Collection, BaseCollection: P, BaseCollection.Element: Equatable, BaseCollection.Element: SomeOtherProtocol {
@@ -367,7 +367,7 @@ public class ExtensionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 
-  public func testEmptyExtension() {
+  func testEmptyExtension() {
     let input = "extension Foo {}"
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 50)
 
@@ -379,7 +379,7 @@ public class ExtensionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: wrapped, linelength: 15)
   }
 
-  public func testEmptyExtensionWithComment() {
+  func testEmptyExtensionWithComment() {
     let input = """
       extension Foo {
         // foo
@@ -388,7 +388,7 @@ public class ExtensionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 50)
   }
 
-  public func testOneMemberExtension() {
+  func testOneMemberExtension() {
     let input = "extension Foo { var bar: Int { return 0 } }"
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 50)
   }

@@ -24,7 +24,7 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
   /// even on platforms that support the latter (currently only Apple OSes).
   ///
   /// This allows test runs on those platforms to test both implementations.
-  static var forcesFallbackModeForTesting = false
+  public static var _forcesFallbackModeForTesting = false
 
   public override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseDocComments(in: DeclSyntax(node))
@@ -124,7 +124,7 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
   ///   actual text).
   private func sentences(in text: String) -> (sentences: [String], trailingText: Substring) {
     #if os(macOS)
-      if BeginDocumentationCommentWithOneLineSummary.forcesFallbackModeForTesting {
+      if BeginDocumentationCommentWithOneLineSummary._forcesFallbackModeForTesting {
         return nonLinguisticSentenceApproximations(in: text)
       }
 
@@ -199,14 +199,13 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
 }
 
 extension Diagnostic.Message {
-
-  static func terminateSentenceWithPeriod<Sentence: StringProtocol>(_ text: Sentence)
+  public static func terminateSentenceWithPeriod<Sentence: StringProtocol>(_ text: Sentence)
     -> Diagnostic.Message
   {
     return .init(.warning, "terminate this sentence with a period: \"\(text)\"")
   }
 
-  static func addBlankLineAfterFirstSentence<Sentence: StringProtocol>(_ text: Sentence)
+  public static func addBlankLineAfterFirstSentence<Sentence: StringProtocol>(_ text: Sentence)
     -> Diagnostic.Message
   {
     return .init(.warning, "add a blank comment line after this sentence: \"\(text)\"")

@@ -19,16 +19,16 @@ import SwiftSyntax
 public class WhitespaceLinter {
 
   /// The text of the input source code to be linted.
-  let userText: String
+  private let userText: String
 
   /// The formatted version of `userText`.
-  let formattedText: String
+  private let formattedText: String
 
   /// The Context object containing the DiagnosticEngine.
-  let context: Context
+  private let context: Context
 
   /// Is the current line too long?
-  var isLineTooLong: Bool
+  private var isLineTooLong: Bool
 
   /// Creates a new WhitespaceLinter with the given context.
   ///
@@ -89,7 +89,7 @@ public class WhitespaceLinter {
   ///   - isFirstCharacter: Are we at the first character in the text?
   ///   - userWs: The user leading whitespace buffer at the current character.
   ///   - formattedWs: The formatted leading whitespace buffer at the current character.
-  func compareWhitespace(
+  private func compareWhitespace(
     userOffset: Int, formOffset: Int, isFirstCharacter: Bool, userWs: String, formattedWs: String
   ) {
     // e.g. "\n" -> ["", ""], and "" -> [""]
@@ -134,7 +134,7 @@ public class WhitespaceLinter {
   ///   - isFirstCharacter: Are we at the first character in the text?
   ///   - user: The tokenized user whitespace buffer.
   ///   - form: The tokenized formatted whitespace buffer.
-  func checkForLineLengthErrors(
+  private func checkForLineLengthErrors(
     userOffset: Int, formOffset: Int, isFirstCharacter: Bool, user: [String], form: [String]
   ) {
     // Only run this check at the start of a line.
@@ -217,7 +217,7 @@ public class WhitespaceLinter {
   ///   - isFirstCharacter: Are we at the first character in the text?
   ///   - user: The tokenized user whitespace buffer.
   ///   - form: The tokenized formatted whitespace buffer.
-  func checkForIndentationErrors(
+  private func checkForIndentationErrors(
     userOffset: Int, isFirstCharacter: Bool, user: [String], form: [String]
   ) {
     guard form.count > 1 && user.count > 1 else {
@@ -258,7 +258,7 @@ public class WhitespaceLinter {
   ///   - userOffset: The current character offset within the user text.
   ///   - user: The tokenized user whitespace buffer.
   ///   - form: The tokenized formatted whitespace buffer.
-  func checkForTrailingWhitespaceErrors(userOffset: Int, user: [String], form: [String]) {
+  private func checkForTrailingWhitespaceErrors(userOffset: Int, user: [String], form: [String]) {
     guard form.count > 1 && user.count > 1 else { return }
     var offset = 0
     for i in 0..<(user.count - 1) {
@@ -281,7 +281,7 @@ public class WhitespaceLinter {
   ///   - isFirstCharacter: Are we at the first character in the text?
   ///   - user: The tokenized user whitespace buffer.
   ///   - form: The tokenized formatted whitespace buffer.
-  func checkForSpacingErrors(
+  private func checkForSpacingErrors(
     userOffset: Int, isFirstCharacter: Bool, user: [String], form: [String]
   ) {
     // The spaces in front of the first character of a file are indentation and not spacing related.
@@ -315,7 +315,7 @@ public class WhitespaceLinter {
   ///   - userOffset: The current character offset within the user text.
   ///   - user: The tokenized user whitespace buffer.
   ///   - form: The tokenized formatted whitespace buffer.
-  func checkForRemoveLineErrors(userOffset: Int, user: [String], form: [String]) {
+  private func checkForRemoveLineErrors(userOffset: Int, user: [String], form: [String]) {
     guard form.count < user.count else { return }
     var offset = 0
     for i in 0..<(user.count - form.count) {
@@ -343,7 +343,7 @@ public class WhitespaceLinter {
   ///   - userOffset: The current character offset within the user text.
   ///   - user: The tokenized user whitespace buffer.
   ///   - form: The tokenized formatted whitespace buffer.
-  func checkForAddLineErrors(userOffset: Int, user: [String], form: [String]) {
+  private func checkForAddLineErrors(userOffset: Int, user: [String], form: [String]) {
     guard form.count > user.count && !isLineTooLong else { return }
     let pos = calculatePosition(offset: userOffset, data: self.userText)
     diagnose(
@@ -363,7 +363,7 @@ public class WhitespaceLinter {
   ///   - data: The input string.
   /// - Returns a tuple of the new offset, the non-whitespace character we landed on, and a string
   ///   containing the leading whitespace.
-  func nextCharacter(offset: Int, data: String)
+  private func nextCharacter(offset: Int, data: String)
     -> (offset: Int, char: Character?, whitespace: String)
   {
     var whitespaceBuffer = ""
@@ -387,7 +387,7 @@ public class WhitespaceLinter {
   ///   - offset: The printable character offset.
   ///   - data: The input string for which we want the line and column numbers.
   /// - Returns a tuple with the line and column numbers within `data`.
-  func calculatePosition(offset: Int, data: String) -> (line: Int, column: Int) {
+  private func calculatePosition(offset: Int, data: String) -> (line: Int, column: Int) {
     var line = 1
     var column = 0
 
@@ -412,7 +412,7 @@ public class WhitespaceLinter {
   ///   - column: The column number location of the message
   ///   - utf8Offset: The utf8 offset location of the message
   ///   - actions: Used for attaching notes, highlights, etc.
-  func diagnose(
+  private func diagnose(
     _ message: Diagnostic.Message,
     line: Int,
     column: Int,
@@ -462,7 +462,7 @@ public class WhitespaceLinter {
 }
 
 /// Describes the composition of the whitespace that creates an indentation for a line of code.
-enum WhitespaceIndentation: Equatable {
+public enum WhitespaceIndentation: Equatable {
   /// The line has no preceding whitespace, meaning there's no indentation.
   case none
 
@@ -477,7 +477,7 @@ enum WhitespaceIndentation: Equatable {
 extension Indent {
   /// Returns a string that describes the indentation in a human readable format, which is
   /// appropriate for use in diagnostic messages.
-  var diagnosticDescription: String {
+  fileprivate var diagnosticDescription: String {
     switch self {
     case .spaces(let count):
       let noun = count == 1 ? "space" : "spaces"
@@ -492,7 +492,7 @@ extension Indent {
 extension WhitespaceIndentation {
   /// Returns a string that describes the whitespace in a human readable format, which is
   /// appropriate for use in diagnostic messages.
-  var diagnosticDescription: String {
+  fileprivate var diagnosticDescription: String {
     switch self {
     case .none:
       return "no indentation"
@@ -508,10 +508,10 @@ extension WhitespaceIndentation {
 }
 
 extension Diagnostic.Message {
-  static let trailingWhitespaceError = Diagnostic.Message(
-    .warning, "[TrailingWhitespace]: remove trailing whitespace")
+  public static let trailingWhitespaceError =
+    Diagnostic.Message(.warning, "[TrailingWhitespace]: remove trailing whitespace")
 
-  static func indentationError(
+  public static func indentationError(
     expected expectedIndentation: WhitespaceIndentation,
     actual actualIndentation: WhitespaceIndentation
   ) -> Diagnostic.Message {
@@ -547,20 +547,21 @@ extension Diagnostic.Message {
     }
   }
 
-  static func spacingError(_ spaces: Int) -> Diagnostic.Message {
+  public static func spacingError(_ spaces: Int) -> Diagnostic.Message {
     let verb = spaces > 0 ? "add" : "remove"
     let noun = abs(spaces) == 1 ? "space" : "spaces"
     return .init(.warning, "[Spacing]: \(verb) \(abs(spaces)) \(noun)")
   }
 
-  static let spacingCharError = Diagnostic.Message(
-    .warning, "[SpacingCharacter]: use spaces for spacing")
+  public static let spacingCharError =
+    Diagnostic.Message(.warning, "[SpacingCharacter]: use spaces for spacing")
 
-  static let removeLineError = Diagnostic.Message(.warning, "[RemoveLine]: remove line break")
+  public static let removeLineError =
+    Diagnostic.Message(.warning, "[RemoveLine]: remove line break")
 
-  static func addLinesError(_ lines: Int) -> Diagnostic.Message {
+  public static func addLinesError(_ lines: Int) -> Diagnostic.Message {
     return .init(.warning, "[AddLines]: add \(lines) line breaks")
   }
 
-  static let lineLengthError = Diagnostic.Message(.warning, "[LineLength]: line is too long")
+  public static let lineLengthError = Diagnostic.Message(.warning, "[LineLength]: line is too long")
 }

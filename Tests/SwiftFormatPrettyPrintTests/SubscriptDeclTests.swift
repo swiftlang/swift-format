@@ -1,8 +1,7 @@
 import SwiftFormatConfiguration
 
-public class SubscriptDeclTests: PrettyPrintTestCase {
-
-  public func testBasicSubscriptDeclarations() {
+final class SubscriptDeclTests: PrettyPrintTestCase {
+  func testBasicSubscriptDeclarations() {
     let input =
       """
       struct MyStruct {
@@ -39,7 +38,7 @@ public class SubscriptDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
-  public func testSubscriptGenerics_noPackArguments() {
+  func testSubscriptGenerics_noPackArguments() {
     let input =
       """
       struct MyStruct {
@@ -84,7 +83,7 @@ public class SubscriptDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 
-  public func testSubscriptGenerics_packArguments() {
+  func testSubscriptGenerics_packArguments() {
     let input =
       """
       struct MyStruct {
@@ -126,7 +125,7 @@ public class SubscriptDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 
-  public func testSubscriptGenericWhere() {
+  func testSubscriptGenericWhere() {
     let input =
       """
       struct MyStruct {
@@ -165,7 +164,7 @@ public class SubscriptDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 
-  public func testSubscriptGenericWhere_lineBreakBeforeEachGenericRequirement() {
+  func testSubscriptGenericWhere_lineBreakBeforeEachGenericRequirement() {
     let input =
     """
       struct MyStruct {
@@ -206,7 +205,7 @@ public class SubscriptDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 
-  public func testSubscriptAttributes() {
+  func testSubscriptAttributes() {
     let input =
       """
       struct MyStruct {
@@ -261,7 +260,7 @@ public class SubscriptDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 70)
   }
 
-  public func testBreaksBeforeOrInsideOutput() {
+  func testBreaksBeforeOrInsideOutput() {
     let input =
     """
       protocol MyProtocol {
@@ -316,7 +315,7 @@ public class SubscriptDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
 
-  public func testBreaksBeforeOrInsideOutput_prioritizingKeepingOutputTogether() {
+  func testBreaksBeforeOrInsideOutput_prioritizingKeepingOutputTogether() {
     let input =
     """
       protocol MyProtocol {
@@ -375,7 +374,7 @@ public class SubscriptDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30, configuration: config)
   }
 
-  public func testSubscriptFullWrap() {
+  func testSubscriptFullWrap() {
     let input =
     """
     struct MyStruct {
@@ -425,7 +424,7 @@ public class SubscriptDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 34)
   }
 
-  public func testSubscriptFullWrap_lineBreakBeforeEachGenericRequirement() {
+  func testSubscriptFullWrap_lineBreakBeforeEachGenericRequirement() {
     let input =
     """
     struct MyStruct {
@@ -478,7 +477,7 @@ public class SubscriptDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 34, configuration: config)
   }
 
-  public func testEmptySubscript() {
+  func testEmptySubscript() {
     // The comment inside the struct prevents it from *also* being collapsed onto a single line.
     let input = """
       struct X {

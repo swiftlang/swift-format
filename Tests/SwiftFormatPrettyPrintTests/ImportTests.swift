@@ -1,5 +1,5 @@
-public class ImportTests: PrettyPrintTestCase {
-  public func testImports() {
+final class ImportTests: PrettyPrintTestCase {
+  func testImports() {
     let input =
       """
       import someModule

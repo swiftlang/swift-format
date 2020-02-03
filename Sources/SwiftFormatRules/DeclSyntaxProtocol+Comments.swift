@@ -14,7 +14,7 @@ import SwiftSyntax
 
 extension DeclSyntaxProtocol {
   /// Searches through the leading trivia of this decl for a documentation comment.
-  public var docComment: String? {
+  var docComment: String? {
     guard let tok = firstToken else { return nil }
     var comment = [String]()
 

@@ -10,10 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SwiftFormatConfiguration
-import SwiftFormatCore
-import SwiftSyntax
-
 enum GroupBreakStyle {
   /// A consistent break indicates that the break will always be finalized as a newline
   /// if wrapping occurs.

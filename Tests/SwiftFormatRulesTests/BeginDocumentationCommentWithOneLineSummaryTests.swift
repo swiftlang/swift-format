@@ -1,18 +1,13 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class BeginDocumentationCommentWithOneLineSummaryTests: DiagnosingTestCase {
-
-  public override func setUp() {
+final class BeginDocumentationCommentWithOneLineSummaryTests: DiagnosingTestCase {
+  override func setUp() {
     // Reset this to false by default. Specific tests may override it.
-    BeginDocumentationCommentWithOneLineSummary.forcesFallbackModeForTesting = false
+    BeginDocumentationCommentWithOneLineSummary._forcesFallbackModeForTesting = false
     super.setUp()
   }
 
-  public func testDocLineCommentsWithoutOneSentenceSummary() {
+  func testDocLineCommentsWithoutOneSentenceSummary() {
     let input =
       """
       /// Returns a bottle of Dr Pepper from the vending machine.
@@ -56,7 +51,7 @@ public class BeginDocumentationCommentWithOneLineSummaryTests: DiagnosingTestCas
     XCTAssertNotDiagnosed(.addBlankLineAfterFirstSentence("Returns the sum of the numbers."))
   }
 
-  public func testBlockLineCommentsWithoutOneSentenceSummary() {
+  func testBlockLineCommentsWithoutOneSentenceSummary() {
     let input =
     """
       /**
@@ -101,11 +96,11 @@ public class BeginDocumentationCommentWithOneLineSummaryTests: DiagnosingTestCas
       "This block comment contains a sentence summary of two lines of code."))
   }
 
-  public func testApproximationsOnMacOS() {
+  func testApproximationsOnMacOS() {
     #if os(macOS)
     // Let macOS also verify that the fallback mode works, which gives us signal about whether it
     // will also succeed on Linux (where the linguistic APIs are not currently available).
-    BeginDocumentationCommentWithOneLineSummary.forcesFallbackModeForTesting = true
+    BeginDocumentationCommentWithOneLineSummary._forcesFallbackModeForTesting = true
 
     let input =
     """

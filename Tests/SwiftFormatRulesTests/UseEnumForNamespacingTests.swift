@@ -1,11 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class UseEnumForNamespacingTests: DiagnosingTestCase {
-  public func testNonEnumsUsedAsNamespaces() {
+final class UseEnumForNamespacingTests: DiagnosingTestCase {
+  func testNonEnumsUsedAsNamespaces() {
     XCTAssertFormatting(
       UseEnumForNamespacing.self,
       input: """

@@ -1,5 +1,5 @@
-public class DeinitializerDeclTests: PrettyPrintTestCase {
-  public func testBasicDeinitializerDeclarations() {
+final class DeinitializerDeclTests: PrettyPrintTestCase {
+  func testBasicDeinitializerDeclarations() {
     let input =
       """
       struct Struct {
@@ -30,7 +30,7 @@ public class DeinitializerDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
-  public func testDeinitializerAttributes() {
+  func testDeinitializerAttributes() {
     let input =
       """
       struct Struct {
@@ -74,7 +74,7 @@ public class DeinitializerDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 26)
   }
 
-  public func testEmptyDeinitializer() {
+  func testEmptyDeinitializer() {
     // The comment inside the class prevents it from *also* being collapsed onto a single line.
     let input = """
       class X {

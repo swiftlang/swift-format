@@ -1,11 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class UseSingleLinePropertyGetterTests: DiagnosingTestCase {
-  public func testMultiLinePropertyGetter() {
+final class UseSingleLinePropertyGetterTests: DiagnosingTestCase {
+  func testMultiLinePropertyGetter() {
     XCTAssertFormatting(
       UseSingleLinePropertyGetter.self,
       input: """

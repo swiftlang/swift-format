@@ -1,8 +1,7 @@
 import SwiftFormatConfiguration
 
-public class StructDeclTests: PrettyPrintTestCase {
-
-  public func testBasicStructDeclarations() {
+final class StructDeclTests: PrettyPrintTestCase {
+  func testBasicStructDeclarations() {
     let input =
       """
       struct MyStruct {
@@ -41,7 +40,7 @@ public class StructDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 25)
   }
 
-  public func testGenericStructDeclarations_noPackArguments() {
+  func testGenericStructDeclarations_noPackArguments() {
     let input =
       """
       struct MyStruct<T> {
@@ -85,7 +84,7 @@ public class StructDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30, configuration: config)
   }
 
-  public func testGenericStructDeclarations_packArguments() {
+  func testGenericStructDeclarations_packArguments() {
     let input =
       """
       struct MyStruct<T> {
@@ -126,7 +125,7 @@ public class StructDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30, configuration: config)
   }
 
-  public func testStructInheritance() {
+  func testStructInheritance() {
     let input =
       """
       struct MyStruct: ProtoOne {
@@ -165,7 +164,7 @@ public class StructDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
 
-  public func testStructWhereClause() {
+  func testStructWhereClause() {
     let input =
       """
       struct MyStruct<S, T> where S: Collection {
@@ -207,7 +206,7 @@ public class StructDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
   }
 
-  public func testStructWhereClause_lineBreakBeforeEachGenericRequirement() {
+  func testStructWhereClause_lineBreakBeforeEachGenericRequirement() {
     let input =
     """
       struct MyStruct<S, T> where S: Collection {
@@ -252,7 +251,7 @@ public class StructDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60, configuration: config)
   }
 
-  public func testStructWhereClauseWithInheritance() {
+  func testStructWhereClauseWithInheritance() {
     let input =
       """
       struct MyStruct<S, T>: ProtoOne where S: Collection {
@@ -294,7 +293,7 @@ public class StructDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
   }
 
-  public func testStructWhereClauseWithInheritance_lineBreakBeforeEachGenericRequirement() {
+  func testStructWhereClauseWithInheritance_lineBreakBeforeEachGenericRequirement() {
     let input =
     """
       struct MyStruct<S, T>: ProtoOne where S: Collection {
@@ -340,7 +339,7 @@ public class StructDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60, configuration: config)
   }
 
-  public func testStructAttributes() {
+  func testStructAttributes() {
     let input =
       """
       @dynamicMemberLookup public struct MyStruct {
@@ -388,7 +387,7 @@ public class StructDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
   }
 
-  public func testStructFullWrap() {
+  func testStructFullWrap() {
     let input =
       """
       public struct MyContainer<BaseCollection, SecondCollection>: MyContainerProtocolOne, MyContainerProtocolTwo, SomeoneElsesContainerProtocol, SomeFrameworkContainerProtocol where BaseCollection: Collection, BaseCollection: P, BaseCollection.Element: Equatable, BaseCollection.Element: SomeOtherProtocol {
@@ -398,7 +397,6 @@ public class StructDeclTests: PrettyPrintTestCase {
       """
 
     let expected =
-
       """
       public struct MyContainer<
         BaseCollection, SecondCollection
@@ -421,9 +419,9 @@ public class StructDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 
-  public func testStructFullWrap_lineBreakBeforeEachGenericRequirement() {
+  func testStructFullWrap_lineBreakBeforeEachGenericRequirement() {
     let input =
-    """
+      """
       public struct MyContainer<BaseCollection, SecondCollection>: MyContainerProtocolOne, MyContainerProtocolTwo, SomeoneElsesContainerProtocol, SomeFrameworkContainerProtocol where BaseCollection: Collection, BaseCollection: P, BaseCollection.Element: Equatable, BaseCollection.Element: SomeOtherProtocol {
         let A: Int
         let B: Double
@@ -432,7 +430,7 @@ public class StructDeclTests: PrettyPrintTestCase {
 
     let expected =
 
-    """
+      """
       public struct MyContainer<
         BaseCollection, SecondCollection
       >: MyContainerProtocolOne, MyContainerProtocolTwo,
@@ -456,7 +454,7 @@ public class StructDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 
-  public func testEmptyStruct() {
+  func testEmptyStruct() {
     let input = "struct Foo {}"
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 50)
 
@@ -468,7 +466,7 @@ public class StructDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: wrapped, linelength: 12)
   }
 
-  public func testEmptyStructWithComment() {
+  func testEmptyStructWithComment() {
     let input = """
       struct Foo {
         // foo
@@ -477,7 +475,7 @@ public class StructDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 50)
   }
 
-  public func testOneMemberStruct() {
+  func testOneMemberStruct() {
     let input = "struct Foo { var bar: Int }"
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 50)
   }

@@ -1,7 +1,7 @@
 import SwiftFormatConfiguration
 
-public class AssignmentExprTests: PrettyPrintTestCase {
-  public func testBasicAssignmentExprs() {
+final class AssignmentExprTests: PrettyPrintTestCase {
+  func testBasicAssignmentExprs() {
     let input =
       """
       foo = bar
@@ -21,7 +21,7 @@ public class AssignmentExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
 
-  public func testAssignmentExprsWithGroupedOperators() {
+  func testAssignmentExprsWithGroupedOperators() {
     let input =
       """
       someVeryLongVariableName = anotherPrettyLongVariableName && someOtherOperand
@@ -45,7 +45,7 @@ public class AssignmentExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
 
-  public func testAssignmentOperatorFromSequenceWithFunctionCalls() {
+  func testAssignmentOperatorFromSequenceWithFunctionCalls() {
     let input =
         """
         result = firstOp + secondOp + someOpFetchingFunc(foo, bar: bar, baz: baz)
@@ -136,7 +136,7 @@ public class AssignmentExprTests: PrettyPrintTestCase {
         input: input, expected: expectedWithBreakBeforeEachArg, linelength: 35, configuration: config)
   }
 
-  public func testAssignmentPatternBindingFromSequenceWithFunctionCalls() {
+  func testAssignmentPatternBindingFromSequenceWithFunctionCalls() {
     let input =
       """
       let result = firstOp + secondOp + someOpFetchingFunc(foo, bar: bar, baz: baz)

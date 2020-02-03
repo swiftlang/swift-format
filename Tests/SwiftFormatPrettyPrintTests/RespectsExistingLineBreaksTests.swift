@@ -2,7 +2,7 @@ import SwiftFormatConfiguration
 
 /// Sanity checks and regression tests for the `respectsExistingLineBreaks` configuration setting
 /// in both true and false states.
-class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
+final class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
   func testExpressions() {
     let input =
       """

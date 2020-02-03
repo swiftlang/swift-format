@@ -1,5 +1,5 @@
-public class BacktickTests: PrettyPrintTestCase {
-  public func testBackticks() {
+final class BacktickTests: PrettyPrintTestCase {
+  func testBackticks() {
     let input =
       """
       let `case` = 123

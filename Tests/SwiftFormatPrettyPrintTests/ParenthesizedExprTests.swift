@@ -1,5 +1,4 @@
-class ParenthesizedExprTests: PrettyPrintTestCase {
-
+final class ParenthesizedExprTests: PrettyPrintTestCase {
   func testSequenceExprParens() {
     let input =
       """

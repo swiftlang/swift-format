@@ -1,4 +1,4 @@
-class DifferentiationAttributeTests: PrettyPrintTestCase {
+final class DifferentiationAttributeTests: PrettyPrintTestCase {
   func testDifferentiable() {
     let input =
       """

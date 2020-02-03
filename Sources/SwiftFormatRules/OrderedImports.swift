@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -222,14 +221,14 @@ public final class OrderedImports: SyntaxFormatRule {
 }
 
 /// Remove any leading blank lines from the main code.
-func formatCodeblocks(_ codeblocks: inout [Line]) {
+fileprivate func formatCodeblocks(_ codeblocks: inout [Line]) {
   if let contentIndex = codeblocks.firstIndex(where: { !$0.isBlankLine }) {
     codeblocks.removeSubrange(0..<contentIndex)
   }
 }
 
 /// Join the lists of Line objects into a single list of Lines with a blank line separating them.
-func joinLines(_ inputLineLists: [Line]...) -> [Line] {
+fileprivate func joinLines(_ inputLineLists: [Line]...) -> [Line] {
   var lineLists = inputLineLists
   lineLists.removeAll { $0.isEmpty }
   guard lineLists.count > 0 else { return [] }
@@ -246,7 +245,7 @@ func joinLines(_ inputLineLists: [Line]...) -> [Line] {
 /// This function transforms the statements in a CodeBlockItemListSyntax object into a list of Line
 /// obejcts. Blank lines and standalone comments are represented by their own Line object. Code with
 /// a trailing comment are represented together in the same Line.
-func generateLines(codeBlockItemList: CodeBlockItemListSyntax) -> [Line] {
+fileprivate func generateLines(codeBlockItemList: CodeBlockItemListSyntax) -> [Line] {
   var lines: [Line] = []
   var currentLine = Line()
   var afterNewline = false
@@ -291,7 +290,7 @@ func generateLines(codeBlockItemList: CodeBlockItemListSyntax) -> [Line] {
 
 /// This function transforms a list of Line objects into a list of CodeBlockItemSyntax objects,
 /// replacing the trivia appropriately to ensure comments appear in the right location.
-func convertToCodeBlockItems(lines: [Line]) -> [CodeBlockItemSyntax] {
+fileprivate func convertToCodeBlockItems(lines: [Line]) -> [CodeBlockItemSyntax] {
   var output: [CodeBlockItemSyntax] = []
   var triviaBuffer: [TriviaPiece] = []
 
@@ -322,7 +321,7 @@ func convertToCodeBlockItems(lines: [Line]) -> [CodeBlockItemSyntax] {
   return output
 }
 
-enum LineType: CustomStringConvertible {
+public enum LineType: CustomStringConvertible {
   case regularImport
   case declImport
   case testableImport
@@ -330,7 +329,7 @@ enum LineType: CustomStringConvertible {
   case comment
   case blankLine
 
-  var description: String {
+  public var description: String {
     switch self {
     case .regularImport:
       return "regular"
@@ -353,7 +352,7 @@ enum LineType: CustomStringConvertible {
 /// represent a single printed line. Other types of code (e.g. structs and classes) will span
 /// multiple literal lines, but can still be represented by a single Line object. This is desireable
 /// since we aren't interested in rearranging those types of structures in this rule.
-class Line {
+fileprivate class Line {
 
   /// This is used to hold line comments. `codeBlock` need not be defined, since a comment can exist
   /// by itself on a line.
@@ -401,12 +400,13 @@ class Line {
 }
 
 extension Diagnostic.Message {
-  static let placeAtTopOfFile = Diagnostic.Message(
+  public static let placeAtTopOfFile = Diagnostic.Message(
     .warning, "place imports at the top of the file")
 
-  static func groupImports(before: LineType, after: LineType) -> Diagnostic.Message {
+  public static func groupImports(before: LineType, after: LineType) -> Diagnostic.Message {
     return Diagnostic.Message(.warning, "place \(before) imports before \(after) imports")
   }
 
-  static let sortImports = Diagnostic.Message(.warning, "sort import statements lexicographically")
+  public static let sortImports =
+    Diagnostic.Message(.warning, "sort import statements lexicographically")
 }

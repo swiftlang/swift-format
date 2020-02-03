@@ -1,5 +1,5 @@
-public class VariableDeclarationTests: PrettyPrintTestCase {
-  public func testBasicVariableDecl() {
+final class VariableDeclarationTests: PrettyPrintTestCase {
+  func testBasicVariableDecl() {
     let input =
       """
       let x = firstVariable + secondVariable / thirdVariable + fourthVariable
@@ -25,7 +25,7 @@ public class VariableDeclarationTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
 
-  public func testVariableDeclWithAttributes() {
+  func testVariableDeclWithAttributes() {
     let input =
       """
       @NSCopying let a: Int = 123
@@ -48,7 +48,7 @@ public class VariableDeclarationTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
 
-  public func testMultipleBindings() {
+  func testMultipleBindings() {
     let input =
       """
       let a = 100, b = 200, c = 300, d = 400, e = 500, f = 600
@@ -81,7 +81,7 @@ public class VariableDeclarationTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
 
-  public func testMultipleBindingsWithTypeAnnotations() {
+  func testMultipleBindingsWithTypeAnnotations() {
     let input =
       """
       let a: Int = 100, b: ReallyLongTypeName = 200, c: (AnotherLongTypeName, AnotherOne) = 300

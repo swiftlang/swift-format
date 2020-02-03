@@ -1,11 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class DoNotUseSemicolonsTests: DiagnosingTestCase {
-  public func testSemicolonUse() {
+final class DoNotUseSemicolonsTests: DiagnosingTestCase {
+  func testSemicolonUse() {
     XCTAssertFormatting(
       DoNotUseSemicolons.self,
       input: """
@@ -19,7 +15,7 @@ public class DoNotUseSemicolonsTests: DiagnosingTestCase {
                 """)
   }
 
-  public func testSemicolonsInNestedStatements() {
+  func testSemicolonsInNestedStatements() {
     XCTAssertFormatting(
       DoNotUseSemicolons.self,
       input: """
@@ -38,7 +34,7 @@ public class DoNotUseSemicolonsTests: DiagnosingTestCase {
                 """)
   }
 
-  public func testSemicolonsInMemberLists() {
+  func testSemicolonsInMemberLists() {
     XCTAssertFormatting(
       DoNotUseSemicolons.self,
       input: """
@@ -62,7 +58,7 @@ public class DoNotUseSemicolonsTests: DiagnosingTestCase {
                 """)
   }
 
-  public func testNewlinesAfterSemicolons() {
+  func testNewlinesAfterSemicolons() {
     XCTAssertFormatting(
       DoNotUseSemicolons.self,
       input: """

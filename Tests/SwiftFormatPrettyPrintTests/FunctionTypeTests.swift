@@ -1,5 +1,5 @@
-public class FunctionTypeTests: PrettyPrintTestCase {
-  public func testFunctionType() {
+final class FunctionTypeTests: PrettyPrintTestCase {
+  func testFunctionType() {
     let input =
       """
       func f(g: (_ somevalue: Int) -> String?) {
@@ -60,7 +60,7 @@ public class FunctionTypeTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
   }
 
-  public func testFunctionTypeThrows() {
+  func testFunctionTypeThrows() {
     let input =
       """
       func f(g: (_ somevalue: Int) throws -> String?) {

@@ -1,5 +1,5 @@
-public class SomeTypeTests: PrettyPrintTestCase {
-  public func testSomeTypes() {
+final class SomeTypeTests: PrettyPrintTestCase {
+  func testSomeTypes() {
     let input =
       """
       var body: some View

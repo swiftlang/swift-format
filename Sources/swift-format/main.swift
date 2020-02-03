@@ -67,7 +67,7 @@ fileprivate func main(_ arguments: [String]) -> Int32 {
 ///   - paths: The file paths for the source files to process with a transformation.
 ///   - configurationPath: The file path to a swift-format configuration file.
 ///   - transform: A closure that performs a transformation on a specific source file.
-private func processSources(
+fileprivate func processSources(
   from paths: [String], configurationPath: String?,
   transform: (FileHandle, String, Configuration) -> Int
 ) -> Int32 {
@@ -85,7 +85,7 @@ private func processSources(
 }
 
 /// Load the configuration.
-private func loadConfiguration(
+fileprivate func loadConfiguration(
   forSwiftFile swiftFilePath: String?, configFilePath: String?
 ) -> Configuration {
   if let path = configFilePath {
@@ -103,7 +103,7 @@ private func loadConfiguration(
 
 /// Look for a ".swift-format" configuration file in the same directory as "forSwiftFile", or its
 /// nearest parent. If one is not found, return "nil".
-private func findConfigurationFile(forSwiftFile: String) -> String? {
+fileprivate func findConfigurationFile(forSwiftFile: String) -> String? {
   let cwd = FileManager.default.currentDirectoryPath
   var path = URL(
     fileURLWithPath: AbsolutePath(forSwiftFile, relativeTo: AbsolutePath(cwd)).pathString)
@@ -123,7 +123,7 @@ private func findConfigurationFile(forSwiftFile: String) -> String? {
 /// Loads and returns a `Configuration` from the given JSON file if it is found and is valid. If the
 /// file does not exist or there was an error decoding it, the program exits with a non-zero exit
 /// code.
-private func decodedConfiguration(fromFileAtPath path: String?) -> Configuration {
+fileprivate func decodedConfiguration(fromFileAtPath path: String?) -> Configuration {
   if let path = path {
     do {
       let url = URL(fileURLWithPath: path)
@@ -140,7 +140,7 @@ private func decodedConfiguration(fromFileAtPath path: String?) -> Configuration
 }
 
 /// Dumps the default configuration as JSON to standard output.
-private func dumpDefaultConfiguration() {
+fileprivate func dumpDefaultConfiguration() {
   let configuration = Configuration()
   do {
     let encoder = JSONEncoder()

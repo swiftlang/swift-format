@@ -1,5 +1,5 @@
-public class GuardStmtTests: PrettyPrintTestCase {
-  public func testGuardStatement() {
+final class GuardStmtTests: PrettyPrintTestCase {
+  func testGuardStatement() {
     let input =
       """
       guard var1 > var2 else {
@@ -48,7 +48,7 @@ public class GuardStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 35)
   }
 
-  public func testGuardWithFuncCall() {
+  func testGuardWithFuncCall() {
     let input =
       """
       guard let myvar = myClass.itsFunc(first: .someStuff, second: .moreStuff).first else {
@@ -88,7 +88,7 @@ public class GuardStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 35)
   }
 
-  public func testOpenBraceIsGluedToElseKeyword() {
+  func testOpenBraceIsGluedToElseKeyword() {
     let input =
       """
       guard let foo = something,
@@ -111,7 +111,7 @@ public class GuardStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
   }
 
-  public func testContinuationLineBreaking() {
+  func testContinuationLineBreaking() {
     let input =
       """
       guard let someObject = object as? Int,
@@ -167,7 +167,7 @@ public class GuardStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
 
-  public func testOptionalBindingConditions() {
+  func testOptionalBindingConditions() {
     let input =
       """
       guard let someObject: Foo = object as? Int else {

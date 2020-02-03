@@ -1,11 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class NeverForceUnwrapTests: DiagnosingTestCase {
-  public func testUnsafeUnwrap() {
+final class NeverForceUnwrapTests: DiagnosingTestCase {
+  func testUnsafeUnwrap() {
     let input =
     """
     func someFunc() -> Int {
@@ -25,7 +21,8 @@ public class NeverForceUnwrapTests: DiagnosingTestCase {
     XCTAssertNotDiagnosed(.doNotForceUnwrap(name: "try"))
     XCTAssertDiagnosed(.doNotForceUnwrap(name: "a"))
   }
-  public func testIgnoreTestCode() {
+
+  func testIgnoreTestCode() {
     let input =
     """
       import XCTest

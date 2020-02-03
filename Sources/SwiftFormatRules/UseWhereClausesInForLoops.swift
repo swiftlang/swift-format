@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -72,7 +71,7 @@ public final class UseWhereClausesInForLoops: SyntaxFormatRule {
   }
 }
 
-private func updateWithWhereCondition(
+fileprivate func updateWithWhereCondition(
   node: ForInStmtSyntax,
   condition: ExprSyntax,
   statements: CodeBlockItemListSyntax
@@ -98,12 +97,12 @@ private func updateWithWhereCondition(
 }
 
 extension Diagnostic.Message {
-  static let useWhereInsteadOfIf = Diagnostic.Message(
+  public static let useWhereInsteadOfIf = Diagnostic.Message(
     .warning,
     "replace this 'if' statement with a 'where' clause"
   )
 
-  static let useWhereInsteadOfGuard = Diagnostic.Message(
+  public static let useWhereInsteadOfGuard = Diagnostic.Message(
     .warning,
     "replace this 'guard' statement with a 'where' clause"
   )

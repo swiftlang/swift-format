@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -50,14 +49,14 @@ public final class NeverUseImplicitlyUnwrappedOptionals: SyntaxLintRule {
     return .skipChildren
   }
 
-  func diagnoseImplicitWrapViolation(_ type: TypeSyntax) {
+  private func diagnoseImplicitWrapViolation(_ type: TypeSyntax) {
     guard let violation = type.as(ImplicitlyUnwrappedOptionalTypeSyntax.self) else { return }
     diagnose(.doNotUseImplicitUnwrapping(identifier: "\(violation.wrappedType)"), on: type)
   }
 }
 
 extension Diagnostic.Message {
-  static func doNotUseImplicitUnwrapping(identifier: String) -> Diagnostic.Message {
+  public static func doNotUseImplicitUnwrapping(identifier: String) -> Diagnostic.Message {
     return .init(.warning, "use \(identifier) or \(identifier)? instead of \(identifier)!")
   }
 }

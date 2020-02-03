@@ -1,6 +1,5 @@
-public class AvailabilityConditionTests: PrettyPrintTestCase {
-
-  public func testAvailabilityCondition() {
+final class AvailabilityConditionTests: PrettyPrintTestCase {
+  func testAvailabilityCondition() {
     let input =
       """
       if someCondition {
@@ -109,7 +108,7 @@ public class AvailabilityConditionTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
 
-  public func testAvailabilityConditionWithTrailingComment() {
+  func testAvailabilityConditionWithTrailingComment() {
     let input =
       """
       struct MyStruct {

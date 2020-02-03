@@ -1,5 +1,5 @@
-public class SemiColonTypeTests: PrettyPrintTestCase {
-  public func testSemicolon() {
+final class SemiColonTypeTests: PrettyPrintTestCase {
+  func testSemicolon() {
     let input =
       """
       var foo = false
@@ -13,7 +13,7 @@ public class SemiColonTypeTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 50)
   }
     
-  public func testNoSemicolon() {
+  func testNoSemicolon() {
     let input =
       """
        var foo = false

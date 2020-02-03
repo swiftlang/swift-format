@@ -1,8 +1,7 @@
 import SwiftFormatConfiguration
 
-public class FunctionCallTests: PrettyPrintTestCase {
-
-  public func testBasicFunctionCalls_noPackArguments() {
+final class FunctionCallTests: PrettyPrintTestCase {
+  func testBasicFunctionCalls_noPackArguments() {
     let input =
       """
       let a = myFunc()
@@ -60,7 +59,7 @@ public class FunctionCallTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45, configuration: config)
   }
 
-  public func testBasicFunctionCalls_packArguments() {
+  func testBasicFunctionCalls_packArguments() {
     let input =
       """
       let a = myFunc()
@@ -98,7 +97,7 @@ public class FunctionCallTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45, configuration: config)
   }
 
-  public func testDiscretionaryLineBreakBeforeClosingParenthesis() {
+  func testDiscretionaryLineBreakBeforeClosingParenthesis() {
     let input =
       """
       let a = myFunc(
@@ -109,7 +108,7 @@ public class FunctionCallTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 45)
   }
 
-  public func testDiscretionaryLineBreaksAreSelfCorrecting() {
+  func testDiscretionaryLineBreaksAreSelfCorrecting() {
     // A discretionary line break should never permit a violation of the rule that says,
     // effectively, "if a closing delimiter does not fit on the same line as its matching open
     // delimiter, then the open delimiter is the last token on that line" (which is implemented in
@@ -133,7 +132,7 @@ public class FunctionCallTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45, configuration: config)
   }
 
-  public func testArgumentStartsWithOpenDelimiter() {
+  func testArgumentStartsWithOpenDelimiter() {
     let input =
       """
       myFunc(someArray: [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000])
@@ -171,7 +170,7 @@ public class FunctionCallTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
 
-  public func testSingleUnlabeledArgumentWithDelimiters() {
+  func testSingleUnlabeledArgumentWithDelimiters() {
     let input =
       """
       myFunc([1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000])

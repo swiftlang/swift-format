@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -130,7 +129,7 @@ public final class OneCasePerLine: SyntaxFormatRule {
 }
 
 extension Diagnostic.Message {
-  static func moveAssociatedOrRawValueCase(name: String) -> Diagnostic.Message {
+  public static func moveAssociatedOrRawValueCase(name: String) -> Diagnostic.Message {
     return .init(.warning, "move '\(name)' to its own case declaration")
   }
 }

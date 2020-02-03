@@ -1,11 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class UseWhereClausesInForLoopsTests: DiagnosingTestCase {
-  public func testForLoopWhereClauses() {
+final class UseWhereClausesInForLoopsTests: DiagnosingTestCase {
+  func testForLoopWhereClauses() {
     XCTAssertFormatting(
       UseWhereClausesInForLoops.self,
       input: """

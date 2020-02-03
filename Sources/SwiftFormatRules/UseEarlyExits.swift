@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -99,8 +98,7 @@ public final class UseEarlyExits: SyntaxFormatRule {
 }
 
 extension Diagnostic.Message {
-
-  static let useGuardStatement = Diagnostic.Message(
+  public static let useGuardStatement = Diagnostic.Message(
     .warning,
     "replace the `if/else` block with a `guard` statement containing the early exit"
   )

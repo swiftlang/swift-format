@@ -1,5 +1,5 @@
-public class YieldStmtTests: PrettyPrintTestCase {
-  public func testBasic() {
+final class YieldStmtTests: PrettyPrintTestCase {
+  func testBasic() {
     let input =
       """
       var foo: Int {

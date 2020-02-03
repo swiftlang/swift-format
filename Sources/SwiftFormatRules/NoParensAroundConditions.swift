@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -27,7 +26,7 @@ import SwiftSyntax
 ///         Specifically, parentheses are allowed if and only if the expression contains a function
 ///         call with a trailing closure.
 public final class NoParensAroundConditions: SyntaxFormatRule {
-  func extractExpr(_ tuple: TupleExprSyntax) -> ExprSyntax {
+  private func extractExpr(_ tuple: TupleExprSyntax) -> ExprSyntax {
     assert(tuple.elementList.count == 1)
     let expr = tuple.elementList.first!.expression
 
@@ -88,6 +87,6 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
 }
 
 extension Diagnostic.Message {
-  static let removeParensAroundExpression = Diagnostic.Message(
+  public static let removeParensAroundExpression = Diagnostic.Message(
     .warning, "remove parentheses around this expression")
 }

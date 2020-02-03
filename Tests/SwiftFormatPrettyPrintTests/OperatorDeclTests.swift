@@ -1,8 +1,7 @@
 import SwiftFormatConfiguration
 
-public class OperatorDeclTests: PrettyPrintTestCase {
-
-  public func testOperatorDecl() {
+final class OperatorDeclTests: PrettyPrintTestCase {
+  func testOperatorDecl() {
     let input =
       """
       prefix operator ^*^
@@ -44,7 +43,7 @@ public class OperatorDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expectedShorter, linelength: 10)
   }
 
-  public func testPrecedenceGroups() {
+  func testPrecedenceGroups() {
     let input =
       """
       precedencegroup FooGroup{higherThan:Group1,Group2 lowerThan:Group3,Group4 associativity:left assignment:false}

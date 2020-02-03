@@ -1,11 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class ReturnVoidInsteadOfEmptyTupleTests: DiagnosingTestCase {
-  public func testEmptyTupleReturns() {
+final class ReturnVoidInsteadOfEmptyTupleTests: DiagnosingTestCase {
+  func testEmptyTupleReturns() {
     XCTAssertFormatting(
       ReturnVoidInsteadOfEmptyTuple.self,
       input: """

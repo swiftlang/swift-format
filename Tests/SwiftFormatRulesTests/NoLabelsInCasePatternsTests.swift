@@ -1,11 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class NoLabelsInCasePatternsTests: DiagnosingTestCase {
-  public func testRedundantCaseLabels() {
+final class NoLabelsInCasePatternsTests: DiagnosingTestCase {
+  func testRedundantCaseLabels() {
     XCTAssertFormatting(
       NoLabelsInCasePatterns.self,
       input: """

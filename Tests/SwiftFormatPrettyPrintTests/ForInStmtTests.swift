@@ -1,5 +1,5 @@
-public class ForInStmtTests: PrettyPrintTestCase {
-  public func testBasicForLoop() {
+final class ForInStmtTests: PrettyPrintTestCase {
+  func testBasicForLoop() {
     let input =
       """
       for i in mycontainer {
@@ -32,7 +32,7 @@ public class ForInStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 25)
   }
 
-  public func testForWhereLoop() {
+  func testForWhereLoop() {
     let input =
       """
       for i in array where array.isContainer() {
@@ -73,7 +73,7 @@ public class ForInStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
 
-  public func testForLoopFullWrap() {
+  func testForLoopFullWrap() {
     let input =
       """
       for item in aVeryLargeContainterObject where largeObject.hasProperty() && condition {
@@ -111,7 +111,7 @@ public class ForInStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
 
-  public func testForLabels() {
+  func testForLabels() {
     let input =
       """
       loopLabel: for element in container {
@@ -146,7 +146,7 @@ public class ForInStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
 
-  public func testForWithRanges() {
+  func testForWithRanges() {
     let input =
       """
       for i in 0...10 {
@@ -177,7 +177,7 @@ public class ForInStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
 
-  public func testForCase() {
+  func testForCase() {
     let input =
       """
       for case let a as String in [] {
@@ -200,7 +200,7 @@ public class ForInStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
   }
 
-  public func testForStatementWithNestedExpressions() {
+  func testForStatementWithNestedExpressions() {
     let input =
       """
       for x in someCollection where someTestableCondition && x.someProperty + x.someSpecialProperty({ $0.value }) && someOtherCondition + thatUses + operators && binPackable && exprs
@@ -263,7 +263,7 @@ public class ForInStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
 
-  public func testExplicitTypeAnnotation() {
+  func testExplicitTypeAnnotation() {
     let input =
       """
       for i: ExplicitType in mycontainer {

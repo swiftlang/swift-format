@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -65,7 +64,7 @@ public final class AllPublicDeclarationsHaveDocumentation: SyntaxLintRule {
     return .skipChildren
   }
 
-  func diagnoseMissingDocComment(
+  private func diagnoseMissingDocComment(
     _ decl: DeclSyntax,
     name: String,
     modifiers: ModifierListSyntax?
@@ -83,7 +82,7 @@ public final class AllPublicDeclarationsHaveDocumentation: SyntaxLintRule {
 }
 
 extension Diagnostic.Message {
-  static func declRequiresComment(_ name: String) -> Diagnostic.Message {
+  public static func declRequiresComment(_ name: String) -> Diagnostic.Message {
     return .init(.warning, "add a documentation comment for '\(name)'")
   }
 }

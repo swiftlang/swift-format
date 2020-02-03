@@ -1,5 +1,5 @@
-public class CommentTests: PrettyPrintTestCase {
-  public func testDocumentationComments() {
+final class CommentTests: PrettyPrintTestCase {
+  func testDocumentationComments() {
     let input =
       """
       /// This is a documentation comment
@@ -78,7 +78,7 @@ public class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 55)
   }
 
-  public func testLineComments() {
+  func testLineComments() {
     let input =
       """
       // Line Comment1
@@ -191,7 +191,7 @@ public class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
 
-  public func testContainerLineComments() {
+  func testContainerLineComments() {
     let input =
       """
       // Array comment
@@ -251,7 +251,7 @@ public class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
   }
 
-  public func testDocumentationBlockComments() {
+  func testDocumentationBlockComments() {
     let input =
       """
       /** This is a documentation comment
@@ -334,7 +334,7 @@ public class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 55)
   }
 
-  public func testBlockComments() {
+  func testBlockComments() {
     let input =
       """
       /* Line Comment1 */
@@ -393,7 +393,7 @@ public class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
 
-  public func testDoesNotInsertExtraNewlinesAfterTrailingComments() {
+  func testDoesNotInsertExtraNewlinesAfterTrailingComments() {
     let input =
       """
       struct Foo {
@@ -428,7 +428,7 @@ public class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
   }
 
-  public func testCommentOnContinuationLine() {
+  func testCommentOnContinuationLine() {
     let input =
       """
       func foo() {
@@ -453,7 +453,7 @@ public class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 60)
   }
 
-  public func testLineCommentAtEndOfMemberDeclList() {
+  func testLineCommentAtEndOfMemberDeclList() {
     let input =
       """
       enum Foo {
@@ -474,7 +474,7 @@ public class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
   }
 
-  public func testCommentsAroundIfElseStatements() {
+  func testCommentsAroundIfElseStatements() {
     let input =
       """
       if foo {
@@ -504,7 +504,7 @@ public class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
   }
 
-  public func testCommentsMoveAroundOperators() {
+  func testCommentsMoveAroundOperators() {
     let input =
       """
       let x = a +  // comment about b
@@ -551,7 +551,7 @@ public class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
   }
 
-  public func testCommentsAllowedInParenthesizedExpressions() {
+  func testCommentsAllowedInParenthesizedExpressions() {
     // There is no group applied outside of single element tuples that don't contain sequence
     // expressions, hence the examples with a tuple wrapping `foo()` and a tuple wrapping a
     // multiline string don't break before the left paren.
@@ -592,7 +592,7 @@ public class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
   }
 
-  public func testCommentsInIfStatements() {
+  func testCommentsInIfStatements() {
     let input =
     """
          if foo.bar && false && // comment about foo.bar

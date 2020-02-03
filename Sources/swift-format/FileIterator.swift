@@ -35,7 +35,7 @@ struct FileIterator: Sequence, IteratorProtocol {
   let fileSuffix = ".swift"
 
   /// The input is a list of paths as Strings. Some will be file paths, and others directories.
-  public init(paths: [String]) {
+  init(paths: [String]) {
     self.paths = paths
     self.pathIterator = self.paths.makeIterator()
   }

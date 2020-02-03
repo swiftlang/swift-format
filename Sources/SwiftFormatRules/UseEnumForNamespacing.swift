@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -53,7 +52,9 @@ public final class UseEnumForNamespacing: SyntaxFormatRule {
   /// possibly being a namespace, since the user probably added it to prevent instantiation.
   ///
   /// If any of the members causes the type to disqualify as a namespace, this method returns nil.
-  func membersToKeepIfUsedAsNamespace(_ members: MemberDeclListSyntax) -> MemberDeclListSyntax? {
+  private func membersToKeepIfUsedAsNamespace(_ members: MemberDeclListSyntax)
+    -> MemberDeclListSyntax?
+  {
     if members.count == 0 { return nil }
     var declList = [MemberDeclListItemSyntax]()
 
@@ -97,7 +98,7 @@ public final class UseEnumForNamespacing: SyntaxFormatRule {
 }
 
 extension Diagnostic.Message {
-  static func convertToEnum(kind: String, name: TokenSyntax) -> Diagnostic.Message {
+  public static func convertToEnum(kind: String, name: TokenSyntax) -> Diagnostic.Message {
     return .init(.warning, "replace \(kind) '\(name.text)' with an enum when used as a namespace")
   }
 }

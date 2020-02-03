@@ -1,10 +1,7 @@
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class OrderedImportsTests: DiagnosingTestCase {
-  public func testInvalidImportsOrder() {
+final class OrderedImportsTests: DiagnosingTestCase {
+  func testInvalidImportsOrder() {
     let input =
       """
       import Foundation
@@ -66,7 +63,7 @@ public class OrderedImportsTests: DiagnosingTestCase {
     XCTAssertDiagnosed(.groupImports(before: .declImport, after: .testableImport))
   }
   
-  public func testImportsOrderWithoutModuleType() {
+  func testImportsOrderWithoutModuleType() {
     let input =
       """
       @testable import SwiftFormatRules
@@ -103,7 +100,7 @@ public class OrderedImportsTests: DiagnosingTestCase {
     XCTAssertDiagnosed(.sortImports)
   }
   
-  public func testImportsOrderWithDocComment() {
+  func testImportsOrderWithDocComment() {
     let input =
       """
       /// Test imports with comments.
@@ -146,7 +143,7 @@ public class OrderedImportsTests: DiagnosingTestCase {
     XCTAssertDiagnosed(.sortImports)
   }
   
-  public func testValidOrderedImport() {
+  func testValidOrderedImport() {
     let input =
       """
       import CoreLocation
@@ -178,7 +175,7 @@ public class OrderedImportsTests: DiagnosingTestCase {
     // Should not raise any linter errors.
   }
 
-  public func testSeparatedFileHeader() {
+  func testSeparatedFileHeader() {
     let input =
       """
       // This is part of the file header.
@@ -223,7 +220,7 @@ public class OrderedImportsTests: DiagnosingTestCase {
     XCTAssertDiagnosed(.placeAtTopOfFile)
   }
 
-  public func testNonHeaderComment() {
+  func testNonHeaderComment() {
     let input =
       """
       // Top comment
@@ -250,7 +247,7 @@ public class OrderedImportsTests: DiagnosingTestCase {
     XCTAssertDiagnosed(.sortImports)
   }
 
-  public func testDisableOrderedImports() {
+  func testDisableOrderedImports() {
     let input =
       """
       import C
@@ -284,7 +281,7 @@ public class OrderedImportsTests: DiagnosingTestCase {
     XCTAssertDiagnosed(.placeAtTopOfFile)
   }
 
-  public func testDisableOrderedImportsMovingComments() {
+  func testDisableOrderedImportsMovingComments() {
     let input =
       """
       import B
@@ -312,7 +309,7 @@ public class OrderedImportsTests: DiagnosingTestCase {
     XCTAssertDiagnosed(.placeAtTopOfFile)
   }
 
-  public func testEmptyFile() {
+  func testEmptyFile() {
     XCTAssertFormatting(
       OrderedImports.self, input: "", expected: "", checkForUnassertedDiagnostics: true
     )

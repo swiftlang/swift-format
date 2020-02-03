@@ -1,10 +1,7 @@
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class UseTripleSlashForDocumentationCommentsTests: DiagnosingTestCase {
-  public func testRemoveDocBlockComments() {
+final class UseTripleSlashForDocumentationCommentsTests: DiagnosingTestCase {
+  func testRemoveDocBlockComments() {
     XCTAssertFormatting(
       UseTripleSlashForDocumentationComments.self,
       input: """
@@ -35,7 +32,7 @@ public class UseTripleSlashForDocumentationCommentsTests: DiagnosingTestCase {
                 """)
   }
   
-  public func testRemoveDocBlockCommentsWithoutStars() {
+  func testRemoveDocBlockCommentsWithoutStars() {
     XCTAssertFormatting(
       UseTripleSlashForDocumentationComments.self,
       input: """

@@ -1,11 +1,10 @@
 import SwiftFormatConfiguration
 import SwiftFormatCore
+import SwiftFormatPrettyPrint
 import SwiftSyntax
 import XCTest
 
-@testable import SwiftFormatPrettyPrint
-
-public class PrettyPrintTestCase: XCTestCase {
+class PrettyPrintTestCase: XCTestCase {
   /// A helper that will keep track of which diagnostics have been emitted, and their locations.
   private var consumer: DiagnosticTrackingConsumer? = nil
 
@@ -31,7 +30,7 @@ public class PrettyPrintTestCase: XCTestCase {
   ///   - column: The column number of the diagnostic message within the user's input text.
   ///   - file: The file the test resides in (defaults to the current caller's file).
   ///   - sourceLine: The line the test resides in (defaults to the current caller's file).
-  func XCTAssertDiagnosed(
+  final func XCTAssertDiagnosed(
     _ message: Diagnostic.Message,
     line: Int? = nil,
     column: Int? = nil,
@@ -50,7 +49,7 @@ public class PrettyPrintTestCase: XCTestCase {
     consumer?.registeredDiagnostics.remove(at: idx)
   }
 
-  public func assertPrettyPrintEqual(
+  final func assertPrettyPrintEqual(
     input: String,
     expected: String,
     linelength: Int,

@@ -1,11 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class IdentifiersMustBeASCIITests: DiagnosingTestCase {
-  public func testInvalidIdentifiers() {
+final class IdentifiersMustBeASCIITests: DiagnosingTestCase {
+  func testInvalidIdentifiers() {
     let input =
     """
       let Te$t = 1

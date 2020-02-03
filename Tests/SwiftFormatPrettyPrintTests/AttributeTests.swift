@@ -1,7 +1,7 @@
 import SwiftFormatConfiguration
 
-public class AttributeTests: PrettyPrintTestCase {
-  public func testAttributeParamSpacing() {
+final class AttributeTests: PrettyPrintTestCase {
+  func testAttributeParamSpacing() {
     let input =
       """
       @available( iOS 9.0,* )
@@ -26,7 +26,7 @@ public class AttributeTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
   }
 
-  public func testAttributeBinPackedWrapping() {
+  func testAttributeBinPackedWrapping() {
     let input =
       """
       @available(iOS 9.0, *)
@@ -60,7 +60,7 @@ public class AttributeTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 32)
   }
 
-  public func testAttributeArgumentPerLineWrapping() {
+  func testAttributeArgumentPerLineWrapping() {
     let input =
       """
       @available(iOS 9.0, *)
@@ -96,7 +96,7 @@ public class AttributeTests: PrettyPrintTestCase {
       input: input, expected: expected, linelength: 32, configuration: configuration)
   }
 
-  public func testAttributeFormattingRespectsDiscretionaryLineBreaks() {
+  func testAttributeFormattingRespectsDiscretionaryLineBreaks() {
     let input =
       """
       @available(
@@ -124,7 +124,7 @@ public class AttributeTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
 
-  public func testAttributeInterArgumentBinPackedLineBreaking() {
+  func testAttributeInterArgumentBinPackedLineBreaking() {
     let input =
       """
       @available(iOSApplicationExtension, introduced: 10.0, deprecated: 11.0, message: "Use something else because this is definitely deprecated.")
@@ -146,7 +146,7 @@ public class AttributeTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
 
-  public func testAttributArgumentPerLineBreaking() {
+  func testAttributArgumentPerLineBreaking() {
     let input =
       """
       @available(iOSApplicationExtension, introduced: 10.0, deprecated: 11.0, message: "Use something else because this is definitely deprecated.")
@@ -172,7 +172,7 @@ public class AttributeTests: PrettyPrintTestCase {
       input: input, expected: expected, linelength: 40, configuration: configuration)
   }
 
-  public func testObjCBinPackedAttributes() {
+  func testObjCBinPackedAttributes() {
     let input =
       """
       @objc func f() {}
@@ -205,7 +205,7 @@ public class AttributeTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
 
-  public func testObjCAttributesPerLineBreaking() {
+  func testObjCAttributesPerLineBreaking() {
      let input =
        """
        @objc func f() {}
@@ -244,7 +244,7 @@ public class AttributeTests: PrettyPrintTestCase {
        input: input, expected: expected, linelength: 40, configuration: configuration)
    }
 
-  public func testObjCAttributesDiscretionaryLineBreaking() {
+  func testObjCAttributesDiscretionaryLineBreaking() {
     // The discretionary newlines in the 3rd function declaration are invalid, because new lines
     // should be after the ":" character in Objective-C selector pieces, so they should be removed.
     let input =

@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -44,7 +43,7 @@ public final class NoEmptyTrailingClosureParentheses: SyntaxFormatRule {
 }
 
 extension Diagnostic.Message {
-  static func removeEmptyTrailingParentheses(name: String) -> Diagnostic.Message {
+  public static func removeEmptyTrailingParentheses(name: String) -> Diagnostic.Message {
     return .init(.warning, "remove '()' after \(name)")
   }
 }

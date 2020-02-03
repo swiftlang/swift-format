@@ -1,5 +1,5 @@
-public class TupleDeclTests: PrettyPrintTestCase {
-  public func testBasicTuples() {
+final class TupleDeclTests: PrettyPrintTestCase {
+  func testBasicTuples() {
     let input =
       """
       let a = (1, 2, 3)
@@ -29,7 +29,7 @@ public class TupleDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 37)
   }
 
-  public func testLabeledTuples() {
+  func testLabeledTuples() {
     let input =
       """
       let a = (A: var1, B: var2)

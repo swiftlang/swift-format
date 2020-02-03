@@ -1,11 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class DontRepeatTypeInStaticPropertiesTests: DiagnosingTestCase {
-  public func testRepetitiveProperties() {
+final class DontRepeatTypeInStaticPropertiesTests: DiagnosingTestCase {
+  func testRepetitiveProperties() {
     let input =
       """
       public class UIColor {
@@ -57,7 +53,7 @@ public class DontRepeatTypeInStaticPropertiesTests: DiagnosingTestCase {
     XCTAssertDiagnosed(.removeTypeFromName(name: "sharedSession", type: "Session"))
   }
 
-  public func testSR11123() {
+  func testSR11123() {
     let input =
       """
       extension A {
@@ -69,7 +65,7 @@ public class DontRepeatTypeInStaticPropertiesTests: DiagnosingTestCase {
     XCTAssertNotDiagnosed(.removeTypeFromName(name: "b", type: "A"))
   }
 
-  public func testDottedExtendedType() {
+  func testDottedExtendedType() {
     let input =
       """
       extension Dotted.Thing {

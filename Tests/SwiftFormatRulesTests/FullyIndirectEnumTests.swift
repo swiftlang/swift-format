@@ -1,12 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class FullyIndirectEnumTests: DiagnosingTestCase {
-
-  public func testAllIndirectCases() {
+class FullyIndirectEnumTests: DiagnosingTestCase {
+  func testAllIndirectCases() {
     XCTAssertFormatting(
       FullyIndirectEnum.self,
       input: """
@@ -31,7 +26,7 @@ public class FullyIndirectEnumTests: DiagnosingTestCase {
         """)
   }
 
-  public func testNotAllIndirectCases() {
+  func testNotAllIndirectCases() {
     let input = """
       public enum CompassPoint {
         case north
@@ -43,7 +38,7 @@ public class FullyIndirectEnumTests: DiagnosingTestCase {
     XCTAssertFormatting(FullyIndirectEnum.self, input: input, expected: input)
   }
 
-  public func testAlreadyIndirectEnum() {
+  func testAlreadyIndirectEnum() {
     let input = """
       indirect enum CompassPoint {
         case north
@@ -55,7 +50,7 @@ public class FullyIndirectEnumTests: DiagnosingTestCase {
     XCTAssertFormatting(FullyIndirectEnum.self, input: input, expected: input)
   }
 
-  public func testCaselessEnum() {
+  func testCaselessEnum() {
     let input = """
       public enum Constants {
         public static let foo = 5

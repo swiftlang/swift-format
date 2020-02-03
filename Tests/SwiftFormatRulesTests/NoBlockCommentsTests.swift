@@ -1,10 +1,7 @@
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class NoBlockCommentsTests: DiagnosingTestCase {
-  public func testDiagnoseBlockComments() {
+final class NoBlockCommentsTests: DiagnosingTestCase {
+  func testDiagnoseBlockComments() {
     let input =
       """
       /*

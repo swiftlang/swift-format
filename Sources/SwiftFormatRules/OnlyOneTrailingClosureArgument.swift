@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -31,7 +30,7 @@ public final class OnlyOneTrailingClosureArgument: SyntaxLintRule {
 }
 
 extension Diagnostic.Message {
-  static let removeTrailingClosure = Diagnostic.Message(
+  public static let removeTrailingClosure = Diagnostic.Message(
     .warning,
     "revise function call to avoid using both closure arguments and a trailing closure")
 }

@@ -1,11 +1,7 @@
-import Foundation
-import SwiftSyntax
-import XCTest
+import SwiftFormatRules
 
-@testable import SwiftFormatRules
-
-public class NeverUseForceTryTests: DiagnosingTestCase {
-  public func testInvalidTryExpression() {
+final class NeverUseForceTryTests: DiagnosingTestCase {
+  func testInvalidTryExpression() {
     let input =
       """
       let document = try! Document(path: "important.data")
@@ -27,7 +23,7 @@ public class NeverUseForceTryTests: DiagnosingTestCase {
     XCTAssertNotDiagnosed(.doNotForceTry)
   }
 
-  public func testAllowForceTryInTestCode() {
+  func testAllowForceTryInTestCode() {
     let input =
       """
       import XCTest
