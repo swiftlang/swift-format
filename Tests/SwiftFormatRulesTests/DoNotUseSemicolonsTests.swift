@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class DoNotUseSemicolonsTests: DiagnosingTestCase {
+final class DoNotUseSemicolonsTests: LintOrFormatRuleTestCase {
   func testSemicolonUse() {
     XCTAssertFormatting(
       DoNotUseSemicolons.self,

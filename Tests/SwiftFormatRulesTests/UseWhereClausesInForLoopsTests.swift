@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class UseWhereClausesInForLoopsTests: DiagnosingTestCase {
+final class UseWhereClausesInForLoopsTests: LintOrFormatRuleTestCase {
   func testForLoopWhereClauses() {
     XCTAssertFormatting(
       UseWhereClausesInForLoops.self,

@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class NoEmptyTrailingClosureParenthesesTests: DiagnosingTestCase {
+final class NoEmptyTrailingClosureParenthesesTests: LintOrFormatRuleTestCase {
   func testInvalidEmptyParenTrailingClosure() {
     XCTAssertFormatting(
       NoEmptyTrailingClosureParentheses.self,

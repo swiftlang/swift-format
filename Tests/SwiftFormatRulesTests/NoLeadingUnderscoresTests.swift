@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class NoLeadingUnderscoresTests: DiagnosingTestCase {
+final class NoLeadingUnderscoresTests: LintOrFormatRuleTestCase {
   func testVars() {
     let input = """
       let _foo = foo

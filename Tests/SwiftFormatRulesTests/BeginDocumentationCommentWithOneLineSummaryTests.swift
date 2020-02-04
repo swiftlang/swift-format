@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class BeginDocumentationCommentWithOneLineSummaryTests: DiagnosingTestCase {
+final class BeginDocumentationCommentWithOneLineSummaryTests: LintOrFormatRuleTestCase {
   override func setUp() {
     // Reset this to false by default. Specific tests may override it.
     BeginDocumentationCommentWithOneLineSummary._forcesFallbackModeForTesting = false

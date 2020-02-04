@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class NoParensAroundConditionsTests: DiagnosingTestCase {
+final class NoParensAroundConditionsTests: LintOrFormatRuleTestCase {
   func testParensAroundConditions() {
     XCTAssertFormatting(
       NoParensAroundConditions.self,

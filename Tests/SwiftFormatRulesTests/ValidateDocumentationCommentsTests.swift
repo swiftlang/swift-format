@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class ValidateDocumentationCommentsTests: DiagnosingTestCase {
+final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
   func testParameterDocumentation() {
     let input =
     """

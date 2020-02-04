@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class AllPublicDeclarationsHaveDocumentationTests: DiagnosingTestCase {
+final class AllPublicDeclarationsHaveDocumentationTests: LintOrFormatRuleTestCase {
   func testPublicDeclsWithoutDocs() {
     let input =
       """

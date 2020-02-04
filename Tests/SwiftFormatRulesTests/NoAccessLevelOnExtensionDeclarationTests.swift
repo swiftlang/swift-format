@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class NoAccessLevelOnExtensionDeclarationTests: DiagnosingTestCase {
+final class NoAccessLevelOnExtensionDeclarationTests: LintOrFormatRuleTestCase {
   func testExtensionDeclarationAccessLevel() {
     XCTAssertFormatting(
       NoAccessLevelOnExtensionDeclaration.self,

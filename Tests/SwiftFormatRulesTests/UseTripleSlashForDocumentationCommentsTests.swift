@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class UseTripleSlashForDocumentationCommentsTests: DiagnosingTestCase {
+final class UseTripleSlashForDocumentationCommentsTests: LintOrFormatRuleTestCase {
   func testRemoveDocBlockComments() {
     XCTAssertFormatting(
       UseTripleSlashForDocumentationComments.self,

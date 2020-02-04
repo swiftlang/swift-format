@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class UseEnumForNamespacingTests: DiagnosingTestCase {
+final class UseEnumForNamespacingTests: LintOrFormatRuleTestCase {
   func testNonEnumsUsedAsNamespaces() {
     XCTAssertFormatting(
       UseEnumForNamespacing.self,

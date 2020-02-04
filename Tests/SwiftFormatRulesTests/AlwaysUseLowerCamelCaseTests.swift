@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class AlwaysUseLowerCamelCaseTests: DiagnosingTestCase {
+final class AlwaysUseLowerCamelCaseTests: LintOrFormatRuleTestCase {
   func testInvalidVariableCasing() {
     let input =
       """

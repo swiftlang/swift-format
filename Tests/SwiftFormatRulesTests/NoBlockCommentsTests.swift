@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class NoBlockCommentsTests: DiagnosingTestCase {
+final class NoBlockCommentsTests: LintOrFormatRuleTestCase {
   func testDiagnoseBlockComments() {
     let input =
       """

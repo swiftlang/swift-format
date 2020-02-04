@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class AmbiguousTrailingClosureOverloadTests: DiagnosingTestCase {
+final class AmbiguousTrailingClosureOverloadTests: LintOrFormatRuleTestCase {
   func testAmbiguousOverloads() {
     performLint(
       AmbiguousTrailingClosureOverload.self,

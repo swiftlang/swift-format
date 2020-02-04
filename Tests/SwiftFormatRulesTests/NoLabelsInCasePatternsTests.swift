@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class NoLabelsInCasePatternsTests: DiagnosingTestCase {
+final class NoLabelsInCasePatternsTests: LintOrFormatRuleTestCase {
   func testRedundantCaseLabels() {
     XCTAssertFormatting(
       NoLabelsInCasePatterns.self,

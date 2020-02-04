@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-class FullyIndirectEnumTests: DiagnosingTestCase {
+class FullyIndirectEnumTests: LintOrFormatRuleTestCase {
   func testAllIndirectCases() {
     XCTAssertFormatting(
       FullyIndirectEnum.self,

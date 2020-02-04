@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class OnlyOneTrailingClosureArgumentTests: DiagnosingTestCase {
+final class OnlyOneTrailingClosureArgumentTests: LintOrFormatRuleTestCase {
   func testInvalidTrailingClosureCall() {
     let input =
       """

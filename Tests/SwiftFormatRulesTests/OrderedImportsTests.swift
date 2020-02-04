@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class OrderedImportsTests: DiagnosingTestCase {
+final class OrderedImportsTests: LintOrFormatRuleTestCase {
   func testInvalidImportsOrder() {
     let input =
       """

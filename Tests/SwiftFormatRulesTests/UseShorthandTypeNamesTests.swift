@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class UseShorthandTypeNamesTests: DiagnosingTestCase {
+final class UseShorthandTypeNamesTests: LintOrFormatRuleTestCase {
   func testNamesInTypeContextsAreShortened() {
     XCTAssertFormatting(
       UseShorthandTypeNames.self,
