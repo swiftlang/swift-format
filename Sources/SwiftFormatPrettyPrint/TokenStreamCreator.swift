@@ -45,6 +45,10 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   /// breaks and start/end contextual breaking tokens have been inserted.
   private var preVisitedExprs = [ExprSyntax]()
 
+  /// Lists the tokens that are the closing or right parens of a parenthesized expression (i.e. a
+  /// tuple expression with 1 element).
+  private var parenthesizedExprParens = Set<TokenSyntax>()
+
   init(configuration: Configuration, operatorContext: OperatorContext) {
     self.config = configuration
     self.operatorContext = operatorContext
@@ -645,6 +649,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       // `stackedIndentationBehavior`).
       after(node.leftParen, tokens: .open)
       before(node.rightParen, tokens: .close)
+      parenthesizedExprParens.insert(node.rightParen)
 
       // When there's a comment inside of a parenthesized expression, we want to allow the comment
       // to exist at the EOL with the left paren or on its own line. The contents are always
@@ -1348,9 +1353,16 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       node.colonMark,
       tokens: .break(.close(mustBreak: false), size: 0), .break(.open(kind: .continuation)), .open)
     after(node.colonMark, tokens: .space)
-    after(
-      node.secondChoice.lastToken,
-      tokens: .break(.close(mustBreak: false), size: 0), .close, .close)
+
+    // When the ternary is wrapped in parens, absorb the closing paren into the ternary's group so
+    // that it is glued to the last token of the ternary.
+    let closeScopeToken: TokenSyntax?
+    if let parenExpr = outerMostEnclosingParenthesizedExpr(from: Syntax(node.secondChoice)) {
+      closeScopeToken = parenExpr.lastToken
+    } else {
+      closeScopeToken = node.secondChoice.lastToken
+    }
+    after(closeScopeToken, tokens: .break(.close(mustBreak: false), size: 0), .close, .close)
     return .visitChildren
   }
 
@@ -2866,6 +2878,24 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     }
   }
 
+  /// Returns the node for the outermost parenthesized expr (i.e. a single element tuple) that is
+  /// ended at the given node. When the given node is not the last component of a parenthesized
+  /// expression, this method returns nil.
+  private func outerMostEnclosingParenthesizedExpr(from node: Syntax) -> Syntax? {
+    guard let afterToken = node.lastToken?.nextToken, parenthesizedExprParens.contains(afterToken)
+    else {
+      return nil
+    }
+    var parenthesizedExpr = afterToken.parent
+    while let nextToken = parenthesizedExpr?.lastToken?.nextToken,
+      parenthesizedExprParens.contains(nextToken),
+      let nextExpr = nextToken.parent
+    {
+      parenthesizedExpr = nextExpr
+    }
+    return parenthesizedExpr
+  }
+
   /// Determines if indentation should be stacked around a subexpression to the right of the given
   /// operator, and, if so, returns the node after which indentation stacking should be closed and
   /// whether or not the continuation state should be reset as well.
@@ -2877,7 +2907,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   private func stackedIndentationBehavior(
     after operatorExpr: ExprSyntax? = nil,
     rhs: ExprSyntax
-  ) -> (unindentingNode: ExprSyntax, shouldReset: Bool)? {
+  ) -> (unindentingNode: Syntax, shouldReset: Bool)? {
     // Check for logical operators first, and if it's that kind of operator, stack indentation
     // around the entire right-hand-side. We have to do this check before checking the RHS for
     // parentheses because if the user writes something like `... && (foo) > bar || ...`, we don't
@@ -2892,21 +2922,35 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         precedence === operatorContext.precedenceGroup(named: .logicalConjunction)
           || precedence === operatorContext.precedenceGroup(named: .logicalDisjunction)
       {
-        return (unindentingNode: rhs, shouldReset: true)
+        // When `rhs` side is the last sequence in an enclosing parenthesized expression, absorb the
+        // paren into the right hand side by unindenting after the final closing paren. This glues
+        // the paren to the last token of `rhs`.
+        if let unindentingParenExpr = outerMostEnclosingParenthesizedExpr(from: Syntax(rhs)) {
+          return (unindentingNode: unindentingParenExpr, shouldReset: true)
+        }
+        return (unindentingNode: Syntax(rhs), shouldReset: true)
       }
     }
 
     // If the right-hand-side is a ternary expression, stack indentation around the condition so
     // that it is indented relative to the `?` and `:` tokens.
     if let ternaryExpr = rhs.as(TernaryExprSyntax.self) {
-      return (unindentingNode: ternaryExpr.conditionExpression, shouldReset: false)
+      // We don't try to absorb any parens in this case, because the condition of a ternary cannot
+      // be grouped with any exprs outside of the condition.
+      return (unindentingNode: Syntax(ternaryExpr.conditionExpression), shouldReset: false)
     }
 
     // If the right-hand-side of the operator is or starts with a parenthesized expression, stack
     // indentation around the operator and those parentheses. We don't need to reset here because
     // the parentheses are sufficient to provide a visual indication of the nesting relationship.
     if let parenthesizedExpr = parenthesizedLeftmostExpr(of: rhs) {
-      return (unindentingNode: ExprSyntax(parenthesizedExpr), shouldReset: false)
+      // When `rhs` side is the last sequence in an enclosing parenthesized expression, absorb the
+      // paren into the right hand side by unindenting after the final closing paren. This glues the
+      // paren to the last token of `rhs`.
+      if let unindentingParenExpr = outerMostEnclosingParenthesizedExpr(from: Syntax(rhs)) {
+        return (unindentingNode: unindentingParenExpr, shouldReset: true)
+      }
+      return (unindentingNode: Syntax(parenthesizedExpr), shouldReset: false)
     }
 
     // Otherwise, don't stack--use regular continuation breaks instead.

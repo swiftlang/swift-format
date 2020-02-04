@@ -387,4 +387,63 @@ final class IfStmtTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
+
+  func testParenthesizedClauses() {
+    let input =
+      """
+      if foo && (
+          bar < 1 || bar > 1
+        ) && baz {
+        // do something
+      }
+      if muchLongerFoo && (
+          muchLongerBar < 1 || muchLongerBar > 1
+        ) && baz {
+        // do something
+      }
+      if muchLongerFoo && (
+          muchLongerBar < 1 || muchLongerBar > 100000000
+        ) && baz {
+        // do something
+      }
+      if muchLongerFoo && (
+          muchLongerBar < 1 || muchLongerBar > 100000000 || (
+            extraTerm1 + extraTerm2 + extraTerm3
+          )
+        ) && baz {
+        // do something
+      }
+      """
+
+    let expected =
+      """
+      if foo && (bar < 1 || bar > 1) && baz {
+        // do something
+      }
+      if muchLongerFoo
+        && (muchLongerBar < 1 || muchLongerBar > 1)
+        && baz
+      {
+        // do something
+      }
+      if muchLongerFoo
+        && (muchLongerBar < 1
+          || muchLongerBar > 100000000)
+        && baz
+      {
+        // do something
+      }
+      if muchLongerFoo
+        && (muchLongerBar < 1
+          || muchLongerBar > 100000000
+          || (extraTerm1 + extraTerm2 + extraTerm3))
+        && baz
+      {
+        // do something
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+  }
 }

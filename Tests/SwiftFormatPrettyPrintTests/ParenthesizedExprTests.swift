@@ -8,6 +8,26 @@ final class ParenthesizedExprTests: PrettyPrintTestCase {
       x = zerothTerm + (firstTerm + secondTerm + thirdTerm)
       x = zerothTerm + (firstTerm + secondTerm + thirdTerm) - (firstTerm + secondTerm + thirdTerm)
       x = zerothTerm + (firstTerm + secondTerm + thirdTerm) - (firstTerm + secondTerm + thirdTerm) * (firstTerm + secondTerm + thirdTerm)
+      x = zerothTerm + (
+          firstTerm + secondTerm + thirdTerm
+        ) -
+        (
+          firstTerm + secondTerm + thirdTerm
+        )
+      x = zerothTerm + (
+        firstTerm + secondTerm + (
+            nestedFirstTerm + nestedSecondTerm + (
+              doubleNestedFirstTerm + doubleNestedSecondTerm
+            )
+        )
+      ) + thirdTerm
+      x = zerothTerm + (
+      firstTerm + secondTerm && thirdTerm + (
+          nestedFirstTerm || nestedSecondTerm + (
+            doubleNestedFirstTerm + doubleNestedSecondTerm
+          )
+        )
+      )
       """
 
     let expected =
@@ -45,6 +65,28 @@ final class ParenthesizedExprTests: PrettyPrintTestCase {
           + thirdTerm)
         * (firstTerm + secondTerm
           + thirdTerm)
+      x =
+        zerothTerm
+        + (firstTerm + secondTerm
+          + thirdTerm)
+        - (firstTerm + secondTerm
+          + thirdTerm)
+      x =
+        zerothTerm
+        + (firstTerm + secondTerm
+          + (nestedFirstTerm
+            + nestedSecondTerm
+            + (doubleNestedFirstTerm
+              + doubleNestedSecondTerm)))
+        + thirdTerm
+      x =
+        zerothTerm
+        + (firstTerm + secondTerm
+          && thirdTerm
+            + (nestedFirstTerm
+              || nestedSecondTerm
+                + (doubleNestedFirstTerm
+                  + doubleNestedSecondTerm)))
 
       """
 
@@ -154,5 +196,122 @@ final class ParenthesizedExprTests: PrettyPrintTestCase {
       """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
+  }
+
+  func testTupleSequenceExprs() {
+    let input =
+      """
+      let x = (
+        (
+          firstTupleElem,
+          secondTupleElem,
+          thirdTupleElem
+        ) == (
+          firstTupleElem,
+          secondTupleElem,
+          thirdTupleElem
+        ) && (
+          firstTupleElem,
+          secondTupleElem,
+          thirdTupleElem
+        ) || (
+          firstTupleElem,
+          secondTupleElem,
+          thirdTupleElem
+        )
+      )
+      let x = (
+        (
+          firstTupleElem,
+          secondTupleElem,
+          thirdTupleElem
+        ) && (
+          foo(firstFuncCallArg, second: secondFuncCallArg, third: thirdFuncCallArg, fourth: fourthFuncCallArg)
+        ) || (
+          firstTupleElem,
+          secondTupleElem,
+          thirdTupleElem
+        ) == (
+          foo(firstFuncCallArg, second: secondFuncCallArg, third: thirdFuncCallArg, fourth: fourthFuncCallArg
+        )
+        )
+      )
+      let x = (
+        foo(firstFuncCallArg, second: secondFuncCallArg, third: thirdFuncCallArg, fourth: fourthFuncCallArg
+        ) && (
+          firstTupleElem,
+          secondTupleElem,
+          thirdTupleElem
+        ) || (
+          firstTupleElem,
+          secondTupleElem,
+          thirdTupleElem
+        )
+      )
+      """
+
+    let expected =
+      """
+      let x =
+        ((
+          firstTupleElem,
+          secondTupleElem,
+          thirdTupleElem
+        ) == (
+          firstTupleElem,
+          secondTupleElem,
+          thirdTupleElem
+        )
+          && (
+            firstTupleElem,
+            secondTupleElem,
+            thirdTupleElem
+          )
+          || (
+            firstTupleElem,
+            secondTupleElem,
+            thirdTupleElem
+          ))
+      let x =
+        ((
+          firstTupleElem,
+          secondTupleElem,
+          thirdTupleElem
+        )
+          && (foo(
+            firstFuncCallArg, second: secondFuncCallArg,
+            third: thirdFuncCallArg,
+            fourth: fourthFuncCallArg))
+          || (
+            firstTupleElem,
+            secondTupleElem,
+            thirdTupleElem
+          )
+            == (foo(
+              firstFuncCallArg,
+              second: secondFuncCallArg,
+              third: thirdFuncCallArg,
+              fourth: fourthFuncCallArg
+            )))
+      let x =
+        (foo(
+          firstFuncCallArg, second: secondFuncCallArg,
+          third: thirdFuncCallArg,
+          fourth: fourthFuncCallArg
+        )
+          && (
+            firstTupleElem,
+            secondTupleElem,
+            thirdTupleElem
+          )
+          || (
+            firstTupleElem,
+            secondTupleElem,
+            thirdTupleElem
+          ))
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 }

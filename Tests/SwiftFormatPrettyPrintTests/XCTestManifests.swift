@@ -341,6 +341,7 @@ extension GuardStmtTests {
         ("testGuardWithFuncCall", testGuardWithFuncCall),
         ("testOpenBraceIsGluedToElseKeyword", testOpenBraceIsGluedToElseKeyword),
         ("testOptionalBindingConditions", testOptionalBindingConditions),
+        ("testParenthesizedClauses", testParenthesizedClauses),
     ]
 }
 
@@ -373,6 +374,7 @@ extension IfStmtTests {
         ("testIfStatement", testIfStatement),
         ("testMatchingPatternConditions", testMatchingPatternConditions),
         ("testOptionalBindingConditions", testOptionalBindingConditions),
+        ("testParenthesizedClauses", testParenthesizedClauses),
     ]
 }
 
@@ -489,6 +491,7 @@ extension ParenthesizedExprTests {
         ("testInitializerClauseParens", testInitializerClauseParens),
         ("testNestedParentheses", testNestedParentheses),
         ("testSequenceExprParens", testSequenceExprParens),
+        ("testTupleSequenceExprs", testTupleSequenceExprs),
     ]
 }
 
@@ -676,6 +679,7 @@ extension TernaryExprTests {
     static let __allTests__TernaryExprTests = [
         ("testExpressionStartsWithTernary", testExpressionStartsWithTernary),
         ("testNestedTernaries", testNestedTernaries),
+        ("testParenthesizedTernary", testParenthesizedTernary),
         ("testTernaryExprs", testTernaryExprs),
         ("testTernaryExprsWithMultiplePartChoices", testTernaryExprsWithMultiplePartChoices),
         ("testTernaryWithWrappingExpressions", testTernaryWithWrappingExpressions),
