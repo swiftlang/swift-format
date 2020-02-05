@@ -197,4 +197,66 @@ final class GuardStmtTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
+
+  func testParenthesizedClauses() {
+    let input =
+      """
+      guard foo && (
+          bar < 1 || bar > 1
+        ) && baz else {
+        // do something
+      }
+      guard muchLongerFoo && (
+          muchLongerBar < 1 || muchLongerBar > 1
+        ) && baz else {
+        // do something
+      }
+      guard muchLongerFoo && (
+          muchLongerBar < 1 || muchLongerBar > 100000000
+        ) && baz else {
+        // do something
+      }
+      guard muchLongerFoo && (
+          muchLongerBar < 1 || muchLongerBar > 100000000 || (
+            extraTerm1 + extraTerm2 + extraTerm3
+          )
+        ) && baz else {
+        // do something
+      }
+      """
+
+    let expected =
+      """
+      guard foo && (bar < 1 || bar > 1) && baz else {
+        // do something
+      }
+      guard
+        muchLongerFoo
+          && (muchLongerBar < 1 || muchLongerBar > 1)
+          && baz
+      else {
+        // do something
+      }
+      guard
+        muchLongerFoo
+          && (muchLongerBar < 1
+            || muchLongerBar > 100000000)
+          && baz
+      else {
+        // do something
+      }
+      guard
+        muchLongerFoo
+          && (muchLongerBar < 1
+            || muchLongerBar > 100000000
+            || (extraTerm1 + extraTerm2 + extraTerm3))
+          && baz
+      else {
+        // do something
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+  }
 }

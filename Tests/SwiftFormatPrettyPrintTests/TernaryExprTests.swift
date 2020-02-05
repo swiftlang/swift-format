@@ -207,4 +207,38 @@ final class TernaryExprTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 25)
   }
+
+  func testParenthesizedTernary() {
+    let input =
+      """
+      let a = (
+          foo ?
+            bar : baz
+        )
+      a = (
+          foo ?
+            bar : baz
+        )
+      b = foo ? (
+        bar
+        ) : (
+        baz
+        )
+      c = foo ?
+        (
+          foo2 ? nestedBar : nestedBaz
+        ) : (baz)
+      """
+
+    let expected =
+      """
+      let a = (foo ? bar : baz)
+      a = (foo ? bar : baz)
+      b = foo ? (bar) : (baz)
+      c = foo ? (foo2 ? nestedBar : nestedBaz) : (baz)
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+  }
 }
