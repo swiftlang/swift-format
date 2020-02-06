@@ -89,53 +89,28 @@ fileprivate func loadConfiguration(
   forSwiftFile swiftFilePath: String?, configFilePath: String?
 ) -> Configuration {
   if let path = configFilePath {
-    return decodedConfiguration(fromFileAtPath: path)
+    return decodedConfiguration(fromFile: URL(fileURLWithPath: path))
   }
-  // Search for a ".swift-format" configuration file in the directory of the current .swift file,
-  // or its nearest parent.
-  var configurationFilePath: String? = nil
-  if let swiftFilePath = swiftFilePath {
-    configurationFilePath = findConfigurationFile(
-      forSwiftFile: URL(fileURLWithPath: swiftFilePath).path)
+
+  if let swiftFileUrl = swiftFilePath.map(URL.init(fileURLWithPath:)), 
+    let configFileUrl = Configuration.configurationFile(forSwiftFile: swiftFileUrl) {
+      return decodedConfiguration(fromFile: configFileUrl)
   }
-  return decodedConfiguration(fromFileAtPath: configurationFilePath)
+
+  return Configuration()
 }
 
-/// Look for a ".swift-format" configuration file in the same directory as "forSwiftFile", or its
-/// nearest parent. If one is not found, return "nil".
-fileprivate func findConfigurationFile(forSwiftFile: String) -> String? {
-  let cwd = FileManager.default.currentDirectoryPath
-  var path = URL(
-    fileURLWithPath: AbsolutePath(forSwiftFile, relativeTo: AbsolutePath(cwd)).pathString)
-  let configFilename = ".swift-format"
-
-  repeat {
-    path = path.deletingLastPathComponent()
-    let testPath = path.appendingPathComponent(configFilename).path
-    if FileManager.default.isReadableFile(atPath: testPath) {
-      return testPath
-    }
-  } while path.path != "/"
-
-  return nil
-}
 
 /// Loads and returns a `Configuration` from the given JSON file if it is found and is valid. If the
 /// file does not exist or there was an error decoding it, the program exits with a non-zero exit
 /// code.
-fileprivate func decodedConfiguration(fromFileAtPath path: String?) -> Configuration {
-  if let path = path {
-    do {
-      let url = URL(fileURLWithPath: path)
-      let data = try Data(contentsOf: url)
-      return try JSONDecoder().decode(Configuration.self, from: data)
-    } catch {
-      // TODO: Improve error message, write to stderr.
-      print("Could not load configuration at \(path): \(error)")
-      exit(1)
-    }
-  } else {
-    return Configuration()
+fileprivate func decodedConfiguration(fromFile url: Foundation.URL) -> Configuration {
+  do {
+    return try Configuration(configFile: url)
+  } catch {
+    // TODO: Improve error message, write to stderr.
+    print("Could not load configuration at \(url): \(error)")
+    exit(1)
   }
 }
 
