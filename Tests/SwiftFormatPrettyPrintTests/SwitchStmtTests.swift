@@ -256,4 +256,36 @@ final class SwitchStmtTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
   }
+
+  func testSwitchSequenceExprCases() {
+    let input =
+      """
+      switch foo {
+      case bar && baz
+        + quxxe:
+        break
+      case baz where bar && (quxxe
+        + 10000):
+        break
+      }
+      """
+
+    let expected =
+      """
+      switch foo {
+      case bar
+        && baz
+          + quxxe:
+        break
+      case baz
+      where bar
+        && (quxxe
+          + 10000):
+        break
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+  }
 }

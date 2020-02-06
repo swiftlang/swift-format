@@ -336,6 +336,7 @@ extension GuardStmtTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__GuardStmtTests = [
+        ("testCompoundClauses", testCompoundClauses),
         ("testContinuationLineBreaking", testContinuationLineBreaking),
         ("testGuardStatement", testGuardStatement),
         ("testGuardWithFuncCall", testGuardWithFuncCall),
@@ -364,6 +365,7 @@ extension IfStmtTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__IfStmtTests = [
+        ("testCompoundClauses", testCompoundClauses),
         ("testConditionExpressionOperatorGrouping", testConditionExpressionOperatorGrouping),
         ("testConditionExpressionOperatorGroupingMixedWithParentheses", testConditionExpressionOperatorGroupingMixedWithParentheses),
         ("testContinuationLineBreakIndentation", testContinuationLineBreakIndentation),
@@ -667,6 +669,7 @@ extension SwitchStmtTests {
         ("testNewlinesDisambiguatingWhereClauses", testNewlinesDisambiguatingWhereClauses),
         ("testSwitchCases", testSwitchCases),
         ("testSwitchCompoundCases", testSwitchCompoundCases),
+        ("testSwitchSequenceExprCases", testSwitchSequenceExprCases),
         ("testSwitchValueBinding", testSwitchValueBinding),
         ("testUnknownDefault", testUnknownDefault),
     ]

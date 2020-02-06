@@ -45,9 +45,10 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   /// breaks and start/end contextual breaking tokens have been inserted.
   private var preVisitedExprs = [ExprSyntax]()
 
-  /// Lists the tokens that are the closing or right parens of a parenthesized expression (i.e. a
-  /// tuple expression with 1 element).
-  private var parenthesizedExprParens = Set<TokenSyntax>()
+  /// Lists the tokens that are the closing or final delimiter of a node that shouldn't be split
+  /// from the preceding token. When breaks are inserted around compound expressions, the breaks are
+  /// moved past these tokens.
+  private var closingDelimiterTokens = Set<TokenSyntax>()
 
   init(configuration: Configuration, operatorContext: OperatorContext) {
     self.config = configuration
@@ -624,6 +625,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     }
 
     after(node.colon, tokens: .close)
+    closingDelimiterTokens.insert(node.colon)
     return .visitChildren
   }
 
@@ -649,7 +651,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       // `stackedIndentationBehavior`).
       after(node.leftParen, tokens: .open)
       before(node.rightParen, tokens: .close)
-      parenthesizedExprParens.insert(node.rightParen)
+      closingDelimiterTokens.insert(node.rightParen)
 
       // When there's a comment inside of a parenthesized expression, we want to allow the comment
       // to exist at the EOL with the left paren or on its own line. The contents are always
@@ -1321,6 +1323,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     before(node.firstToken, tokens: .open)
     if let comma = node.trailingComma {
       after(comma, tokens: .close, .break(.same))
+      closingDelimiterTokens.insert(comma)
     } else {
       after(node.lastToken, tokens: .close)
     }
@@ -1357,7 +1360,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // When the ternary is wrapped in parens, absorb the closing paren into the ternary's group so
     // that it is glued to the last token of the ternary.
     let closeScopeToken: TokenSyntax?
-    if let parenExpr = outerMostEnclosingParenthesizedExpr(from: Syntax(node.secondChoice)) {
+    if let parenExpr = outermostEnclosingNode(from: Syntax(node.secondChoice)) {
       closeScopeToken = parenExpr.lastToken
     } else {
       closeScopeToken = node.secondChoice.lastToken
@@ -2878,17 +2881,17 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     }
   }
 
-  /// Returns the node for the outermost parenthesized expr (i.e. a single element tuple) that is
-  /// ended at the given node. When the given node is not the last component of a parenthesized
-  /// expression, this method returns nil.
-  private func outerMostEnclosingParenthesizedExpr(from node: Syntax) -> Syntax? {
-    guard let afterToken = node.lastToken?.nextToken, parenthesizedExprParens.contains(afterToken)
+  /// Returns the outermost node enclosing the given node whose closing delimiter(s) must be kept
+  /// alongside the last token of the given node. Any tokens between `node.lastToken` and the
+  /// returned node's `lastToken` are delimiter tokens that shouldn't be preceded by a break.
+  private func outermostEnclosingNode(from node: Syntax) -> Syntax? {
+    guard let afterToken = node.lastToken?.nextToken, closingDelimiterTokens.contains(afterToken)
     else {
       return nil
     }
     var parenthesizedExpr = afterToken.parent
     while let nextToken = parenthesizedExpr?.lastToken?.nextToken,
-      parenthesizedExprParens.contains(nextToken),
+      closingDelimiterTokens.contains(nextToken),
       let nextExpr = nextToken.parent
     {
       parenthesizedExpr = nextExpr
@@ -2925,7 +2928,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         // When `rhs` side is the last sequence in an enclosing parenthesized expression, absorb the
         // paren into the right hand side by unindenting after the final closing paren. This glues
         // the paren to the last token of `rhs`.
-        if let unindentingParenExpr = outerMostEnclosingParenthesizedExpr(from: Syntax(rhs)) {
+        if let unindentingParenExpr = outermostEnclosingNode(from: Syntax(rhs)) {
           return (unindentingNode: unindentingParenExpr, shouldReset: true)
         }
         return (unindentingNode: Syntax(rhs), shouldReset: true)
@@ -2947,7 +2950,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       // When `rhs` side is the last sequence in an enclosing parenthesized expression, absorb the
       // paren into the right hand side by unindenting after the final closing paren. This glues the
       // paren to the last token of `rhs`.
-      if let unindentingParenExpr = outerMostEnclosingParenthesizedExpr(from: Syntax(rhs)) {
+      if let unindentingParenExpr = outermostEnclosingNode(from: Syntax(rhs)) {
         return (unindentingNode: unindentingParenExpr, shouldReset: true)
       }
       return (unindentingNode: Syntax(parenthesizedExpr), shouldReset: false)
