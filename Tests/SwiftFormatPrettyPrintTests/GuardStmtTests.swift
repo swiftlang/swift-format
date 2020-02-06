@@ -259,4 +259,49 @@ final class GuardStmtTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
+
+  func testCompoundClauses() {
+    let input =
+      """
+      guard foo &&
+          bar < 1 || bar
+            > 1,
+        let quxxe = 0
+      else {
+        // do something
+      }
+      guard
+        bar < 1 && (
+          baz
+            > 1
+          ),
+        let quxxe = 0
+      else {
+        // blah
+      }
+      """
+
+    let expected =
+      """
+      guard
+        foo && bar < 1
+          || bar
+            > 1,
+        let quxxe = 0
+      else {
+        // do something
+      }
+      guard
+        bar < 1
+          && (baz
+            > 1),
+        let quxxe = 0
+      else {
+        // blah
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+  }
 }

@@ -446,4 +446,46 @@ final class IfStmtTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
+
+  func testCompoundClauses() {
+    let input =
+      """
+      if foo &&
+          bar < 1 || bar
+            > 1,
+        let quxxe = 0
+      {
+        // do something
+      }
+      if bar < 1 && (
+        baz
+          > 1
+        ),
+      let quxxe = 0
+      {
+        // blah
+      }
+      """
+
+    let expected =
+      """
+      if foo && bar < 1
+        || bar
+          > 1,
+        let quxxe = 0
+      {
+        // do something
+      }
+      if bar < 1
+        && (baz
+          > 1),
+        let quxxe = 0
+      {
+        // blah
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+  }
 }
