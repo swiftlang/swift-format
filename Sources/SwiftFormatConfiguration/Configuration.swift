@@ -120,8 +120,8 @@ public struct Configuration: Codable, Equatable {
     self.version = highestSupportedConfigurationVersion
   }
 
-  /// Constructs a Configuration using values from a JSON config file
-  public init(configFile url: URL) throws {
+  /// Constructs a Configuration by loading it from a configuration file.
+  public init(contentsOf url: URL) throws {
     let data = try Data(contentsOf: url)
     self = try JSONDecoder().decode(Configuration.self, from: data)
   }
@@ -196,16 +196,18 @@ public struct Configuration: Codable, Equatable {
     try container.encode(rules, forKey: .rules)
   }
 
-  /// Configuration file associated with a swift file.
-  /// 
-  /// Looks for a ".swift-format" file in the same directory as the swift file, or its nearest parent.
-  /// If one is not found, returns "nil".
-  public static func configurationFile(forSwiftFile url: URL) -> URL? {
+  /// Returns the URL of the configuration file that applies to the given file or directory.
+  public static func url(forConfigurationFileApplyingTo url: URL) -> URL? {
     var path = url.absoluteURL
     let configFilename = ".swift-format"
-
+    var isDirectory: ObjCBool = false
+    if FileManager.default.fileExists(atPath: path.path, isDirectory: &isDirectory), 
+      isDirectory.boolValue {
+      // will be deleted in a loop
+      path.appendPathComponent("placeholder")
+    }
     repeat {
-      path = path.deletingLastPathComponent()
+      path.deleteLastPathComponent()
       let candidateFile = path.appendingPathComponent(configFilename)
       if FileManager.default.isReadableFile(atPath: candidateFile.path) {
         return candidateFile

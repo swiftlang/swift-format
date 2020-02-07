@@ -88,13 +88,13 @@ fileprivate func processSources(
 fileprivate func loadConfiguration(
   forSwiftFile swiftFilePath: String?, configFilePath: String?
 ) -> Configuration {
-  if let path = configFilePath {
-    return decodedConfiguration(fromFile: URL(fileURLWithPath: path))
+  if let configFilePath = configFilePath {
+    return decodedConfiguration(fromFile: URL(fileURLWithPath: configFilePath))
   }
 
-  if let swiftFileUrl = swiftFilePath.map(URL.init(fileURLWithPath:)), 
-    let configFileUrl = Configuration.configurationFile(forSwiftFile: swiftFileUrl) {
-      return decodedConfiguration(fromFile: configFileUrl)
+  if let swiftFileURL = swiftFilePath.map(URL.init(fileURLWithPath:)), 
+    let configFileURL = Configuration.url(forConfigurationFileApplyingTo: swiftFileURL) {
+      return decodedConfiguration(fromFile: configFileURL)
   }
 
   return Configuration()
@@ -106,7 +106,7 @@ fileprivate func loadConfiguration(
 /// code.
 fileprivate func decodedConfiguration(fromFile url: Foundation.URL) -> Configuration {
   do {
-    return try Configuration(configFile: url)
+    return try Configuration(contentsOf: url)
   } catch {
     // TODO: Improve error message, write to stderr.
     print("Could not load configuration at \(url): \(error)")
