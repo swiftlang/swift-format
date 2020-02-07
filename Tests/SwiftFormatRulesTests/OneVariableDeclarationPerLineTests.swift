@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class OneVariableDeclarationPerLineTests: DiagnosingTestCase {
+final class OneVariableDeclarationPerLineTests: LintOrFormatRuleTestCase {
   func testMultipleVariableBindings() {
     XCTAssertFormatting(
       OneVariableDeclarationPerLine.self,

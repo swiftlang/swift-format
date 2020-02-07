@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class UseLetInEveryBoundCaseVariableTests: DiagnosingTestCase {
+final class UseLetInEveryBoundCaseVariableTests: LintOrFormatRuleTestCase {
   func testInvalidLetBoundCase() {
     let input =
       """

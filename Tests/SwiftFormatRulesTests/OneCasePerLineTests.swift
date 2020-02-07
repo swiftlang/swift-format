@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class OneCasePerLineTests: DiagnosingTestCase {
+final class OneCasePerLineTests: LintOrFormatRuleTestCase {
 
   // The inconsistent leading whitespace in the expected text is intentional. This transform does
   // not attempt to preserve leading indentation since the pretty printer will correct it when

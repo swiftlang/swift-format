@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class UseEarlyExitsTests: DiagnosingTestCase {
+final class UseEarlyExitsTests: LintOrFormatRuleTestCase {
   func testBasicIfElse() {
     // In this and other tests, the indentation of the true block in the expected output is
     // explicitly incorrect because this formatting rule does not fix it up with the assumption that

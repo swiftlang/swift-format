@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class IdentifiersMustBeASCIITests: DiagnosingTestCase {
+final class IdentifiersMustBeASCIITests: LintOrFormatRuleTestCase {
   func testInvalidIdentifiers() {
     let input =
     """

@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class GroupNumericLiteralsTests: DiagnosingTestCase {
+final class GroupNumericLiteralsTests: LintOrFormatRuleTestCase {
   func testNumericGrouping() {
     XCTAssertFormatting(
       GroupNumericLiterals.self,

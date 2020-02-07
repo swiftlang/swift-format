@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class NoVoidReturnOnFunctionSignatureTests: DiagnosingTestCase {
+final class NoVoidReturnOnFunctionSignatureTests: LintOrFormatRuleTestCase {
   func testVoidReturns() {
     XCTAssertFormatting(
       NoVoidReturnOnFunctionSignature.self,

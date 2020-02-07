@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class NeverUseImplicitlyUnwrappedOptionalsTests: DiagnosingTestCase {
+final class NeverUseImplicitlyUnwrappedOptionalsTests: LintOrFormatRuleTestCase {
   func testInvalidVariableUnwrapping() {
     let input =
       """

@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class FileprivateAtFileScopeTests: DiagnosingTestCase {
+final class FileprivateAtFileScopeTests: LintOrFormatRuleTestCase {
   func testFileScopeDecls() {
     XCTAssertFormatting(
       FileprivateAtFileScope.self,

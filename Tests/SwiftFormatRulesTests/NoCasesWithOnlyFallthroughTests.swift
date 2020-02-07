@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class NoCasesWithOnlyFallthroughTests: DiagnosingTestCase {
+final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
   func testFallthroughCases() {
     XCTAssertFormatting(
       NoCasesWithOnlyFallthrough.self,

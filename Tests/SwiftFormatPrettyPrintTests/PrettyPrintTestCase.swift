@@ -1,54 +1,24 @@
 import SwiftFormatConfiguration
 import SwiftFormatCore
 import SwiftFormatPrettyPrint
+import SwiftFormatTestSupport
 import SwiftSyntax
 import XCTest
 
-class PrettyPrintTestCase: XCTestCase {
-  /// A helper that will keep track of which diagnostics have been emitted, and their locations.
-  private var consumer: DiagnosticTrackingConsumer? = nil
-
-  /// Implements `DiagnosticConsumer` to keep track which diagnostics have been raised and their
-  /// locations.
-  private class DiagnosticTrackingConsumer: DiagnosticConsumer {
-    var registeredDiagnostics = [(String, line: Int?, column: Int?)]()
-
-    func handle(_ diagnostic: Diagnostic) {
-      let loc = diagnostic.location
-      registeredDiagnostics.append((diagnostic.message.text, line: loc?.line, column: loc?.column))
-    }
-
-    func finalize() {}
-  }
-
-  /// Asserts that a specific diagnostic message was emitted. This should be called to check for
-  /// diagnostics after `assertPrettyPrintEqual`.
+class PrettyPrintTestCase: DiagnosingTestCase {
+  /// Asserts that the input string, when pretty printed, is equal to the expected string.
   ///
   /// - Parameters:
-  ///   - message: The diagnostic message to check for.
-  ///   - line: The line number of the diagnotic message within the ueser's input text.
-  ///   - column: The column number of the diagnostic message within the user's input text.
-  ///   - file: The file the test resides in (defaults to the current caller's file).
-  ///   - sourceLine: The line the test resides in (defaults to the current caller's file).
-  final func XCTAssertDiagnosed(
-    _ message: Diagnostic.Message,
-    line: Int? = nil,
-    column: Int? = nil,
-    file: StaticString = #file,
-    sourceLine: UInt = #line
-  ) {
-    let maybeIdx = consumer?.registeredDiagnostics.firstIndex {
-      $0 == (message.text, line: line, column: column)
-    }
-
-    guard let idx = maybeIdx else {
-      XCTFail("diagnostic '\(message.text)' not raised", file: file, line: sourceLine)
-      return
-    }
-
-    consumer?.registeredDiagnostics.remove(at: idx)
-  }
-
+  ///   - input: The input text to pretty print.
+  ///   - expected: The expected pretty-printed output.
+  ///   - linelength: The maximum allowed line length of the output.
+  ///   - configuration: The formatter configuration.
+  ///   - whitespaceOnly: If true, the pretty printer should only apply whitespace changes and omit
+  ///     changes that insert or remove non-whitespace characters (like trailing commas).
+  ///   - file: The file in which failure occurred. Defaults to the file name of the test case in
+  ///     which this function was called.
+  ///   - line: The line number on which failure occurred. Defaults to the line number on which this
+  ///     function was called.
   final func assertPrettyPrintEqual(
     input: String,
     expected: String,
@@ -60,34 +30,38 @@ class PrettyPrintTestCase: XCTestCase {
   ) {
     var configuration = configuration
     configuration.lineLength = linelength
-    let firstPassConsumer = DiagnosticTrackingConsumer()
-    consumer = firstPassConsumer
 
     // Assert that the input, when formatted, is what we expected.
     if let formatted = prettyPrintedSource(
-      input, configuration: configuration, whitespaceOnly: whitespaceOnly,
-      consumer: firstPassConsumer)
+      input, configuration: configuration, whitespaceOnly: whitespaceOnly)
     {
-      XCTAssertEqual(
-        expected, formatted,
+      XCTAssertStringsEqualWithDiff(
+        formatted, expected,
         "Pretty-printed result was not what was expected",
         file: file, line: line)
 
       // Idempotency check: Running the formatter multiple times should not change the outcome.
       // Assert that running the formatter again on the previous result keeps it the same.
+      stopTrackingDiagnostics()
       if let reformatted = prettyPrintedSource(
         formatted, configuration: configuration, whitespaceOnly: whitespaceOnly)
       {
-        XCTAssertEqual(
-          formatted, reformatted, "Pretty printer is not idempotent", file: file, line: line)
+        XCTAssertStringsEqualWithDiff(
+          reformatted, formatted, "Pretty printer is not idempotent", file: file, line: line)
       }
     }
   }
 
   /// Returns the given source code reformatted with the pretty printer.
+  ///
+  /// - Parameters:
+  ///   - source: The source text to pretty print.
+  ///   - configuration: The formatter configuration.
+  ///   - whitespaceOnly: If true, the pretty printer should only apply whitespace changes and omit
+  ///     changes that insert or remove non-whitespace characters (like trailing commas).
+  /// - Returns: The pretty-printed text, or nil if an error occurred and a test failure was logged.
   private func prettyPrintedSource(
-    _ source: String, configuration: Configuration, whitespaceOnly: Bool,
-    consumer: DiagnosticConsumer? = nil
+    _ source: String, configuration: Configuration, whitespaceOnly: Bool
   ) -> String? {
     let sourceFileSyntax: SourceFileSyntax
     do {
@@ -97,15 +71,7 @@ class PrettyPrintTestCase: XCTestCase {
       return nil
     }
 
-    let context = Context(
-      configuration: configuration,
-      diagnosticEngine: DiagnosticEngine(),
-      fileURL: URL(fileURLWithPath: "/tmp/file.swift"),
-      sourceFileSyntax: sourceFileSyntax)
-    if let consumer = consumer {
-      context.diagnosticEngine?.addConsumer(consumer)
-    }
-
+    let context = makeContext(sourceFileSyntax: sourceFileSyntax, configuration: configuration)
     let printer = PrettyPrinter(
       context: context,
       operatorContext: OperatorContext.makeBuiltinOperatorContext(),

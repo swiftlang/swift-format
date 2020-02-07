@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class DontRepeatTypeInStaticPropertiesTests: DiagnosingTestCase {
+final class DontRepeatTypeInStaticPropertiesTests: LintOrFormatRuleTestCase {
   func testRepetitiveProperties() {
     let input =
       """

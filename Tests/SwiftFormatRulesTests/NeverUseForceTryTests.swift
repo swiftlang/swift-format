@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class NeverUseForceTryTests: DiagnosingTestCase {
+final class NeverUseForceTryTests: LintOrFormatRuleTestCase {
   func testInvalidTryExpression() {
     let input =
       """

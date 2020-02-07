@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class ReturnVoidInsteadOfEmptyTupleTests: DiagnosingTestCase {
+final class ReturnVoidInsteadOfEmptyTupleTests: LintOrFormatRuleTestCase {
   func testEmptyTupleReturns() {
     XCTAssertFormatting(
       ReturnVoidInsteadOfEmptyTuple.self,

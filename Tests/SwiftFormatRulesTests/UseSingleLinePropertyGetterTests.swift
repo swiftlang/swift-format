@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class UseSingleLinePropertyGetterTests: DiagnosingTestCase {
+final class UseSingleLinePropertyGetterTests: LintOrFormatRuleTestCase {
   func testMultiLinePropertyGetter() {
     XCTAssertFormatting(
       UseSingleLinePropertyGetter.self,

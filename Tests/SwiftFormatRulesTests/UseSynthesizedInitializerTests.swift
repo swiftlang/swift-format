@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class UseSynthesizedInitializerTests: DiagnosingTestCase {
+final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
   func testMemberwiseInitializerIsDiagnosed() {
     let input =
       """

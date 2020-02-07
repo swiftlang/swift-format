@@ -1,6 +1,6 @@
 import SwiftFormatRules
 
-final class NeverForceUnwrapTests: DiagnosingTestCase {
+final class NeverForceUnwrapTests: LintOrFormatRuleTestCase {
   func testUnsafeUnwrap() {
     let input =
     """
