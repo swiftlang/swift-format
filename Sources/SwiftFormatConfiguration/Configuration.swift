@@ -120,6 +120,12 @@ public struct Configuration: Codable, Equatable {
     self.version = highestSupportedConfigurationVersion
   }
 
+  /// Constructs a Configuration by loading it from a configuration file.
+  public init(contentsOf url: URL) throws {
+    let data = try Data(contentsOf: url)
+    self = try JSONDecoder().decode(Configuration.self, from: data)
+  }
+
   public init(from decoder: Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
 
@@ -188,6 +194,27 @@ public struct Configuration: Codable, Equatable {
       lineBreakAroundMultilineExpressionChainComponents,
       forKey: .lineBreakAroundMultilineExpressionChainComponents)
     try container.encode(rules, forKey: .rules)
+  }
+
+  /// Returns the URL of the configuration file that applies to the given file or directory.
+  public static func url(forConfigurationFileApplyingTo url: URL) -> URL? {
+    var path = url.absoluteURL
+    let configFilename = ".swift-format"
+    var isDirectory: ObjCBool = false
+    if FileManager.default.fileExists(atPath: path.path, isDirectory: &isDirectory), 
+      isDirectory.boolValue {
+      // will be deleted in a loop
+      path.appendPathComponent("placeholder")
+    }
+    repeat {
+      path.deleteLastPathComponent()
+      let candidateFile = path.appendingPathComponent(configFilename)
+      if FileManager.default.isReadableFile(atPath: candidateFile.path) {
+        return candidateFile
+      }
+    } while path.path != "/"
+
+    return nil
   }
 }
 
