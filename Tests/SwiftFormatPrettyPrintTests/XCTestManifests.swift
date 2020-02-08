@@ -63,6 +63,7 @@ extension AttributeTests {
         ("testAttributeFormattingRespectsDiscretionaryLineBreaks", testAttributeFormattingRespectsDiscretionaryLineBreaks),
         ("testAttributeInterArgumentBinPackedLineBreaking", testAttributeInterArgumentBinPackedLineBreaking),
         ("testAttributeParamSpacing", testAttributeParamSpacing),
+        ("testIgnoresDiscretionaryLineBreakAfterColon", testIgnoresDiscretionaryLineBreakAfterColon),
         ("testObjCAttributesDiscretionaryLineBreaking", testObjCAttributesDiscretionaryLineBreaking),
         ("testObjCAttributesPerLineBreaking", testObjCAttributesPerLineBreaking),
         ("testObjCBinPackedAttributes", testObjCBinPackedAttributes),
@@ -180,6 +181,7 @@ extension DictionaryDeclTests {
     // to regenerate.
     static let __allTests__DictionaryDeclTests = [
         ("testBasicDictionaries", testBasicDictionaries),
+        ("testIgnoresDiscretionaryNewlineAfterColon", testIgnoresDiscretionaryNewlineAfterColon),
         ("testNoTrailingCommasInTypes", testNoTrailingCommasInTypes),
         ("testTrailingCommaDiagnostics", testTrailingCommaDiagnostics),
         ("testWhitespaceOnlyDoesNotChangeTrailingComma", testWhitespaceOnlyDoesNotChangeTrailingComma),
@@ -254,6 +256,7 @@ extension ForInStmtTests {
         ("testForStatementWithNestedExpressions", testForStatementWithNestedExpressions),
         ("testForWhereLoop", testForWhereLoop),
         ("testForWithRanges", testForWithRanges),
+        ("testTypeAnnotationIgnoresDiscretionaryNewlineAfterColon", testTypeAnnotationIgnoresDiscretionaryNewlineAfterColon),
     ]
 }
 
@@ -267,6 +270,7 @@ extension FunctionCallTests {
         ("testBasicFunctionCalls_packArguments", testBasicFunctionCalls_packArguments),
         ("testDiscretionaryLineBreakBeforeClosingParenthesis", testDiscretionaryLineBreakBeforeClosingParenthesis),
         ("testDiscretionaryLineBreaksAreSelfCorrecting", testDiscretionaryLineBreaksAreSelfCorrecting),
+        ("testIgnoresDiscretionaryLineBreakAfterColon", testIgnoresDiscretionaryLineBreakAfterColon),
         ("testNestedFunctionCallExprSequences", testNestedFunctionCallExprSequences),
         ("testSingleUnlabeledArgumentWithDelimiters", testSingleUnlabeledArgumentWithDelimiters),
     ]
@@ -301,6 +305,7 @@ extension FunctionDeclTests {
         ("testFunctionWhereClause", testFunctionWhereClause),
         ("testFunctionWhereClause_lineBreakBeforeEachGenericRequirement", testFunctionWhereClause_lineBreakBeforeEachGenericRequirement),
         ("testFunctionWithDefer", testFunctionWithDefer),
+        ("testIgnoresDiscretionaryLineBreakAfterColonAndInout", testIgnoresDiscretionaryLineBreakAfterColonAndInout),
         ("testOperatorOverloads", testOperatorOverloads),
         ("testRemovesLineBreakBeforeOpenBraceUnlessAbsolutelyNecessary", testRemovesLineBreakBeforeOpenBraceUnlessAbsolutelyNecessary),
     ]
@@ -503,6 +508,7 @@ extension PatternBindingTests {
     // to regenerate.
     static let __allTests__PatternBindingTests = [
         ("testBindingIncludingTypeAnnotation", testBindingIncludingTypeAnnotation),
+        ("testIgnoresDiscretionaryNewlineAfterColon", testIgnoresDiscretionaryNewlineAfterColon),
     ]
 }
 
@@ -709,6 +715,7 @@ extension TupleDeclTests {
     // to regenerate.
     static let __allTests__TupleDeclTests = [
         ("testBasicTuples", testBasicTuples),
+        ("testIgnoresDiscretionaryNewlineAfterColon", testIgnoresDiscretionaryNewlineAfterColon),
         ("testLabeledTuples", testLabeledTuples),
     ]
 }

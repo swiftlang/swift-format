@@ -23,4 +23,24 @@ final class PatternBindingTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
+
+  func testIgnoresDiscretionaryNewlineAfterColon() {
+    let input =
+      """
+      let someObject:
+        Foo = object
+      let someObject:
+        Foo = longerObjectName
+      """
+
+    let expected =
+      """
+      let someObject: Foo = object
+      let someObject: Foo =
+        longerObjectName
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 28)
+  }
 }

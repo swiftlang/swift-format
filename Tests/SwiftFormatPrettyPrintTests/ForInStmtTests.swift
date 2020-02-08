@@ -306,4 +306,27 @@ final class ForInStmtTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
+
+  func testTypeAnnotationIgnoresDiscretionaryNewlineAfterColon() {
+    let input =
+      """
+      for i:
+        ExplicitType in mycontainer
+      {
+        let a = 123
+        let b = i
+      }
+      """
+
+    let expected =
+      """
+      for i: ExplicitType in mycontainer {
+        let a = 123
+        let b = i
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
+  }
 }

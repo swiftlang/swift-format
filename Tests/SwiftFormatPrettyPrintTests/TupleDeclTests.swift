@@ -45,4 +45,37 @@ final class TupleDeclTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
+
+  func testIgnoresDiscretionaryNewlineAfterColon() {
+    let input =
+      """
+      let a = (
+        reallyLongKeySoTheValueWillWrap:
+          value,
+        b: c
+      )
+      let a = (
+        shortKey:
+          value,
+        b:
+          c
+      )
+      """
+
+    let expected =
+      """
+      let a = (
+        reallyLongKeySoTheValueWillWrap:
+          value,
+        b: c
+      )
+      let a = (
+        shortKey: value,
+        b: c
+      )
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 25)
+  }
 }
