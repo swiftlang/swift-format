@@ -225,4 +225,28 @@ final class FunctionCallTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
   }
+
+  func testIgnoresDiscretionaryLineBreakAfterColon() {
+    let input =
+      """
+      myFunc(
+        a:
+          foo,
+        b:
+          bar + baz + quux
+      )
+      """
+
+    let expected =
+      """
+      myFunc(
+        a: foo,
+        b: bar + baz
+          + quux
+      )
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
+  }
 }

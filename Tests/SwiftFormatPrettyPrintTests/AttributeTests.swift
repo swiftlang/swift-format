@@ -290,4 +290,28 @@ final class AttributeTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
   }
+
+  func testIgnoresDiscretionaryLineBreakAfterColon() {
+    let input =
+      """
+      @available(
+        *, unavailable,
+        renamed:
+          "MyRenamedFunction"
+      )
+      func f() {}
+      """
+
+    let expected =
+      """
+      @available(
+        *, unavailable,
+        renamed: "MyRenamedFunction"
+      )
+      func f() {}
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
+  }
 }

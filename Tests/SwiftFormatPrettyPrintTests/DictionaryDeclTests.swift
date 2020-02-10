@@ -94,4 +94,43 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
     XCTAssertDiagnosed(.removeTrailingComma, line: 1, column: 32)
     XCTAssertDiagnosed(.addTrailingComma, line: 4, column: 17)
   }
+
+  func testIgnoresDiscretionaryNewlineAfterColon() {
+    let input =
+      """
+      let a = [
+        "reallyLongKeySoTheValueWillWrap":
+          value
+      ]
+      let a = [
+        "shortKey":
+          value
+      ]
+      let a:
+        [ReallyLongKeySoTheValueWillWrap:
+          Value]
+      let a:
+        [ShortKey:
+          Value]
+      """
+
+    let expected =
+      """
+      let a = [
+        "reallyLongKeySoTheValueWillWrap":
+          value
+      ]
+      let a = [
+        "shortKey": value
+      ]
+      let a:
+        [ReallyLongKeySoTheValueWillWrap:
+          Value]
+      let a:
+        [ShortKey: Value]
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
+  }
 }

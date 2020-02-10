@@ -1038,4 +1038,51 @@ final class FunctionDeclTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 14)
   }
+
+  func testIgnoresDiscretionaryLineBreakAfterColonAndInout() {
+    let input =
+      """
+      func foo(
+        a:
+          ReallyLongTypeName,
+        b:
+          ShortType,
+        c:
+          inout
+            C,
+        labeled
+          d:
+            D,
+        reallyLongLabel
+          reallyLongArg: E
+      ) {}
+      func foo<
+        A:
+          ReallyLongType,
+        B:
+          ShortType
+      >(a: A, b: B) {}
+
+      """
+
+    let expected =
+      """
+      func foo(
+        a:
+          ReallyLongTypeName,
+        b: ShortType,
+        c: inout C,
+        labeled d: D,
+        reallyLongLabel
+          reallyLongArg: E
+      ) {}
+      func foo<
+        A: ReallyLongType,
+        B: ShortType
+      >(a: A, b: B) {}
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 23)
+  }
 }
