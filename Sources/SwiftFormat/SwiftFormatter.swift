@@ -91,8 +91,11 @@ public final class SwiftFormatter {
   public func format<Output: TextOutputStream>(
     syntax: SourceFileSyntax, assumingFileURL url: URL?, to outputStream: inout Output
   ) throws {
-    let assumedURL = url ?? URL(fileURLWithPath: "source")
+    guard isSyntaxValidForProcessing(Syntax(syntax)) else {
+      throw SwiftFormatError.fileContainsInvalidSyntax
+    }
 
+    let assumedURL = url ?? URL(fileURLWithPath: "source")
     let context = Context(
       configuration: configuration, diagnosticEngine: diagnosticEngine, fileURL: assumedURL,
       sourceFileSyntax: syntax)
