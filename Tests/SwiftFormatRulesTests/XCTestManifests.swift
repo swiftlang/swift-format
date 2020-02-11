@@ -269,6 +269,8 @@ extension OrderedImportsTests {
         ("testImportsOrderWithDocComment", testImportsOrderWithDocComment),
         ("testImportsOrderWithoutModuleType", testImportsOrderWithoutModuleType),
         ("testInvalidImportsOrder", testInvalidImportsOrder),
+        ("testMultipleCodeBlocksPerLine", testMultipleCodeBlocksPerLine),
+        ("testMultipleCodeBlocksWithImportsPerLine", testMultipleCodeBlocksWithImportsPerLine),
         ("testNonHeaderComment", testNonHeaderComment),
         ("testSeparatedFileHeader", testSeparatedFileHeader),
         ("testValidOrderedImport", testValidOrderedImport),

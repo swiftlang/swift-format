@@ -26,18 +26,60 @@ import SwiftSyntax
 public final class OrderedImports: SyntaxFormatRule {
 
   public override func visit(_ node: SourceFileSyntax) -> Syntax {
-    let lines = generateLines(codeBlockItemList: node.statements)
+    let lines = generateLines(codeBlockItemList: node.statements, context: context)
+
+    // Stores the formatted and sorted lines that will be used to reconstruct the list of code block
+    // items later.
+    var formattedLines: [Line] = []
 
     var regularImports: [Line] = []
     var declImports: [Line] = []
     var testableImports: [Line] = []
     var codeBlocks: [Line] = []
     var fileHeader: [Line] = []
-
     var atStartOfFile = true
     var commentBuffer: [Line] = []
 
-    for line in lines {
+    func formatAndAppend(linesSection: ArraySlice<Line>) {
+      codeBlocks.append(contentsOf: commentBuffer)
+
+      // Perform linting on the grouping of the imports.
+      checkGrouping(linesSection)
+
+      if let lastLine = fileHeader.last, lastLine.type == .blankLine {
+        fileHeader.removeLast()
+      }
+
+      regularImports = formatImports(regularImports)
+      declImports = formatImports(declImports)
+      testableImports = formatImports(testableImports)
+      formatCodeblocks(&codeBlocks)
+
+      let joined = joinLines(fileHeader, regularImports, declImports, testableImports, codeBlocks)
+      formattedLines.append(contentsOf: joined)
+
+      regularImports = []
+      declImports = []
+      testableImports = []
+      codeBlocks = []
+      fileHeader = []
+      commentBuffer = []
+    }
+
+    var lastSliceStartIndex = 0
+    for (index, line) in lines.enumerated() {
+
+      if let syntaxNode = line.syntaxNode,
+        case .importCodeBlock(_, let sortable) = syntaxNode, !sortable
+      {
+        formatAndAppend(linesSection: lines[lastSliceStartIndex..<index])
+        formattedLines.append(line)
+        // Insert a blank line after the unsorted import to show that it's a separate "group" from
+        // the sorted imports.
+        formattedLines.append(Line())
+        lastSliceStartIndex = index + 1  // Add 1 to skip the current line.
+        continue
+      }
 
       // Capture any leading comments as the file header. It is assumed to be separated from the
       // rest of the file by a blank line.
@@ -58,19 +100,8 @@ public final class OrderedImports: SyntaxFormatRule {
         }
       }
 
-      var lineType = line.type
-
-      // Set the line type to codeBlock if the rule is disabled.
-      if let codeblock = line.codeBlock, !context.isRuleEnabled(Self.ruleName, node: Syntax(codeblock)) {
-        switch lineType {
-        case .comment: ()
-        default:
-          lineType = .codeBlock
-        }
-      }
-
       // Separate lines into different categories along with any associated comments.
-      switch lineType {
+      switch line.type {
       case .regularImport:
         regularImports.append(contentsOf: commentBuffer)
         regularImports.append(line)
@@ -95,46 +126,26 @@ public final class OrderedImports: SyntaxFormatRule {
         commentBuffer.append(line)
       }
     }
-    codeBlocks.append(contentsOf: commentBuffer)
 
-    // Perform linting on the grouping of the imports.
-    checkGrouping(lines)
-
-    if let lastLine = fileHeader.last, lastLine.type == .blankLine {
-      fileHeader.removeLast()
+    if lastSliceStartIndex < lines.endIndex {
+      formatAndAppend(linesSection: lines[lastSliceStartIndex..<lines.endIndex])
     }
 
-    regularImports = formatImports(regularImports)
-    declImports = formatImports(declImports)
-    testableImports = formatImports(testableImports)
-    formatCodeblocks(&codeBlocks)
-
-    let joined = joinLines(fileHeader, regularImports, declImports, testableImports, codeBlocks)
-
     let newNode = node.withStatements(
-      SyntaxFactory.makeCodeBlockItemList(convertToCodeBlockItems(lines: joined))
+      SyntaxFactory.makeCodeBlockItemList(convertToCodeBlockItems(lines: formattedLines))
     )
     return Syntax(newNode)
   }
 
   /// Raise lint errors if the different import types appear in the wrong order, and if import
   /// statements do not appear at the top of the file.
-  private func checkGrouping(_ lines: [Line]) {
+  private func checkGrouping<C: Collection>(_ lines: C) where C.Element == Line {
     var declGroup = false
     var testableGroup = false
     var codeGroup = false
 
     for line in lines {
-      var lineType = line.type
-
-      // Set the line type to codeBlock if the rule is disabled.
-      if let codeblock = line.codeBlock, !context.isRuleEnabled(Self.ruleName, node: Syntax(codeblock)) {
-        switch lineType {
-        case .comment: ()
-        default:
-          lineType = .codeBlock
-        }
-      }
+      let lineType = line.type
 
       switch lineType {
       case .declImport:
@@ -149,7 +160,7 @@ public final class OrderedImports: SyntaxFormatRule {
       if codeGroup {
         switch lineType {
         case .regularImport, .declImport, .testableImport:
-          diagnose(.placeAtTopOfFile, on: line.codeBlock?.firstToken)
+          diagnose(.placeAtTopOfFile, on: line.firstToken)
         default: ()
         }
       }
@@ -158,8 +169,7 @@ public final class OrderedImports: SyntaxFormatRule {
         switch lineType {
         case .regularImport, .declImport:
           diagnose(
-            .groupImports(before: lineType, after: LineType.testableImport),
-            on: line.codeBlock?.firstToken
+            .groupImports(before: lineType, after: LineType.testableImport), on: line.firstToken
           )
         default: ()
         }
@@ -169,8 +179,7 @@ public final class OrderedImports: SyntaxFormatRule {
         switch lineType {
         case .regularImport:
           diagnose(
-            .groupImports(before: lineType, after: LineType.declImport),
-            on: line.codeBlock?.firstToken
+            .groupImports(before: lineType, after: LineType.declImport), on: line.firstToken
           )
         default: ()
         }
@@ -193,7 +202,7 @@ public final class OrderedImports: SyntaxFormatRule {
         if let previousImport = previousImport,
           line.importName.lexicographicallyPrecedes(previousImport.importName) && !diagnosed
         {
-          diagnose(.sortImports, on: line.codeBlock?.firstToken)
+          diagnose(.sortImports, on: line.firstToken)
           diagnosed = true  // Only emit one of these errors to avoid alert fatigue.
         }
         // Pack the import line and its associated comments into a tuple.
@@ -245,7 +254,9 @@ fileprivate func joinLines(_ inputLineLists: [Line]...) -> [Line] {
 /// This function transforms the statements in a CodeBlockItemListSyntax object into a list of Line
 /// obejcts. Blank lines and standalone comments are represented by their own Line object. Code with
 /// a trailing comment are represented together in the same Line.
-fileprivate func generateLines(codeBlockItemList: CodeBlockItemListSyntax) -> [Line] {
+fileprivate func generateLines(codeBlockItemList: CodeBlockItemListSyntax, context: Context)
+  -> [Line]
+{
   var lines: [Line] = []
   var currentLine = Line()
   var afterNewline = false
@@ -277,10 +288,32 @@ fileprivate func generateLines(codeBlockItemList: CodeBlockItemListSyntax) -> [L
           }
         }
       }
-    } else if currentLine.codeBlock != nil {
-      appendNewLine()
     }
-    currentLine.codeBlock = block  // This represents actual code: imports and otherwise.
+
+    if block.item.is(ImportDeclSyntax.self) {
+      // Always create a new `Line` for each import statement, so they can be reordered.
+      if currentLine.syntaxNode != nil {
+        lines.append(currentLine)
+        currentLine = Line()
+      }
+      let sortable = context.isRuleEnabled(OrderedImports.ruleName, node: Syntax(block))
+      currentLine.syntaxNode = .importCodeBlock(block, sortable: sortable)
+    } else {
+      guard let syntaxNode = currentLine.syntaxNode else {
+        currentLine.syntaxNode = .nonImportCodeBlocks([block])
+        continue
+      }
+      // Multiple code blocks can be merged, as long as there isn't an import statement.
+      switch syntaxNode {
+      case .importCodeBlock:
+        lines.append(currentLine)
+        currentLine = Line()
+        currentLine.syntaxNode = .nonImportCodeBlocks([block])
+      case .nonImportCodeBlocks(let existingCodeBlocks):
+        currentLine.syntaxNode = .nonImportCodeBlocks(existingCodeBlocks + [block])
+      }
+    }
+
     isFirstBlock = false
   }
   lines.append(currentLine)
@@ -296,18 +329,28 @@ fileprivate func convertToCodeBlockItems(lines: [Line]) -> [CodeBlockItemSyntax]
 
   for line in lines {
     triviaBuffer += line.leadingTrivia
-    if let block = line.codeBlock {
+
+    func append(codeBlockItem: CodeBlockItemSyntax) {
       // Comments and newlines are always located in the leading trivia of an AST node, so we need
       // not deal with trailing trivia.
       output.append(
         replaceTrivia(
-          on: block,
-          token: block.firstToken,
+          on: codeBlockItem,
+          token: codeBlockItem.firstToken,
           leadingTrivia: Trivia(pieces: triviaBuffer)
         )
       )
       triviaBuffer = []
       triviaBuffer += line.trailingTrivia
+    }
+
+    if let syntaxNode = line.syntaxNode {
+      switch syntaxNode {
+      case .importCodeBlock(let codeBlock, _):
+        append(codeBlockItem: codeBlock)
+      case .nonImportCodeBlocks(let codeBlocks):
+        codeBlocks.forEach(append(codeBlockItem:))
+      }
     }
 
     // Merge multiple newlines together into a single trivia piece by updating it's N value.
@@ -353,49 +396,134 @@ public enum LineType: CustomStringConvertible {
 /// multiple literal lines, but can still be represented by a single Line object. This is desireable
 /// since we aren't interested in rearranging those types of structures in this rule.
 fileprivate class Line {
+  /// Storage for the different types of AST nodes that can be held by a `Line`.
+  enum SyntaxNode {
+    /// A collection of code block items that aren't imports. These types of code blocks aren't
+    /// reordered and there may be multiple per printed line.
+    case nonImportCodeBlocks([CodeBlockItemSyntax])
+    /// A single code block item whose content must be an import decl.
+    case importCodeBlock(CodeBlockItemSyntax, sortable: Bool)
+  }
 
-  /// This is used to hold line comments. `codeBlock` need not be defined, since a comment can exist
-  /// by itself on a line.
+  /// Stores line comments. `syntaxNode` need not be defined, since a comment can exist by itself on
+  /// a line.
   var leadingTrivia: [TriviaPiece] = []
 
-  /// These hold trailing line comments that follow normal code. `codeBlock` should be defined.
+  /// Stores trailing line comments that follow normal code. `syntaxNode` should be defined.
   var trailingTrivia: [TriviaPiece] = []
 
-  /// This holds the actual CodeBlockItemSyntax object from the AST.
-  var codeBlock: CodeBlockItemSyntax?
+  /// Stores one or more CodeBlockItemSyntax objects from the AST.
+  var syntaxNode: SyntaxNode?
 
   /// A Line object can represent a blank line if all of its fields are empty.
   var isBlankLine: Bool {
-    return leadingTrivia.isEmpty && trailingTrivia.isEmpty && codeBlock == nil
+    return leadingTrivia.isEmpty && trailingTrivia.isEmpty && syntaxNode == nil
   }
 
   var type: LineType {
-    if let block = codeBlock {
-      if let importdecl = block.item.as(ImportDeclSyntax.self) {
-        if let attr = importdecl.attributes?.firstToken,
-          attr.tokenKind == .atSign,
-          attr.nextToken?.text == "testable"
-        {
-          return LineType.testableImport
+    if let syntaxNode = syntaxNode {
+      switch syntaxNode {
+      case .nonImportCodeBlocks:
+        return .codeBlock
+      case .importCodeBlock(let importCodeBlock, _):
+        guard let importDecl = importCodeBlock.item.as(ImportDeclSyntax.self) else {
+          // Invalid `importCodeBlock` - fallback to treating it as a generic code block.
+          return .codeBlock
         }
-        if importdecl.importKind != nil {
-          return LineType.declImport
-        }
-        return LineType.regularImport
-      } else {
-        return LineType.codeBlock
+        return importType(of: importDecl)
       }
-    } else if !leadingTrivia.isEmpty {
-      return LineType.comment
-    } else {
-      return LineType.blankLine
     }
+
+    if leadingTrivia.contains(where: {
+      switch $0 {
+      case .lineComment, .blockComment, .docLineComment, .docBlockComment:
+        return true
+      default:
+        return false
+      }
+    }) {
+      return .comment
+    }
+
+    // There may be some whitespace in the leading trivia, but consider the line to be blank.
+    return .blankLine
   }
 
   var importName: String {
-    let importTypes: [LineType] = [.regularImport, .declImport, .testableImport]
-    guard importTypes.contains(type), let block = codeBlock else { return "" }
-    return (block.item.as(ImportDeclSyntax.self))?.path.description ?? ""
+    guard let syntaxNode = syntaxNode, case .importCodeBlock(let importCodeBlock, _) = syntaxNode,
+      let importDecl = importCodeBlock.item.as(ImportDeclSyntax.self)
+    else {
+      return ""
+    }
+    return importDecl.path.description
+  }
+
+  /// Returns the first `TokenSyntax` in the code block(s) from this Line, or nil when this Line
+  /// doesn't represent any code blocks (e.g. a comment or blank line).
+  var firstToken: TokenSyntax? {
+    guard let syntaxNode = syntaxNode else { return nil }
+    switch syntaxNode {
+    case .importCodeBlock(let codeBlock, _):
+      return codeBlock.firstToken
+    case .nonImportCodeBlocks(let codeBlocks):
+      return codeBlocks.first?.firstToken
+    }
+  }
+
+  /// Returns a `LineType` the represents the type of import from the given import decl.
+  private func importType(of importDecl: ImportDeclSyntax) -> LineType {
+    if let attr = importDecl.attributes?.firstToken,
+      attr.tokenKind == .atSign,
+      attr.nextToken?.text == "testable"
+    {
+      return .testableImport
+    }
+    if importDecl.importKind != nil {
+      return .declImport
+    }
+    return .regularImport
+  }
+}
+
+extension Line: CustomDebugStringConvertible {
+  var debugDescription: String {
+    var description = ""
+    if !leadingTrivia.isEmpty {
+      var newlinesCount = 0
+      for piece in leadingTrivia {
+        switch piece {
+        case .newlines(let count):
+          newlinesCount += count
+        default:
+          if newlinesCount > 0 {
+            description += "\(newlinesCount) newlines "
+            newlinesCount = 0
+          }
+          description += "\(piece) "
+        }
+      }
+      if newlinesCount > 0 {
+        description += "\(newlinesCount) newlines "
+      }
+    }
+
+    if let syntaxNode = syntaxNode {
+      switch syntaxNode {
+      case .nonImportCodeBlocks(let codeBlocks):
+        description += "\(codeBlocks.count) code blocks "
+      case .importCodeBlock(_, let sortable):
+        description += "\(sortable ? "sorted" : "unsorted") import \(importName) "
+      }
+    }
+
+    if !trailingTrivia.isEmpty {
+      // Trailing trivia should just be comments, so just print each piece.
+      for piece in trailingTrivia {
+        description += "\(piece) "
+      }
+    }
+
+    return description.trimmingCharacters(in: .whitespaces)
   }
 }
 
