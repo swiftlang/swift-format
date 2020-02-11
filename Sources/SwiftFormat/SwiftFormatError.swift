@@ -18,4 +18,7 @@ public enum SwiftFormatError: Error {
 
   /// The requested file was a directory.
   case isDirectory
+
+  /// The file contains invalid or unrecognized Swift syntax and cannot be handled safely.
+  case fileContainsInvalidSyntax
 }

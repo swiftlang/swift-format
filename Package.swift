@@ -72,6 +72,12 @@ let package = Package(
       ]
     ),
     .testTarget(
+      name: "SwiftFormatTests",
+      dependencies: [
+        "SwiftFormat",
+      ]
+    ),
+    .testTarget(
       name: "SwiftFormatConfigurationTests",
       dependencies: ["SwiftFormatConfiguration"]
     ),

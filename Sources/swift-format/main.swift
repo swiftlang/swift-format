@@ -14,12 +14,14 @@ import Foundation
 import SwiftFormat
 import SwiftFormatConfiguration
 import SwiftFormatCore
+import SwiftSyntax
 import TSCBasic
 import TSCUtility
 
 fileprivate func main(_ arguments: [String]) -> Int32 {
   let url = URL(fileURLWithPath: arguments.first!)
   let options = processArguments(commandName: url.lastPathComponent, Array(arguments.dropFirst()))
+  let diagnosticEngine = makeDiagnosticEngine()
   switch options.mode {
   case .format:
     if options.paths.isEmpty {
@@ -29,13 +31,17 @@ fileprivate func main(_ arguments: [String]) -> Int32 {
         formatMain(
           configuration: configuration, sourceFile: FileHandle.standardInput,
           assumingFilename: options.assumeFilename, inPlace: false,
-          debugOptions: options.debugOptions))
+          debugOptions: options.debugOptions, diagnosticEngine: diagnosticEngine))
     }
-    return processSources(from: options.paths, configurationPath: options.configurationPath) {
+    return processSources(
+      from: options.paths, configurationPath: options.configurationPath,
+      diagnosticEngine: diagnosticEngine
+    ) {
       (sourceFile, path, configuration) in
       formatMain(
         configuration: configuration, sourceFile: sourceFile, assumingFilename: path,
-        inPlace: options.inPlace, debugOptions: options.debugOptions)
+        inPlace: options.inPlace, debugOptions: options.debugOptions,
+        diagnosticEngine: diagnosticEngine)
     }
   case .lint:
     if options.paths.isEmpty {
@@ -44,13 +50,17 @@ fileprivate func main(_ arguments: [String]) -> Int32 {
       return Int32(
         lintMain(
           configuration: configuration, sourceFile: FileHandle.standardInput,
-          assumingFilename: options.assumeFilename, debugOptions: options.debugOptions))
+          assumingFilename: options.assumeFilename, debugOptions: options.debugOptions,
+          diagnosticEngine: diagnosticEngine))
     }
-    return processSources(from: options.paths, configurationPath: options.configurationPath) {
+    return processSources(
+      from: options.paths, configurationPath: options.configurationPath,
+      diagnosticEngine: diagnosticEngine
+    ) {
       (sourceFile, path, configuration) in
       lintMain(
         configuration: configuration, sourceFile: sourceFile, assumingFilename: path,
-        debugOptions: options.debugOptions)
+        debugOptions: options.debugOptions, diagnosticEngine: diagnosticEngine)
     }
   case .dumpConfiguration:
     dumpDefaultConfiguration()
@@ -66,22 +76,31 @@ fileprivate func main(_ arguments: [String]) -> Int32 {
 /// - Parameters:
 ///   - paths: The file paths for the source files to process with a transformation.
 ///   - configurationPath: The file path to a swift-format configuration file.
+///   - diagnosticEngine: A diagnostic collector that handles diagnostic messages.
 ///   - transform: A closure that performs a transformation on a specific source file.
 fileprivate func processSources(
-  from paths: [String], configurationPath: String?,
+  from paths: [String], configurationPath: String?, diagnosticEngine: DiagnosticEngine,
   transform: (FileHandle, String, Configuration) -> Int
 ) -> Int32 {
   var result = 0
   for path in FileIterator(paths: paths) {
     guard let sourceFile = FileHandle(forReadingAtPath: path) else {
-      stderrStream.write("Unable to create a file handle for source from \(path).\n")
-      stderrStream.flush()
+      diagnosticEngine.diagnose(
+        Diagnostic.Message(.error, "Unable to create a file handle for source from \(path)."))
       return 1
     }
     let configuration = loadConfiguration(forSwiftFile: path, configFilePath: configurationPath)
     result |= transform(sourceFile, path, configuration)
   }
   return Int32(result)
+}
+
+/// Makes and returns a new configured diagnostic engine.
+fileprivate func makeDiagnosticEngine() -> DiagnosticEngine {
+  let engine = DiagnosticEngine()
+  let consumer = PrintingDiagnosticConsumer()
+  engine.addConsumer(consumer)
+  return engine
 }
 
 /// Load the configuration.
@@ -92,14 +111,14 @@ fileprivate func loadConfiguration(
     return decodedConfiguration(fromFile: URL(fileURLWithPath: configFilePath))
   }
 
-  if let swiftFileURL = swiftFilePath.map(URL.init(fileURLWithPath:)), 
-    let configFileURL = Configuration.url(forConfigurationFileApplyingTo: swiftFileURL) {
-      return decodedConfiguration(fromFile: configFileURL)
+  if let swiftFileURL = swiftFilePath.map(URL.init(fileURLWithPath:)),
+    let configFileURL = Configuration.url(forConfigurationFileApplyingTo: swiftFileURL)
+  {
+    return decodedConfiguration(fromFile: configFileURL)
   }
 
   return Configuration()
 }
-
 
 /// Loads and returns a `Configuration` from the given JSON file if it is found and is valid. If the
 /// file does not exist or there was an error decoding it, the program exits with a non-zero exit
