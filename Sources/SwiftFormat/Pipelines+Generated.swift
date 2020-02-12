@@ -225,7 +225,6 @@ class LintPipeline: SyntaxVisitor {
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, in: context, for: node)
     visitIfEnabled(DontRepeatTypeInStaticProperties.visit, in: context, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, in: context, for: node)
-    visitIfEnabled(UseEnumForNamespacing.visit, in: context, for: node)
     visitIfEnabled(UseSynthesizedInitializer.visit, in: context, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, in: context, for: node)
     return .visitChildren
@@ -300,7 +299,6 @@ extension FormatPipeline {
     node = OneVariableDeclarationPerLine(context: context).visit(node)
     node = OrderedImports(context: context).visit(node)
     node = ReturnVoidInsteadOfEmptyTuple(context: context).visit(node)
-    node = UseEnumForNamespacing(context: context).visit(node)
     node = UseShorthandTypeNames(context: context).visit(node)
     node = UseSingleLinePropertyGetter(context: context).visit(node)
     node = UseTripleSlashForDocumentationComments(context: context).visit(node)
