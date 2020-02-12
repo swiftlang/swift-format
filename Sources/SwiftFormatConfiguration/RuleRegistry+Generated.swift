@@ -40,7 +40,6 @@ enum RuleRegistry {
     "OnlyOneTrailingClosureArgument": true,
     "OrderedImports": true,
     "ReturnVoidInsteadOfEmptyTuple": true,
-    "UseEnumForNamespacing": true,
     "UseLetInEveryBoundCaseVariable": true,
     "UseShorthandTypeNames": true,
     "UseSingleLinePropertyGetter": true,
