@@ -247,6 +247,45 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
     XCTAssertDiagnosed(.sortImports)
   }
 
+  func testMultipleCodeBlocksPerLine() {
+    let input =
+      """
+      import A;import Z;import D;import C;
+      foo();bar();baz();quxxe();
+      """
+
+    let expected =
+      """
+      import A;
+      import C;
+      import D;
+      import Z;
+
+      foo();bar();baz();quxxe();
+      """
+
+    XCTAssertFormatting(OrderedImports.self, input: input, expected: expected)
+  }
+
+  func testMultipleCodeBlocksWithImportsPerLine() {
+    let input =
+      """
+      import A;import Z;import D;import C;foo();bar();baz();quxxe();
+      """
+
+    let expected =
+      """
+      import A;
+      import C;
+      import D;
+      import Z;
+
+      foo();bar();baz();quxxe();
+      """
+
+    XCTAssertFormatting(OrderedImports.self, input: input, expected: expected)
+  }
+
   func testDisableOrderedImports() {
     let input =
       """
@@ -256,6 +295,9 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       import A
       let a = 123
       import func Darwin.C.isatty
+
+      // swift-format-ignore
+      import a
       """
 
     let expected =
@@ -263,50 +305,85 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       import B
       import C
 
-      import func Darwin.C.isatty
-
       // swift-format-ignore: OrderedImports
       import A
+
+      import func Darwin.C.isatty
+
       let a = 123
+
+      // swift-format-ignore
+      import a
       """
 
     XCTAssertFormatting(
       OrderedImports.self, input: input, expected: expected, checkForUnassertedDiagnostics: true
     )
 
-    // import Aimport
-    XCTAssertDiagnosed(.sortImports)
-
-    // import func Darwin.C.isatty
-    XCTAssertDiagnosed(.placeAtTopOfFile)
+    XCTAssertDiagnosed(.sortImports, line: 2, column: 1)
+    XCTAssertDiagnosed(.placeAtTopOfFile, line: 6, column: 1)
   }
 
   func testDisableOrderedImportsMovingComments() {
     let input =
       """
+      import C  // Trailing comment about C
       import B
-      import C
+      // Comment about ignored A
       // swift-format-ignore: OrderedImports
-      import A
+      import A  // trailing comment about ignored A
+      // Comment about Z
+      import Z
       import D
+      // swift-format-ignore
+      // Comment about testable testA
+      @testable import testA
+      @testable import testZ  // trailing comment about testZ
+      @testable import testC
+      // swift-format-ignore
+      @testable import testB
+      // Comment about Bar
+      import enum Bar
+
+      let a = 2
       """
 
     let expected =
       """
       import B
-      import C
-      import D
+      import C  // Trailing comment about C
 
+      // Comment about ignored A
       // swift-format-ignore: OrderedImports
-      import A
+      import A  // trailing comment about ignored A
+
+      import D
+      // Comment about Z
+      import Z
+
+      // swift-format-ignore
+      // Comment about testable testA
+      @testable import testA
+
+      @testable import testC
+      @testable import testZ  // trailing comment about testZ
+
+      // swift-format-ignore
+      @testable import testB
+
+      // Comment about Bar
+      import enum Bar
+
+      let a = 2
       """
 
     XCTAssertFormatting(
       OrderedImports.self, input: input, expected: expected, checkForUnassertedDiagnostics: true
     )
 
-    // import D
-    XCTAssertDiagnosed(.placeAtTopOfFile)
+    XCTAssertDiagnosed(.sortImports, line: 2, column: 1)
+    XCTAssertDiagnosed(.sortImports, line: 8, column:  1)
+    XCTAssertDiagnosed(.sortImports, line: 13, column: 1)
   }
 
   func testEmptyFile() {
