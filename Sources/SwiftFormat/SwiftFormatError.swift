@@ -10,6 +10,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftSyntax
+
 /// Errors that can be thrown by the `SwiftFormatter` and `SwiftLinter` APIs.
 public enum SwiftFormatError: Error {
 
@@ -20,5 +22,5 @@ public enum SwiftFormatError: Error {
   case isDirectory
 
   /// The file contains invalid or unrecognized Swift syntax and cannot be handled safely.
-  case fileContainsInvalidSyntax
+  case fileContainsInvalidSyntax(position: AbsolutePosition)
 }
