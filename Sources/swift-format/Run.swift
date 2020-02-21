@@ -48,13 +48,14 @@ func lintMain(
     diagnosticEngine.diagnose(
       Diagnostic.Message(.error, "Unable to lint \(path): file is not readable or does not exist."))
     return 1
-  } catch SwiftFormatError.fileContainsInvalidSyntax {
-     let path = assumingFileURL.path
-     diagnosticEngine.diagnose(
-       Diagnostic.Message(
-         .error, "Unable to line \(path): file contains invalid or unrecognized Swift syntax."))
-     return 1
-   } catch {
+  } catch SwiftFormatError.fileContainsInvalidSyntax(let position) {
+    let path = assumingFileURL.path
+    let location = SourceLocationConverter(file: path, source: source).location(for: position)
+    diagnosticEngine.diagnose(
+      Diagnostic.Message(.error, "file contains invalid or unrecognized Swift syntax."),
+      location: location)
+    return 1
+  } catch {
     let path = assumingFileURL.path
     diagnosticEngine.diagnose(Diagnostic.Message(.error, "Unable to lint \(path): \(error)"))
     exit(1)
@@ -107,11 +108,12 @@ func formatMain(
       Diagnostic.Message(
         .error, "Unable to format \(path): file is not readable or does not exist."))
     return 1
-  } catch SwiftFormatError.fileContainsInvalidSyntax {
+  } catch SwiftFormatError.fileContainsInvalidSyntax(let position) {
     let path = assumingFileURL.path
+    let location = SourceLocationConverter(file: path, source: source).location(for: position)
     diagnosticEngine.diagnose(
-      Diagnostic.Message(
-        .error, "Unable to format \(path): file contains invalid or unrecognized Swift syntax."))
+      Diagnostic.Message(.error, "file contains invalid or unrecognized Swift syntax."),
+      location: location)
     return 1
   } catch {
     let path = assumingFileURL.path

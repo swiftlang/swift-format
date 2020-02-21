@@ -14,41 +14,41 @@ import SwiftSyntax
 
 /// A SyntaxVisitor that searches for nodes that cannot be handled safely.
 fileprivate class SyntaxValidatingVisitor: SyntaxVisitor {
-  /// Tracks whether an invalid node has been encountered.
-  var isValidSyntax = true
+  /// Stores the start position of the first node that contains invalid syntax.
+  var invalidSyntaxStartPosition: AbsolutePosition?
 
   override func visit(_ node: UnknownSyntax) -> SyntaxVisitorContinueKind {
-    isValidSyntax = false
+    invalidSyntaxStartPosition = node.positionAfterSkippingLeadingTrivia
     return .skipChildren
   }
 
   override func visit(_ node: UnknownDeclSyntax) -> SyntaxVisitorContinueKind {
-    isValidSyntax = false
+    invalidSyntaxStartPosition = node.positionAfterSkippingLeadingTrivia
     return .skipChildren
   }
 
   override func visit(_ node: UnknownExprSyntax) -> SyntaxVisitorContinueKind {
-    isValidSyntax = false
+    invalidSyntaxStartPosition = node.positionAfterSkippingLeadingTrivia
     return .skipChildren
   }
 
   override func visit(_ node: UnknownStmtSyntax) -> SyntaxVisitorContinueKind {
-    isValidSyntax = false
+    invalidSyntaxStartPosition = node.positionAfterSkippingLeadingTrivia
     return .skipChildren
   }
 
   override func visit(_ node: UnknownTypeSyntax) -> SyntaxVisitorContinueKind {
-    isValidSyntax = false
+    invalidSyntaxStartPosition = node.positionAfterSkippingLeadingTrivia
     return .skipChildren
   }
 
   override func visit(_ node: UnknownPatternSyntax) -> SyntaxVisitorContinueKind {
-    isValidSyntax = false
+    invalidSyntaxStartPosition = node.positionAfterSkippingLeadingTrivia
     return .skipChildren
   }
 
   override func visit(_ node: NonEmptyTokenListSyntax) -> SyntaxVisitorContinueKind {
-    isValidSyntax = false
+    invalidSyntaxStartPosition = node.positionAfterSkippingLeadingTrivia
     return .skipChildren
   }
 
@@ -56,19 +56,20 @@ fileprivate class SyntaxValidatingVisitor: SyntaxVisitor {
     // The token list is used to collect any unexpected tokens. When it's missing or empty, then
     // there were no unexpected tokens. Otherwise, the attribute is invalid.
     guard node.tokenList?.isEmpty ?? true else {
-      isValidSyntax = false
+      invalidSyntaxStartPosition = node.positionAfterSkippingLeadingTrivia
       return .skipChildren
     }
     return .visitChildren
   }
 }
 
-/// Returns whether the given syntax contains any nodes which are invalid or unrecognized and
-/// cannot be handled safely.
+/// Determines whether the given syntax has any nodes which are invalid or unrecognized, and, if
+/// so, returns the starting position of the first such node. Otherwise, returns nil indicating the
+/// syntax is valid.
 ///
 /// - Parameter syntax: The root of a tree of syntax nodes to check for compatibility.
-func isSyntaxValidForProcessing(_ syntax: Syntax) -> Bool {
+func firstInvalidSyntaxPosition(in syntax: Syntax) -> AbsolutePosition? {
   let visitor = SyntaxValidatingVisitor()
   visitor.walk(syntax)
-  return visitor.isValidSyntax
+  return visitor.invalidSyntaxStartPosition
 }

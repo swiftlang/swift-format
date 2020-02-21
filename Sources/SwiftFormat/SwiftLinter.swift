@@ -75,8 +75,8 @@ public final class SwiftLinter {
   ///   - url: A file URL denoting the filename/path that should be assumed for this syntax tree.
   /// - Throws: If an unrecoverable error occurs when formatting the code.
   public func lint(syntax: SourceFileSyntax, assumingFileURL url: URL) throws {
-    guard isSyntaxValidForProcessing(Syntax(syntax)) else {
-      throw SwiftFormatError.fileContainsInvalidSyntax
+    if let position = firstInvalidSyntaxPosition(in: Syntax(syntax)) {
+      throw SwiftFormatError.fileContainsInvalidSyntax(position: position)
     }
     
     let context = Context(

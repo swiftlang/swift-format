@@ -18,7 +18,7 @@ final class SyntaxValidatingVisitorTests: XCTestCase {
       @unknown default: break
       }
       """
-    XCTAssertTrue(isSyntaxValidForProcessing(createSyntax(from: input)))
+    XCTAssertNil(firstInvalidSyntaxPosition(in: createSyntax(from: input)))
   }
 
   func testInvalidSyntax() {
@@ -28,7 +28,7 @@ final class SyntaxValidatingVisitorTests: XCTestCase {
         var bar = 0
       }
       """
-    XCTAssertFalse(isSyntaxValidForProcessing(createSyntax(from: input)))
+    assertInvalidSyntax(in: input, atLine: 1, column: 1)
 
     input =
       """
@@ -37,17 +37,31 @@ final class SyntaxValidatingVisitorTests: XCTestCase {
       @unknown what_is_this default: break
       }
       """
-    XCTAssertFalse(isSyntaxValidForProcessing(createSyntax(from: input)))
+    assertInvalidSyntax(in: input, atLine: 3, column: 1)
 
     input =
       """
       @unknown c class Foo {}
       """
-    XCTAssertFalse(isSyntaxValidForProcessing(createSyntax(from: input)))
+    assertInvalidSyntax(in: input, atLine: 1, column: 1)
   }
 
   /// Parses the given source into a syntax tree.
   private func createSyntax(from source: String) -> Syntax {
     return Syntax(try! SyntaxParser.parse(source: source))
+  }
+
+  /// Asserts that `SyntaxValidatingVisitor` finds invalid syntax in the given source code at the
+  /// given line and column.
+  private func assertInvalidSyntax(
+    in source: String, atLine: Int, column: Int, file: StaticString = #file, line: UInt = #line
+  ) {
+    guard let position = firstInvalidSyntaxPosition(in: createSyntax(from: source)) else {
+      XCTFail("No invalid syntax was found", file: file, line: line)
+      return
+    }
+    let location = SourceLocationConverter(file: "", source: source).location(for: position)
+    XCTAssertEqual(location.line, atLine, file: file, line: line)
+    XCTAssertEqual(location.column, column, file: file, line: line)
   }
 }
