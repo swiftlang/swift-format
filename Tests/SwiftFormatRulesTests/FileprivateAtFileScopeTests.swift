@@ -10,7 +10,6 @@ final class FileprivateAtFileScopeTests: LintOrFormatRuleTestCase {
         private enum Foo {}
         private protocol Foo {}
         private typealias Foo = Bar
-        private extension Foo {}
         private func foo() {}
         private var foo: Bar
         """,
@@ -20,7 +19,6 @@ final class FileprivateAtFileScopeTests: LintOrFormatRuleTestCase {
         fileprivate enum Foo {}
         fileprivate protocol Foo {}
         fileprivate typealias Foo = Bar
-        fileprivate extension Foo {}
         fileprivate func foo() {}
         fileprivate var foo: Bar
         """)
@@ -31,7 +29,18 @@ final class FileprivateAtFileScopeTests: LintOrFormatRuleTestCase {
     XCTAssertDiagnosed(.replacePrivateWithFileprivate)
     XCTAssertDiagnosed(.replacePrivateWithFileprivate)
     XCTAssertDiagnosed(.replacePrivateWithFileprivate)
-    XCTAssertDiagnosed(.replacePrivateWithFileprivate)
+  }
+
+  func testFileScopeExtensionsAreNotChanged() {
+    XCTAssertFormatting(
+      FileprivateAtFileScope.self,
+      input: """
+        private extension Foo {}
+        """,
+      expected: """
+        private extension Foo {}
+        """)
+    XCTAssertNotDiagnosed(.replacePrivateWithFileprivate)
   }
 
   func testNonFileScopeDeclsAreNotChanged() {
@@ -70,7 +79,6 @@ final class FileprivateAtFileScopeTests: LintOrFormatRuleTestCase {
           private enum Foo {}
           private protocol Foo {}
           private typealias Foo = Bar
-          private extension Foo {}
           private func foo() {}
           private var foo: Bar
         #elseif BAR
@@ -79,7 +87,6 @@ final class FileprivateAtFileScopeTests: LintOrFormatRuleTestCase {
           private enum Foo {}
           private protocol Foo {}
           private typealias Foo = Bar
-          private extension Foo {}
           private func foo() {}
           private var foo: Bar
         #else
@@ -88,7 +95,6 @@ final class FileprivateAtFileScopeTests: LintOrFormatRuleTestCase {
           private enum Foo {}
           private protocol Foo {}
           private typealias Foo = Bar
-          private extension Foo {}
           private func foo() {}
           private var foo: Bar
         #endif
@@ -100,7 +106,6 @@ final class FileprivateAtFileScopeTests: LintOrFormatRuleTestCase {
           fileprivate enum Foo {}
           fileprivate protocol Foo {}
           fileprivate typealias Foo = Bar
-          fileprivate extension Foo {}
           fileprivate func foo() {}
           fileprivate var foo: Bar
         #elseif BAR
@@ -109,7 +114,6 @@ final class FileprivateAtFileScopeTests: LintOrFormatRuleTestCase {
           fileprivate enum Foo {}
           fileprivate protocol Foo {}
           fileprivate typealias Foo = Bar
-          fileprivate extension Foo {}
           fileprivate func foo() {}
           fileprivate var foo: Bar
         #else
@@ -118,7 +122,6 @@ final class FileprivateAtFileScopeTests: LintOrFormatRuleTestCase {
           fileprivate enum Foo {}
           fileprivate protocol Foo {}
           fileprivate typealias Foo = Bar
-          fileprivate extension Foo {}
           fileprivate func foo() {}
           fileprivate var foo: Bar
         #endif
@@ -136,7 +139,6 @@ final class FileprivateAtFileScopeTests: LintOrFormatRuleTestCase {
             private enum Foo {}
             private protocol Foo {}
             private typealias Foo = Bar
-            private extension Foo {}
             private func foo() {}
             private var foo: Bar
           #endif
@@ -150,7 +152,6 @@ final class FileprivateAtFileScopeTests: LintOrFormatRuleTestCase {
             fileprivate enum Foo {}
             fileprivate protocol Foo {}
             fileprivate typealias Foo = Bar
-            fileprivate extension Foo {}
             fileprivate func foo() {}
             fileprivate var foo: Bar
           #endif

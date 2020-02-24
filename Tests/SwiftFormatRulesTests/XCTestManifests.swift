@@ -70,6 +70,7 @@ extension FileprivateAtFileScopeTests {
         ("testFileScopeDecls", testFileScopeDecls),
         ("testFileScopeDeclsInsideConditionals", testFileScopeDeclsInsideConditionals),
         ("testFileScopeDeclsInsideNestedConditionals", testFileScopeDeclsInsideNestedConditionals),
+        ("testFileScopeExtensionsAreNotChanged", testFileScopeExtensionsAreNotChanged),
         ("testLeadingTriviaIsPreserved", testLeadingTriviaIsPreserved),
         ("testModifierDetailIsPreserved", testModifierDetailIsPreserved),
         ("testNonFileScopeDeclsAreNotChanged", testNonFileScopeDeclsAreNotChanged),
