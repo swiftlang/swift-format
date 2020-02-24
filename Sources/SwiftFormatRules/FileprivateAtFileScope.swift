@@ -92,13 +92,6 @@ public final class FileprivateAtFileScope: SyntaxFormatRule {
             modifiers: typealiasDecl.modifiers,
             factory: typealiasDecl.withModifiers)))
 
-      case .extensionDecl(let extensionDecl):
-        return codeBlockItem.withItem(
-          Syntax(rewrittenDecl(
-            extensionDecl,
-            modifiers: extensionDecl.modifiers,
-            factory: extensionDecl.withModifiers)))
-
       default:
         return codeBlockItem
       }
