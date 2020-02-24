@@ -1049,6 +1049,13 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: ReturnClauseSyntax) -> SyntaxVisitorContinueKind {
     after(node.arrow, tokens: .space)
+
+    // Member type identifier is used when the return type is a member of another type. Add a group
+    // here so that the base, dot, and member type are kept together when they fit.
+    if node.returnType.is(MemberTypeIdentifierSyntax.self) {
+      before(node.returnType.firstToken, tokens: .open)
+      after(node.returnType.lastToken, tokens: .close)
+    }
     return .visitChildren
   }
 

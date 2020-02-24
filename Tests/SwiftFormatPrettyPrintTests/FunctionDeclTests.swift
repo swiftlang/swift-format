@@ -90,7 +90,6 @@ final class FunctionDeclTests: PrettyPrintTestCase {
   }
 
   func testFunctionDeclReturns() {
-    // TODO: The tuple return case needs a lot of work.
     let input =
       """
       func myFun(var1: Int, var2: Double) -> Double {
@@ -103,6 +102,12 @@ final class FunctionDeclTests: PrettyPrintTestCase {
       }
       func tupleFunc() throws -> (one: Int, two: Double, three: Bool, four: String) {
         return (one: 1, two: 2.0, three: true, four: "four")
+      }
+      func memberTypeThrowingFunc() throws -> SomeBaseType<GenericArg1, GenericArg2, GenericArg3>.SomeInnerType {
+      }
+      func memberTypeReallyLongNameFunc() -> Type.InnerMember {
+      }
+      func tupleMembersFunc() -> (Type.Inner, Type2.Inner2) {
       }
       """
 
@@ -124,6 +129,20 @@ final class FunctionDeclTests: PrettyPrintTestCase {
         return (
           one: 1, two: 2.0, three: true, four: "four"
         )
+      }
+      func memberTypeThrowingFunc() throws
+        -> SomeBaseType<
+          GenericArg1, GenericArg2, GenericArg3
+        >.SomeInnerType
+      {
+      }
+      func memberTypeReallyLongNameFunc()
+        -> Type.InnerMember
+      {
+      }
+      func tupleMembersFunc() -> (
+        Type.Inner, Type2.Inner2
+      ) {
       }
 
       """
