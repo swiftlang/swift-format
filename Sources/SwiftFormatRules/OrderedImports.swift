@@ -191,7 +191,8 @@ public final class OrderedImports: SyntaxFormatRule {
   /// import lines should be assocaited with it, and move with the line during sorting. We also emit
   /// a linter error if an import line is discovered to be out of order.
   private func formatImports(_ imports: [Line]) -> [Line] {
-    var linesWithLeadingComments: [(Line, [Line])] = []
+    var linesWithLeadingComments: [(import: Line, comments: [Line])] = []
+    var visitedImports: [String: Int] = [:]
     var commentBuffer: [Line] = []
     var previousImport: Line? = nil
     var diagnosed = false
@@ -199,16 +200,43 @@ public final class OrderedImports: SyntaxFormatRule {
     for line in imports {
       switch line.type {
       case .regularImport, .declImport, .testableImport:
+        let fullyQualifiedImport = line.fullyQualifiedImport
+        // Check for duplicate imports and potentially remove them.
+        if let previousMatchingImportIndex = visitedImports[fullyQualifiedImport] {
+          // Even if automatically removing this import is impossible, alert the user that this is a
+          // duplicate so they can manually fix it.
+          diagnose(.removeDuplicateImport, on: line.firstToken)
+          var duplicateLine = linesWithLeadingComments[previousMatchingImportIndex]
+
+          // We can combine multiple leading comments, but it's unsafe to combine trailing comments.
+          // Any extra comments must go on a new line, and would be grouped with the next import.
+          guard !duplicateLine.import.trailingTrivia.isEmpty && !line.trailingTrivia.isEmpty else {
+            duplicateLine.comments.append(contentsOf: commentBuffer)
+            commentBuffer = []
+            // Keep the Line that has the trailing comment, if there is one.
+            if !line.trailingTrivia.isEmpty {
+              duplicateLine.import = line
+            }
+            linesWithLeadingComments[previousMatchingImportIndex] = duplicateLine
+            continue
+          }
+          // Otherwise, both lines have trailing trivia so it's not safe to automatically merge
+          // them. Leave this duplicate import.
+        }
         if let previousImport = previousImport,
           line.importName.lexicographicallyPrecedes(previousImport.importName) && !diagnosed
+            // Only warn to sort imports that shouldn't be removed.
+            && visitedImports[fullyQualifiedImport] == nil
         {
           diagnose(.sortImports, on: line.firstToken)
           diagnosed = true  // Only emit one of these errors to avoid alert fatigue.
         }
+
         // Pack the import line and its associated comments into a tuple.
         linesWithLeadingComments.append((line, commentBuffer))
         commentBuffer = []
         previousImport = line
+        visitedImports[fullyQualifiedImport] = linesWithLeadingComments.endIndex - 1
       case .comment:
         commentBuffer.append(line)
       default: ()
@@ -449,13 +477,33 @@ fileprivate class Line {
     return .blankLine
   }
 
+  /// Returns a fully qualified description of this line's import if it's an import statement,
+  /// including any attributes, modifiers, the import kind, and the import path. When this line
+  /// isn't an import statement, returns an empty string.
+  var fullyQualifiedImport: String {
+    guard let syntaxNode = syntaxNode, case .importCodeBlock(let importCodeBlock, _) = syntaxNode,
+      let importDecl = importCodeBlock.item.as(ImportDeclSyntax.self)
+    else {
+      return ""
+    }
+    // Using the description is a reliable way to include all content from the import, but
+    // description includes all leading and trailing trivia. It would be unusual to have any
+    // non-whitespace trivia on the components of the import. Trim off the leading trivia, where
+    // comments could be, and trim whitespace that might be after the import.
+    let leadingText = importDecl.leadingTrivia?.reduce(into: "") { $1.write(to: &$0) } ?? ""
+    return importDecl.description.dropFirst(leadingText.count)
+      .trimmingCharacters(in: .whitespacesAndNewlines)
+  }
+
+  /// Returns the path that is imported by this line's import statement if it's an import statement.
+  /// When this line isn't an import statement, returns an empty string.
   var importName: String {
     guard let syntaxNode = syntaxNode, case .importCodeBlock(let importCodeBlock, _) = syntaxNode,
       let importDecl = importCodeBlock.item.as(ImportDeclSyntax.self)
     else {
       return ""
     }
-    return importDecl.path.description
+    return importDecl.path.description.trimmingCharacters(in: .whitespaces)
   }
 
   /// Returns the first `TokenSyntax` in the code block(s) from this Line, or nil when this Line
@@ -534,6 +582,8 @@ extension Diagnostic.Message {
   public static func groupImports(before: LineType, after: LineType) -> Diagnostic.Message {
     return Diagnostic.Message(.warning, "place \(before) imports before \(after) imports")
   }
+
+  public static let removeDuplicateImport = Diagnostic.Message(.warning, "remove duplicate import")
 
   public static let sortImports =
     Diagnostic.Message(.warning, "sort import statements lexicographically")
