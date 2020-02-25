@@ -249,4 +249,25 @@ final class FunctionCallTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
   }
+
+  func testGroupsTrailingComma() {
+    let input =
+      """
+      foo(
+        image: useLongName ? image(named: .longNameImage) : image(named: .veryLongNameImageZ),
+        bar: bar)
+      """
+
+    let expected =
+      """
+      foo(
+        image: useLongName
+          ? image(named: .longNameImage)
+          : image(named: .veryLongNameImageZ),
+        bar: bar)
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 70)
+  }
 }

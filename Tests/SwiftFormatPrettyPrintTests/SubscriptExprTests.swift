@@ -85,4 +85,25 @@ final class SubscriptExprTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
+
+  func testGroupsTrailingComma() {
+    let input =
+      """
+      myCollection[
+        image: useLongName ? image(named: .longNameImage) : image(named: .veryLongNameImageZ),
+        bar: bar]
+      """
+
+    let expected =
+      """
+      myCollection[
+        image: useLongName
+          ? image(named: .longNameImage)
+          : image(named: .veryLongNameImageZ),
+        bar: bar]
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 70)
+  }
 }

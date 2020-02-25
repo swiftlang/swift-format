@@ -111,4 +111,27 @@ final class ArrayDeclTests: PrettyPrintTestCase {
     XCTAssertDiagnosed(.removeTrailingComma, line: 1, column: 17)
     XCTAssertDiagnosed(.addTrailingComma, line: 4, column: 26)
   }
+
+  func testGroupsTrailingComma() {
+    let input =
+      """
+      let a = [
+        condition ? firstOption : secondOption,
+        bar(),
+      ]
+      """
+
+    let expected =
+      """
+      let a = [
+        condition
+          ? firstOption
+          : secondOption,
+        bar(),
+      ]
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 32)
+  }
 }

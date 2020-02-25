@@ -24,6 +24,7 @@ extension ArrayDeclTests {
     static let __allTests__ArrayDeclTests = [
         ("testArrayOfFunctions", testArrayOfFunctions),
         ("testBasicArrays", testBasicArrays),
+        ("testGroupsTrailingComma", testGroupsTrailingComma),
         ("testNoTrailingCommasInTypes", testNoTrailingCommasInTypes),
         ("testTrailingCommaDiagnostics", testTrailingCommaDiagnostics),
         ("testWhitespaceOnlyDoesNotChangeTrailingComma", testWhitespaceOnlyDoesNotChangeTrailingComma),
@@ -181,6 +182,7 @@ extension DictionaryDeclTests {
     // to regenerate.
     static let __allTests__DictionaryDeclTests = [
         ("testBasicDictionaries", testBasicDictionaries),
+        ("testGroupsTrailingComma", testGroupsTrailingComma),
         ("testIgnoresDiscretionaryNewlineAfterColon", testIgnoresDiscretionaryNewlineAfterColon),
         ("testNoTrailingCommasInTypes", testNoTrailingCommasInTypes),
         ("testTrailingCommaDiagnostics", testTrailingCommaDiagnostics),
@@ -270,6 +272,7 @@ extension FunctionCallTests {
         ("testBasicFunctionCalls_packArguments", testBasicFunctionCalls_packArguments),
         ("testDiscretionaryLineBreakBeforeClosingParenthesis", testDiscretionaryLineBreakBeforeClosingParenthesis),
         ("testDiscretionaryLineBreaksAreSelfCorrecting", testDiscretionaryLineBreaksAreSelfCorrecting),
+        ("testGroupsTrailingComma", testGroupsTrailingComma),
         ("testIgnoresDiscretionaryLineBreakAfterColon", testIgnoresDiscretionaryLineBreakAfterColon),
         ("testNestedFunctionCallExprSequences", testNestedFunctionCallExprSequences),
         ("testSingleUnlabeledArgumentWithDelimiters", testSingleUnlabeledArgumentWithDelimiters),
@@ -473,6 +476,7 @@ extension ObjectLiteralExprTests {
     static let __allTests__ObjectLiteralExprTests = [
         ("testColorLiteral_noPackArguments", testColorLiteral_noPackArguments),
         ("testColorLiteral_packArguments", testColorLiteral_packArguments),
+        ("testGroupsTrailingComma", testGroupsTrailingComma),
         ("testImageLiteral_noPackArguments", testImageLiteral_noPackArguments),
         ("testImageLiteral_packArguments", testImageLiteral_packArguments),
     ]
@@ -508,6 +512,7 @@ extension PatternBindingTests {
     // to regenerate.
     static let __allTests__PatternBindingTests = [
         ("testBindingIncludingTypeAnnotation", testBindingIncludingTypeAnnotation),
+        ("testGroupingIncludesTrailingComma", testGroupingIncludesTrailingComma),
         ("testIgnoresDiscretionaryNewlineAfterColon", testIgnoresDiscretionaryNewlineAfterColon),
     ]
 }
@@ -660,6 +665,7 @@ extension SubscriptExprTests {
     static let __allTests__SubscriptExprTests = [
         ("testBasicSubscriptGetters", testBasicSubscriptGetters),
         ("testBasicSubscriptSetters", testBasicSubscriptSetters),
+        ("testGroupsTrailingComma", testGroupsTrailingComma),
         ("testSubscriptGettersWithTrailingClosures", testSubscriptGettersWithTrailingClosures),
         ("testSubscriptSettersWithTrailingClosures", testSubscriptSettersWithTrailingClosures),
     ]
@@ -715,6 +721,7 @@ extension TupleDeclTests {
     // to regenerate.
     static let __allTests__TupleDeclTests = [
         ("testBasicTuples", testBasicTuples),
+        ("testGroupsTrailingComma", testGroupsTrailingComma),
         ("testIgnoresDiscretionaryNewlineAfterColon", testIgnoresDiscretionaryNewlineAfterColon),
         ("testLabeledTuples", testLabeledTuples),
     ]

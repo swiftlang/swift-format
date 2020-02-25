@@ -43,4 +43,27 @@ final class PatternBindingTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 28)
   }
+
+  func testGroupingIncludesTrailingComma() {
+    let input =
+      """
+      let foo =  veryLongCondition
+        ? firstOption
+        : secondOption,
+        bar = bar()
+      """
+
+    let expected =
+      """
+      let
+        foo =
+          veryLongCondition
+          ? firstOption
+          : secondOption,
+        bar = bar()
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 18)
+  }
 }

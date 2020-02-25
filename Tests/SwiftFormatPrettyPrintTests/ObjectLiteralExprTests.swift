@@ -110,4 +110,25 @@ final class ObjectLiteralExprTests: PrettyPrintTestCase {
     config.lineBreakBeforeEachArgument = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 38, configuration: config)
   }
+
+  func testGroupsTrailingComma() {
+    let input =
+      """
+      #imageLiteral(
+        image: useLongName ? image(named: .longNameImage) : image(named: .veryLongNameImageZ),
+        bar: bar)
+      """
+
+    let expected =
+      """
+      #imageLiteral(
+        image: useLongName
+          ? image(named: .longNameImage)
+          : image(named: .veryLongNameImageZ),
+        bar: bar)
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 70)
+  }
 }

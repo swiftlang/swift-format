@@ -78,4 +78,27 @@ final class TupleDeclTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 25)
   }
+
+  func testGroupsTrailingComma() {
+    let input =
+      """
+      let t = (
+        condition ? firstOption : secondOption,
+        bar()
+      )
+      """
+
+    let expected =
+      """
+      let t = (
+        condition
+          ? firstOption
+          : secondOption,
+        bar()
+      )
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 32)
+  }
 }
