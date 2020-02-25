@@ -266,6 +266,9 @@ extension OrderedImportsTests {
     static let __allTests__OrderedImportsTests = [
         ("testDisableOrderedImports", testDisableOrderedImports),
         ("testDisableOrderedImportsMovingComments", testDisableOrderedImportsMovingComments),
+        ("testDuplicateAttributedImports", testDuplicateAttributedImports),
+        ("testDuplicateCommentedImports", testDuplicateCommentedImports),
+        ("testDuplicateIgnoredImports", testDuplicateIgnoredImports),
         ("testEmptyFile", testEmptyFile),
         ("testImportsOrderWithDocComment", testImportsOrderWithDocComment),
         ("testImportsOrderWithoutModuleType", testImportsOrderWithoutModuleType),
@@ -273,6 +276,7 @@ extension OrderedImportsTests {
         ("testMultipleCodeBlocksPerLine", testMultipleCodeBlocksPerLine),
         ("testMultipleCodeBlocksWithImportsPerLine", testMultipleCodeBlocksWithImportsPerLine),
         ("testNonHeaderComment", testNonHeaderComment),
+        ("testRemovesDuplicateImports", testRemovesDuplicateImports),
         ("testSeparatedFileHeader", testSeparatedFileHeader),
         ("testValidOrderedImport", testValidOrderedImport),
     ]

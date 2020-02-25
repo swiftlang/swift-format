@@ -395,4 +395,150 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       checkForUnassertedDiagnostics: true
     )
   }
+
+  func testRemovesDuplicateImports() {
+    let input =
+      """
+      import CoreLocation
+      import UIKit
+      import CoreLocation
+      import ZeeFramework
+      bar()
+      """
+
+    let expected =
+      """
+      import CoreLocation
+      import UIKit
+      import ZeeFramework
+
+      bar()
+      """
+
+    XCTAssertFormatting(
+      OrderedImports.self, input: input, expected: expected, checkForUnassertedDiagnostics: true)
+    XCTAssertDiagnosed(.removeDuplicateImport, line: 3, column: 1)
+  }
+
+  func testDuplicateCommentedImports() {
+    let input =
+      """
+      import AppKit
+      // CoreLocation is necessary to get location stuff.
+      import CoreLocation  // This import must stay.
+      // UIKit does UI Stuff?
+      import UIKit
+      // This is the second CoreLocation import.
+      import CoreLocation  // The 2nd CL import has a comment here too.
+      // Comment about ZeeFramework.
+      import ZeeFramework
+      import foo
+      // Second comment about ZeeFramework.
+      import ZeeFramework  // This one has a trailing comment too.
+      foo()
+      """
+
+    let expected =
+      """
+      import AppKit
+      // CoreLocation is necessary to get location stuff.
+      import CoreLocation  // This import must stay.
+      // This is the second CoreLocation import.
+      import CoreLocation  // The 2nd CL import has a comment here too.
+      // UIKit does UI Stuff?
+      import UIKit
+      // Comment about ZeeFramework.
+      // Second comment about ZeeFramework.
+      import ZeeFramework  // This one has a trailing comment too.
+      import foo
+
+      foo()
+      """
+
+    XCTAssertFormatting(
+      OrderedImports.self, input: input, expected: expected, checkForUnassertedDiagnostics: true)
+
+    // Even though this import is technically also not sorted, that won't matter if the import is
+    // removed so there should only be a warning to remove it.
+    XCTAssertDiagnosed(.removeDuplicateImport, line: 7, column: 1)
+    XCTAssertDiagnosed(.removeDuplicateImport, line: 12, column: 1)
+  }
+
+  func testDuplicateIgnoredImports() {
+    let input =
+      """
+      import AppKit
+      // swift-format-ignore
+      import CoreLocation
+      // Second CoreLocation import here.
+      import CoreLocation
+      // Comment about ZeeFramework.
+      import ZeeFramework
+      // swift-format-ignore
+      import ZeeFramework  // trailing comment
+      foo()
+      """
+
+    let expected =
+      """
+      import AppKit
+
+      // swift-format-ignore
+      import CoreLocation
+
+      // Second CoreLocation import here.
+      import CoreLocation
+      // Comment about ZeeFramework.
+      import ZeeFramework
+
+      // swift-format-ignore
+      import ZeeFramework  // trailing comment
+
+      foo()
+      """
+
+    XCTAssertFormatting(
+      OrderedImports.self, input: input, expected: expected, checkForUnassertedDiagnostics: true)
+  }
+
+  func testDuplicateAttributedImports() {
+    let input =
+      """
+      // imports an enum
+      import enum Darwin.D.isatty
+      // this is a dup
+      import enum Darwin.D.isatty
+      import foo
+      import a
+      @testable import foo
+      // exported import of bar
+      @_exported import bar
+      @_implementationOnly import bar
+      import bar
+      // second import of foo
+      import foo
+      baz()
+      """
+
+    let expected =
+      """
+      import a
+      // exported import of bar
+      @_exported import bar
+      @_implementationOnly import bar
+      import bar
+      // second import of foo
+      import foo
+
+      // imports an enum
+      // this is a dup
+      import enum Darwin.D.isatty
+
+      @testable import foo
+
+      baz()
+      """
+
+    XCTAssertFormatting(OrderedImports.self, input: input, expected: expected)
+  }
 }
