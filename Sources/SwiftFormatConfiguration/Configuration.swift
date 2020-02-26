@@ -32,6 +32,7 @@ public struct Configuration: Codable, Equatable {
     case prioritizeKeepingFunctionOutputTogether
     case indentConditionalCompilationBlocks
     case lineBreakAroundMultilineExpressionChainComponents
+    case fileScopedDeclarationPrivacy
     case rules
   }
 
@@ -115,6 +116,10 @@ public struct Configuration: Codable, Equatable {
   /// (i.e. right paren, right bracket, right brace, etc.).
   public var lineBreakAroundMultilineExpressionChainComponents = false
 
+  /// Determines the formal access level (i.e., the level specified in source code) for file-scoped
+  /// declarations whose effective access level is private to the containing file.
+  public var fileScopedDeclarationPrivacy = FileScopedDeclarationPrivacyConfiguration()
+
   /// Constructs a Configuration with all default values.
   public init() {
     self.version = highestSupportedConfigurationVersion
@@ -167,6 +172,10 @@ public struct Configuration: Codable, Equatable {
     self.lineBreakAroundMultilineExpressionChainComponents =
       try container.decodeIfPresent(
         Bool.self, forKey: .lineBreakAroundMultilineExpressionChainComponents) ?? false
+    self.fileScopedDeclarationPrivacy =
+      try container.decodeIfPresent(
+        FileScopedDeclarationPrivacyConfiguration.self, forKey: .fileScopedDeclarationPrivacy)
+      ?? FileScopedDeclarationPrivacyConfiguration()
 
     // If the `rules` key is not present at all, default it to the built-in set
     // so that the behavior is the same as if the configuration had been
@@ -193,6 +202,7 @@ public struct Configuration: Codable, Equatable {
     try container.encode(
       lineBreakAroundMultilineExpressionChainComponents,
       forKey: .lineBreakAroundMultilineExpressionChainComponents)
+    try container.encode(fileScopedDeclarationPrivacy, forKey: .fileScopedDeclarationPrivacy)
     try container.encode(rules, forKey: .rules)
   }
 
@@ -233,4 +243,25 @@ public struct NoPlaygroundLiteralsConfiguration: Codable, Equatable {
 
   /// Resolution behavior to use when encountering an ambiguous `#colorLiteral`.
   public let resolveAmbiguousColor: ResolveBehavior = .useUIColor
+}
+
+/// Configuration for the `FileScopedDeclarationPrivacy` rule.
+public struct FileScopedDeclarationPrivacyConfiguration: Codable, Equatable {
+  public enum AccessLevel: String, Codable {
+    /// Private file-scoped declarations should be declared `private`.
+    ///
+    /// If a file-scoped declaration is declared `fileprivate`, it will be diagnosed (in lint mode)
+    /// or changed to `private` (in format mode).
+    case `private`
+
+    /// Private file-scoped declarations should be declared `fileprivate`.
+    ///
+    /// If a file-scoped declaration is declared `private`, it will be diagnosed (in lint mode) or
+    /// changed to `fileprivate` (in format mode).
+    case `fileprivate`
+  }
+
+  /// The formal access level to use when encountering a file-scoped declaration with effective
+  /// private access.
+  public var accessLevel: AccessLevel = .private
 }
