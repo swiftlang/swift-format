@@ -699,6 +699,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     before(node.firstToken, tokens: .open)
     after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
     after(node.lastToken, tokens: .close)
+    if let trailingComma = node.trailingComma {
+      closingDelimiterTokens.insert(trailingComma)
+    }
   }
 
   override func visit(_ node: ArrayExprSyntax) -> SyntaxVisitorContinueKind {
@@ -729,6 +732,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   override func visit(_ node: ArrayElementSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
     after(node.lastToken, tokens: .close)
+    if let trailingComma = node.trailingComma {
+      closingDelimiterTokens.insert(trailingComma)
+    }
     return .visitChildren
   }
 
@@ -766,6 +772,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     before(node.firstToken, tokens: .open)
     after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
     after(node.lastToken, tokens: .close)
+    if let trailingComma = node.trailingComma {
+      closingDelimiterTokens.insert(trailingComma)
+    }
     return .visitChildren
   }
 
@@ -837,6 +846,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
     let shouldGroupAroundArgument = !isCompactSingleFunctionCallArgument(arguments)
     for argument in arguments {
+      if let trailingComma = argument.trailingComma {
+        closingDelimiterTokens.insert(trailingComma)
+      }
       arrangeAsFunctionCallArgument(argument, shouldGroup: shouldGroupAroundArgument)
     }
   }
@@ -1626,6 +1638,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       // If this is one of multiple comma-delimited bindings, move any pending close breaks to
       // follow the comma so that it doesn't get separated from the tokens before it.
       closeAfterToken = trailingComma
+      closingDelimiterTokens.insert(trailingComma)
     }
 
     if closeAfterToken != nil && closesNeeded > 0 {

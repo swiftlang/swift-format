@@ -133,4 +133,27 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
   }
+
+  func testGroupsTrailingComma() {
+    let input =
+      """
+      let d = [
+        key: cond ? firstOption : secondOption,
+        key2: bar(),
+      ]
+      """
+
+    let expected =
+      """
+      let d = [
+        key: cond
+          ? firstOption
+          : secondOption,
+        key2: bar(),
+      ]
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 32)
+  }
 }
