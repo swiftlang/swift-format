@@ -171,4 +171,62 @@ final class RuleMaskTests: XCTestCase {
     XCTAssertEqual(mask.ruleState("TotallyMadeUpRule", at: location(ofLine: 3)), .default)
     XCTAssertEqual(mask.ruleState("rule1", at: location(ofLine: 4)), .default)
   }
+
+  func testAllRulesWholeFileIgnore() {
+    let text =
+      """
+      // This file has important contents.
+      // swift-format-ignore-file
+      // Everything in this file is ignored.
+
+      let a = 5
+      let b = 4
+
+      class Foo {
+        let member1 = 0
+        func foo() {
+          baz()
+        }
+      }
+
+      struct Baz {
+      }
+      """
+
+    let mask = createMask(sourceText: text)
+
+    let lineCount = text.split(separator: "\n").count
+    for i in 0..<lineCount {
+      XCTAssertEqual(mask.ruleState("rule1", at: location(ofLine: i)), .disabled)
+    }
+  }
+
+  func testAllRulesWholeFileIgnoreNestedInNode() {
+    let text =
+      """
+      // This file has important contents.
+      // Everything in this file is ignored.
+
+      let a = 5
+      let b = 4
+
+      class Foo {
+        // swift-format-ignore-file
+        let member1 = 0
+        func foo() {
+          baz()
+        }
+      }
+
+      struct Baz {
+      }
+      """
+
+    let mask = createMask(sourceText: text)
+
+    let lineCount = text.split(separator: "\n").count
+    for i in 0..<lineCount {
+      XCTAssertEqual(mask.ruleState("rule1", at: location(ofLine: i)), .default)
+    }
+  }
 }

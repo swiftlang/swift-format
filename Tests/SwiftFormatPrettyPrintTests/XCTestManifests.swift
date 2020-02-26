@@ -396,6 +396,8 @@ extension IgnoreNodeTests {
         ("testIgnoreInvalidAfterFirstToken", testIgnoreInvalidAfterFirstToken),
         ("testIgnoreMemberDeclListItems", testIgnoreMemberDeclListItems),
         ("testIgnoresNestedMembers", testIgnoresNestedMembers),
+        ("testIgnoreWholeFile", testIgnoreWholeFile),
+        ("testIgnoreWholeFileInNestedNode", testIgnoreWholeFileInNestedNode),
         ("testInvalidComment", testInvalidComment),
         ("testValidComment", testValidComment),
     ]

@@ -289,4 +289,126 @@ final class IgnoreNodeTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
+
+  func testIgnoreWholeFile() {
+    let input =
+      """
+      // swift-format-ignore-file
+      import Zoo
+      import Aoo
+      import foo
+
+          struct Foo {
+            private var baz: Bool {
+                return foo +
+                 bar + // poorly placed comment
+                  false
+            }
+
+            var a = true    // line comment
+                            // aligned line comment
+            var b = false  // correct trailing comment
+
+      var c = 0 +
+          1
+          + (2 + 3)
+      }
+
+            class Bar
+      {
+        var bazzle = 0 }
+      """
+
+    let expected =
+      """
+      // swift-format-ignore-file
+      import Zoo
+      import Aoo
+      import foo
+
+          struct Foo {
+            private var baz: Bool {
+                return foo +
+                 bar + // poorly placed comment
+                  false
+            }
+
+            var a = true    // line comment
+                            // aligned line comment
+            var b = false  // correct trailing comment
+
+      var c = 0 +
+          1
+          + (2 + 3)
+      }
+
+            class Bar
+      {
+        var bazzle = 0 }
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+  }
+
+  func testIgnoreWholeFileInNestedNode() {
+    let input =
+      """
+      import Zoo
+      import Aoo
+      import foo
+
+      // swift-format-ignore-file
+          struct Foo {
+            private var baz: Bool {
+                return foo +
+                 bar + // poorly placed comment
+                  false
+            }
+
+            var a = true    // line comment
+                            // aligned line comment
+            var b = false  // correct trailing comment
+
+      var c = 0 +
+          1
+          + (2 + 3)
+      }
+
+            class Bar
+      {
+      // swift-format-ignore-file
+        var bazzle = 0 }
+      """
+
+    let expected =
+      """
+      import Zoo
+      import Aoo
+      import foo
+
+      // swift-format-ignore-file
+      struct Foo {
+        private var baz: Bool {
+          return foo + bar  // poorly placed comment
+            + false
+        }
+
+        var a = true  // line comment
+        // aligned line comment
+        var b = false  // correct trailing comment
+
+        var c =
+          0 + 1
+          + (2 + 3)
+      }
+
+      class Bar {
+        // swift-format-ignore-file
+        var bazzle = 0
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+  }
 }

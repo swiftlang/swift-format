@@ -22,6 +22,11 @@ import SwiftSyntax
 ///   2. |  let a = 123
 ///   Ignores all rules for line 2.
 ///
+///   1. |  // swift-format-ignore-file
+///   2. |  let a = 123
+///   3. | class Foo { }
+///   Ignores all rules for an entire file (lines 2-3).
+///
 ///   1. |  // swift-format-ignore: RuleName
 ///   2. |  let a = 123
 ///   Ignores `RuleName` for line 2.
@@ -108,6 +113,12 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
   /// Rule ignore regex object.
   private let ignoreRegex: NSRegularExpression
 
+  /// Regex pattern to match an ignore comment that applies to an entire file.
+  private let ignoreFilePattern = #"^\s*\/\/\s*swift-format-ignore-file$"#
+
+  /// Rule ignore regex object.
+  private let ignoreFileRegex: NSRegularExpression
+
   /// Stores the source ranges in which all rules are ignored.
   var allRulesIgnoredRanges: [SourceRange] = []
 
@@ -116,11 +127,35 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
 
   init(sourceLocationConverter: SourceLocationConverter) {
     ignoreRegex = try! NSRegularExpression(pattern: ignorePattern, options: [])
+    ignoreFileRegex = try! NSRegularExpression(pattern: ignoreFilePattern, options: [])
 
     self.sourceLocationConverter = sourceLocationConverter
   }
 
   // MARK: - Syntax Visitation Methods
+
+  override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
+    guard let firstToken = node.firstToken else {
+      return .visitChildren
+    }
+    let comments = loneLineComments(in: firstToken.leadingTrivia, isFirstToken: true)
+    var foundIgnoreFileComment = false
+    for comment in comments {
+      let range = NSRange(comment.startIndex..<comment.endIndex, in: comment)
+      if ignoreFileRegex.firstMatch(in: comment, options: [], range: range) != nil {
+        foundIgnoreFileComment = true
+        break
+      }
+    }
+    guard foundIgnoreFileComment else {
+      return .visitChildren
+    }
+
+    let sourceRange = node.sourceRange(
+      converter: sourceLocationConverter, afterLeadingTrivia: false, afterTrailingTrivia: true)
+    allRulesIgnoredRanges.append(sourceRange)
+    return .skipChildren
+  }
 
   override func visit(_ node: CodeBlockItemSyntax) -> SyntaxVisitorContinueKind {
     guard let firstToken = node.firstToken else {

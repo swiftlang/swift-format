@@ -1143,6 +1143,10 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
+    if shouldFormatterIgnore(file: node) {
+      appendFormatterIgnored(node: Syntax(node))
+      return .skipChildren
+    }
     after(node.eofToken, tokens: .break(.same, newlines: .soft))
     return .visitChildren
   }
@@ -3191,6 +3195,13 @@ class CommentMovingRewriter: SyntaxRewriter {
   /// Map of tokens to alternate trivia to use as the token's leading trivia.
   var rewriteTokenTriviaMap: [TokenSyntax: Trivia] = [:]
 
+  override func visit(_ node: SourceFileSyntax) -> Syntax {
+    if shouldFormatterIgnore(file: node) {
+      return Syntax(node)
+    }
+    return super.visit(node)
+  }
+
   override func visit(_ node: CodeBlockItemSyntax) -> Syntax {
     if shouldFormatterIgnore(node: Syntax(node)) {
       return Syntax(node)
@@ -3280,14 +3291,18 @@ extension TriviaPiece {
 
 /// Returns whether the given trivia includes a directive to ignore formatting for the next node.
 ///
-/// - Parameter trivia: Leading trivia for a node that the formatter supports ignoring.
-fileprivate func isFormatterIgnorePresent(inTrivia trivia: Trivia) -> Bool {
+/// - Parameters:
+///   - trivia: Leading trivia for a node that the formatter supports ignoring.
+///   - isWholeFile: Whether to search for a whole-file ignore directive or per node ignore.
+/// - Returns: Whether the trivia contains the specified type of ignore directive.
+fileprivate func isFormatterIgnorePresent(inTrivia trivia: Trivia, isWholeFile: Bool) -> Bool {
   func isFormatterIgnore(in commentText: String, prefix: String, suffix: String) -> Bool {
     let trimmed =
       commentText.dropFirst(prefix.count)
         .dropLast(suffix.count)
         .trimmingCharacters(in: .whitespaces)
-    return trimmed == "swift-format-ignore"
+    let pattern = isWholeFile ? "swift-format-ignore-file" : "swift-format-ignore"
+    return trimmed == pattern
   }
 
   for piece in trivia {
@@ -3317,7 +3332,19 @@ fileprivate func shouldFormatterIgnore(node: Syntax) -> Bool {
   // Regardless of the level of nesting, if the ignore directive is present on the first token
   // contained within the node then the entire node is eligible for ignoring.
   if let firstTrivia = node.firstToken?.leadingTrivia {
-    return isFormatterIgnorePresent(inTrivia: firstTrivia)
+    return isFormatterIgnorePresent(inTrivia: firstTrivia, isWholeFile: false)
+  }
+  return false
+}
+
+/// Returns whether the formatter should ignore the given file by printing it without changing the
+/// any if its nodes' internal text representation (i.e. print all text inside of the file as it was
+/// in the original source).
+///
+/// - Parameter file: The root syntax node for a source file.
+fileprivate func shouldFormatterIgnore(file: SourceFileSyntax) -> Bool {
+  if let firstTrivia = file.firstToken?.leadingTrivia {
+    return isFormatterIgnorePresent(inTrivia: firstTrivia, isWholeFile: true)
   }
   return false
 }

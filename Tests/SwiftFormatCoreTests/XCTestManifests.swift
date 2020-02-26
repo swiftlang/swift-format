@@ -6,6 +6,8 @@ extension RuleMaskTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__RuleMaskTests = [
+        ("testAllRulesWholeFileIgnore", testAllRulesWholeFileIgnore),
+        ("testAllRulesWholeFileIgnoreNestedInNode", testAllRulesWholeFileIgnoreNestedInNode),
         ("testDirectiveWithRulesList", testDirectiveWithRulesList),
         ("testDuplicateNested", testDuplicateNested),
         ("testIgnoreTwoRules", testIgnoreTwoRules),
