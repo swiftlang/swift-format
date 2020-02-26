@@ -18,6 +18,10 @@ extension ModifierListSyntax {
     return contains { $0.name.text == modifier }
   }
 
+  func has(modifier: TokenKind) -> Bool {
+    return contains { $0.name.tokenKind == modifier }
+  }
+
   /// Returns the declaration's access level modifier, if present.
   var accessLevelModifier: DeclModifierSyntax? {
     for modifier in self {

@@ -13,23 +13,24 @@
 import SwiftFormatCore
 import SwiftSyntax
 
-/// Declarations at file scope should be declared `fileprivate`, not `private`.
+/// Declarations at file scope with effective private access should be consistently declared as
+/// either `fileprivate` or `private`, determined by configuration.
 ///
-/// Using `private` at file scope actually gives the declaration `fileprivate` visibility, so using
-/// `fileprivate` explicitly is a better indicator of intent.
+/// Lint: If a file-scoped declaration has formal access opposite to the desired access level in the
+///       formatter's configuration, a lint error is raised.
 ///
-/// Lint: If a file-scoped declaration has `private` visibility, a lint error is raised.
-///
-/// Format: File-scoped declarations that have `private` visibility will have their visibility
-///         changed to `fileprivate`.
-public final class FileprivateAtFileScope: SyntaxFormatRule {
+/// Format: File-scoped declarations that have formal access opposite to the desired access level in
+///         the formatter's configuration will have their access level changed.
+public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
   public override func visit(_ node: SourceFileSyntax) -> Syntax {
     let newStatements = rewrittenCodeBlockItems(node.statements)
     return Syntax(node.withStatements(newStatements))
   }
 
   /// Returns a list of code block items equivalent to the given list, but where any file-scoped
-  /// declarations have had their `private` modifier replaced by `fileprivate` if present.
+  /// declarations with effective private access have had their formal access level rewritten, if
+  /// necessary, to be either `private` or `fileprivate`, as determined by the formatter
+  /// configuration.
   ///
   /// - Parameter codeBlockItems: The list of code block items to rewrite.
   /// - Returns: A new `CodeBlockItemListSyntax` that has possibly been rewritten.
@@ -100,7 +101,9 @@ public final class FileprivateAtFileScope: SyntaxFormatRule {
   }
 
   /// Returns a new `IfConfigDeclSyntax` equivalent to the given node, but where any file-scoped
-  /// declarations have had their `private` modifier replaced by `fileprivate` if present.
+  /// declarations with effective private access have had their formal access level rewritten, if
+  /// necessary, to be either `private` or `fileprivate`, as determined by the formatter
+  /// configuration.
   ///
   /// - Parameter ifConfigDecl: The `IfConfigDeclSyntax` to rewrite.
   /// - Returns: A new `IfConfigDeclSyntax` that has possibly been rewritten.
@@ -119,8 +122,8 @@ public final class FileprivateAtFileScope: SyntaxFormatRule {
   /// Returns a rewritten version of the given declaration if its modifier list contains `private`
   /// that contains `fileprivate` instead.
   ///
-  /// If the modifier list does not contain `private`, the original declaration is returned
-  /// unchanged.
+  /// If the modifier list is not inconsistent with the configured access level, the original
+  /// declaration is returned unchanged.
   ///
   /// - Parameters:
   ///   - decl: The declaration to possibly rewrite.
@@ -133,15 +136,30 @@ public final class FileprivateAtFileScope: SyntaxFormatRule {
     modifiers: ModifierListSyntax?,
     factory: (ModifierListSyntax?) -> DeclType
   ) -> DeclType {
-    guard let modifiers = modifiers, modifiers.has(modifier: "private") else {
+    let invalidAccess: TokenKind
+    let validAccess: TokenKind
+    let diagnostic: Diagnostic.Message
+
+    switch context.configuration.fileScopedDeclarationPrivacy.accessLevel {
+    case .private:
+      invalidAccess = .fileprivateKeyword
+      validAccess = .privateKeyword
+      diagnostic = .replaceFileprivateWithPrivate
+    case .fileprivate:
+      invalidAccess = .privateKeyword
+      validAccess = .fileprivateKeyword
+      diagnostic = .replacePrivateWithFileprivate
+    }
+
+    guard let modifiers = modifiers, modifiers.has(modifier: invalidAccess) else {
       return decl
     }
 
     let newModifiers = modifiers.map { modifier -> DeclModifierSyntax in
       let name = modifier.name
-      if name.tokenKind == .privateKeyword {
-        diagnose(.replacePrivateWithFileprivate, on: name)
-        return modifier.withName(name.withKind(.fileprivateKeyword))
+      if name.tokenKind == invalidAccess {
+        diagnose(diagnostic, on: name)
+        return modifier.withName(name.withKind(validAccess))
       }
       return modifier
     }
@@ -152,4 +170,7 @@ public final class FileprivateAtFileScope: SyntaxFormatRule {
 extension Diagnostic.Message {
   public static let replacePrivateWithFileprivate =
     Diagnostic.Message(.warning, "replace 'private' with 'fileprivate' on file-scoped declarations")
+
+  public static let replaceFileprivateWithPrivate =
+    Diagnostic.Message(.warning, "replace 'fileprivate' with 'private' on file-scoped declarations")
 }
