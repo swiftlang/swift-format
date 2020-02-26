@@ -6,6 +6,22 @@ technical limitations of the formatter's implementation. When an ignore comment
 is present, the next ["node"](#understanding-nodes) in the source's AST
 representation is ignored by the formatter.
 
+## Ignore A File
+
+In the event that an entire file cannot be formatted, add a comment that contains 
+`swift-format-ignore-file` at the top of the file and the formatter will leave 
+the file completely unchanged.
+
+```swift
+// swift-format-ignore-file
+import Zoo
+import Arrays
+
+struct Foo {
+  func foo() { bar();baz(); }
+}
+```
+
 ## Ignoring Formatting (aka indentation, line breaks, line length, etc.)
 
 The formatter applies line length to add line breaks and indentation throughout
