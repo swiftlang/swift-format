@@ -94,7 +94,7 @@ struct SwiftFormatCommand: ParsableCommand {
       throw CleanExit.message("0.0.1")
     }
     
-    if inPlace && (mode == .format || paths.isEmpty) {
+    if inPlace && (mode != .format || paths.isEmpty) {
       throw ValidationError("'--in-place' is only valid when formatting files")
     }
 

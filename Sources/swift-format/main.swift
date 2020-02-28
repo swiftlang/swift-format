@@ -19,21 +19,22 @@ import TSCBasic
 
 extension SwiftFormatCommand {
   func run() throws {
+    let diagnosticEngine = makeDiagnosticEngine()
     switch mode {
     case .format:
       if paths.isEmpty {
         let configuration = try loadConfiguration(
           forSwiftFile: nil, configFilePath: configurationPath)
-        try formatMain(
+        formatMain(
           configuration: configuration, sourceFile: FileHandle.standardInput,
           assumingFilename: assumeFilename, inPlace: false,
-          debugOptions: debugOptions)
+          debugOptions: debugOptions, diagnosticEngine: diagnosticEngine)
       } else {
-        try processSources(from: paths, configurationPath: configurationPath) {
+        try processSources(from: paths, configurationPath: configurationPath, diagnosticEngine: diagnosticEngine) {
           (sourceFile, path, configuration) in
-          try formatMain(
+          formatMain(
             configuration: configuration, sourceFile: sourceFile, assumingFilename: path,
-            inPlace: inPlace, debugOptions: debugOptions)
+            inPlace: inPlace, debugOptions: debugOptions, diagnosticEngine: diagnosticEngine)
         }
       }
       
@@ -41,20 +42,26 @@ extension SwiftFormatCommand {
       if paths.isEmpty {
         let configuration = try loadConfiguration(
           forSwiftFile: nil, configFilePath: configurationPath)
-        try lintMain(
+        lintMain(
             configuration: configuration, sourceFile: FileHandle.standardInput,
-            assumingFilename: assumeFilename, debugOptions: debugOptions)
+            assumingFilename: assumeFilename, debugOptions: debugOptions, diagnosticEngine: diagnosticEngine)
       } else {
-        try processSources(from: paths, configurationPath: configurationPath) {
+        try processSources(from: paths, configurationPath: configurationPath, diagnosticEngine: diagnosticEngine) {
           (sourceFile, path, configuration) in
-          try lintMain(
+          lintMain(
             configuration: configuration, sourceFile: sourceFile, assumingFilename: path,
-            debugOptions: debugOptions)
+            debugOptions: debugOptions, diagnosticEngine: diagnosticEngine)
         }
       }
       
     case .dumpConfiguration:
       try dumpDefaultConfiguration()
+    }
+    
+    // If any of the operations have generated diagnostics, throw an error
+    // to exit with the error status code.
+    if !diagnosticEngine.diagnostics.isEmpty {
+      throw FormatError.exitWithDiagnosticErrors
     }
   }
 }
@@ -68,14 +75,17 @@ extension SwiftFormatCommand {
 ///   - transform: A closure that performs a transformation on a specific source file.
 private func processSources(
   from paths: [String], configurationPath: String?,
-  transform: (FileHandle, String, Configuration) throws -> Void
+  diagnosticEngine: DiagnosticEngine,
+  transform: (FileHandle, String, Configuration) -> Void
 ) throws {
   for path in FileIterator(paths: paths) {
     guard let sourceFile = FileHandle(forReadingAtPath: path) else {
-      throw FormatError(message: "Unable to create a file handle for source from \(path).")
+      diagnosticEngine.diagnose(
+        Diagnostic.Message(.error, "Unable to create a file handle for source from \(path)."))
+      return
     }
     let configuration = try loadConfiguration(forSwiftFile: path, configFilePath: configurationPath)
-    try transform(sourceFile, path, configuration)
+    transform(sourceFile, path, configuration)
   }
 }
 
