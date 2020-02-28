@@ -33,6 +33,7 @@ build `swift-format` using the following commands:
 
 ```
 git clone -b swift-5.1-branch https://github.com/apple/swift-format.git
+cd swift-format
 swift build
 ```
 
