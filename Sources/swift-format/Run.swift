@@ -76,6 +76,9 @@ func formatMain(
   configuration: Configuration, sourceFile: FileHandle, assumingFilename: String?, inPlace: Bool,
   debugOptions: DebugOptions, diagnosticEngine: DiagnosticEngine
 ) {
+  // Even though `diagnosticEngine` is defined, it's use is reserved for fatal messages. Pass nil
+  // to the formatter to suppress other messages since they will be fixed or can't be automatically
+  // fixed anyway.
   let formatter = SwiftFormatter(configuration: configuration, diagnosticEngine: nil)
   formatter.debugOptions = debugOptions
   let assumingFileURL = URL(fileURLWithPath: assumingFilename ?? "<stdin>")
