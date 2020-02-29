@@ -76,7 +76,7 @@ func formatMain(
   configuration: Configuration, sourceFile: FileHandle, assumingFilename: String?, inPlace: Bool,
   debugOptions: DebugOptions, diagnosticEngine: DiagnosticEngine
 ) {
-  let formatter = SwiftFormatter(configuration: configuration, diagnosticEngine: diagnosticEngine)
+  let formatter = SwiftFormatter(configuration: configuration, diagnosticEngine: nil)
   formatter.debugOptions = debugOptions
   let assumingFileURL = URL(fileURLWithPath: assumingFilename ?? "<stdin>")
 
