@@ -98,7 +98,7 @@ There are five kinds of breaks:
   wrap (without regard to the break's length) and the indentation level will be
   reset to the base indentation level. This is used, for example, to reset the
   indentation level at the end of a statement (which may have been wrapped as
-  a continution) or to force the `{` of a control flow statement onto its own
+  a continuation) or to force the `{` of a control flow statement onto its own
   line when the statement was wrapped.
 
 #### Open
