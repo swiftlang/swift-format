@@ -16,6 +16,7 @@ import SwiftFormatConfiguration
 import SwiftFormatCore
 import SwiftSyntax
 import TSCBasic
+import ArgumentParser
 
 extension SwiftFormatCommand {
   func run() throws {
@@ -58,10 +59,10 @@ extension SwiftFormatCommand {
       try dumpDefaultConfiguration()
     }
     
-    // If any of the operations have generated diagnostics, throw an error
-    // to exit with the error status code.
+    // If any of the operations have generated diagnostics, exit with the
+    // error status code.
     if !diagnosticEngine.diagnostics.isEmpty {
-      throw FormatError.exitWithDiagnosticErrors
+      throw ExitCode.failure
     }
   }
 }
