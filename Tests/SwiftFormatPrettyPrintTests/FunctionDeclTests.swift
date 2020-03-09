@@ -1058,7 +1058,7 @@ final class FunctionDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 14)
   }
 
-  func testIgnoresDiscretionaryLineBreakAfterColonAndInout() {
+  func testDiscretionaryLineBreakAfterColonAndInout() {
     let input =
       """
       func foo(
@@ -1075,6 +1075,18 @@ final class FunctionDeclTests: PrettyPrintTestCase {
         reallyLongLabel
           reallyLongArg: E
       ) {}
+      func foo(
+        a: Very.Deeply.Nested.InnerMember,
+        b:
+          Also.Deeply.Nested.InnerMember,
+      ) {}
+      func foo(
+        cmp: @escaping (R) -> ()
+      ) {}
+      func foo(
+        cmp:
+          @escaping (R) -> ()
+      ) {}
       func foo<
         A:
           ReallyLongType,
@@ -1089,15 +1101,35 @@ final class FunctionDeclTests: PrettyPrintTestCase {
       func foo(
         a:
           ReallyLongTypeName,
-        b: ShortType,
-        c: inout C,
-        labeled d: D,
+        b:
+          ShortType,
+        c:
+          inout C,
+        labeled d:
+          D,
         reallyLongLabel
           reallyLongArg: E
       ) {}
+      func foo(
+        a: Very.Deeply.Nested
+          .InnerMember,
+        b:
+          Also.Deeply.Nested
+          .InnerMember,
+      ) {}
+      func foo(
+        cmp: @escaping (R) ->
+          ()
+      ) {}
+      func foo(
+        cmp:
+          @escaping (R) -> ()
+      ) {}
       func foo<
-        A: ReallyLongType,
-        B: ShortType
+        A:
+          ReallyLongType,
+        B:
+          ShortType
       >(a: A, b: B) {}
 
       """

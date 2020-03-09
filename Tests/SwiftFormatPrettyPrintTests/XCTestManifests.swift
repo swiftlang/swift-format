@@ -182,8 +182,8 @@ extension DictionaryDeclTests {
     // to regenerate.
     static let __allTests__DictionaryDeclTests = [
         ("testBasicDictionaries", testBasicDictionaries),
+        ("testDiscretionaryNewlineAfterColon", testDiscretionaryNewlineAfterColon),
         ("testGroupsTrailingComma", testGroupsTrailingComma),
-        ("testIgnoresDiscretionaryNewlineAfterColon", testIgnoresDiscretionaryNewlineAfterColon),
         ("testNoTrailingCommasInTypes", testNoTrailingCommasInTypes),
         ("testTrailingCommaDiagnostics", testTrailingCommaDiagnostics),
         ("testWhitespaceOnlyDoesNotChangeTrailingComma", testWhitespaceOnlyDoesNotChangeTrailingComma),
@@ -270,10 +270,10 @@ extension FunctionCallTests {
         ("testArgumentStartsWithOpenDelimiter", testArgumentStartsWithOpenDelimiter),
         ("testBasicFunctionCalls_noPackArguments", testBasicFunctionCalls_noPackArguments),
         ("testBasicFunctionCalls_packArguments", testBasicFunctionCalls_packArguments),
+        ("testDiscretionaryLineBreakAfterColon", testDiscretionaryLineBreakAfterColon),
         ("testDiscretionaryLineBreakBeforeClosingParenthesis", testDiscretionaryLineBreakBeforeClosingParenthesis),
         ("testDiscretionaryLineBreaksAreSelfCorrecting", testDiscretionaryLineBreaksAreSelfCorrecting),
         ("testGroupsTrailingComma", testGroupsTrailingComma),
-        ("testIgnoresDiscretionaryLineBreakAfterColon", testIgnoresDiscretionaryLineBreakAfterColon),
         ("testNestedFunctionCallExprSequences", testNestedFunctionCallExprSequences),
         ("testSingleUnlabeledArgumentWithDelimiters", testSingleUnlabeledArgumentWithDelimiters),
     ]
@@ -294,6 +294,7 @@ extension FunctionDeclTests {
         ("testBreaksBeforeOrInsideOutputWithAttributes_prioritizingKeepingOutputTogether", testBreaksBeforeOrInsideOutputWithAttributes_prioritizingKeepingOutputTogether),
         ("testBreaksBeforeOrInsideOutputWithWhereClause", testBreaksBeforeOrInsideOutputWithWhereClause),
         ("testBreaksBeforeOrInsideOutputWithWhereClause_prioritizingKeepingOutputTogether", testBreaksBeforeOrInsideOutputWithWhereClause_prioritizingKeepingOutputTogether),
+        ("testDiscretionaryLineBreakAfterColonAndInout", testDiscretionaryLineBreakAfterColonAndInout),
         ("testDoesNotBreakInsideEmptyParens", testDoesNotBreakInsideEmptyParens),
         ("testDoesNotCollapseFunctionParameterAttributes", testDoesNotCollapseFunctionParameterAttributes),
         ("testDoesNotCollapseStackedFunctionParameterAttributes", testDoesNotCollapseStackedFunctionParameterAttributes),
@@ -308,7 +309,6 @@ extension FunctionDeclTests {
         ("testFunctionWhereClause", testFunctionWhereClause),
         ("testFunctionWhereClause_lineBreakBeforeEachGenericRequirement", testFunctionWhereClause_lineBreakBeforeEachGenericRequirement),
         ("testFunctionWithDefer", testFunctionWithDefer),
-        ("testIgnoresDiscretionaryLineBreakAfterColonAndInout", testIgnoresDiscretionaryLineBreakAfterColonAndInout),
         ("testOperatorOverloads", testOperatorOverloads),
         ("testRemovesLineBreakBeforeOpenBraceUnlessAbsolutelyNecessary", testRemovesLineBreakBeforeOpenBraceUnlessAbsolutelyNecessary),
     ]
@@ -723,8 +723,8 @@ extension TupleDeclTests {
     // to regenerate.
     static let __allTests__TupleDeclTests = [
         ("testBasicTuples", testBasicTuples),
+        ("testDiscretionaryNewlineAfterColon", testDiscretionaryNewlineAfterColon),
         ("testGroupsTrailingComma", testGroupsTrailingComma),
-        ("testIgnoresDiscretionaryNewlineAfterColon", testIgnoresDiscretionaryNewlineAfterColon),
         ("testLabeledTuples", testLabeledTuples),
     ]
 }

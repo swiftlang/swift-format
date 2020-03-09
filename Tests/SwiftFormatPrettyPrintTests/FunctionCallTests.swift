@@ -226,23 +226,32 @@ final class FunctionCallTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
   }
 
-  func testIgnoresDiscretionaryLineBreakAfterColon() {
+  func testDiscretionaryLineBreakAfterColon() {
     let input =
       """
       myFunc(
         a:
           foo,
         b:
-          bar + baz + quux
+          bar + baz + qux,
+        c: Very.Deeply.Nested.Member,
+        d:
+          Very.Deeply.Nested.Member
       )
       """
 
     let expected =
       """
       myFunc(
-        a: foo,
-        b: bar + baz
-          + quux
+        a:
+          foo,
+        b:
+          bar + baz + qux,
+        c: Very.Deeply
+          .Nested.Member,
+        d:
+          Very.Deeply
+          .Nested.Member
       )
 
       """
