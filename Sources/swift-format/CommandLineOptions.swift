@@ -50,6 +50,7 @@ struct SwiftFormatCommand: ParsableCommand {
   ///
   /// If not specified, the tool will be run in format mode.
   @Option(
+    name: .shortAndLong,
     default: .format,
     help: "The mode to run swift-format in. Either 'format', 'lint', or 'dump-configuration'.")
   var mode: ToolMode
@@ -74,7 +75,7 @@ struct SwiftFormatCommand: ParsableCommand {
   @Argument(help: "One or more input filenames")
   var paths: [String]
   
-  @Flag(help: "Print the version and exit")
+  @Flag(name: .shortAndLong, help: "Print the version and exit")
   var version: Bool
   
   @Flag(help: .hidden) var debugDisablePrettyPrint: Bool
