@@ -46,7 +46,7 @@ final class TupleDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
 
-  func testIgnoresDiscretionaryNewlineAfterColon() {
+  func testDiscretionaryNewlineAfterColon() {
     let input =
       """
       let a = (
@@ -58,7 +58,10 @@ final class TupleDeclTests: PrettyPrintTestCase {
         shortKey:
           value,
         b:
-          c
+          c,
+        label: Deeply.Nested.InnerMember,
+        label2:
+          Deeply.Nested.InnerMember
       )
       """
 
@@ -70,8 +73,15 @@ final class TupleDeclTests: PrettyPrintTestCase {
         b: c
       )
       let a = (
-        shortKey: value,
-        b: c
+        shortKey:
+          value,
+        b:
+          c,
+        label: Deeply.Nested
+          .InnerMember,
+        label2:
+          Deeply.Nested
+          .InnerMember
       )
 
       """

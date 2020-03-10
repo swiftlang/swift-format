@@ -95,7 +95,7 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
     XCTAssertDiagnosed(.addTrailingComma, line: 4, column: 17)
   }
 
-  func testIgnoresDiscretionaryNewlineAfterColon() {
+  func testDiscretionaryNewlineAfterColon() {
     let input =
       """
       let a = [
@@ -105,6 +105,13 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
       let a = [
         "shortKey":
           value
+      ]
+      let a = [
+        "shortKey": Very.Deeply.Nested.Member
+      ]
+      let a = [
+        "shortKey":
+          Very.Deeply.Nested.Member
       ]
       let a:
         [ReallyLongKeySoTheValueWillWrap:
@@ -121,13 +128,25 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
           value
       ]
       let a = [
-        "shortKey": value
+        "shortKey":
+          value
+      ]
+      let a = [
+        "shortKey": Very
+          .Deeply.Nested
+          .Member
+      ]
+      let a = [
+        "shortKey":
+          Very.Deeply
+          .Nested.Member
       ]
       let a:
         [ReallyLongKeySoTheValueWillWrap:
           Value]
       let a:
-        [ShortKey: Value]
+        [ShortKey:
+          Value]
 
       """
 

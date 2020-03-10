@@ -697,7 +697,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   /// - Parameter node: The tuple expression element to be arranged.
   private func arrangeAsTupleExprElement(_ node: TupleExprElementSyntax) {
     before(node.firstToken, tokens: .open)
-    after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
+    after(node.colon, tokens: .break)
     after(node.lastToken, tokens: .close)
     if let trailingComma = node.trailingComma {
       closingDelimiterTokens.insert(trailingComma)
@@ -764,13 +764,13 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: DictionaryTypeSyntax) -> SyntaxVisitorContinueKind {
-    after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
+    after(node.colon, tokens: .break)
     return .visitChildren
   }
 
   override func visit(_ node: DictionaryElementSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
-    after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
+    after(node.colon, tokens: .break)
     after(node.lastToken, tokens: .close)
     if let trailingComma = node.trailingComma {
       closingDelimiterTokens.insert(trailingComma)
@@ -869,10 +869,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // If we have an open delimiter following the colon, use a space instead of a continuation
     // break so that we don't awkwardly shift the delimiter down and indent it further if it
     // wraps.
-    let tokenAfterColon: Token =
-      startsWithOpenDelimiter(Syntax(node.expression))
-      ? .space
-      : .break(.continue, newlines: .elective(ignoresDiscretionary: true))
+    let tokenAfterColon: Token = startsWithOpenDelimiter(Syntax(node.expression)) ? .space : .break
 
     after(node.colon, tokens: tokenAfterColon)
 
@@ -1049,7 +1046,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     before(
       node.secondName,
       tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
-    after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
+    after(node.colon, tokens: .break)
 
     if let trailingComma = node.trailingComma {
       after(trailingComma, tokens: .close, .break(.same))
@@ -1274,7 +1271,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     before(
       node.secondName,
       tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
-    after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
+    after(node.colon, tokens: .break)
 
     if let trailingComma = node.trailingComma {
       after(trailingComma, tokens: .close, .break(.same))
@@ -1788,7 +1785,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: GenericParameterSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
-    after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
+    after(node.colon, tokens: .break)
     if let trailingComma = node.trailingComma {
       after(trailingComma, tokens: .close, .break(.same))
     } else {
