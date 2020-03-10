@@ -639,6 +639,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   // TODO: - Other nodes (yet to be organized)
 
   override func visit(_ node: DeclNameArgumentsSyntax) -> SyntaxVisitorContinueKind {
+    after(node.leftParen, tokens: .break(.open, size: 0), .open(argumentListConsistency()))
+    before(node.rightParen, tokens: .break(.close(mustBreak: false), size: 0), .close)
+    insertTokens(.break(.same, size: 0), betweenElementsOf: node.arguments)
     return .visitChildren
   }
 
@@ -1182,6 +1185,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: ObjcSelectorExprSyntax) -> SyntaxVisitorContinueKind {
+    after(node.leftParen, tokens: .break(.open, size: 0), .open)
+    before(node.rightParen, tokens: .break(.close(mustBreak: false), size: 0), .close)
     return .visitChildren
   }
 
