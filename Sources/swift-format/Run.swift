@@ -30,7 +30,7 @@ import TSCBasic
 func lintMain(
   configuration: Configuration, sourceFile: FileHandle, assumingFilename: String?,
   debugOptions: DebugOptions, diagnosticEngine: DiagnosticEngine
-) -> Int {
+) {
   let linter = SwiftLinter(configuration: configuration, diagnosticEngine: diagnosticEngine)
   linter.debugOptions = debugOptions
   let assumingFileURL = URL(fileURLWithPath: assumingFilename ?? "<stdin>")
@@ -38,7 +38,7 @@ func lintMain(
   guard let source = readSource(from: sourceFile) else {
     diagnosticEngine.diagnose(
       Diagnostic.Message(.error, "Unable to read source for linting from \(assumingFileURL.path)."))
-    return 1
+    return
   }
 
   do {
@@ -47,20 +47,19 @@ func lintMain(
     let path = assumingFileURL.path
     diagnosticEngine.diagnose(
       Diagnostic.Message(.error, "Unable to lint \(path): file is not readable or does not exist."))
-    return 1
+    return
   } catch SwiftFormatError.fileContainsInvalidSyntax(let position) {
     let path = assumingFileURL.path
     let location = SourceLocationConverter(file: path, source: source).location(for: position)
     diagnosticEngine.diagnose(
       Diagnostic.Message(.error, "file contains invalid or unrecognized Swift syntax."),
       location: location)
-    return 1
+    return
   } catch {
     let path = assumingFileURL.path
     diagnosticEngine.diagnose(Diagnostic.Message(.error, "Unable to lint \(path): \(error)"))
-    exit(1)
+    return
   }
-  return diagnosticEngine.diagnostics.isEmpty ? 0 : 1
 }
 
 /// Runs the formatting pipeline over the provided source file.
@@ -76,7 +75,7 @@ func lintMain(
 func formatMain(
   configuration: Configuration, sourceFile: FileHandle, assumingFilename: String?, inPlace: Bool,
   debugOptions: DebugOptions, diagnosticEngine: DiagnosticEngine
-) -> Int {
+) {
   // Even though `diagnosticEngine` is defined, it's use is reserved for fatal messages. Pass nil
   // to the formatter to suppress other messages since they will be fixed or can't be automatically
   // fixed anyway.
@@ -88,7 +87,7 @@ func formatMain(
     diagnosticEngine.diagnose(
       Diagnostic.Message(
         .error, "Unable to read source for formatting from \(assumingFileURL.path)."))
-    return 1
+    return
   }
 
   do {
@@ -110,20 +109,19 @@ func formatMain(
     diagnosticEngine.diagnose(
       Diagnostic.Message(
         .error, "Unable to format \(path): file is not readable or does not exist."))
-    return 1
+    return
   } catch SwiftFormatError.fileContainsInvalidSyntax(let position) {
     let path = assumingFileURL.path
     let location = SourceLocationConverter(file: path, source: source).location(for: position)
     diagnosticEngine.diagnose(
       Diagnostic.Message(.error, "file contains invalid or unrecognized Swift syntax."),
       location: location)
-    return 1
+    return
   } catch {
     let path = assumingFileURL.path
     diagnosticEngine.diagnose(Diagnostic.Message(.error, "Unable to format \(path): \(error)"))
-    exit(1)
+    return
   }
-  return 0
 }
 
 /// Reads from the given file handle until EOF is reached, then returns the contents as a UTF8
