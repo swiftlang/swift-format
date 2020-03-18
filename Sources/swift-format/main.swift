@@ -10,13 +10,13 @@
 //
 //===----------------------------------------------------------------------===//
 
+import ArgumentParser
 import Foundation
 import SwiftFormat
 import SwiftFormatConfiguration
 import SwiftFormatCore
 import SwiftSyntax
 import TSCBasic
-import ArgumentParser
 
 extension SwiftFormatCommand {
   func run() throws {
@@ -29,36 +29,44 @@ extension SwiftFormatCommand {
         formatMain(
           configuration: configuration, sourceFile: FileHandle.standardInput,
           assumingFilename: assumeFilename, inPlace: false,
+          ignoreUnparsableFiles: ignoreUnparsableFiles,
           debugOptions: debugOptions, diagnosticEngine: diagnosticEngine)
       } else {
-        try processSources(from: paths, configurationPath: configurationPath, diagnosticEngine: diagnosticEngine) {
+        try processSources(
+          from: paths, configurationPath: configurationPath, diagnosticEngine: diagnosticEngine
+        ) {
           (sourceFile, path, configuration) in
           formatMain(
             configuration: configuration, sourceFile: sourceFile, assumingFilename: path,
-            inPlace: inPlace, debugOptions: debugOptions, diagnosticEngine: diagnosticEngine)
+            inPlace: inPlace, ignoreUnparsableFiles: ignoreUnparsableFiles,
+            debugOptions: debugOptions, diagnosticEngine: diagnosticEngine)
         }
       }
-      
+
     case .lint:
       if paths.isEmpty {
         let configuration = try loadConfiguration(
           forSwiftFile: nil, configFilePath: configurationPath)
         lintMain(
-            configuration: configuration, sourceFile: FileHandle.standardInput,
-            assumingFilename: assumeFilename, debugOptions: debugOptions, diagnosticEngine: diagnosticEngine)
+          configuration: configuration, sourceFile: FileHandle.standardInput,
+          assumingFilename: assumeFilename, ignoreUnparsableFiles: ignoreUnparsableFiles,
+          debugOptions: debugOptions, diagnosticEngine: diagnosticEngine)
       } else {
-        try processSources(from: paths, configurationPath: configurationPath, diagnosticEngine: diagnosticEngine) {
+        try processSources(
+          from: paths, configurationPath: configurationPath, diagnosticEngine: diagnosticEngine
+        ) {
           (sourceFile, path, configuration) in
           lintMain(
             configuration: configuration, sourceFile: sourceFile, assumingFilename: path,
+            ignoreUnparsableFiles: ignoreUnparsableFiles,
             debugOptions: debugOptions, diagnosticEngine: diagnosticEngine)
         }
       }
-      
+
     case .dumpConfiguration:
       try dumpDefaultConfiguration()
     }
-    
+
     // If any of the operations have generated diagnostics, exit with the
     // error status code.
     if !diagnosticEngine.diagnostics.isEmpty {
@@ -140,7 +148,8 @@ private func dumpDefaultConfiguration() throws {
     guard let jsonString = String(data: data, encoding: .utf8) else {
       // This should never happen, but let's make sure we fail more gracefully than crashing, just
       // in case.
-      throw FormatError(message: "Could not dump the default configuration: the JSON was not valid UTF-8")
+      throw FormatError(
+        message: "Could not dump the default configuration: the JSON was not valid UTF-8")
     }
     print(jsonString)
   } catch {

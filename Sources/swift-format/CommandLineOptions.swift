@@ -71,6 +71,16 @@ struct SwiftFormatCommand: ParsableCommand {
     help: "Recursively run on '.swift' files in any provided directories.")
   var recursive: Bool
 
+  /// Whether unparsable files, due to syntax errors or unrecognized syntax, should be ignored or
+  /// treated as containing an error. When ignored, unparsable files are output verbatim in format
+  /// mode and no diagnostics are raised in lint mode. When not ignored, unparsable files raise a
+  /// diagnostic in both format and lint mode.
+  @Flag(help: """
+    Ignores unparsable files, disabling all diagnostics and formatting for files that contain \
+    invalid syntax.
+    """)
+  var ignoreUnparsableFiles: Bool
+
   /// The list of paths to Swift source files that should be formatted or linted.
   @Argument(help: "One or more input filenames")
   var paths: [String]

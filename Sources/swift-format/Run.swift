@@ -24,12 +24,13 @@ import TSCBasic
 ///   - configuration: The `Configuration` that contains user-specific settings.
 ///   - sourceFile: A file handle from which to read the source code to be linted.
 ///   - assumingFilename: The filename of the source file, used in diagnostic output.
+///   - ignoreUnparsableFiles: Whether or not to ignore files that contain syntax errors.
 ///   - debugOptions: The set containing any debug options that were supplied on the command line.
 ///   - diagnosticEngine: A diagnostic collector that handles diagnostic messages.
 /// - Returns: Zero if there were no lint errors, otherwise a non-zero number.
 func lintMain(
   configuration: Configuration, sourceFile: FileHandle, assumingFilename: String?,
-  debugOptions: DebugOptions, diagnosticEngine: DiagnosticEngine
+  ignoreUnparsableFiles: Bool, debugOptions: DebugOptions, diagnosticEngine: DiagnosticEngine
 ) {
   let linter = SwiftLinter(configuration: configuration, diagnosticEngine: diagnosticEngine)
   linter.debugOptions = debugOptions
@@ -49,6 +50,9 @@ func lintMain(
       Diagnostic.Message(.error, "Unable to lint \(path): file is not readable or does not exist."))
     return
   } catch SwiftFormatError.fileContainsInvalidSyntax(let position) {
+    guard !ignoreUnparsableFiles else {
+      return
+    }
     let path = assumingFileURL.path
     let location = SourceLocationConverter(file: path, source: source).location(for: position)
     diagnosticEngine.diagnose(
@@ -69,12 +73,13 @@ func lintMain(
 ///   - sourceFile: A file handle from which to read the source code to be linted.
 ///   - assumingFilename: The filename of the source file, used in diagnostic output.
 ///   - inPlace: Whether or not to overwrite the current file when formatting.
+///   - ignoreUnparsableFiles: Whether or not to ignore files that contain syntax errors.
 ///   - debugOptions: The set containing any debug options that were supplied on the command line.
 ///   - diagnosticEngine: A diagnostic collector that handles diagnostic messages.
 /// - Returns: Zero if there were no format errors, otherwise a non-zero number.
 func formatMain(
   configuration: Configuration, sourceFile: FileHandle, assumingFilename: String?, inPlace: Bool,
-  debugOptions: DebugOptions, diagnosticEngine: DiagnosticEngine
+  ignoreUnparsableFiles: Bool, debugOptions: DebugOptions, diagnosticEngine: DiagnosticEngine
 ) {
   // Even though `diagnosticEngine` is defined, it's use is reserved for fatal messages. Pass nil
   // to the formatter to suppress other messages since they will be fixed or can't be automatically
@@ -111,6 +116,15 @@ func formatMain(
         .error, "Unable to format \(path): file is not readable or does not exist."))
     return
   } catch SwiftFormatError.fileContainsInvalidSyntax(let position) {
+    guard !ignoreUnparsableFiles else {
+      guard !inPlace else {
+        // For in-place mode, nothing is expected to stdout and the file shouldn't be modified.
+        return
+      }
+      stdoutStream.write(source)
+      stdoutStream.flush()
+      return
+    }
     let path = assumingFileURL.path
     let location = SourceLocationConverter(file: path, source: source).location(for: position)
     diagnosticEngine.diagnose(
