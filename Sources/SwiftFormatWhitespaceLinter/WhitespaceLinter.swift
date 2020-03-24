@@ -14,15 +14,18 @@ import SwiftFormatConfiguration
 import SwiftFormatCore
 import SwiftSyntax
 
+private let utf8Newline = UTF8.CodeUnit(ascii: "\n")
+private let utf8Tab = UTF8.CodeUnit(ascii: "\t")
+
 /// Emits linter errors for whitespace style violations by comparing the raw text of the input Swift
 /// code with formatted text.
 public class WhitespaceLinter {
 
   /// The text of the input source code to be linted.
-  private let userText: String
+  private let userText: [UTF8.CodeUnit]
 
   /// The formatted version of `userText`.
-  private let formattedText: String
+  private let formattedText: [UTF8.CodeUnit]
 
   /// The Context object containing the DiagnosticEngine.
   private let context: Context
@@ -37,8 +40,8 @@ public class WhitespaceLinter {
   ///   - formatted: The formatted text to compare to `user`.
   ///   - context: The context object containing the DiagnosticEngine instance we wish to use.
   public init(user: String, formatted: String, context: Context) {
-    self.userText = user
-    self.formattedText = formatted
+    self.userText = Array(user.utf8)
+    self.formattedText = Array(formatted.utf8)
     self.context = context
     self.isLineTooLong = false
   }
@@ -48,7 +51,7 @@ public class WhitespaceLinter {
     var userOffset = 0
     var formOffset = 0
     var isFirstCharater = true
-    var lastChar: Character?
+    var lastChar: UTF8.CodeUnit?
 
     repeat {
       let userNext = nextCharacter(offset: userOffset, data: self.userText)
@@ -90,13 +93,12 @@ public class WhitespaceLinter {
   ///   - userWs: The user leading whitespace buffer at the current character.
   ///   - formattedWs: The formatted leading whitespace buffer at the current character.
   private func compareWhitespace(
-    userOffset: Int, formOffset: Int, isFirstCharacter: Bool, userWs: String, formattedWs: String
+    userOffset: Int, formOffset: Int, isFirstCharacter: Bool,
+    userWs: [UTF8.CodeUnit], formattedWs: [UTF8.CodeUnit]
   ) {
     // e.g. "\n" -> ["", ""], and "" -> [""]
-    let userTokens = userWs.split(
-      separator: "\n", omittingEmptySubsequences: false).map(String.init)
-    let formTokens = formattedWs.split(
-      separator: "\n", omittingEmptySubsequences: false).map(String.init)
+    let userTokens = userWs.split(separator: utf8Newline, omittingEmptySubsequences: false)
+    let formTokens = formattedWs.split(separator: utf8Newline, omittingEmptySubsequences: false)
 
     checkForLineLengthErrors(
       userOffset: userOffset,
@@ -135,7 +137,8 @@ public class WhitespaceLinter {
   ///   - user: The tokenized user whitespace buffer.
   ///   - form: The tokenized formatted whitespace buffer.
   private func checkForLineLengthErrors(
-    userOffset: Int, formOffset: Int, isFirstCharacter: Bool, user: [String], form: [String]
+    userOffset: Int, formOffset: Int, isFirstCharacter: Bool,
+    user: [ArraySlice<UTF8.CodeUnit>], form: [ArraySlice<UTF8.CodeUnit>]
   ) {
     // Only run this check at the start of a line.
     guard
@@ -164,7 +167,7 @@ public class WhitespaceLinter {
         let char = userText[index]
 
         // Count characters up to the newline.
-        if char == "\n" { break } else { userLength += 1 }
+        if char == utf8Newline { break } else { userLength += 1 }
       }
     }
 
@@ -188,7 +191,7 @@ public class WhitespaceLinter {
         let char = formattedText[index]
 
         // Count characters up to the newline.
-        if char == "\n" { break } else { formLength += 1 }
+        if char == utf8Newline { break } else { formLength += 1 }
       }
     }
 
@@ -218,7 +221,8 @@ public class WhitespaceLinter {
   ///   - user: The tokenized user whitespace buffer.
   ///   - form: The tokenized formatted whitespace buffer.
   private func checkForIndentationErrors(
-    userOffset: Int, isFirstCharacter: Bool, user: [String], form: [String]
+    userOffset: Int, isFirstCharacter: Bool,
+    user: [ArraySlice<UTF8.CodeUnit>], form: [ArraySlice<UTF8.CodeUnit>]
   ) {
     guard form.count > 1 && user.count > 1 else {
       // Ordinarily, we only look for indentation spacing following a newline. The first character
@@ -242,8 +246,8 @@ public class WhitespaceLinter {
     }
     if form.last != user.last {
       let pos = calculatePosition(offset: userOffset + offset, data: self.userText)
-      let actual = indentation(of: user.last ?? "")
-      let expected = indentation(of: form.last ?? "")
+      let actual = indentation(of: user.last ?? [])
+      let expected = indentation(of: form.last ?? [])
       diagnose(
         .indentationError(expected: expected, actual: actual),
         line: pos.line,
@@ -258,7 +262,9 @@ public class WhitespaceLinter {
   ///   - userOffset: The current character offset within the user text.
   ///   - user: The tokenized user whitespace buffer.
   ///   - form: The tokenized formatted whitespace buffer.
-  private func checkForTrailingWhitespaceErrors(userOffset: Int, user: [String], form: [String]) {
+  private func checkForTrailingWhitespaceErrors(
+    userOffset: Int, user: [ArraySlice<UTF8.CodeUnit>], form: [ArraySlice<UTF8.CodeUnit>]
+  ) {
     guard form.count > 1 && user.count > 1 else { return }
     var offset = 0
     for i in 0..<(user.count - 1) {
@@ -282,14 +288,15 @@ public class WhitespaceLinter {
   ///   - user: The tokenized user whitespace buffer.
   ///   - form: The tokenized formatted whitespace buffer.
   private func checkForSpacingErrors(
-    userOffset: Int, isFirstCharacter: Bool, user: [String], form: [String]
+    userOffset: Int, isFirstCharacter: Bool,
+    user: [ArraySlice<UTF8.CodeUnit>], form: [ArraySlice<UTF8.CodeUnit>]
   ) {
     // The spaces in front of the first character of a file are indentation and not spacing related.
     guard form.count == 1 && user.count == 1 && !isFirstCharacter else { return }
     guard form[0] != user[0] else { return }
 
     let pos = calculatePosition(offset: userOffset, data: self.userText)
-    let illegalSpacingCharacters = ["\t"]
+    let illegalSpacingCharacters: [UTF8.CodeUnit] = [utf8Tab]
     if illegalSpacingCharacters.contains(where: { user[0].contains($0) }) {
       diagnose(.spacingCharError, line: pos.line, column: pos.column, utf8Offset: 0)
     } else if form[0].count != user[0].count {
@@ -315,7 +322,9 @@ public class WhitespaceLinter {
   ///   - userOffset: The current character offset within the user text.
   ///   - user: The tokenized user whitespace buffer.
   ///   - form: The tokenized formatted whitespace buffer.
-  private func checkForRemoveLineErrors(userOffset: Int, user: [String], form: [String]) {
+  private func checkForRemoveLineErrors(
+    userOffset: Int, user: [ArraySlice<UTF8.CodeUnit>], form: [ArraySlice<UTF8.CodeUnit>]
+  ) {
     guard form.count < user.count else { return }
     var offset = 0
     for i in 0..<(user.count - form.count) {
@@ -343,7 +352,9 @@ public class WhitespaceLinter {
   ///   - userOffset: The current character offset within the user text.
   ///   - user: The tokenized user whitespace buffer.
   ///   - form: The tokenized formatted whitespace buffer.
-  private func checkForAddLineErrors(userOffset: Int, user: [String], form: [String]) {
+  private func checkForAddLineErrors(
+    userOffset: Int, user: [ArraySlice<UTF8.CodeUnit>], form: [ArraySlice<UTF8.CodeUnit>]
+  ) {
     guard form.count > user.count && !isLineTooLong else { return }
     let pos = calculatePosition(offset: userOffset, data: self.userText)
     diagnose(
@@ -363,17 +374,17 @@ public class WhitespaceLinter {
   ///   - data: The input string.
   /// - Returns a tuple of the new offset, the non-whitespace character we landed on, and a string
   ///   containing the leading whitespace.
-  private func nextCharacter(offset: Int, data: String)
-    -> (offset: Int, char: Character?, whitespace: String)
+  private func nextCharacter(offset: Int, data: [UTF8.CodeUnit])
+    -> (offset: Int, char: UTF8.CodeUnit?, whitespace: [UTF8.CodeUnit])
   {
-    var whitespaceBuffer = ""
+    var whitespaceBuffer = [UTF8.CodeUnit]()
 
     for i in offset..<data.count {
       let index = data.index(data.startIndex, offsetBy: i)
       let char = data[index]
 
-      if char.isWhitespace {
-        whitespaceBuffer += String(char)
+      if UnicodeScalar(char).properties.isWhitespace {
+        whitespaceBuffer.append(char)
       } else {
         return (offset: i, char: char, whitespace: whitespaceBuffer)
       }
@@ -387,12 +398,12 @@ public class WhitespaceLinter {
   ///   - offset: The printable character offset.
   ///   - data: The input string for which we want the line and column numbers.
   /// - Returns a tuple with the line and column numbers within `data`.
-  private func calculatePosition(offset: Int, data: String) -> (line: Int, column: Int) {
+  private func calculatePosition(offset: Int, data: [UTF8.CodeUnit]) -> (line: Int, column: Int) {
     var line = 1
     var column = 0
 
     for (index, char) in data.enumerated() {
-      if char == "\n" {
+      if char == utf8Newline {
         line += 1
         column = 0
       } else {
@@ -432,15 +443,15 @@ public class WhitespaceLinter {
   /// leading spacing for a line.
   ///
   /// A return value of nil indicates that there was no indentation.
-  private func indentation(of whitespace: String) -> WhitespaceIndentation {
+  private func indentation(of whitespace: ArraySlice<UTF8.CodeUnit>) -> WhitespaceIndentation {
     if whitespace.count == 0 {
       return .none
     }
 
-    var orderedRuns: [(char: Character, count: Int)] = []
+    var orderedRuns: [(char: UTF8.CodeUnit, count: Int)] = []
     for char in whitespace {
       // Any non-whitespace character indicates the end of the indentation whitespace.
-      guard char.isWhitespace else { break }
+      guard UnicodeScalar(char).properties.isWhitespace else { break }
 
       let lastRun = orderedRuns.last
       if lastRun?.char == char {
@@ -452,7 +463,7 @@ public class WhitespaceLinter {
 
     let indents = orderedRuns.map { run in
       // Assumes any non-tab whitespace character is some type of space.
-      return run.char == "\t" ? Indent.tabs(run.count) : Indent.spaces(run.count)
+      return run.char == utf8Tab ? Indent.tabs(run.count) : Indent.spaces(run.count)
     }
     if indents.count == 1, let onlyIndent = indents.first {
       return .homogeneous(onlyIndent)
