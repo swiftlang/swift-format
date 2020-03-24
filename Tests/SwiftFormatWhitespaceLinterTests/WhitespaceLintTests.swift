@@ -206,7 +206,7 @@ final class WhitespaceLintTests: WhitespaceTestCase {
       """
 
     performWhitespaceLint(input: input, expected: expected)
-    XCTAssertDiagnosed(.addLinesError(1), line: 2, column: 0)
+    XCTAssertDiagnosed(.addLinesError(1), line: 1, column: 12)
     XCTAssertDiagnosed(.addLinesError(1), line: 3, column: 15)
     XCTAssertDiagnosed(.addLinesError(1), line: 3, column: 22)
   }
@@ -236,11 +236,11 @@ final class WhitespaceLintTests: WhitespaceTestCase {
       """
 
     performWhitespaceLint(input: input, expected: expected)
-    XCTAssertDiagnosed(.removeLineError, line: 2, column: 0)
-    XCTAssertDiagnosed(.removeLineError, line: 4, column: 0)
-    XCTAssertDiagnosed(.removeLineError, line: 5, column: 0)
-    XCTAssertDiagnosed(.removeLineError, line: 8, column: 0)
-    XCTAssertDiagnosed(.removeLineError, line: 9, column: 0)
+    XCTAssertDiagnosed(.removeLineError, line: 1, column: 12)
+    XCTAssertDiagnosed(.removeLineError, line: 3, column: 14)
+    XCTAssertDiagnosed(.removeLineError, line: 4, column: 1)
+    XCTAssertDiagnosed(.removeLineError, line: 7, column: 15)
+    XCTAssertDiagnosed(.removeLineError, line: 8, column: 19)
   }
 
   func testLineLength() {

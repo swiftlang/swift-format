@@ -201,10 +201,8 @@ public class WhitespaceLinter {
       return
     }
 
-    let pos = calculatePosition(offset: adjustedUserOffset, data: self.userText)
-
     isLineTooLong = true
-    diagnose(.lineLengthError, line: pos.line, column: pos.column, utf8Offset: 0)
+    diagnose(.lineLengthError, utf8Offset: adjustedUserOffset)
   }
 
   /// Compare user and formatted whitespace buffers, and check for indentation errors.
@@ -231,11 +229,7 @@ public class WhitespaceLinter {
         if form[0] != user[0] {
           let actual = indentation(of: user[0])
           let expected = indentation(of: form[0])
-          diagnose(
-            .indentationError(expected: expected, actual: actual),
-            line: 1,
-            column: 1,
-            utf8Offset: 0)
+          diagnose(.indentationError(expected: expected, actual: actual), utf8Offset: 0)
         }
       }
       return
@@ -245,14 +239,10 @@ public class WhitespaceLinter {
       offset += user[i].count + 1
     }
     if form.last != user.last {
-      let pos = calculatePosition(offset: userOffset + offset, data: self.userText)
       let actual = indentation(of: user.last ?? [])
       let expected = indentation(of: form.last ?? [])
       diagnose(
-        .indentationError(expected: expected, actual: actual),
-        line: pos.line,
-        column: pos.column,
-        utf8Offset: 0)
+        .indentationError(expected: expected, actual: actual), utf8Offset: userOffset + offset)
     }
   }
 
@@ -269,8 +259,7 @@ public class WhitespaceLinter {
     var offset = 0
     for i in 0..<(user.count - 1) {
       if user[i].count > 0 {
-        let pos = calculatePosition(offset: userOffset + offset, data: self.userText)
-        diagnose(.trailingWhitespaceError, line: pos.line, column: pos.column, utf8Offset: 0)
+        diagnose(.trailingWhitespaceError, utf8Offset: userOffset + offset)
       }
       offset += user[i].count + 1
     }
@@ -295,13 +284,12 @@ public class WhitespaceLinter {
     guard form.count == 1 && user.count == 1 && !isFirstCharacter else { return }
     guard form[0] != user[0] else { return }
 
-    let pos = calculatePosition(offset: userOffset, data: self.userText)
     let illegalSpacingCharacters: [UTF8.CodeUnit] = [utf8Tab]
     if illegalSpacingCharacters.contains(where: { user[0].contains($0) }) {
-      diagnose(.spacingCharError, line: pos.line, column: pos.column, utf8Offset: 0)
+      diagnose(.spacingCharError, utf8Offset: userOffset)
     } else if form[0].count != user[0].count {
       let delta = form[0].count - user[0].count
-      diagnose(.spacingError(delta), line: pos.line, column: pos.column, utf8Offset: 0)
+      diagnose(.spacingError(delta), utf8Offset: userOffset)
     }
   }
 
@@ -328,8 +316,7 @@ public class WhitespaceLinter {
     guard form.count < user.count else { return }
     var offset = 0
     for i in 0..<(user.count - form.count) {
-      let pos = calculatePosition(offset: userOffset + offset, data: self.userText)
-      diagnose(.removeLineError, line: pos.line, column: pos.column, utf8Offset: 0)
+      diagnose(.removeLineError, utf8Offset: userOffset + offset)
       offset += user[i].count + 1
     }
   }
@@ -356,10 +343,7 @@ public class WhitespaceLinter {
     userOffset: Int, user: [ArraySlice<UTF8.CodeUnit>], form: [ArraySlice<UTF8.CodeUnit>]
   ) {
     guard form.count > user.count && !isLineTooLong else { return }
-    let pos = calculatePosition(offset: userOffset, data: self.userText)
-    diagnose(
-      .addLinesError(form.count - user.count), line: pos.line, column: pos.column, utf8Offset: 0
-    )
+    diagnose(.addLinesError(form.count - user.count), utf8Offset: userOffset)
   }
 
   /// Find the next non-whitespace character in a given string, and any leading whitespace before
@@ -392,28 +376,6 @@ public class WhitespaceLinter {
     return (offset: data.count - 1, char: nil, whitespace: whitespaceBuffer)
   }
 
-  /// Given a string and a printable charater offset, calculate the line and column number.
-  ///
-  /// - Parameters:
-  ///   - offset: The printable character offset.
-  ///   - data: The input string for which we want the line and column numbers.
-  /// - Returns a tuple with the line and column numbers within `data`.
-  private func calculatePosition(offset: Int, data: [UTF8.CodeUnit]) -> (line: Int, column: Int) {
-    var line = 1
-    var column = 0
-
-    for (index, char) in data.enumerated() {
-      if char == utf8Newline {
-        line += 1
-        column = 0
-      } else {
-        column += 1
-      }
-      if index == offset { break }
-    }
-    return (line: line, column: column)
-  }
-
   /// Emits the provided diagnostic message to the DiagnosticEngine. The message will correspond to
   /// a specific location (line and column number) in the input Swift source file (`userText`).
   ///
@@ -425,18 +387,14 @@ public class WhitespaceLinter {
   ///   - actions: Used for attaching notes, highlights, etc.
   private func diagnose(
     _ message: Diagnostic.Message,
-    line: Int,
-    column: Int,
     utf8Offset: Int,
     actions: ((inout Diagnostic.Builder) -> Void)? = nil
   ) {
-    let loc = SourceLocation(
-      line: line, column: column, offset: utf8Offset, file: context.fileURL.path)
-    context.diagnosticEngine?.diagnose(
-      message,
-      location: loc,
-      actions: actions
-    )
+    guard let diagnosticEngine = context.diagnosticEngine else { return }
+
+    let absolutePosition = AbsolutePosition(utf8Offset: utf8Offset)
+    let sourceLocation = context.sourceLocationConverter.location(for: absolutePosition)
+    diagnosticEngine.diagnose(message, location: sourceLocation, actions: actions)
   }
 
   /// Returns the indentation that represents the indentation of the given whitespace, which is the
