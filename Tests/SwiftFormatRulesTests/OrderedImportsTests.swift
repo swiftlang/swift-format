@@ -541,4 +541,82 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
 
     XCTAssertFormatting(OrderedImports.self, input: input, expected: expected)
   }
+
+  func testConditionalImports() {
+    let input =
+      """
+      import Zebras
+      import Apples
+      #if canImport(Darwin)
+        import Darwin
+      #elseif canImport(Glibc)
+        import Glibc
+      #endif
+      import Aardvarks
+
+      foo()
+      bar()
+      baz()
+      """
+
+    let expected =
+      """
+      import Aardvarks
+      import Apples
+      import Zebras
+
+      #if canImport(Darwin)
+        import Darwin
+        typealias SomeNativeTypeHandle = some_darwin_type_t
+      #elseif canImport(Glibc)
+        import Glibc
+        typealias SomeNativeTypeHandle = some_glibc_type_t
+      #endif
+
+      foo()
+      bar()
+      baz()
+      """
+
+    XCTAssertFormatting(OrderedImports.self, input: input, expected: expected)
+  }
+
+  func testIgnoredConditionalImports() {
+    let input =
+      """
+      import Zebras
+      import Apples
+      #if canImport(Darwin)
+        import Darwin
+      #elseif canImport(Glibc)
+        import Glibc
+      #endif
+      // swift-format-ignore
+      import Aardvarks
+
+      foo()
+      bar()
+      baz()
+      """
+
+    let expected =
+      """
+      import Apples
+      import Zebras
+
+      #if canImport(Darwin)
+        import Darwin
+      #elseif canImport(Glibc)
+        import Glibc
+      #endif
+      // swift-format-ignore
+      import Aardvarks
+
+      foo()
+      bar()
+      baz()
+      """
+
+    XCTAssertFormatting(OrderedImports.self, input: input, expected: expected)
+  }
 }

@@ -264,12 +264,14 @@ extension OrderedImportsTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__OrderedImportsTests = [
+        ("testConditionalImports", testConditionalImports),
         ("testDisableOrderedImports", testDisableOrderedImports),
         ("testDisableOrderedImportsMovingComments", testDisableOrderedImportsMovingComments),
         ("testDuplicateAttributedImports", testDuplicateAttributedImports),
         ("testDuplicateCommentedImports", testDuplicateCommentedImports),
         ("testDuplicateIgnoredImports", testDuplicateIgnoredImports),
         ("testEmptyFile", testEmptyFile),
+        ("testIgnoredConditionalImports", testIgnoredConditionalImports),
         ("testImportsOrderWithDocComment", testImportsOrderWithDocComment),
         ("testImportsOrderWithoutModuleType", testImportsOrderWithoutModuleType),
         ("testInvalidImportsOrder", testInvalidImportsOrder),
