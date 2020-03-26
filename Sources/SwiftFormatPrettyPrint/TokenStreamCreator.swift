@@ -533,11 +533,19 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   override func visit(_ node: RepeatWhileStmtSyntax) -> SyntaxVisitorContinueKind {
     arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
 
-    let whilePrecedingBreak = config.lineBreakBeforeControlFlowKeywords
-      ? Token.break(.same) : Token.space
-    before(node.whileKeyword, tokens: whilePrecedingBreak)
+    if config.lineBreakBeforeControlFlowKeywords {
+      before(node.whileKeyword, tokens: .break(.same), .open)
+      after(node.condition.lastToken, tokens: .close)
+    } else {
+      // The length of the condition needs to force the breaks around the braces of the repeat
+      // stmt's body, so that there's always a break before the right brace when the while &
+      // condition is too long to be on one line.
+      before(node.whileKeyword, tokens: .space)
+      // The `open` token occurs after the ending tokens for the braced `body` node.
+      before(node.body.rightBrace, tokens: .open)
+      after(node.condition.lastToken, tokens: .close)
+    }
     after(node.whileKeyword, tokens: .space)
-
     return .visitChildren
   }
 
