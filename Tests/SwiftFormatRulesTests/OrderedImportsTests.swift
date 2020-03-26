@@ -567,10 +567,8 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
 
       #if canImport(Darwin)
         import Darwin
-        typealias SomeNativeTypeHandle = some_darwin_type_t
       #elseif canImport(Glibc)
         import Glibc
-        typealias SomeNativeTypeHandle = some_glibc_type_t
       #endif
 
       foo()
