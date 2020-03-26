@@ -2036,22 +2036,25 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: DerivativeRegistrationAttributeArgumentsSyntax)
-    -> SyntaxVisitorContinueKind
-  {
-    // This node encapsulates the entire list of arguments in a `@derivative(...)` or
-    // `@transpose(...)` attribute.
-    before(node.ofLabel, tokens: .open)
-    after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
-    after(node.comma, tokens: .close)
+  // `DerivativeRegistrationAttributeArguments` was added after the Swift 5.2 release was cut.
+  #if HAS_DERIVATIVE_REGISTRATION_ATTRIBUTE
+    override func visit(_ node: DerivativeRegistrationAttributeArgumentsSyntax)
+      -> SyntaxVisitorContinueKind
+    {
+      // This node encapsulates the entire list of arguments in a `@derivative(...)` or
+      // `@transpose(...)` attribute.
+      before(node.ofLabel, tokens: .open)
+      after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
+      after(node.comma, tokens: .close)
 
-    if let diffParams = node.diffParams {
-      before(diffParams.firstToken, tokens: .break(.same), .open)
-      after(diffParams.lastToken, tokens: .close)
+      if let diffParams = node.diffParams {
+        before(diffParams.firstToken, tokens: .break(.same), .open)
+        after(diffParams.lastToken, tokens: .close)
+      }
+
+      return .visitChildren
     }
-
-    return .visitChildren
-  }
+  #endif
 
   override func visit(_ node: DifferentiationParamsClauseSyntax) -> SyntaxVisitorContinueKind {
     // This node encapsulates the `wrt:` label and value/variable in a `@differentiable`,

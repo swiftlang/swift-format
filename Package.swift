@@ -21,10 +21,7 @@ let package = Package(
     .library(name: "SwiftFormatConfiguration", targets: ["SwiftFormatConfiguration"]),
   ],
   dependencies: [
-    .package(
-      url: "https://github.com/apple/swift-syntax",
-      .revision("swift-DEVELOPMENT-SNAPSHOT-2020-01-29-a")
-    ),
+    .package(url: "https://github.com/apple/swift-syntax", from: "0.50200.0"),
     .package(url: "https://github.com/apple/swift-tools-support-core.git", from: "0.0.1"),
     .package(url: "https://github.com/apple/swift-argument-parser.git", .upToNextMinor(from: "0.0.4")),
   ],
