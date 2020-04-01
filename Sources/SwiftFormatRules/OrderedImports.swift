@@ -503,7 +503,7 @@ fileprivate class Line {
     else {
       return ""
     }
-    return importDecl.path.description.trimmingCharacters(in: .whitespaces)
+    return importDecl.path.description.trimmingCharacters(in: .whitespacesAndNewlines)
   }
 
   /// Returns the first `TokenSyntax` in the code block(s) from this Line, or nil when this Line

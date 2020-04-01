@@ -272,6 +272,7 @@ extension OrderedImportsTests {
         ("testDuplicateIgnoredImports", testDuplicateIgnoredImports),
         ("testEmptyFile", testEmptyFile),
         ("testIgnoredConditionalImports", testIgnoredConditionalImports),
+        ("testImportsContainingNewlines", testImportsContainingNewlines),
         ("testImportsOrderWithDocComment", testImportsOrderWithDocComment),
         ("testImportsOrderWithoutModuleType", testImportsOrderWithoutModuleType),
         ("testInvalidImportsOrder", testInvalidImportsOrder),
