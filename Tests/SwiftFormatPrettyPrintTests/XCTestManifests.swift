@@ -207,7 +207,9 @@ extension DifferentiationAttributeTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__DifferentiationAttributeTests = [
+        ("testDerivative", testDerivative),
         ("testDifferentiable", testDifferentiable),
+        ("testTranspose", testTranspose),
     ]
 }
 
