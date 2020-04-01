@@ -396,6 +396,30 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
     )
   }
 
+  func testImportsContainingNewlines() {
+    let input =
+      """
+      import
+        zeta
+      import Zeta
+      import
+        Alpha
+      import Beta
+      """
+
+    let expected =
+      """
+      import
+        Alpha
+      import Beta
+      import Zeta
+      import
+        zeta
+      """
+
+    XCTAssertFormatting(OrderedImports.self, input: input, expected: expected)
+  }
+
   func testRemovesDuplicateImports() {
     let input =
       """
@@ -536,6 +560,82 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
 
       @testable import foo
 
+      baz()
+      """
+
+    XCTAssertFormatting(OrderedImports.self, input: input, expected: expected)
+  }
+
+  func testConditionalImports() {
+    let input =
+      """
+      import Zebras
+      import Apples
+      #if canImport(Darwin)
+        import Darwin
+      #elseif canImport(Glibc)
+        import Glibc
+      #endif
+      import Aardvarks
+
+      foo()
+      bar()
+      baz()
+      """
+
+    let expected =
+      """
+      import Aardvarks
+      import Apples
+      import Zebras
+
+      #if canImport(Darwin)
+        import Darwin
+      #elseif canImport(Glibc)
+        import Glibc
+      #endif
+
+      foo()
+      bar()
+      baz()
+      """
+
+    XCTAssertFormatting(OrderedImports.self, input: input, expected: expected)
+  }
+
+  func testIgnoredConditionalImports() {
+    let input =
+      """
+      import Zebras
+      import Apples
+      #if canImport(Darwin)
+        import Darwin
+      #elseif canImport(Glibc)
+        import Glibc
+      #endif
+      // swift-format-ignore
+      import Aardvarks
+
+      foo()
+      bar()
+      baz()
+      """
+
+    let expected =
+      """
+      import Apples
+      import Zebras
+
+      #if canImport(Darwin)
+        import Darwin
+      #elseif canImport(Glibc)
+        import Glibc
+      #endif
+      // swift-format-ignore
+      import Aardvarks
+
+      foo()
+      bar()
       baz()
       """
 

@@ -43,8 +43,8 @@ final class DifferentiationAttributeTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 43)
   }
 
-  #if HAS_DERIVATIVE_REGISTRATION_ATTRIBUTE
-    func testDerivative() {
+  func testDerivative() {
+    #if HAS_DERIVATIVE_REGISTRATION_ATTRIBUTE
       let input =
         """
         @derivative(of: foo, wrt: x)
@@ -78,9 +78,11 @@ final class DifferentiationAttributeTests: PrettyPrintTestCase {
         """
 
       assertPrettyPrintEqual(input: input, expected: expected, linelength: 28)
-    }
+    #endif
+  }
 
-    func testTranspose() {
+  func testTranspose() {
+    #if HAS_DERIVATIVE_REGISTRATION_ATTRIBUTE
       let input =
         """
         @transpose(of: foo, wrt: 0)
@@ -114,6 +116,6 @@ final class DifferentiationAttributeTests: PrettyPrintTestCase {
         """
 
       assertPrettyPrintEqual(input: input, expected: expected, linelength: 27)
-    }
-  #endif
+    #endif
+  }
 }

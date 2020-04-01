@@ -16,7 +16,6 @@ import SwiftFormat
 import SwiftFormatConfiguration
 import SwiftFormatCore
 import SwiftSyntax
-import TSCBasic
 
 extension SwiftFormatCommand {
   /// Keep the legacy `-m/--mode` flag working temporarily when no other subcommand is specified.

@@ -10,6 +10,10 @@ final class RepeatStmtTests: PrettyPrintTestCase {
       while x
       repeat { foo() }
       while longcondition
+      repeat { f() }
+      while long.condition
+      repeat { f() } while long.condition
+      repeat { f() } while long.condition.that.ison.many.lines
       repeat {
         let a = 123
         var b = "abc"
@@ -29,6 +33,16 @@ final class RepeatStmtTests: PrettyPrintTestCase {
       repeat {
         foo()
       } while longcondition
+      repeat {
+        f()
+      } while long.condition
+      repeat {
+        f()
+      } while long.condition
+      repeat {
+        f()
+      } while long.condition
+        .that.ison.many.lines
       repeat {
         let a = 123
         var b = "abc"
@@ -50,6 +64,10 @@ final class RepeatStmtTests: PrettyPrintTestCase {
       repeat {} while x
       repeat { f() } while x
       repeat { foo() } while longcondition
+      repeat { f() }
+      while long.condition
+      repeat { f() } while long.condition
+      repeat { f() } while long.condition.that.ison.many.lines
       repeat {
         let a = 123
         var b = "abc"
@@ -68,6 +86,13 @@ final class RepeatStmtTests: PrettyPrintTestCase {
       repeat { f() } while x
       repeat { foo() }
       while longcondition
+      repeat { f() }
+      while long.condition
+      repeat { f() }
+      while long.condition
+      repeat { f() }
+      while long.condition.that
+        .ison.many.lines
       repeat {
         let a = 123
         var b = "abc"

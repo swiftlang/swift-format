@@ -16,7 +16,6 @@ import SwiftFormat
 import SwiftFormatConfiguration
 import SwiftFormatCore
 import SwiftSyntax
-import TSCBasic
 
 /// Throws an error that causes the current command to exit the process with a failure exit code if
 /// any of the preceding operations emitted diagnostics.
