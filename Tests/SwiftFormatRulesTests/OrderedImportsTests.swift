@@ -396,6 +396,30 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
     )
   }
 
+  func testImportsContainingNewlines() {
+    let input =
+      """
+      import
+        zeta
+      import Zeta
+      import
+        Alpha
+      import Beta
+      """
+
+    let expected =
+      """
+      import
+        Alpha
+      import Beta
+      import Zeta
+      import
+        zeta
+      """
+
+    XCTAssertFormatting(OrderedImports.self, input: input, expected: expected)
+  }
+
   func testRemovesDuplicateImports() {
     let input =
       """
