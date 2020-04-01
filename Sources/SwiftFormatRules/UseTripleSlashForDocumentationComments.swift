@@ -73,17 +73,23 @@ public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
   /// a docLineComment.
   private func convertDocBlockCommentToDocLineComment(_ decl: DeclSyntax) -> DeclSyntax {
     guard let commentText = decl.docComment else { return decl }
-    guard let declLeadinTrivia = decl.leadingTrivia else { return decl }
+    guard let declLeadingTrivia = decl.leadingTrivia else { return decl }
     let docComments = commentText.components(separatedBy: "\n")
     var pieces = [TriviaPiece]()
 
     // Ensures the documentation comment is a docLineComment.
     var hasFoundDocComment = false
-    for piece in declLeadinTrivia.reversed() {
+    for piece in declLeadingTrivia.reversed() {
       if case .docBlockComment(_) = piece, !hasFoundDocComment {
         hasFoundDocComment = true
         diagnose(.avoidDocBlockComment, on: decl)
         pieces.append(contentsOf: separateDocBlockIntoPieces(docComments).reversed())
+      } else if case .docLineComment(_) = piece, !hasFoundDocComment {
+        // The comment was a doc-line comment all along. Leave it alone.
+        // This intentionally only considers the comment closest to the decl. There may be other
+        // comments, including block or doc-block comments, which are left as-is because they aren't
+        // necessarily related to the decl and are unlikely part of the decl's documentation.
+        return decl
       } else {
         pieces.append(piece)
       }
