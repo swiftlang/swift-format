@@ -15,7 +15,6 @@ import Foundation
 import SwiftFormat
 import SwiftFormatConfiguration
 import SwiftSyntax
-import TSCBasic
 
 extension SwiftFormatCommand {
   /// Formats one or more files containing Swift code.
@@ -89,31 +88,29 @@ private func formatMain(
   // fixed anyway.
   let formatter = SwiftFormatter(configuration: configuration, diagnosticEngine: nil)
   formatter.debugOptions = debugOptions
-  let assumingFileURL = URL(fileURLWithPath: assumingFilename ?? "<stdin>")
+
+  let path = assumingFilename ?? "<stdin>"
+  let assumingFileURL = URL(fileURLWithPath: path)
 
   guard let source = readSource(from: sourceFile) else {
     diagnosticEngine.diagnose(
-      Diagnostic.Message(
-        .error, "Unable to read source for formatting from \(assumingFileURL.path)."))
+      Diagnostic.Message(.error, "Unable to read source for formatting from \(path)."))
     return
   }
 
+  var stdoutStream = FileHandle.standardOutput
   do {
     if inPlace {
-      let cwd = FileManager.default.currentDirectoryPath
-      var buffer = BufferedOutputByteStream()
+      var buffer = ""
       try formatter.format(source: source, assumingFileURL: assumingFileURL, to: &buffer)
-      buffer.flush()
-      try localFileSystem.writeFileContents(
-        AbsolutePath(assumingFileURL.path, relativeTo: AbsolutePath(cwd)),
-        bytes: buffer.bytes
-      )
+
+      let bufferData = buffer.data(using: .utf8)!  // Conversion to UTF-8 cannot fail
+      try bufferData.write(to: assumingFileURL, options: .atomic)
     } else {
       try formatter.format(source: source, assumingFileURL: assumingFileURL, to: &stdoutStream)
-      stdoutStream.flush()
+      stdoutStream.synchronizeFile()
     }
   } catch SwiftFormatError.fileNotReadable {
-    let path = assumingFileURL.path
     diagnosticEngine.diagnose(
       Diagnostic.Message(
         .error, "Unable to format \(path): file is not readable or does not exist."))
@@ -125,17 +122,15 @@ private func formatMain(
         return
       }
       stdoutStream.write(source)
-      stdoutStream.flush()
+      stdoutStream.synchronizeFile()
       return
     }
-    let path = assumingFileURL.path
     let location = SourceLocationConverter(file: path, source: source).location(for: position)
     diagnosticEngine.diagnose(
       Diagnostic.Message(.error, "file contains invalid or unrecognized Swift syntax."),
       location: location)
     return
   } catch {
-    let path = assumingFileURL.path
     diagnosticEngine.diagnose(Diagnostic.Message(.error, "Unable to format \(path): \(error)"))
     return
   }
