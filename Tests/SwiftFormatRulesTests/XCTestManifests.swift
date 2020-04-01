@@ -369,6 +369,9 @@ extension UseTripleSlashForDocumentationCommentsTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__UseTripleSlashForDocumentationCommentsTests = [
+        ("testManyDocComments", testManyDocComments),
+        ("testMultipleDocLineComments", testMultipleDocLineComments),
+        ("testMultipleTypesOfDocComments", testMultipleTypesOfDocComments),
         ("testRemoveDocBlockComments", testRemoveDocBlockComments),
         ("testRemoveDocBlockCommentsWithoutStars", testRemoveDocBlockCommentsWithoutStars),
     ]
