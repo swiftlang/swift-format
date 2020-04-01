@@ -15,7 +15,6 @@ import Foundation
 import SwiftFormat
 import SwiftFormatConfiguration
 import SwiftSyntax
-import TSCBasic
 
 extension SwiftFormatCommand {
   /// Emits style diagnostics for one or more files containing Swift code.
