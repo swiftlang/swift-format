@@ -22,7 +22,6 @@ let package = Package(
   ],
   dependencies: [
     .package(url: "https://github.com/apple/swift-syntax", from: "0.50200.0"),
-    .package(url: "https://github.com/apple/swift-tools-support-core.git", from: "0.0.1"),
     .package(url: "https://github.com/apple/swift-argument-parser.git", .upToNextMinor(from: "0.0.4")),
   ],
   targets: [
@@ -62,12 +61,11 @@ let package = Package(
     .target(
       name: "swift-format",
       dependencies: [
+        "ArgumentParser",
         "SwiftFormat",
         "SwiftFormatConfiguration",
         "SwiftFormatCore",
         "SwiftSyntax",
-        "SwiftToolsSupport-auto",
-        "ArgumentParser",
       ]
     ),
     .testTarget(

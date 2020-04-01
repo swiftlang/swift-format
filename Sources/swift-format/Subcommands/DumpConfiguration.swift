@@ -13,8 +13,6 @@
 import ArgumentParser
 import Foundation
 import SwiftFormatConfiguration
-import TSCBasic
-import TSCUtility
 
 extension SwiftFormatCommand {
   /// Dumps the tool's default configuration in JSON format to standard output.
