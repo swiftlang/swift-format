@@ -1186,7 +1186,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     after(node.trailingComma, tokens: .break)
 
     if let associatedValue = node.associatedValue {
-      arrangeParameterClause(associatedValue, forcesBreakBeforeRightParen: true)
+      arrangeParameterClause(associatedValue, forcesBreakBeforeRightParen: false)
     }
 
     return .visitChildren
