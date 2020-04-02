@@ -125,4 +125,31 @@ final class RepeatStmtTests: PrettyPrintTestCase {
       """
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 45)
   }
+
+  func testLabeledRepeat() {
+    let input = """
+      someLabel:repeat {
+        bar()
+        baz()
+      } while condition
+      somePrettyLongLabelThatTakesUpManyColumns: repeat {
+        bar()
+        baz()
+      } while condition
+      """
+
+    let expected = """
+      someLabel: repeat {
+        bar()
+        baz()
+      } while condition
+      somePrettyLongLabelThatTakesUpManyColumns: repeat
+      {
+        bar()
+        baz()
+      } while condition
+
+      """
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
+  }
 }

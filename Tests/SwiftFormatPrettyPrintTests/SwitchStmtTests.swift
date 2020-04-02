@@ -288,4 +288,42 @@ final class SwitchStmtTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
+
+  func testLabeledSwitchStmt() {
+    let input =
+      """
+      label:switch foo {
+      case bar:
+        callForBar()
+      case baz:
+        callForBaz()
+      }
+      someVeryExtremelyLongLabel: switch foo {
+      case bar:
+        callForBar()
+      case baz:
+        callForBaz()
+      }
+      """
+
+    let expected =
+      """
+      label: switch foo {
+      case bar:
+        callForBar()
+      case baz:
+        callForBaz()
+      }
+      someVeryExtremelyLongLabel: switch foo
+      {
+      case bar:
+        callForBar()
+      case baz:
+        callForBaz()
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
+  }
 }

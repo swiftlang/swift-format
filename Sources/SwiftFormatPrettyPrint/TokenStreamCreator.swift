@@ -444,6 +444,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   // MARK: - Control flow statement nodes
 
   override func visit(_ node: IfStmtSyntax) -> SyntaxVisitorContinueKind {
+    after(node.labelColon, tokens: .space)
     after(node.ifKeyword, tokens: .space)
 
     // Add break groups, using open continuation breaks, around any conditions after the first so
@@ -531,6 +532,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: RepeatWhileStmtSyntax) -> SyntaxVisitorContinueKind {
+    after(node.labelColon, tokens: .space)
     arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
 
     if config.lineBreakBeforeControlFlowKeywords {
@@ -550,6 +552,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: DoStmtSyntax) -> SyntaxVisitorContinueKind {
+    after(node.labelColon, tokens: .space)
     arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
     return .visitChildren
   }
@@ -591,6 +594,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: SwitchStmtSyntax) -> SyntaxVisitorContinueKind {
+    after(node.labelColon, tokens: .space)
     before(node.switchKeyword, tokens: .open)
     after(node.switchKeyword, tokens: .space)
     before(node.leftBrace, tokens: .break(.reset))
