@@ -488,4 +488,31 @@ final class IfStmtTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
+
+  func testLabeledIfStmt() {
+    let input =
+      """
+      someLabel:if foo && bar {
+        // do something
+      }
+      anotherVeryLongLabelThatTakesUpTooManyCharacters: if foo && bar {
+        // do something else
+      }
+      """
+
+    let expected =
+      """
+      someLabel: if foo && bar {
+        // do something
+      }
+      anotherVeryLongLabelThatTakesUpTooManyCharacters: if foo
+        && bar
+      {
+        // do something else
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+  }
 }
