@@ -43,6 +43,68 @@ final class DifferentiationAttributeTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 43)
   }
 
+  func testDifferentiableWithOnlyWhereClause() {
+    let input =
+      """
+      @differentiable(where T: D)
+      func foo<T>(_ x: T) -> T {}
+
+      @differentiable(where T: Differentiable)
+      func foo<T>(_ x: T) -> T {}
+      """
+
+    let expected =
+      """
+      @differentiable(where T: D)
+      func foo<T>(_ x: T) -> T {}
+
+      @differentiable(
+        where T: Differentiable
+      )
+      func foo<T>(_ x: T) -> T {}
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 28)
+  }
+
+  func testDifferentiableWithMultipleParameters() {
+    let input =
+      """
+      @differentiable(wrt: (x, y))
+      func foo<T>(_ x: T) -> T {}
+
+      @differentiable(wrt: (self, x, y))
+      func foo<T>(_ x: T) -> T {}
+
+      @differentiable(wrt: (theVariableNamedSelf, theVariableNamedX, theVariableNamedY))
+      func foo<T>(_ x: T) -> T {}
+      """
+
+    let expected =
+      """
+      @differentiable(wrt: (x, y))
+      func foo<T>(_ x: T) -> T {}
+
+      @differentiable(
+        wrt: (self, x, y)
+      )
+      func foo<T>(_ x: T) -> T {}
+
+      @differentiable(
+        wrt: (
+          theVariableNamedSelf,
+          theVariableNamedX,
+          theVariableNamedY
+        )
+      )
+      func foo<T>(_ x: T) -> T {}
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 28)
+  }
+
   func testDerivative() {
     #if HAS_DERIVATIVE_REGISTRATION_ATTRIBUTE
       let input =

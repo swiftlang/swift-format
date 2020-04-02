@@ -209,6 +209,8 @@ extension DifferentiationAttributeTests {
     static let __allTests__DifferentiationAttributeTests = [
         ("testDerivative", testDerivative),
         ("testDifferentiable", testDifferentiable),
+        ("testDifferentiableWithMultipleParameters", testDifferentiableWithMultipleParameters),
+        ("testDifferentiableWithOnlyWhereClause", testDifferentiableWithOnlyWhereClause),
         ("testTranspose", testTranspose),
     ]
 }
