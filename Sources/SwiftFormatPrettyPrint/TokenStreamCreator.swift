@@ -2020,16 +2020,27 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: DifferentiableAttributeArgumentsSyntax) -> SyntaxVisitorContinueKind {
     // This node encapsulates the entire list of arguments in a `@differentiable(...)` attribute.
+    after(node.diffParamsComma, tokens: .break(.same))
+
+    var needsBreakBeforeWhereClause = false
+
     if let vjp = node.maybeVJP {
-      before(vjp.firstToken, tokens: .break(.same), .open)
+      before(vjp.firstToken, tokens: .open)
       after(vjp.lastToken, tokens: .close)
+      after(vjp.trailingComma, tokens: .break(.same))
+      needsBreakBeforeWhereClause = true
     }
     if let jvp = node.maybeJVP {
-      before(jvp.firstToken, tokens: .break(.same), .open)
+      before(jvp.firstToken, tokens: .open)
       after(jvp.lastToken, tokens: .close)
+      after(jvp.trailingComma, tokens: .break(.same))
+      needsBreakBeforeWhereClause = true
     }
     if let whereClause = node.whereClause {
-      before(whereClause.firstToken, tokens: .break(.same), .open)
+      if needsBreakBeforeWhereClause {
+        before(whereClause.firstToken, tokens: .break(.same))
+      }
+      before(whereClause.firstToken, tokens: .open)
       after(whereClause.lastToken, tokens: .close)
     }
     return .visitChildren
@@ -2041,6 +2052,17 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // This node encapsulates the `vjp:` or `jvp:` label and decl name in a `@differentiable`
     // attribute.
     after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
+    return .visitChildren
+  }
+
+  override func visit(_ node: DifferentiationParamsSyntax) -> SyntaxVisitorContinueKind {
+    after(node.leftParen, tokens: .break(.open, size: 0), .open)
+    before(node.rightParen, tokens: .break(.close, size: 0), .close)
+    return .visitChildren
+  }
+
+  override func visit(_ node: DifferentiationParamSyntax) -> SyntaxVisitorContinueKind {
+    after(node.trailingComma, tokens: .break(.same))
     return .visitChildren
   }
 
