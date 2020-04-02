@@ -115,15 +115,14 @@ final class EnumDeclTests: PrettyPrintTestCase {
           fifth
         case sixth(Int)
         case seventh(
-          a: Int, b: Bool, c: Double
-        )
+          a: Int, b: Bool, c: Double)
       }
 
       """
 
     var config = Configuration()
     config.lineBreakBeforeEachArgument = false
-    assertPrettyPrintEqual(input: input, expected: expected, linelength: 30, configuration: config)
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 31, configuration: config)
   }
 
   func testIndirectEnum() {
