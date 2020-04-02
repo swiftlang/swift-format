@@ -108,7 +108,6 @@ private func formatMain(
       try bufferData.write(to: assumingFileURL, options: .atomic)
     } else {
       try formatter.format(source: source, assumingFileURL: assumingFileURL, to: &stdoutStream)
-      stdoutStream.synchronizeFile()
     }
   } catch SwiftFormatError.fileNotReadable {
     diagnosticEngine.diagnose(
@@ -122,7 +121,6 @@ private func formatMain(
         return
       }
       stdoutStream.write(source)
-      stdoutStream.synchronizeFile()
       return
     }
     let location = SourceLocationConverter(file: path, source: source).location(for: position)
