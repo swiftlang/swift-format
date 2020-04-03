@@ -290,7 +290,11 @@ extension ReturnVoidInsteadOfEmptyTupleTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__ReturnVoidInsteadOfEmptyTupleTests = [
-        ("testEmptyTupleReturns", testEmptyTupleReturns),
+        ("testBasic", testBasic),
+        ("testClosureSignatures", testClosureSignatures),
+        ("testEmptyTupleWithInternalCommentsIsDiagnosedButNotReplaced", testEmptyTupleWithInternalCommentsIsDiagnosedButNotReplaced),
+        ("testNestedFunctionTypes", testNestedFunctionTypes),
+        ("testTriviaPreservation", testTriviaPreservation),
     ]
 }
 
