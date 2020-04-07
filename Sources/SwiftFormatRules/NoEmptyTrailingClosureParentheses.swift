@@ -22,22 +22,31 @@ import SwiftSyntax
 public final class NoEmptyTrailingClosureParentheses: SyntaxFormatRule {
 
   public override func visit(_ node: FunctionCallExprSyntax) -> ExprSyntax {
-    guard node.argumentList.count == 0 else { return ExprSyntax(node) }
+    guard node.argumentList.count == 0 else { return super.visit(node) }
 
-    guard node.trailingClosure != nil && node.argumentList.isEmpty && node.leftParen != nil else {
-      return ExprSyntax(node)
+    guard let trailingClosure = node.trailingClosure,
+      node.argumentList.isEmpty && node.leftParen != nil else
+    {
+      return super.visit(node)
     }
     guard let name = node.calledExpression.lastToken?.withoutTrivia() else {
-      return ExprSyntax(node)
+      return super.visit(node)
     }
 
     diagnose(.removeEmptyTrailingParentheses(name: "\(name)"), on: node)
 
+    // Need to visit `calledExpression` before creating a new node so that the location data (column
+    // and line numbers) is available.
+    guard let rewrittenCalledExpr = ExprSyntax(visit(Syntax(node.calledExpression))) else {
+      return super.visit(node)
+    }
     let formattedExp = replaceTrivia(
-      on: node.calledExpression,
-      token: node.calledExpression.lastToken,
+      on: rewrittenCalledExpr,
+      token: rewrittenCalledExpr.lastToken,
       trailingTrivia: .spaces(1))
+    let formattedClosure = visit(trailingClosure).as(ClosureExprSyntax.self)
     let result = node.withLeftParen(nil).withRightParen(nil).withCalledExpression(formattedExp)
+      .withTrailingClosure(formattedClosure)
     return ExprSyntax(result)
   }
 }
