@@ -316,8 +316,8 @@ final class ExtensionDeclTests: PrettyPrintTestCase {
     let expected =
 
       """
-      public extension MyContainer: MyContainerProtocolOne,
-        MyContainerProtocolTwo,
+      public extension MyContainer:
+        MyContainerProtocolOne, MyContainerProtocolTwo,
         SomeoneElsesContainerProtocol,
         SomeFrameworkContainerProtocol
       where
@@ -346,8 +346,8 @@ final class ExtensionDeclTests: PrettyPrintTestCase {
     let expected =
 
     """
-      public extension MyContainer: MyContainerProtocolOne,
-        MyContainerProtocolTwo,
+      public extension MyContainer:
+        MyContainerProtocolOne, MyContainerProtocolTwo,
         SomeoneElsesContainerProtocol,
         SomeFrameworkContainerProtocol
       where
