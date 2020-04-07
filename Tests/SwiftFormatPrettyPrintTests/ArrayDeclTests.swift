@@ -7,7 +7,6 @@ final class ArrayDeclTests: PrettyPrintTestCase {
       """
       let a = [1, 2, 3,]
       let a: [Bool] = [false, true, true, false]
-      let a = [11111111, 2222222, 33333333, 444444]
       let a = [11111111, 2222222, 33333333, 4444444]
       let a: [String] = ["One", "Two", "Three", "Four"]
       let a: [String] = ["One", "Two", "Three", "Four", "Five", "Six", "Seven"]
@@ -16,13 +15,13 @@ final class ArrayDeclTests: PrettyPrintTestCase {
         "One", "Two", "Three", "Four", "Five",
         "Six", "Seven", "Eight",
       ]
+      let a = [11111111, 2222222, 33333333, 444444]
       """
 
     let expected =
       """
       let a = [1, 2, 3]
       let a: [Bool] = [false, true, true, false]
-      let a = [11111111, 2222222, 33333333, 444444]
       let a = [
         11111111, 2222222, 33333333, 4444444,
       ]
@@ -40,6 +39,15 @@ final class ArrayDeclTests: PrettyPrintTestCase {
       let a: [String] = [
         "One", "Two", "Three", "Four", "Five",
         "Six", "Seven", "Eight",
+      ]
+
+      """
+      // Ideally, this array would be left on 1 line without a trailing comma. We don't know if the
+      // comma is required when calculating the length of array elements, so the comma's length is
+      // always added to last element and that 1 character causes the newlines inside of the array.
+      + """
+      let a = [
+        11111111, 2222222, 33333333, 444444,
       ]
 
       """
@@ -128,6 +136,61 @@ final class ArrayDeclTests: PrettyPrintTestCase {
           ? firstOption
           : secondOption,
         bar(),
+      ]
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 32)
+  }
+
+  func testInnerElementBreakingFromComma() {
+    let input =
+      """
+      let a = [("abc", "def", "xyz"),("this ", "string", "is long"),]
+      let a = [("abc", "def", "xyz"),("this ", "string", "is long")]
+      let a = [("this ", "string", "is long"),]
+      let a = [("this ", "string", "is long")]
+      let a = ["this ", "string", "is longer",]
+      let a = [("this", "str"), ("is", "lng")]
+      a = [("az", "by"), ("cf", "de")]
+      """
+
+    let expected =
+      """
+      let a = [
+        ("abc", "def", "xyz"),
+        (
+          "this ", "string", "is long"
+        ),
+      ]
+      let a = [
+        ("abc", "def", "xyz"),
+        (
+          "this ", "string", "is long"
+        ),
+      ]
+      let a = [
+        ("this ", "string", "is long")
+      ]
+      let a = [
+        ("this ", "string", "is long")
+      ]
+      let a = [
+        "this ", "string",
+        "is longer",
+      ]
+      let a = [
+        ("this", "str"),
+        ("is", "lng"),
+      ]
+
+      """
+      // Ideally, this array would be left on 1 line without a trailing comma. We don't know if the
+      // comma is required when calculating the length of array elements, so the comma's length is
+      // always added to last element and that 1 character causes the newlines inside of the array.
+      + """
+      a = [
+        ("az", "by"), ("cf", "de"),
       ]
 
       """

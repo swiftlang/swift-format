@@ -728,28 +728,33 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   override func visit(_ node: ArrayElementListSyntax) -> SyntaxVisitorContinueKind {
     insertTokens(.break(.same), betweenElementsOf: node)
 
-    // The syntax library can't distinguish an array initializer (where the elements are types) from
-    // an array literal (where the elements are the contents of the array). We never want to add a
-    // trailing comma in the initializer case and there's always exactly 1 element, so we never add
-    // a trailing comma to 1 element arrays.
-    if let firstElement = node.first, let lastElement = node.last, firstElement != lastElement {
-      before(firstElement.firstToken, tokens: .commaDelimitedRegionStart)
-      let endToken =
-        Token.commaDelimitedRegionEnd(hasTrailingComma: lastElement.trailingComma != nil)
-      after(lastElement.lastToken, tokens: endToken)
-      if let existingTrailingComma = lastElement.trailingComma {
-        ignoredTokens.insert(existingTrailingComma)
+    for element in node {
+      before(element.firstToken, tokens: .open)
+      after(element.lastToken, tokens: .close)
+      if let trailingComma = element.trailingComma {
+        closingDelimiterTokens.insert(trailingComma)
+      }
+    }
+
+    if let lastElement = node.last {
+      if let trailingComma = lastElement.trailingComma {
+        ignoredTokens.insert(trailingComma)
+      }
+      // The syntax library can't distinguish an array initializer (where the elements are types)
+      // from an array literal (where the elements are the contents of the array). We never want to
+      // add a trailing comma in the initializer case and there's always exactly 1 element, so we
+      // never add a trailing comma to 1 element arrays.
+      if let firstElement = node.first, firstElement != lastElement {
+        before(firstElement.firstToken, tokens: .commaDelimitedRegionStart)
+        let endToken =
+          Token.commaDelimitedRegionEnd(hasTrailingComma: lastElement.trailingComma != nil)
+        after(lastElement.expression.lastToken, tokens: [endToken])
       }
     }
     return .visitChildren
   }
 
   override func visit(_ node: ArrayElementSyntax) -> SyntaxVisitorContinueKind {
-    before(node.firstToken, tokens: .open)
-    after(node.lastToken, tokens: .close)
-    if let trailingComma = node.trailingComma {
-      closingDelimiterTokens.insert(trailingComma)
-    }
     return .visitChildren
   }
 
@@ -762,17 +767,28 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   override func visit(_ node: DictionaryElementListSyntax) -> SyntaxVisitorContinueKind {
     insertTokens(.break(.same), betweenElementsOf: node)
 
-    // The syntax library can't distinguish a dictionary initializer (where the elements are types)
-    // from a dictionary literal (where the elements are the contents of the dictionary). We never
-    // want to add a trailing comma in the initializer case and there's always exactly 1 element,
-    // so we never add a trailing comma to 1 element dictionaries.
-    if let firstElement = node.first, let lastElement = node.last, firstElement != lastElement {
-      before(firstElement.firstToken, tokens: .commaDelimitedRegionStart)
-      let endToken =
-        Token.commaDelimitedRegionEnd(hasTrailingComma: lastElement.trailingComma != nil)
-      after(lastElement.lastToken, tokens: endToken)
-      if let existingTrailingComma = lastElement.trailingComma {
-        ignoredTokens.insert(existingTrailingComma)
+    for element in node {
+      before(element.firstToken, tokens: .open)
+      after(element.colon, tokens: .break)
+      after(element.lastToken, tokens: .close)
+      if let trailingComma = element.trailingComma {
+        closingDelimiterTokens.insert(trailingComma)
+      }
+    }
+
+    if let lastElement = node.last {
+      if let trailingComma = lastElement.trailingComma {
+        ignoredTokens.insert(trailingComma)
+      }
+      // The syntax library can't distinguish a dictionary initializer (where the elements are
+      // types) from a dictionary literal (where the elements are the contents of the dictionary).
+      // We never want to add a trailing comma in the initializer case and there's always exactly 1
+      //  element, so we never add a trailing comma to 1 element dictionaries.
+      if let firstElement = node.first, let lastElement = node.last, firstElement != lastElement {
+        before(firstElement.firstToken, tokens: .commaDelimitedRegionStart)
+        let endToken =
+          Token.commaDelimitedRegionEnd(hasTrailingComma: lastElement.trailingComma != nil)
+        after(lastElement.lastToken, tokens: endToken)
       }
     }
     return .visitChildren
@@ -784,12 +800,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: DictionaryElementSyntax) -> SyntaxVisitorContinueKind {
-    before(node.firstToken, tokens: .open)
-    after(node.colon, tokens: .break)
-    after(node.lastToken, tokens: .close)
-    if let trailingComma = node.trailingComma {
-      closingDelimiterTokens.insert(trailingComma)
-    }
     return .visitChildren
   }
 
