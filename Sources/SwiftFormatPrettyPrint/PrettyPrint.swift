@@ -651,15 +651,12 @@ public class PrettyPrinter {
         lengths.append(0)
 
       case .commaDelimitedRegionEnd:
-        // The trailing comma needs to be included in the length of the preceding break, but is not
-        // included in the length of the enclosing group. A trailing comma cannot cause the group
-        // to break onto multiple lines, because the comma isn't printed for a single line group.
-        if let index = delimIndexStack.last, case .break = tokens[index] {
-          lengths[index] += 1
-        }
-        // If the closest delimiter token is an open, instead of a break, then adding the comma's
-        // length isn't necessary. In that case, the comma is printed if the preceding break fires.
-
+        // The token's length is only necessary when a comma will be printed, but it's impossible to
+        // know at this point whether the region-start token will be on the same line as this token.
+        // Without adding this length to the total, it would be possible for this comma to be
+        // printed in column `maxLineLength`. Unfortunately, this can cause breaks to fire
+        // unnecessarily when the enclosed tokens comma would fit within `maxLineLength`.
+        total += 1
         lengths.append(1)
       }
     }
