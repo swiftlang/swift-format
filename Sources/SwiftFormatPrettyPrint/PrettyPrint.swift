@@ -211,7 +211,7 @@ public class PrettyPrinter {
       numberToPrint = consecutiveNewlineCount == 0 ? 1 : 0
     case .soft(let count, _):
       // We add 1 to the max blank lines because it takes 2 newlines to create the first blank line.
-      numberToPrint = min(count - consecutiveNewlineCount, configuration.maximumBlankLines + 1)
+      numberToPrint = min(count, configuration.maximumBlankLines + 1) - consecutiveNewlineCount
     case .hard(let count):
       numberToPrint = count
     }
