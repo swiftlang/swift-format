@@ -92,7 +92,7 @@ class Frontend {
     if paths.isEmpty {
       processStandardInput()
     } else {
-      processPaths(paths)
+      processPaths(paths, parallel: lintFormatOptions.parallel)
     }
   }
 
@@ -124,29 +124,46 @@ class Frontend {
   }
 
   /// Processes source content from a list of files and/or directories provided as paths.
-  private func processPaths(_ paths: [String]) {
+  private func processPaths(_ paths: [String], parallel: Bool) {
     precondition(
       !paths.isEmpty,
       "processPaths(_:) should only be called when paths is non-empty.")
 
-    for path in FileIterator(paths: paths) {
-      guard let sourceFile = FileHandle(forReadingAtPath: path) else {
-        diagnosticEngine.diagnose(Diagnostic.Message(.error, "Unable to open \(path)"))
-        continue
+    let lock = NSLock()
+    if parallel {
+      let allFilePaths = Array(FileIterator(paths: paths))
+      DispatchQueue.concurrentPerform(iterations: allFilePaths.count) { index in
+        let path = allFilePaths[index]
+        openAndProcess(path, lock: lock)
       }
-
-      guard let configuration = configuration(
-        atPath: lintFormatOptions.configurationPath, orInferredFromSwiftFileAtPath: path)
-      else {
-        // Already diagnosed in the called method.
-        continue
+    } else {
+      for path in FileIterator(paths: paths) {
+        openAndProcess(path, lock: nil)
       }
-
-      let fileToProcess = FileToProcess(
-        fileHandle: sourceFile, path: path, configuration: configuration)
-      processFile(fileToProcess)
     }
   }
+
+  /// Read and process the given path, optionally synchronizing diagnostic output with the given lock.
+  private func openAndProcess(_ path: String, lock: NSLock?) -> Void {
+    guard let sourceFile = FileHandle(forReadingAtPath: path) else {
+      lock?.lock()
+      defer { lock?.unlock() }
+      diagnosticEngine.diagnose(Diagnostic.Message(.error, "Unable to open \(path)"))
+      return
+    }
+
+    guard let configuration = configuration(
+      atPath: lintFormatOptions.configurationPath, orInferredFromSwiftFileAtPath: path)
+    else {
+      // Already diagnosed in the called method.
+      return
+    }
+
+    let fileToProcess = FileToProcess(
+      fileHandle: sourceFile, path: path, configuration: configuration)
+    processFile(fileToProcess)
+  }
+
 
   /// Returns the configuration that applies to the given `.swift` source file, when an explicit
   /// configuration path is also perhaps provided.

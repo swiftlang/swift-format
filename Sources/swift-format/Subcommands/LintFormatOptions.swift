@@ -49,6 +49,9 @@ struct LintFormatOptions: ParsableArguments {
     """)
   var ignoreUnparsableFiles: Bool
 
+  @Flag(help: "Whether or not to run formatting or linting in parallel consuming all possible resources")
+  var parallel: Bool
+
   /// The list of paths to Swift source files that should be formatted or linted.
   @Argument(help: "Zero or more input filenames.")
   var paths: [String]
