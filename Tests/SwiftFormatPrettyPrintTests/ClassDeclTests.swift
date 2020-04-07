@@ -140,6 +140,15 @@ final class ClassDeclTests: PrettyPrintTestCase {
         let A: Int
         let B: Bool
       }
+      class MyClass:
+        SuperOne, SuperTwo, SuperThree {
+        let A: Int
+        let B: Bool
+      }
+      class MyClassWhoseNameIsVeryLong: SuperOne, SuperTwo, SuperThree {
+        let A: Int
+        let B: Bool
+      }
       """
 
     let expected =
@@ -154,6 +163,18 @@ final class ClassDeclTests: PrettyPrintTestCase {
       }
       class MyClass: SuperOne, SuperTwo,
         SuperThree
+      {
+        let A: Int
+        let B: Bool
+      }
+      class MyClass:
+        SuperOne, SuperTwo, SuperThree
+      {
+        let A: Int
+        let B: Bool
+      }
+      class MyClassWhoseNameIsVeryLong:
+        SuperOne, SuperTwo, SuperThree
       {
         let A: Int
         let B: Bool

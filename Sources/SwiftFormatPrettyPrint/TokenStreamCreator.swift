@@ -1991,10 +1991,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: TypeInheritanceClauseSyntax) -> SyntaxVisitorContinueKind {
-    after(node.colon, tokens: .break(.open, size: 1))
-    before(node.inheritedTypeCollection.firstToken, tokens: .open)
-    after(node.inheritedTypeCollection.lastToken, tokens: .close)
-    after(node.lastToken, tokens: .break(.close, size: 0))
+    // Normally, the open-break is placed before the open token. In this case, it's intentionally
+    // ordered differently so that the inheritance list can start on the current line and only
+    // breaks if the first item in the list would overflow the column limit.
+    before(node.inheritedTypeCollection.firstToken, tokens: .open, .break(.open, size: 1))
+    after(node.inheritedTypeCollection.lastToken, tokens: .break(.close, size: 0), .close)
     return .visitChildren
   }
 
