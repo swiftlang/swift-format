@@ -526,6 +526,19 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     after(node.labelColon, tokens: .space)
     after(node.whileKeyword, tokens: .space)
 
+    // Add break groups, using open continuation breaks, around any conditions after the first so
+    // that continuations inside of the conditions can stack in addition to continuations between
+    // the conditions. There are no breaks around the first condition because there was historically
+    // not break after the while token and adding such a break would cause excessive changes to
+    // previously formatted code.
+    // This has the side effect that the label + `while` + tokens up to the first break in the first
+    // condition could be longer than the column limit since there are no breaks between the label
+    // or while token.
+    for condition in node.conditions.dropFirst() {
+      before(condition.firstToken, tokens: .break(.open(kind: .continuation), size: 0))
+      after(condition.lastToken, tokens: .break(.close(mustBreak: false), size: 0))
+    }
+
     arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
 
     return .visitChildren

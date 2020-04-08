@@ -493,6 +493,7 @@ extension NewlineTests {
     static let __allTests__NewlineTests = [
         ("testLeadingNewlines", testLeadingNewlines),
         ("testLeadingNewlinesWithComments", testLeadingNewlinesWithComments),
+        ("testNewlinesBetweenMembers", testNewlinesBetweenMembers),
         ("testTrailingNewlines", testTrailingNewlines),
         ("testTrailingNewlinesWithComments", testTrailingNewlinesWithComments),
     ]
@@ -802,6 +803,7 @@ extension WhileStmtTests {
     static let __allTests__WhileStmtTests = [
         ("testBasicWhileLoops", testBasicWhileLoops),
         ("testLabeledWhileLoops", testLabeledWhileLoops),
+        ("testWhileLoopMultipleConditionElements", testWhileLoopMultipleConditionElements),
     ]
 }
 
