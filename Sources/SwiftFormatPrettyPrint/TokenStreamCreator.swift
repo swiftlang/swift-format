@@ -2035,10 +2035,18 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: DifferentiableAttributeArgumentsSyntax) -> SyntaxVisitorContinueKind {
     // This node encapsulates the entire list of arguments in a `@differentiable(...)` attribute.
-    after(node.diffParamsComma, tokens: .break(.same))
-
     var needsBreakBeforeWhereClause = false
 
+    if let diffParamsComma = node.diffParamsComma {
+      after(diffParamsComma, tokens: .break(.same))
+    } else if node.diffParams != nil {
+      // If there were diff params but no comma following them, then we have "wrt: foo where ..."
+      // and we need a break before the where clause.
+      needsBreakBeforeWhereClause = true
+    }
+
+    // TODO: These properties will likely go away in a future version since the parser no longer
+    // reads the `vjp:` and `jvp:` arguments to `@differentiable`.
     if let vjp = node.maybeVJP {
       before(vjp.firstToken, tokens: .open)
       after(vjp.lastToken, tokens: .close)
@@ -2051,6 +2059,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       after(jvp.trailingComma, tokens: .break(.same))
       needsBreakBeforeWhereClause = true
     }
+
     if let whereClause = node.whereClause {
       if needsBreakBeforeWhereClause {
         before(whereClause.firstToken, tokens: .break(.same))
@@ -2066,6 +2075,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   {
     // This node encapsulates the `vjp:` or `jvp:` label and decl name in a `@differentiable`
     // attribute.
+    // TODO: This node will likely go away in a future version since the parser no longer reads the
+    // `vjp:` and `jvp:` arguments to `@differentiable`.
     after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
     return .visitChildren
   }
