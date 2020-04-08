@@ -2,38 +2,28 @@ final class DifferentiationAttributeTests: PrettyPrintTestCase {
   func testDifferentiable() {
     let input =
       """
-      @differentiable(wrt: x, vjp: d where T: D)
+      @differentiable(wrt: x where T: D)
       func foo<T>(_ x: T) -> T {}
 
-      @differentiable(wrt: x, vjp: deriv where T: D)
+      @differentiable(wrt: x where T: Differentiable)
       func foo<T>(_ x: T) -> T {}
 
-      @differentiable(wrt: x, vjp: derivativeFoo where T: Differentiable)
-      func foo<T>(_ x: T) -> T {}
-
-      @differentiable(wrt: theVariableNamedX, vjp: derivativeFoo where T: Differentiable)
+      @differentiable(wrt: theVariableNamedX where T: Differentiable)
       func foo<T>(_ theVariableNamedX: T) -> T {}
       """
 
     let expected =
       """
-      @differentiable(wrt: x, vjp: d where T: D)
+      @differentiable(wrt: x where T: D)
       func foo<T>(_ x: T) -> T {}
 
       @differentiable(
-        wrt: x, vjp: deriv where T: D
+        wrt: x where T: Differentiable
       )
       func foo<T>(_ x: T) -> T {}
 
       @differentiable(
-        wrt: x, vjp: derivativeFoo
-        where T: Differentiable
-      )
-      func foo<T>(_ x: T) -> T {}
-
-      @differentiable(
-        wrt: theVariableNamedX,
-        vjp: derivativeFoo
+        wrt: theVariableNamedX
         where T: Differentiable
       )
       func foo<T>(_ theVariableNamedX: T) -> T {}
