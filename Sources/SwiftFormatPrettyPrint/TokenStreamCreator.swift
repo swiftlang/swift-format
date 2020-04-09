@@ -444,6 +444,12 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   // MARK: - Control flow statement nodes
 
   override func visit(_ node: IfStmtSyntax) -> SyntaxVisitorContinueKind {
+    // There may be a consistent breaking group around this node, see `CodeBlockItemSyntax`. This
+    // group is necessary so that breaks around and inside of the conditions aren't forced to break
+    // when the if-stmt spans multiple lines.
+    before(node.conditions.firstToken, tokens: .open)
+    after(node.conditions.lastToken, tokens: .close)
+
     after(node.labelColon, tokens: .space)
     after(node.ifKeyword, tokens: .space)
 
@@ -1286,6 +1292,13 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     if shouldFormatterIgnore(node: Syntax(node)) {
       appendFormatterIgnored(node: Syntax(node))
       return .skipChildren
+    }
+
+    // This group applies to a top-level if-stmt so that all of the bodies will have the same
+    // breaking behavior.
+    if let ifStmt = node.item.as(IfStmtSyntax.self) {
+      before(ifStmt.firstToken, tokens: .open(.consistent))
+      after(ifStmt.lastToken, tokens: .close)
     }
     return .visitChildren
   }
