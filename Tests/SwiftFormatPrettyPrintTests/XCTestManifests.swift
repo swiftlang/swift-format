@@ -410,6 +410,7 @@ extension IfStmtTests {
         ("testIfStatement", testIfStatement),
         ("testLabeledIfStmt", testLabeledIfStmt),
         ("testMatchingPatternConditions", testMatchingPatternConditions),
+        ("testMultipleIfStmts", testMultipleIfStmts),
         ("testOptionalBindingConditions", testOptionalBindingConditions),
         ("testParenthesizedClauses", testParenthesizedClauses),
     ]
