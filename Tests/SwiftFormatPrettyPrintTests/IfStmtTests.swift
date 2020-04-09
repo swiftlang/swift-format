@@ -381,7 +381,9 @@ final class IfStmtTests: PrettyPrintTestCase {
             SomeVeryLongTypeNameThatDefinitelyBreaks,
           baz: Baz
         ) = foo(a, b, c, d)
-      { return nil }
+      {
+        return nil
+      }
 
       """
 
@@ -514,5 +516,52 @@ final class IfStmtTests: PrettyPrintTestCase {
       """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+  }
+
+  func testMultipleIfStmts() {
+    let input =
+      """
+      if foo && bar { baz() } else if bar { baz() } else if foo { baz() } else { blargh() }
+      if foo && bar && quxxe { baz() } else if bar { baz() } else if foo { baz() } else if quxxe { baz() } else { blargh() }
+      if let foo = getmyfoo(), let bar = getmybar(), foo.baz && bar.baz { foo() } else { bar() }
+      if let foo = getmyfoo(), let bar = getmybar(), foo.baz && bar.baz && someOtherCondition { foo() } else { bar() }
+      if let foo = getmyfoo(), let bar = getmybar(), foo.baz && bar.baz && someOtherCondition { foo() }
+      """
+
+    let expected =
+      """
+      if foo && bar { baz() } else if bar { baz() } else if foo { baz() } else { blargh() }
+      if foo && bar && quxxe {
+        baz()
+      } else if bar {
+        baz()
+      } else if foo {
+        baz()
+      } else if quxxe {
+        baz()
+      } else {
+        blargh()
+      }
+      if let foo = getmyfoo(), let bar = getmybar(), foo.baz && bar.baz {
+        foo()
+      } else {
+        bar()
+      }
+      if let foo = getmyfoo(), let bar = getmybar(),
+        foo.baz && bar.baz && someOtherCondition
+      {
+        foo()
+      } else {
+        bar()
+      }
+      if let foo = getmyfoo(), let bar = getmybar(),
+        foo.baz && bar.baz && someOtherCondition
+      {
+        foo()
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 85)
   }
 }
