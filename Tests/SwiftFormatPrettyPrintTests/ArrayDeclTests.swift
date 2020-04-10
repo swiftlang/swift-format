@@ -5,6 +5,12 @@ final class ArrayDeclTests: PrettyPrintTestCase {
   func testBasicArrays() {
     let input =
       """
+      let a = [ ]
+      let a = [
+      ]
+      let a = [
+        // Comment
+      ]
       let a = [1, 2, 3,]
       let a: [Bool] = [false, true, true, false]
       let a = [11111111, 2222222, 33333333, 4444444]
@@ -20,6 +26,11 @@ final class ArrayDeclTests: PrettyPrintTestCase {
 
     let expected =
       """
+      let a = []
+      let a = []
+      let a = [
+        // Comment
+      ]
       let a = [1, 2, 3]
       let a: [Bool] = [false, true, true, false]
       let a = [
