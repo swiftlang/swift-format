@@ -739,8 +739,10 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: ArrayExprSyntax) -> SyntaxVisitorContinueKind {
-    after(node.leftSquare, tokens: .break(.open, size: 0), .open)
-    before(node.rightSquare, tokens: .break(.close, size: 0), .close)
+    if !node.elements.isEmpty || node.rightSquare.leadingTrivia.numberOfComments > 0 {
+      after(node.leftSquare, tokens: .break(.open, size: 0), .open)
+      before(node.rightSquare, tokens: .break(.close, size: 0), .close)
+    }
     return .visitChildren
   }
 
@@ -778,8 +780,15 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: DictionaryExprSyntax) -> SyntaxVisitorContinueKind {
-    after(node.leftSquare, tokens: .break(.open, size: 0), .open)
-    before(node.rightSquare, tokens: .break(.close, size: 0), .close)
+    // The node's content is either a `DictionaryElementListSyntax` or a `TokenSyntax` for a colon
+    // token (for an empty dictionary).
+    if !(node.content.as(DictionaryElementListSyntax.self)?.isEmpty ?? true)
+      || node.content.leadingTrivia?.numberOfComments ?? 0 > 0
+      || node.rightSquare.leadingTrivia.numberOfComments > 0
+    {
+      after(node.leftSquare, tokens: .break(.open, size: 0), .open)
+      before(node.rightSquare, tokens: .break(.close, size: 0), .close)
+    }
     return .visitChildren
   }
 

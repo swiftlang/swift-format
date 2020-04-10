@@ -5,6 +5,15 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
   func testBasicDictionaries() {
     let input =
       """
+      let a: [String: String] = [ : ]
+      let a: [String: String] = [
+      :
+      ]
+      let a: [String: String] = [
+      // Comment A
+      :
+      // Comment B
+      ]
       let a = [1: "a", 2: "b", 3: "c",]
       let a: [Int: String] = [1: "a", 2: "b", 3: "c"]
       let a = [10000: "abc", 20000: "def", 30000: "ghij"]
@@ -20,6 +29,13 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
 
     let expected =
       """
+      let a: [String: String] = [:]
+      let a: [String: String] = [:]
+      let a: [String: String] = [
+        // Comment A
+        :
+        // Comment B
+      ]
       let a = [1: "a", 2: "b", 3: "c"]
       let a: [Int: String] = [1: "a", 2: "b", 3: "c"]
       let a = [
