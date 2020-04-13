@@ -855,7 +855,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       (node.trailingClosure != nil && !isCompactSingleFunctionCallArgument(arguments))
       || mustBreakBeforeClosingDelimiter(of: node, argumentListPath: \.argumentList)
 
-    before(node.trailingClosure?.leftBrace, tokens: .break(.same))
+    before(
+      node.trailingClosure?.leftBrace,
+      tokens: .break(.same, newlines: .elective(ignoresDiscretionary: true)))
 
     arrangeFunctionCallArgumentList(
       arguments,
@@ -1048,7 +1050,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       node.trailingClosure != nil
       || mustBreakBeforeClosingDelimiter(of: node, argumentListPath: \.argumentList)
 
-    before(node.trailingClosure?.leftBrace, tokens: .space)
+    before(
+      node.trailingClosure?.leftBrace,
+      tokens: .break(.same, newlines: .elective(ignoresDiscretionary: true)))
 
     arrangeFunctionCallArgumentList(
       arguments,

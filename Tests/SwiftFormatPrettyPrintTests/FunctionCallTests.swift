@@ -259,6 +259,55 @@ final class FunctionCallTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
   }
 
+  func testDiscretionaryLineBreakBeforeTrailingClosure() {
+    let input =
+      """
+      foo(a, b, c)
+      {
+        blah()
+      }
+      foo(
+        a, b, c
+      )
+      {
+        blah()
+      }
+      foo(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+      {
+        blah()
+      }
+      foo(ab, arg1, arg2) {
+        blah()
+      }
+      """
+
+    let expected =
+      """
+      foo(a, b, c) {
+        blah()
+      }
+      foo(
+        a, b, c
+      ) {
+        blah()
+      }
+      foo(
+        arg1, arg2, arg3,
+        arg4, arg5, arg6,
+        arg7
+      ) {
+        blah()
+      }
+      foo(ab, arg1, arg2)
+      {
+        blah()
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
+  }
+
   func testGroupsTrailingComma() {
     let input =
       """

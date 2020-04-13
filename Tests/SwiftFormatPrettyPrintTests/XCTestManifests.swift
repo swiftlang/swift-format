@@ -298,6 +298,7 @@ extension FunctionCallTests {
         ("testBasicFunctionCalls_packArguments", testBasicFunctionCalls_packArguments),
         ("testDiscretionaryLineBreakAfterColon", testDiscretionaryLineBreakAfterColon),
         ("testDiscretionaryLineBreakBeforeClosingParenthesis", testDiscretionaryLineBreakBeforeClosingParenthesis),
+        ("testDiscretionaryLineBreakBeforeTrailingClosure", testDiscretionaryLineBreakBeforeTrailingClosure),
         ("testDiscretionaryLineBreaksAreSelfCorrecting", testDiscretionaryLineBreaksAreSelfCorrecting),
         ("testGroupsTrailingComma", testGroupsTrailingComma),
         ("testNestedFunctionCallExprSequences", testNestedFunctionCallExprSequences),
@@ -697,6 +698,7 @@ extension SubscriptExprTests {
     static let __allTests__SubscriptExprTests = [
         ("testBasicSubscriptGetters", testBasicSubscriptGetters),
         ("testBasicSubscriptSetters", testBasicSubscriptSetters),
+        ("testDiscretionaryLineBreakBeforeTrailingClosure", testDiscretionaryLineBreakBeforeTrailingClosure),
         ("testGroupsTrailingComma", testGroupsTrailingComma),
         ("testSubscriptGettersWithTrailingClosures", testSubscriptGettersWithTrailingClosures),
         ("testSubscriptSettersWithTrailingClosures", testSubscriptSettersWithTrailingClosures),
