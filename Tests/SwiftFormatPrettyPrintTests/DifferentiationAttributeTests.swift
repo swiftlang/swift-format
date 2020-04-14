@@ -99,6 +99,9 @@ final class DifferentiationAttributeTests: PrettyPrintTestCase {
     #if HAS_DERIVATIVE_REGISTRATION_ATTRIBUTE
       let input =
         """
+        @derivative(of: foo)
+        func deriv<T>() {}
+
         @derivative(of: foo, wrt: x)
         func deriv<T>(_ x: T) {}
 
@@ -111,6 +114,9 @@ final class DifferentiationAttributeTests: PrettyPrintTestCase {
 
       let expected =
         """
+        @derivative(of: foo)
+        func deriv<T>() {}
+
         @derivative(of: foo, wrt: x)
         func deriv<T>(_ x: T) {}
 

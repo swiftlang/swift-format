@@ -2136,7 +2136,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       // `@transpose(...)` attribute.
       before(node.ofLabel, tokens: .open)
       after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
-      after(node.comma, tokens: .close)
+      // The comma after originalDeclName is optional and is only present if there are diffParams.
+      after(node.comma ?? node.originalDeclName.lastToken, tokens: .close)
 
       if let diffParams = node.diffParams {
         before(diffParams.firstToken, tokens: .break(.same), .open)
