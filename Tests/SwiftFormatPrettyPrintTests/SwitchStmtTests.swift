@@ -83,6 +83,7 @@ final class SwitchStmtTests: PrettyPrintTestCase {
       case "a": print("a")
       case "b", "c": print("bc")
       case "d", "e", "f", "g", "h": print("defgh")
+      case someVeryLongVarName, someOtherLongVarName: foo(a: [1, 2, 3, 4, 5])
       default: print("default")
       }
       """
@@ -96,6 +97,11 @@ final class SwitchStmtTests: PrettyPrintTestCase {
       case "d", "e", "f",
         "g", "h":
         print("defgh")
+      case someVeryLongVarName,
+        someOtherLongVarName:
+        foo(a: [
+          1, 2, 3, 4, 5,
+        ])
       default:
         print("default")
       }
