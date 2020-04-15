@@ -135,8 +135,16 @@ final class FunctionCallTests: PrettyPrintTestCase {
   func testArgumentStartsWithOpenDelimiter() {
     let input =
       """
+      myFunc(someArray: [
+      ])
       myFunc(someArray: [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000])
+      myFunc(someDictionary: [
+      :])
       myFunc(someDictionary: ["foo": "bar", "baz": "quux", "gli": "glop"])
+      myFunc(someClosure: {
+      })
+      myFunc(someClosure: { (a, b, c) in
+      })
       myFunc(someClosure: { foo, bar in baz(1000, 2000, 3000, 4000, 5000) })
       myFunc(someArray: [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000]) { foo in bar() }
       myFunc(someArray: [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000]) { foo in someMuchLongerLineBreakingBarFunction() }
@@ -144,13 +152,19 @@ final class FunctionCallTests: PrettyPrintTestCase {
 
     let expected =
       """
+      myFunc(someArray: [])
       myFunc(someArray: [
         1000, 2000, 3000, 4000, 5000, 6000, 7000,
         8000,
       ])
+      myFunc(someDictionary: [:])
       myFunc(someDictionary: [
         "foo": "bar", "baz": "quux", "gli": "glop",
       ])
+      myFunc(someClosure: {
+      })
+      myFunc(someClosure: { (a, b, c) in
+      })
       myFunc(someClosure: { foo, bar in
         baz(1000, 2000, 3000, 4000, 5000)
       })

@@ -359,11 +359,14 @@ public class PrettyPrinter {
           = openCloseBreakCompensatingLineNumber != matchingOpenBreak.lineNumber
 
         if matchingOpenBreak.contributesBlockIndent {
+          // The actual line number is used, instead of the compensating line number. When the close
+          // break is at the start of a new line, the block indentation isn't carried to the new line.
+          let currentLine = lineNumber
           // When two or more open breaks are encountered on the same line, only the final open
           // break is allowed to increase the block indent, avoiding multiple block indents. As the
           // open breaks on that line are closed, the new final open break must be enabled again to
           // add a block indent.
-          if matchingOpenBreak.lineNumber == openCloseBreakCompensatingLineNumber,
+          if matchingOpenBreak.lineNumber == currentLine,
             let lastActiveOpenBreak = activeOpenBreaks.last,
             lastActiveOpenBreak.kind == .block,
             !lastActiveOpenBreak.contributesBlockIndent
