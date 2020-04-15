@@ -173,4 +173,62 @@ final class TryCatchTests: PrettyPrintTestCase {
       """
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 45)
   }
+
+  func testMultipleCatchItems() {
+    let input =
+      """
+      do { try thisMightFail() } catch error1, error2 { print("Nope") }
+      do { try thisMightFail() } catch longErrorType, error2 { print("Nope") }
+      do { try thisMightFail() } catch longErrorTypeName, longErrorType2(let someLongVariable) { print("Nope") }
+      do { try thisMightFail() } catch longErrorTypeName, longErrorType2 as SomeLongErrorType { print("Nope") }
+      do { try thisMightFail() } catch longErrorName where someCondition, longErrorType2 { print("Nope") }
+      do { try thisMightFail() } catch longErrorTypeName, longErrorType2 as SomeLongErrorType where someCondition, longErrorType3 { print("Nope") }
+      """
+
+    let expected =
+      """
+      do {
+        try thisMightFail()
+      } catch error1, error2 {
+        print("Nope")
+      }
+      do {
+        try thisMightFail()
+      } catch longErrorType,
+        error2
+      { print("Nope") }
+      do {
+        try thisMightFail()
+      } catch
+        longErrorTypeName,
+        longErrorType2(
+          let someLongVariable)
+      { print("Nope") }
+      do {
+        try thisMightFail()
+      } catch
+        longErrorTypeName,
+        longErrorType2
+          as SomeLongErrorType
+      { print("Nope") }
+      do {
+        try thisMightFail()
+      } catch longErrorName
+        where someCondition,
+        longErrorType2
+      { print("Nope") }
+      do {
+        try thisMightFail()
+      } catch
+        longErrorTypeName,
+        longErrorType2
+          as SomeLongErrorType
+          where someCondition,
+        longErrorType3
+      { print("Nope") }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 25)
+  }
 }

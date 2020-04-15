@@ -747,6 +747,7 @@ extension TryCatchTests {
         ("testCatchWhere_noBreakBeforeCatch", testCatchWhere_noBreakBeforeCatch),
         ("testDoTryCatch_breakBeforeCatch", testDoTryCatch_breakBeforeCatch),
         ("testDoTryCatch_noBreakBeforeCatch", testDoTryCatch_noBreakBeforeCatch),
+        ("testMultipleCatchItems", testMultipleCatchItems),
         ("testNestedDo", testNestedDo),
     ]
 }

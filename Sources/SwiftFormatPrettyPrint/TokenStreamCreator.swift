@@ -580,7 +580,20 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     let catchPrecedingBreak = config.lineBreakBeforeControlFlowKeywords
       ? Token.break(.same, newlines: .soft) : Token.space
     before(node.catchKeyword, tokens: catchPrecedingBreak)
-    before(node.pattern?.firstToken, tokens: .space)
+
+    if let catchItems = node.catchItems {
+      // If there are multiple items in the `catch` clause, wrap each in open/close breaks so that
+      // their internal breaks stack correctly. Otherwise, if there is only a single clause, use the
+      // old (pre-SE-0276) behavior (a fixed space after the `catch` keyword).
+      if catchItems.count > 1 {
+        for catchItem in catchItems {
+          before(catchItem.firstToken, tokens: .break(.open(kind: .continuation)))
+          after(catchItem.lastToken, tokens: .break(.close(mustBreak: false), size: 0))
+        }
+      } else {
+        before(node.catchItems?.firstToken, tokens: .space)
+      }
+    }
 
     arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
 
@@ -1499,7 +1512,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     //     }
     //
     let wherePrecedingBreak: Token
-    if !config.lineBreakBeforeControlFlowKeywords, let parent = node.parent, parent.is(CatchClauseSyntax.self) {
+    if !config.lineBreakBeforeControlFlowKeywords,
+      let parent = node.parent, parent.is(CatchItemSyntax.self)
+    {
       wherePrecedingBreak = .break(.continue)
     } else {
       wherePrecedingBreak = .break(.same)
@@ -2100,21 +2115,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       needsBreakBeforeWhereClause = true
     }
 
-    // TODO: These properties will likely go away in a future version since the parser no longer
-    // reads the `vjp:` and `jvp:` arguments to `@differentiable`.
-    if let vjp = node.maybeVJP {
-      before(vjp.firstToken, tokens: .open)
-      after(vjp.lastToken, tokens: .close)
-      after(vjp.trailingComma, tokens: .break(.same))
-      needsBreakBeforeWhereClause = true
-    }
-    if let jvp = node.maybeJVP {
-      before(jvp.firstToken, tokens: .open)
-      after(jvp.lastToken, tokens: .close)
-      after(jvp.trailingComma, tokens: .break(.same))
-      needsBreakBeforeWhereClause = true
-    }
-
     if let whereClause = node.whereClause {
       if needsBreakBeforeWhereClause {
         before(whereClause.firstToken, tokens: .break(.same))
@@ -2125,24 +2125,13 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: DifferentiableAttributeFuncSpecifierSyntax)
-    -> SyntaxVisitorContinueKind
-  {
-    // This node encapsulates the `vjp:` or `jvp:` label and decl name in a `@differentiable`
-    // attribute.
-    // TODO: This node will likely go away in a future version since the parser no longer reads the
-    // `vjp:` and `jvp:` arguments to `@differentiable`.
-    after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
-    return .visitChildren
-  }
-
-  override func visit(_ node: DifferentiationParamsSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: DifferentiabilityParamsSyntax) -> SyntaxVisitorContinueKind {
     after(node.leftParen, tokens: .break(.open, size: 0), .open)
     before(node.rightParen, tokens: .break(.close, size: 0), .close)
     return .visitChildren
   }
 
-  override func visit(_ node: DifferentiationParamSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: DifferentiabilityParamSyntax) -> SyntaxVisitorContinueKind {
     after(node.trailingComma, tokens: .break(.same))
     return .visitChildren
   }
@@ -2168,7 +2157,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     }
   #endif
 
-  override func visit(_ node: DifferentiationParamsClauseSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: DifferentiabilityParamsClauseSyntax) -> SyntaxVisitorContinueKind {
     // This node encapsulates the `wrt:` label and value/variable in a `@differentiable`,
     // `@derivative`, or `@transpose` attribute.
     after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
