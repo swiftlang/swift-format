@@ -1310,7 +1310,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // This group applies to a top-level if-stmt so that all of the bodies will have the same
     // breaking behavior.
     if let ifStmt = node.item.as(IfStmtSyntax.self) {
-      before(ifStmt.firstToken, tokens: .open(.consistent))
+      before(ifStmt.conditions.firstToken, tokens: .open(.consistent))
       after(ifStmt.lastToken, tokens: .close)
     }
     return .visitChildren

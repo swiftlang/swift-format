@@ -521,47 +521,51 @@ final class IfStmtTests: PrettyPrintTestCase {
   func testMultipleIfStmts() {
     let input =
       """
-      if foo && bar { baz() } else if bar { baz() } else if foo { baz() } else { blargh() }
-      if foo && bar && quxxe { baz() } else if bar { baz() } else if foo { baz() } else if quxxe { baz() } else { blargh() }
-      if let foo = getmyfoo(), let bar = getmybar(), foo.baz && bar.baz { foo() } else { bar() }
-      if let foo = getmyfoo(), let bar = getmybar(), foo.baz && bar.baz && someOtherCondition { foo() } else { bar() }
-      if let foo = getmyfoo(), let bar = getmybar(), foo.baz && bar.baz && someOtherCondition { foo() }
+      func foo() {
+        if foo && bar { baz() } else if bar { baz() } else if foo { baz() } else { blargh() }
+        if foo && bar && quxxe { baz() } else if bar { baz() } else if foo { baz() } else if quxxe { baz() } else { blargh() }
+        if let foo = getmyfoo(), let bar = getmybar(), foo.baz && bar.baz { foo() } else { bar() }
+        if let foo = getmyfoo(), let bar = getmybar(), foo.baz && bar.baz && someOtherCondition { foo() } else { bar() }
+        if let foo = getmyfoo(), let bar = getmybar(), foo.baz && bar.baz && someOtherCondition { foo() }
+      }
       """
 
     let expected =
       """
-      if foo && bar { baz() } else if bar { baz() } else if foo { baz() } else { blargh() }
-      if foo && bar && quxxe {
-        baz()
-      } else if bar {
-        baz()
-      } else if foo {
-        baz()
-      } else if quxxe {
-        baz()
-      } else {
-        blargh()
-      }
-      if let foo = getmyfoo(), let bar = getmybar(), foo.baz && bar.baz {
-        foo()
-      } else {
-        bar()
-      }
-      if let foo = getmyfoo(), let bar = getmybar(),
-        foo.baz && bar.baz && someOtherCondition
-      {
-        foo()
-      } else {
-        bar()
-      }
-      if let foo = getmyfoo(), let bar = getmybar(),
-        foo.baz && bar.baz && someOtherCondition
-      {
-        foo()
+      func foo() {
+        if foo && bar { baz() } else if bar { baz() } else if foo { baz() } else { blargh() }
+        if foo && bar && quxxe {
+          baz()
+        } else if bar {
+          baz()
+        } else if foo {
+          baz()
+        } else if quxxe {
+          baz()
+        } else {
+          blargh()
+        }
+        if let foo = getmyfoo(), let bar = getmybar(), foo.baz && bar.baz {
+          foo()
+        } else {
+          bar()
+        }
+        if let foo = getmyfoo(), let bar = getmybar(),
+          foo.baz && bar.baz && someOtherCondition
+        {
+          foo()
+        } else {
+          bar()
+        }
+        if let foo = getmyfoo(), let bar = getmybar(),
+          foo.baz && bar.baz && someOtherCondition
+        {
+          foo()
+        }
       }
 
       """
 
-    assertPrettyPrintEqual(input: input, expected: expected, linelength: 85)
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 87)
   }
 }
