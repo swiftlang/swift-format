@@ -314,4 +314,49 @@ final class AttributeTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
+
+  func testPropertyWrappers() {
+    // Property wrappers are `CustomAttributeSyntax` nodes (not `AttributeSyntax`) and their
+    // arguments are `TupleExprElementListSyntax` (like regular function call argument lists), so
+    // make sure that those are formatted properly.
+    let input =
+      """
+      struct X {
+        @Wrapper var value: String
+
+        @Wrapper ( ) var value: String
+
+        @Wrapper (arg1:"value")var value: String
+
+        @Wrapper (arg1:"value")
+        var value: String
+
+        @Wrapper (arg1:"value",arg2:otherValue)
+        var value: String
+      }
+      """
+
+    let expected =
+      """
+      struct X {
+        @Wrapper var value: String
+
+        @Wrapper() var value: String
+
+        @Wrapper(arg1: "value")
+        var value: String
+
+        @Wrapper(arg1: "value")
+        var value: String
+
+        @Wrapper(
+          arg1: "value",
+          arg2: otherValue)
+        var value: String
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 32)
+  }
 }

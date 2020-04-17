@@ -1391,6 +1391,22 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
+  override func visit(_ node: CustomAttributeSyntax) -> SyntaxVisitorContinueKind {
+    // "Custom attributes" are better known to users as "property wrappers".
+    before(node.firstToken, tokens: .open)
+    if let argumentList = node.argumentList,
+      let leftParen = node.leftParen, let rightParen = node.rightParen
+    {
+      arrangeFunctionCallArgumentList(
+        argumentList,
+        leftDelimiter: leftParen,
+        rightDelimiter: rightParen,
+        forcesBreakBeforeRightDelimiter: false)
+    }
+    after(node.lastToken, tokens: .close)
+    return .visitChildren
+  }
+
   override func visit(_ node: AvailabilitySpecListSyntax) -> SyntaxVisitorContinueKind {
     insertTokens(.break(.same, size: 1), betweenElementsOf: node)
     return .visitChildren

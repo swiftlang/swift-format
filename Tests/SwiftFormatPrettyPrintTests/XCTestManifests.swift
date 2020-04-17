@@ -69,6 +69,7 @@ extension AttributeTests {
         ("testObjCAttributesDiscretionaryLineBreaking", testObjCAttributesDiscretionaryLineBreaking),
         ("testObjCAttributesPerLineBreaking", testObjCAttributesPerLineBreaking),
         ("testObjCBinPackedAttributes", testObjCBinPackedAttributes),
+        ("testPropertyWrappers", testPropertyWrappers),
     ]
 }
 
