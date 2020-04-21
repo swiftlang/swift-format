@@ -228,23 +228,6 @@ public struct Configuration: Codable, Equatable {
   }
 }
 
-/// Configuration for the NoPlaygroundLiterals rule.
-public struct NoPlaygroundLiteralsConfiguration: Codable, Equatable {
-  public enum ResolveBehavior: String, Codable {
-    /// If not sure, use `UIColor` to replace `#colorLiteral`.
-    case useUIColor
-
-    /// If not sure, use `NSColor` to replace `#colorLiteral`.
-    case useNSColor
-
-    /// If not sure, raise an error.
-    case error
-  }
-
-  /// Resolution behavior to use when encountering an ambiguous `#colorLiteral`.
-  public let resolveAmbiguousColor: ResolveBehavior = .useUIColor
-}
-
 /// Configuration for the `FileScopedDeclarationPrivacy` rule.
 public struct FileScopedDeclarationPrivacyConfiguration: Codable, Equatable {
   public enum AccessLevel: String, Codable {
