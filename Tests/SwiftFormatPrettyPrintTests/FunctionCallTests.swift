@@ -135,8 +135,16 @@ final class FunctionCallTests: PrettyPrintTestCase {
   func testArgumentStartsWithOpenDelimiter() {
     let input =
       """
+      myFunc(someArray: [
+      ])
       myFunc(someArray: [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000])
+      myFunc(someDictionary: [
+      :])
       myFunc(someDictionary: ["foo": "bar", "baz": "quux", "gli": "glop"])
+      myFunc(someClosure: {
+      })
+      myFunc(someClosure: { (a, b, c) in
+      })
       myFunc(someClosure: { foo, bar in baz(1000, 2000, 3000, 4000, 5000) })
       myFunc(someArray: [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000]) { foo in bar() }
       myFunc(someArray: [1000, 2000, 3000, 4000, 5000, 6000, 7000, 8000]) { foo in someMuchLongerLineBreakingBarFunction() }
@@ -144,13 +152,19 @@ final class FunctionCallTests: PrettyPrintTestCase {
 
     let expected =
       """
+      myFunc(someArray: [])
       myFunc(someArray: [
         1000, 2000, 3000, 4000, 5000, 6000, 7000,
         8000,
       ])
+      myFunc(someDictionary: [:])
       myFunc(someDictionary: [
         "foo": "bar", "baz": "quux", "gli": "glop",
       ])
+      myFunc(someClosure: {
+      })
+      myFunc(someClosure: { (a, b, c) in
+      })
       myFunc(someClosure: { foo, bar in
         baz(1000, 2000, 3000, 4000, 5000)
       })
@@ -253,6 +267,55 @@ final class FunctionCallTests: PrettyPrintTestCase {
           Very.Deeply
           .Nested.Member
       )
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
+  }
+
+  func testDiscretionaryLineBreakBeforeTrailingClosure() {
+    let input =
+      """
+      foo(a, b, c)
+      {
+        blah()
+      }
+      foo(
+        a, b, c
+      )
+      {
+        blah()
+      }
+      foo(arg1, arg2, arg3, arg4, arg5, arg6, arg7)
+      {
+        blah()
+      }
+      foo(ab, arg1, arg2) {
+        blah()
+      }
+      """
+
+    let expected =
+      """
+      foo(a, b, c) {
+        blah()
+      }
+      foo(
+        a, b, c
+      ) {
+        blah()
+      }
+      foo(
+        arg1, arg2, arg3,
+        arg4, arg5, arg6,
+        arg7
+      ) {
+        blah()
+      }
+      foo(ab, arg1, arg2)
+      {
+        blah()
+      }
 
       """
 

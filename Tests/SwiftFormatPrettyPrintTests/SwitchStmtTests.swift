@@ -83,6 +83,7 @@ final class SwitchStmtTests: PrettyPrintTestCase {
       case "a": print("a")
       case "b", "c": print("bc")
       case "d", "e", "f", "g", "h": print("defgh")
+      case someVeryLongVarName, someOtherLongVarName: foo(a: [1, 2, 3, 4, 5])
       default: print("default")
       }
       """
@@ -96,6 +97,11 @@ final class SwitchStmtTests: PrettyPrintTestCase {
       case "d", "e", "f",
         "g", "h":
         print("defgh")
+      case someVeryLongVarName,
+        someOtherLongVarName:
+        foo(a: [
+          1, 2, 3, 4, 5,
+        ])
       default:
         print("default")
       }
@@ -287,5 +293,43 @@ final class SwitchStmtTests: PrettyPrintTestCase {
       """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+  }
+
+  func testLabeledSwitchStmt() {
+    let input =
+      """
+      label:switch foo {
+      case bar:
+        callForBar()
+      case baz:
+        callForBaz()
+      }
+      someVeryExtremelyLongLabel: switch foo {
+      case bar:
+        callForBar()
+      case baz:
+        callForBaz()
+      }
+      """
+
+    let expected =
+      """
+      label: switch foo {
+      case bar:
+        callForBar()
+      case baz:
+        callForBaz()
+      }
+      someVeryExtremelyLongLabel: switch foo
+      {
+      case bar:
+        callForBar()
+      case baz:
+        callForBaz()
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
   }
 }

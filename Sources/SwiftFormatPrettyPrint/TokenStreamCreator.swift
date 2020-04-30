@@ -444,6 +444,13 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   // MARK: - Control flow statement nodes
 
   override func visit(_ node: IfStmtSyntax) -> SyntaxVisitorContinueKind {
+    // There may be a consistent breaking group around this node, see `CodeBlockItemSyntax`. This
+    // group is necessary so that breaks around and inside of the conditions aren't forced to break
+    // when the if-stmt spans multiple lines.
+    before(node.conditions.firstToken, tokens: .open)
+    after(node.conditions.lastToken, tokens: .close)
+
+    after(node.labelColon, tokens: .space)
     after(node.ifKeyword, tokens: .space)
 
     // Add break groups, using open continuation breaks, around any conditions after the first so
@@ -525,12 +532,26 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     after(node.labelColon, tokens: .space)
     after(node.whileKeyword, tokens: .space)
 
+    // Add break groups, using open continuation breaks, around any conditions after the first so
+    // that continuations inside of the conditions can stack in addition to continuations between
+    // the conditions. There are no breaks around the first condition because there was historically
+    // not break after the while token and adding such a break would cause excessive changes to
+    // previously formatted code.
+    // This has the side effect that the label + `while` + tokens up to the first break in the first
+    // condition could be longer than the column limit since there are no breaks between the label
+    // or while token.
+    for condition in node.conditions.dropFirst() {
+      before(condition.firstToken, tokens: .break(.open(kind: .continuation), size: 0))
+      after(condition.lastToken, tokens: .break(.close(mustBreak: false), size: 0))
+    }
+
     arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
 
     return .visitChildren
   }
 
   override func visit(_ node: RepeatWhileStmtSyntax) -> SyntaxVisitorContinueKind {
+    after(node.labelColon, tokens: .space)
     arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
 
     if config.lineBreakBeforeControlFlowKeywords {
@@ -550,6 +571,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: DoStmtSyntax) -> SyntaxVisitorContinueKind {
+    after(node.labelColon, tokens: .space)
     arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
     return .visitChildren
   }
@@ -591,6 +613,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: SwitchStmtSyntax) -> SyntaxVisitorContinueKind {
+    after(node.labelColon, tokens: .space)
     before(node.switchKeyword, tokens: .open)
     after(node.switchKeyword, tokens: .space)
     before(node.leftBrace, tokens: .break(.reset))
@@ -716,59 +739,84 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: ArrayExprSyntax) -> SyntaxVisitorContinueKind {
-    after(node.leftSquare, tokens: .break(.open, size: 0), .open)
-    before(node.rightSquare, tokens: .break(.close, size: 0), .close)
+    if !node.elements.isEmpty || node.rightSquare.leadingTrivia.numberOfComments > 0 {
+      after(node.leftSquare, tokens: .break(.open, size: 0), .open)
+      before(node.rightSquare, tokens: .break(.close, size: 0), .close)
+    }
     return .visitChildren
   }
 
   override func visit(_ node: ArrayElementListSyntax) -> SyntaxVisitorContinueKind {
     insertTokens(.break(.same), betweenElementsOf: node)
 
-    // The syntax library can't distinguish an array initializer (where the elements are types) from
-    // an array literal (where the elements are the contents of the array). We never want to add a
-    // trailing comma in the initializer case and there's always exactly 1 element, so we never add
-    // a trailing comma to 1 element arrays.
-    if let firstElement = node.first, let lastElement = node.last, firstElement != lastElement {
-      before(firstElement.firstToken, tokens: .commaDelimitedRegionStart)
-      let endToken =
-        Token.commaDelimitedRegionEnd(hasTrailingComma: lastElement.trailingComma != nil)
-      after(lastElement.lastToken, tokens: endToken)
-      if let existingTrailingComma = lastElement.trailingComma {
-        ignoredTokens.insert(existingTrailingComma)
+    for element in node {
+      before(element.firstToken, tokens: .open)
+      after(element.lastToken, tokens: .close)
+      if let trailingComma = element.trailingComma {
+        closingDelimiterTokens.insert(trailingComma)
+      }
+    }
+
+    if let lastElement = node.last {
+      if let trailingComma = lastElement.trailingComma {
+        ignoredTokens.insert(trailingComma)
+      }
+      // The syntax library can't distinguish an array initializer (where the elements are types)
+      // from an array literal (where the elements are the contents of the array). We never want to
+      // add a trailing comma in the initializer case and there's always exactly 1 element, so we
+      // never add a trailing comma to 1 element arrays.
+      if let firstElement = node.first, firstElement != lastElement {
+        before(firstElement.firstToken, tokens: .commaDelimitedRegionStart)
+        let endToken =
+          Token.commaDelimitedRegionEnd(hasTrailingComma: lastElement.trailingComma != nil)
+        after(lastElement.expression.lastToken, tokens: [endToken])
       }
     }
     return .visitChildren
   }
 
   override func visit(_ node: ArrayElementSyntax) -> SyntaxVisitorContinueKind {
-    before(node.firstToken, tokens: .open)
-    after(node.lastToken, tokens: .close)
-    if let trailingComma = node.trailingComma {
-      closingDelimiterTokens.insert(trailingComma)
-    }
     return .visitChildren
   }
 
   override func visit(_ node: DictionaryExprSyntax) -> SyntaxVisitorContinueKind {
-    after(node.leftSquare, tokens: .break(.open, size: 0), .open)
-    before(node.rightSquare, tokens: .break(.close, size: 0), .close)
+    // The node's content is either a `DictionaryElementListSyntax` or a `TokenSyntax` for a colon
+    // token (for an empty dictionary).
+    if !(node.content.as(DictionaryElementListSyntax.self)?.isEmpty ?? true)
+      || node.content.leadingTrivia?.numberOfComments ?? 0 > 0
+      || node.rightSquare.leadingTrivia.numberOfComments > 0
+    {
+      after(node.leftSquare, tokens: .break(.open, size: 0), .open)
+      before(node.rightSquare, tokens: .break(.close, size: 0), .close)
+    }
     return .visitChildren
   }
 
   override func visit(_ node: DictionaryElementListSyntax) -> SyntaxVisitorContinueKind {
     insertTokens(.break(.same), betweenElementsOf: node)
 
-    // The syntax library can't distinguish a dictionary initializer (where the elements are types)
-    // from a dictionary literal (where the elements are the contents of the dictionary). We never
-    // want to add a trailing comma in the initializer case and there's always exactly 1 element,
-    // so we never add a trailing comma to 1 element dictionaries.
-    if let firstElement = node.first, let lastElement = node.last, firstElement != lastElement {
-      before(firstElement.firstToken, tokens: .commaDelimitedRegionStart)
-      let endToken =
-        Token.commaDelimitedRegionEnd(hasTrailingComma: lastElement.trailingComma != nil)
-      after(lastElement.lastToken, tokens: endToken)
-      if let existingTrailingComma = lastElement.trailingComma {
-        ignoredTokens.insert(existingTrailingComma)
+    for element in node {
+      before(element.firstToken, tokens: .open)
+      after(element.colon, tokens: .break)
+      after(element.lastToken, tokens: .close)
+      if let trailingComma = element.trailingComma {
+        closingDelimiterTokens.insert(trailingComma)
+      }
+    }
+
+    if let lastElement = node.last {
+      if let trailingComma = lastElement.trailingComma {
+        ignoredTokens.insert(trailingComma)
+      }
+      // The syntax library can't distinguish a dictionary initializer (where the elements are
+      // types) from a dictionary literal (where the elements are the contents of the dictionary).
+      // We never want to add a trailing comma in the initializer case and there's always exactly 1
+      //  element, so we never add a trailing comma to 1 element dictionaries.
+      if let firstElement = node.first, let lastElement = node.last, firstElement != lastElement {
+        before(firstElement.firstToken, tokens: .commaDelimitedRegionStart)
+        let endToken =
+          Token.commaDelimitedRegionEnd(hasTrailingComma: lastElement.trailingComma != nil)
+        after(lastElement.lastToken, tokens: endToken)
       }
     }
     return .visitChildren
@@ -780,12 +828,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: DictionaryElementSyntax) -> SyntaxVisitorContinueKind {
-    before(node.firstToken, tokens: .open)
-    after(node.colon, tokens: .break)
-    after(node.lastToken, tokens: .close)
-    if let trailingComma = node.trailingComma {
-      closingDelimiterTokens.insert(trailingComma)
-    }
     return .visitChildren
   }
 
@@ -813,7 +855,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       (node.trailingClosure != nil && !isCompactSingleFunctionCallArgument(arguments))
       || mustBreakBeforeClosingDelimiter(of: node, argumentListPath: \.argumentList)
 
-    before(node.trailingClosure?.leftBrace, tokens: .break(.same))
+    before(
+      node.trailingClosure?.leftBrace,
+      tokens: .break(.same, newlines: .elective(ignoresDiscretionary: true)))
 
     arrangeFunctionCallArgumentList(
       arguments,
@@ -1006,7 +1050,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       node.trailingClosure != nil
       || mustBreakBeforeClosingDelimiter(of: node, argumentListPath: \.argumentList)
 
-    before(node.trailingClosure?.leftBrace, tokens: .space)
+    before(
+      node.trailingClosure?.leftBrace,
+      tokens: .break(.same, newlines: .elective(ignoresDiscretionary: true)))
 
     arrangeFunctionCallArgumentList(
       arguments,
@@ -1186,7 +1232,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     after(node.trailingComma, tokens: .break)
 
     if let associatedValue = node.associatedValue {
-      arrangeParameterClause(associatedValue, forcesBreakBeforeRightParen: true)
+      arrangeParameterClause(associatedValue, forcesBreakBeforeRightParen: false)
     }
 
     return .visitChildren
@@ -1259,6 +1305,13 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     if shouldFormatterIgnore(node: Syntax(node)) {
       appendFormatterIgnored(node: Syntax(node))
       return .skipChildren
+    }
+
+    // This group applies to a top-level if-stmt so that all of the bodies will have the same
+    // breaking behavior.
+    if let ifStmt = node.item.as(IfStmtSyntax.self) {
+      before(ifStmt.conditions.firstToken, tokens: .open(.consistent))
+      after(ifStmt.lastToken, tokens: .close)
     }
     return .visitChildren
   }
@@ -1333,6 +1386,22 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       // the argument, using type specific visitor methods.
       after(node.leftParen, tokens: .break(.open, size: 0), .open(argumentListConsistency()))
       before(node.rightParen, tokens: .break(.close, size: 0), .close)
+    }
+    after(node.lastToken, tokens: .close)
+    return .visitChildren
+  }
+
+  override func visit(_ node: CustomAttributeSyntax) -> SyntaxVisitorContinueKind {
+    // "Custom attributes" are better known to users as "property wrappers".
+    before(node.firstToken, tokens: .open)
+    if let argumentList = node.argumentList,
+      let leftParen = node.leftParen, let rightParen = node.rightParen
+    {
+      arrangeFunctionCallArgumentList(
+        argumentList,
+        leftDelimiter: leftParen,
+        rightDelimiter: rightParen,
+        forcesBreakBeforeRightDelimiter: false)
     }
     after(node.lastToken, tokens: .close)
     return .visitChildren
@@ -1977,10 +2046,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: TypeInheritanceClauseSyntax) -> SyntaxVisitorContinueKind {
-    after(node.colon, tokens: .break(.open, size: 1))
-    before(node.inheritedTypeCollection.firstToken, tokens: .open)
-    after(node.inheritedTypeCollection.lastToken, tokens: .close)
-    after(node.lastToken, tokens: .break(.close, size: 0))
+    // Normally, the open-break is placed before the open token. In this case, it's intentionally
+    // ordered differently so that the inheritance list can start on the current line and only
+    // breaks if the first item in the list would overflow the column limit.
+    before(node.inheritedTypeCollection.firstToken, tokens: .open, .break(.open, size: 1))
+    after(node.inheritedTypeCollection.lastToken, tokens: .break(.close, size: 0), .close)
     return .visitChildren
   }
 
@@ -2020,16 +2090,36 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: DifferentiableAttributeArgumentsSyntax) -> SyntaxVisitorContinueKind {
     // This node encapsulates the entire list of arguments in a `@differentiable(...)` attribute.
+    var needsBreakBeforeWhereClause = false
+
+    if let diffParamsComma = node.diffParamsComma {
+      after(diffParamsComma, tokens: .break(.same))
+    } else if node.diffParams != nil {
+      // If there were diff params but no comma following them, then we have "wrt: foo where ..."
+      // and we need a break before the where clause.
+      needsBreakBeforeWhereClause = true
+    }
+
+    // TODO: These properties will likely go away in a future version since the parser no longer
+    // reads the `vjp:` and `jvp:` arguments to `@differentiable`.
     if let vjp = node.maybeVJP {
-      before(vjp.firstToken, tokens: .break(.same), .open)
+      before(vjp.firstToken, tokens: .open)
       after(vjp.lastToken, tokens: .close)
+      after(vjp.trailingComma, tokens: .break(.same))
+      needsBreakBeforeWhereClause = true
     }
     if let jvp = node.maybeJVP {
-      before(jvp.firstToken, tokens: .break(.same), .open)
+      before(jvp.firstToken, tokens: .open)
       after(jvp.lastToken, tokens: .close)
+      after(jvp.trailingComma, tokens: .break(.same))
+      needsBreakBeforeWhereClause = true
     }
+
     if let whereClause = node.whereClause {
-      before(whereClause.firstToken, tokens: .break(.same), .open)
+      if needsBreakBeforeWhereClause {
+        before(whereClause.firstToken, tokens: .break(.same))
+      }
+      before(whereClause.firstToken, tokens: .open)
       after(whereClause.lastToken, tokens: .close)
     }
     return .visitChildren
@@ -2040,7 +2130,20 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   {
     // This node encapsulates the `vjp:` or `jvp:` label and decl name in a `@differentiable`
     // attribute.
+    // TODO: This node will likely go away in a future version since the parser no longer reads the
+    // `vjp:` and `jvp:` arguments to `@differentiable`.
     after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
+    return .visitChildren
+  }
+
+  override func visit(_ node: DifferentiationParamsSyntax) -> SyntaxVisitorContinueKind {
+    after(node.leftParen, tokens: .break(.open, size: 0), .open)
+    before(node.rightParen, tokens: .break(.close, size: 0), .close)
+    return .visitChildren
+  }
+
+  override func visit(_ node: DifferentiationParamSyntax) -> SyntaxVisitorContinueKind {
+    after(node.trailingComma, tokens: .break(.same))
     return .visitChildren
   }
 
@@ -2053,7 +2156,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       // `@transpose(...)` attribute.
       before(node.ofLabel, tokens: .open)
       after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
-      after(node.comma, tokens: .close)
+      // The comma after originalDeclName is optional and is only present if there are diffParams.
+      after(node.comma ?? node.originalDeclName.lastToken, tokens: .close)
 
       if let diffParams = node.diffParams {
         before(diffParams.firstToken, tokens: .break(.same), .open)

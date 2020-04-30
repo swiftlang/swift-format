@@ -74,4 +74,60 @@ final class NewlineTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
+
+  func testNewlinesBetweenMembers() {
+    let input =
+      """
+
+
+      class MyClazz {
+
+        lazy var memberView: UIView = {
+          let view = UIView()
+          return view
+        }()
+
+
+        func doSomething() {
+          print("!")
+        }
+
+
+        func doSomethingElse() {
+          print("else!")
+        }
+
+
+        let constMember = 1
+
+
+
+      }
+      """
+
+    let expected =
+      """
+      class MyClazz {
+
+        lazy var memberView: UIView = {
+          let view = UIView()
+          return view
+        }()
+
+        func doSomething() {
+          print("!")
+        }
+
+        func doSomethingElse() {
+          print("else!")
+        }
+
+        let constMember = 1
+
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
+  }
 }

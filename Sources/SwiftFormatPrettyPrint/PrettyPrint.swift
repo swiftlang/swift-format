@@ -211,7 +211,7 @@ public class PrettyPrinter {
       numberToPrint = consecutiveNewlineCount == 0 ? 1 : 0
     case .soft(let count, _):
       // We add 1 to the max blank lines because it takes 2 newlines to create the first blank line.
-      numberToPrint = min(count - consecutiveNewlineCount, configuration.maximumBlankLines + 1)
+      numberToPrint = min(count, configuration.maximumBlankLines + 1) - consecutiveNewlineCount
     case .hard(let count):
       numberToPrint = count
     }
@@ -359,11 +359,14 @@ public class PrettyPrinter {
           = openCloseBreakCompensatingLineNumber != matchingOpenBreak.lineNumber
 
         if matchingOpenBreak.contributesBlockIndent {
+          // The actual line number is used, instead of the compensating line number. When the close
+          // break is at the start of a new line, the block indentation isn't carried to the new line.
+          let currentLine = lineNumber
           // When two or more open breaks are encountered on the same line, only the final open
           // break is allowed to increase the block indent, avoiding multiple block indents. As the
           // open breaks on that line are closed, the new final open break must be enabled again to
           // add a block indent.
-          if matchingOpenBreak.lineNumber == openCloseBreakCompensatingLineNumber,
+          if matchingOpenBreak.lineNumber == currentLine,
             let lastActiveOpenBreak = activeOpenBreaks.last,
             lastActiveOpenBreak.kind == .block,
             !lastActiveOpenBreak.contributesBlockIndent
@@ -651,15 +654,12 @@ public class PrettyPrinter {
         lengths.append(0)
 
       case .commaDelimitedRegionEnd:
-        // The trailing comma needs to be included in the length of the preceding break, but is not
-        // included in the length of the enclosing group. A trailing comma cannot cause the group
-        // to break onto multiple lines, because the comma isn't printed for a single line group.
-        if let index = delimIndexStack.last, case .break = tokens[index] {
-          lengths[index] += 1
-        }
-        // If the closest delimiter token is an open, instead of a break, then adding the comma's
-        // length isn't necessary. In that case, the comma is printed if the preceding break fires.
-
+        // The token's length is only necessary when a comma will be printed, but it's impossible to
+        // know at this point whether the region-start token will be on the same line as this token.
+        // Without adding this length to the total, it would be possible for this comma to be
+        // printed in column `maxLineLength`. Unfortunately, this can cause breaks to fire
+        // unnecessarily when the enclosed tokens comma would fit within `maxLineLength`.
+        total += 1
         lengths.append(1)
       }
     }

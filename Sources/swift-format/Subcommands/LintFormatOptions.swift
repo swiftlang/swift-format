@@ -12,7 +12,6 @@
 
 import ArgumentParser
 import Foundation
-import SwiftFormat
 
 /// Common arguments used by the `lint` and `format` subcommands.
 struct LintFormatOptions: ParsableArguments {
@@ -56,15 +55,6 @@ struct LintFormatOptions: ParsableArguments {
 
   @Flag(help: .hidden) var debugDisablePrettyPrint: Bool
   @Flag(help: .hidden) var debugDumpTokenStream: Bool
-
-  /// Advanced options that are useful for developing/debugging but otherwise not meant for general
-  /// use.
-  var debugOptions: DebugOptions {
-    [
-      debugDisablePrettyPrint ? .disablePrettyPrint : [],
-      debugDumpTokenStream ? .dumpTokenStream : [],
-    ]
-  }
 
   mutating func validate() throws {
     if recursive && paths.isEmpty {
