@@ -23,6 +23,10 @@ top-level keys and values:
     *   `tabs` _(number)_: One level of indentation is the given number of
         tabs.
 
+*   `whitespaceOnly` _(boolean)_: If true, only apply whitespace changes and
+    omit changes that insert or remove non-whitespace characters (like
+    trailing commas). Defaults to `false`.
+
 *   `tabWidth` _(number)_: The number of spaces that should be considered
     equivalent to one tab character. This is used during line length
     calculations when tabs are used for indentation.
@@ -93,6 +97,7 @@ An example `.swift-format` configuration file is shown below.
     "indentation": {
         "spaces": 2
     },
+    "whitespaceOnly": true,
     "maximumBlankLines": 1,
     "respectsExistingLineBreaks": true,
     "lineBreakBeforeControlFlowKeywords": true,
