@@ -26,7 +26,7 @@ struct FileIterator: Sequence, IteratorProtocol {
   var dirIterator: FileManager.DirectoryEnumerator? = nil
 
   /// Keep track of the current directory we're recursing through.
-  var currentDirectory: String = ""
+  var currentDirectory = URL(fileURLWithPath: "")
 
   /// Keep track of paths we have visited to prevent duplicates.
   var visited: Set<String> = []
@@ -54,7 +54,7 @@ struct FileIterator: Sequence, IteratorProtocol {
         if FileManager.default.fileExists(atPath: next, isDirectory: &isDir) {
           if isDir.boolValue {
             dirIterator = FileManager.default.enumerator(atPath: next)
-            currentDirectory = next
+            currentDirectory = URL(fileURLWithPath: next, isDirectory: true)
           } else { output = next }
         } else {
           // If a path doesn't exist, allow it pass down into the SwiftFormat API so it can throw
@@ -74,12 +74,13 @@ struct FileIterator: Sequence, IteratorProtocol {
     while output == nil {
       var isDir: ObjCBool = false
       if let item = dirIterator?.nextObject() as? String {
-        if item.hasSuffix(fileSuffix)
-          && FileManager.default.fileExists(
-            atPath: currentDirectory + "/" + item, isDirectory: &isDir)
-          && !isDir.boolValue
-        {
-          output = currentDirectory + "/" + item
+        if item.hasSuffix(fileSuffix) {
+          let absoluteItemPath = currentDirectory.appendingPathComponent(item).path
+          if FileManager.default.fileExists(atPath: absoluteItemPath, isDirectory: &isDir)
+            && !isDir.boolValue
+          {
+            output = absoluteItemPath
+          }
         }
       } else { break }
     }
