@@ -27,9 +27,12 @@ fileprivate var nameCache = [ObjectIdentifier: String]()
 extension Rule {
   /// By default, the `ruleName` is just the name of the implementing rule class.
   public static var ruleName: String {
-    return nameCache[
-      ObjectIdentifier(self),
-      default: String("\(self)".split(separator: ".").last!)
-    ]
+    let identifier = ObjectIdentifier(self)
+    if let cachedName = nameCache[identifier] {
+      return cachedName
+    }
+    let name = String("\(self)".split(separator: ".").last!)
+    nameCache[identifier] = name
+    return name
   }
 }
