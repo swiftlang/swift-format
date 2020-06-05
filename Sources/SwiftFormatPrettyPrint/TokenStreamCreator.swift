@@ -43,7 +43,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   /// Lists the expressions that have been visited, from the outermost expression, where contextual
   /// breaks and start/end contextual breaking tokens have been inserted.
-  private var preVisitedExprs = [ExprSyntax]()
+  private var preVisitedExprs = Set<ExprSyntax>()
 
   /// Lists the tokens that are the closing or final delimiter of a node that shouldn't be split
   /// from the preceding token. When breaks are inserted around compound expressions, the breaks are
@@ -3181,18 +3181,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   /// necessary for contextual breaking throughout the expression. Records the nodes that were
   /// visited so that they can be skipped later.
   private func preVisitInsertingContextualBreaks<T: ExprSyntaxProtocol & Equatable>(_ expr: T) {
-    if !hasPreVisited(expr) {
-      let (visited, _, _) = insertContextualBreaks(ExprSyntax(expr), isTopLevel: true)
-      preVisitedExprs.append(contentsOf: visited)
+    let exprSyntax = ExprSyntax(expr)
+    if !preVisitedExprs.contains(exprSyntax) {
+      let (visited, _, _) = insertContextualBreaks(exprSyntax, isTopLevel: true)
+      preVisitedExprs.formUnion(visited)
     }
-  }
-
-  /// Returns whether the given expression node has been pre-visited, from a parent expression.
-  private func hasPreVisited<T: ExprSyntaxProtocol & Equatable>(_ expr: T) -> Bool {
-    for item in preVisitedExprs {
-      if item == ExprSyntax(expr) { return true }
-    }
-    return false
   }
 
   /// Recursively visits nested expressions from the given expression inserting contextual breaking
