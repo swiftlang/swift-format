@@ -43,7 +43,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   /// Lists the expressions that have been visited, from the outermost expression, where contextual
   /// breaks and start/end contextual breaking tokens have been inserted.
-  private var preVisitedExprs = Set<ExprSyntax>()
+  private var preVisitedExprs = Set<SyntaxIdentifier>()
+
+  /// Tracks the "root" exprs where previsiting for contextual breaks started so that
+  /// `preVisitedExprs` can be emptied after exiting an expr tree.
+  private var rootExprs = Set<SyntaxIdentifier>()
 
   /// Lists the tokens that are the closing or final delimiter of a node that shouldn't be split
   /// from the preceding token. When breaks are inserted around compound expressions, the breaks are
@@ -850,6 +854,10 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
+  override func visitPost(_ node: MemberAccessExprSyntax) {
+    clearContextualBreakState(node)
+  }
+
   override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
     preVisitInsertingContextualBreaks(node)
 
@@ -879,6 +887,10 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       forcesBreakBeforeRightDelimiter: breakBeforeRightParen)
 
     return .visitChildren
+  }
+
+  override func visitPost(_ node: FunctionCallExprSyntax) {
+    clearContextualBreakState(node)
   }
 
   /// Arrange the given argument list (or equivalently, tuple expression list) as a list of function
@@ -1074,6 +1086,10 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       forcesBreakBeforeRightDelimiter: breakBeforeRightBracket)
 
     return .visitChildren
+  }
+
+  override func visitPost(_ node: SubscriptExprSyntax) {
+    clearContextualBreakState(node)
   }
 
   override func visit(_ node: ExpressionSegmentSyntax) -> SyntaxVisitorContinueKind {
@@ -2271,7 +2287,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   /// Appends the before-tokens of the given syntax token to the token stream.
   private func appendBeforeTokens(_ token: TokenSyntax) {
-    if let before = beforeMap[token] {
+    if let before = beforeMap.removeValue(forKey: token) {
       before.forEach(appendToken)
     }
   }
@@ -2331,7 +2347,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   ///   not incorrectly inserted into the token stream *after* a break or newline.
   private func appendAfterTokensAndTrailingComments(_ token: TokenSyntax) {
     let (wasLineComment, trailingCommentTokens) = afterTokensForTrailingComment(token)
-    let afterGroups = afterMap[token] ?? []
+    let afterGroups = afterMap.removeValue(forKey: token) ?? []
     var hasAppendedTrailingComment = false
 
     if !wasLineComment {
@@ -3177,23 +3193,34 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     appendToken(.break(.same, size: 0))
   }
 
+  /// Cleans up state related to inserting contextual breaks throughout expressions during
+  /// `visitPost` for an expression that is the root of an expression tree.
+  private func clearContextualBreakState<T: ExprSyntaxProtocol>(_ expr: T) {
+    let exprID = expr.id
+    if rootExprs.remove(exprID) != nil {
+      preVisitedExprs.removeAll()
+    }
+  }
+
   /// Visits the given expression node and all of the nested expression nodes, inserting tokens
   /// necessary for contextual breaking throughout the expression. Records the nodes that were
   /// visited so that they can be skipped later.
   private func preVisitInsertingContextualBreaks<T: ExprSyntaxProtocol & Equatable>(_ expr: T) {
-    let exprSyntax = ExprSyntax(expr)
-    if !preVisitedExprs.contains(exprSyntax) {
-      let (visited, _, _) = insertContextualBreaks(exprSyntax, isTopLevel: true)
-      preVisitedExprs.formUnion(visited)
+    let exprID = expr.id
+    if !preVisitedExprs.contains(exprID) {
+      rootExprs.insert(exprID)
+      insertContextualBreaks(ExprSyntax(expr), isTopLevel: true)
     }
   }
 
   /// Recursively visits nested expressions from the given expression inserting contextual breaking
   /// tokens. When visiting an expression node, `preVisitInsertingContextualBreaks(_:)` should be
   /// called instead of this helper.
+  @discardableResult
   private func insertContextualBreaks(_ expr: ExprSyntax, isTopLevel: Bool) -> (
-    [ExprSyntax], hasCompoundExpression: Bool, hasMemberAccess: Bool
+    hasCompoundExpression: Bool, hasMemberAccess: Bool
   ) {
+    preVisitedExprs.insert(expr.id)
     if let memberAccessExpr = expr.as(MemberAccessExprSyntax.self) {
       // When the member access is part of a calling expression, the break before the dot is
       // inserted when visiting the parent node instead so that the break is inserted before any
@@ -3202,21 +3229,18 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
           expr.parent?.isProtocol(CallingExprSyntaxProtocol.self) != true {
         before(memberAccessExpr.dot, tokens: .break(.contextual, size: 0))
       }
-      let children: [ExprSyntax]
       var hasCompoundExpression = false
       if let base = memberAccessExpr.base {
-        (children, hasCompoundExpression, _) = insertContextualBreaks(base, isTopLevel: false)
-      } else {
-        children = []
+        (hasCompoundExpression, _) = insertContextualBreaks(base, isTopLevel: false)
       }
       if isTopLevel {
         before(expr.firstToken, tokens: .contextualBreakingStart)
         after(expr.lastToken, tokens: .contextualBreakingEnd)
       }
-      return ([expr] + children, hasCompoundExpression, true)
+      return (hasCompoundExpression, true)
     } else if let callingExpr = expr.asProtocol(CallingExprSyntaxProtocol.self) {
       let calledExpression = callingExpr.calledExpression
-      let (children, hasCompoundExpression, hasMemberAccess) =
+      let (hasCompoundExpression, hasMemberAccess) =
         insertContextualBreaks(calledExpression, isTopLevel: false)
 
       let shouldGroup =
@@ -3241,7 +3265,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         before(expr.firstToken, tokens: beforeTokens)
         after(expr.lastToken, tokens: afterTokens)
       }
-      return ([expr] + children, true, hasMemberAccess)
+      return (true, hasMemberAccess)
     }
 
     // Otherwise, it's an expression that isn't calling another expression (e.g. array or
@@ -3250,7 +3274,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     before(expr.firstToken, tokens: .contextualBreakingStart)
     after(expr.lastToken, tokens: .contextualBreakingEnd)
     let hasCompoundExpression = !expr.is(IdentifierExprSyntax.self)
-    return ([expr], hasCompoundExpression, false)
+    return (hasCompoundExpression, false)
   }
 }
 
