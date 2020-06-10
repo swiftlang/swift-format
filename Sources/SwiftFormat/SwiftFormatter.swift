@@ -58,7 +58,8 @@ public final class SwiftFormatter {
       throw SwiftFormatError.isDirectory
     }
     let sourceFile = try SyntaxParser.parse(url)
-    try format(syntax: sourceFile, assumingFileURL: url, to: &outputStream)
+    let source = try String(contentsOf: url, encoding: .utf8)
+    try format(syntax: sourceFile, assumingFileURL: url, source: source, to: &outputStream)
   }
 
   /// Formats the given Swift source code and writes the result to an output stream.
@@ -75,10 +76,12 @@ public final class SwiftFormatter {
     source: String, assumingFileURL url: URL?, to outputStream: inout Output
   ) throws {
     let sourceFile = try SyntaxParser.parse(source: source)
-    try format(syntax: sourceFile, assumingFileURL: url, to: &outputStream)
+    try format(syntax: sourceFile, assumingFileURL: url, source: source, to: &outputStream)
   }
 
   /// Formats the given Swift syntax tree and writes the result to an output stream.
+  ///
+  /// - Note: The formatter may be faster using the source text, if it's available.
   ///
   /// - Parameters:
   ///   - syntax: The Swift syntax tree to be converted to source code and formatted.
@@ -91,6 +94,13 @@ public final class SwiftFormatter {
   public func format<Output: TextOutputStream>(
     syntax: SourceFileSyntax, assumingFileURL url: URL?, to outputStream: inout Output
   ) throws {
+    try format(syntax: syntax, assumingFileURL: url, source: nil, to: &outputStream)
+  }
+
+  private func format<Output: TextOutputStream>(
+    syntax: SourceFileSyntax, assumingFileURL url: URL?, source: String?,
+    to outputStream: inout Output
+  ) throws {
     if let position = firstInvalidSyntaxPosition(in: Syntax(syntax)) {
       throw SwiftFormatError.fileContainsInvalidSyntax(position: position)
     }
@@ -98,7 +108,7 @@ public final class SwiftFormatter {
     let assumedURL = url ?? URL(fileURLWithPath: "source")
     let context = Context(
       configuration: configuration, diagnosticEngine: diagnosticEngine, fileURL: assumedURL,
-      sourceFileSyntax: syntax)
+      sourceFileSyntax: syntax, source: source)
     let pipeline = FormatPipeline(context: context)
     let transformedSyntax = pipeline.visit(Syntax(syntax))
 

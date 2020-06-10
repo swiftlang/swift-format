@@ -57,14 +57,16 @@ public class Context {
     configuration: Configuration,
     diagnosticEngine: DiagnosticEngine?,
     fileURL: URL,
-    sourceFileSyntax: SourceFileSyntax
+    sourceFileSyntax: SourceFileSyntax,
+    source: String? = nil
   ) {
     self.configuration = configuration
     self.diagnosticEngine = diagnosticEngine
     self.fileURL = fileURL
     self.importsXCTest = .notDetermined
-    self.sourceLocationConverter = SourceLocationConverter(
-      file: fileURL.path, tree: sourceFileSyntax)
+    self.sourceLocationConverter =
+      source.map { SourceLocationConverter(file: fileURL.path, source: $0) }
+      ?? SourceLocationConverter(file: fileURL.path, tree: sourceFileSyntax)
     self.ruleMask = RuleMask(
       syntaxNode: Syntax(sourceFileSyntax),
       sourceLocationConverter: sourceLocationConverter
