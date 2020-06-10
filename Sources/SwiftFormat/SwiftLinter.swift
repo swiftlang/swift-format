@@ -54,7 +54,8 @@ public final class SwiftLinter {
       throw SwiftFormatError.isDirectory
     }
     let sourceFile = try SyntaxParser.parse(url)
-    try lint(syntax: sourceFile, assumingFileURL: url)
+    let source = try String(contentsOf: url, encoding: .utf8)
+    try lint(syntax: sourceFile, assumingFileURL: url, source: source)
   }
 
   /// Lints the given Swift source code.
@@ -65,23 +66,29 @@ public final class SwiftLinter {
   /// - Throws: If an unrecoverable error occurs when formatting the code.
   public func lint(source: String, assumingFileURL url: URL) throws {
     let sourceFile = try SyntaxParser.parse(source: source)
-    try lint(syntax: sourceFile, assumingFileURL: url)
+    try lint(syntax: sourceFile, assumingFileURL: url, source: source)
   }
 
   /// Lints the given Swift syntax tree.
+  ///
+  /// - Note: The linter may be faster using the source text, if it's available.
   ///
   /// - Parameters:
   ///   - syntax: The Swift syntax tree to be converted to be linted.
   ///   - url: A file URL denoting the filename/path that should be assumed for this syntax tree.
   /// - Throws: If an unrecoverable error occurs when formatting the code.
   public func lint(syntax: SourceFileSyntax, assumingFileURL url: URL) throws {
+    try lint(syntax: syntax, assumingFileURL: url, source: nil)
+  }
+
+  private func lint(syntax: SourceFileSyntax, assumingFileURL url: URL, source: String?) throws {
     if let position = firstInvalidSyntaxPosition(in: Syntax(syntax)) {
       throw SwiftFormatError.fileContainsInvalidSyntax(position: position)
     }
-    
+
     let context = Context(
       configuration: configuration, diagnosticEngine: diagnosticEngine, fileURL: url,
-      sourceFileSyntax: syntax)
+      sourceFileSyntax: syntax, source: source)
     let pipeline = LintPipeline(context: context)
     pipeline.walk(Syntax(syntax))
 
