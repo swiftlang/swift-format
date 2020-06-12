@@ -56,7 +56,7 @@ fileprivate func main(_ arguments: [String]) -> Int32 {
     dumpDefaultConfiguration()
     return 0
   case .version:
-    print("0.0.1")  // TODO: Automate updates to this somehow.
+    print("0.50100.0")  // TODO: Automate updates to this somehow.
     return 0
   }
 }
