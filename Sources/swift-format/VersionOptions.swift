@@ -19,8 +19,8 @@ struct VersionOptions: ParsableArguments {
 
   func validate() throws {
     if version {
-      // TODO: Use a real version number here.
-      print("0.0.1")
+      // TODO: Automate updates to this somehow.
+      print("0.50200.1")
       throw ExitCode.success
     }
   }
