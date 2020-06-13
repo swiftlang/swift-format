@@ -33,6 +33,7 @@ public struct Configuration: Codable, Equatable {
     case indentConditionalCompilationBlocks
     case lineBreakAroundMultilineExpressionChainComponents
     case fileScopedDeclarationPrivacy
+    case indentSwitchCaseLabels
     case rules
   }
 
@@ -120,6 +121,27 @@ public struct Configuration: Codable, Equatable {
   /// declarations whose effective access level is private to the containing file.
   public var fileScopedDeclarationPrivacy = FileScopedDeclarationPrivacyConfiguration()
 
+  /// Determines if `case` statements should be indented compared to the containing `switch` block.
+  ///
+  /// When `false`, the correct form is:
+  /// ```swift
+  /// switch someValue {
+  /// case someCase:
+  ///   someStatement
+  /// ...
+  /// }
+  /// ```
+  ///
+  /// When `true`, the correct form is:
+  /// ```swift
+  /// switch someValue {
+  ///   case someCase:
+  ///     someStatement
+  ///   ...
+  /// }
+  ///```
+  public var indentSwitchCaseLabels = false
+
   /// Constructs a Configuration with all default values.
   public init() {
     self.version = highestSupportedConfigurationVersion
@@ -176,6 +198,8 @@ public struct Configuration: Codable, Equatable {
       try container.decodeIfPresent(
         FileScopedDeclarationPrivacyConfiguration.self, forKey: .fileScopedDeclarationPrivacy)
       ?? FileScopedDeclarationPrivacyConfiguration()
+    self.indentSwitchCaseLabels
+      = try container.decodeIfPresent(Bool.self, forKey: .indentSwitchCaseLabels) ?? false
 
     // If the `rules` key is not present at all, default it to the built-in set
     // so that the behavior is the same as if the configuration had been
@@ -203,6 +227,7 @@ public struct Configuration: Codable, Equatable {
       lineBreakAroundMultilineExpressionChainComponents,
       forKey: .lineBreakAroundMultilineExpressionChainComponents)
     try container.encode(fileScopedDeclarationPrivacy, forKey: .fileScopedDeclarationPrivacy)
+    try container.encode(indentSwitchCaseLabels, forKey: .indentSwitchCaseLabels)
     try container.encode(rules, forKey: .rules)
   }
 
