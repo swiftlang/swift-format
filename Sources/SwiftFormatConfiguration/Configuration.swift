@@ -25,6 +25,7 @@ public struct Configuration: Codable, Equatable {
     case lineLength
     case tabWidth
     case indentation
+    case whitespaceOnly
     case respectsExistingLineBreaks
     case lineBreakBeforeControlFlowKeywords
     case lineBreakBeforeEachArgument
@@ -60,6 +61,10 @@ public struct Configuration: Codable, Equatable {
   ///
   /// All indentation will be conducted in multiples of this configuration.
   public var indentation: Indent = .spaces(2)
+
+  /// When true, only whitespace (e.g. spaces, newlines) are modified. Text changes (e.g. add/remove
+  /// trailing commas) are not performed.
+  public var whitespaceOnly = false
 
   /// Indicates that the formatter should try to respect users' discretionary line breaks when
   /// possible.
@@ -157,6 +162,8 @@ public struct Configuration: Codable, Equatable {
     self.tabWidth = try container.decodeIfPresent(Int.self, forKey: .tabWidth) ?? 8
     self.indentation
       = try container.decodeIfPresent(Indent.self, forKey: .indentation) ?? .spaces(2)
+    self.whitespaceOnly
+      = try container.decodeIfPresent(Bool.self, forKey: .whitespaceOnly) ?? false
     self.respectsExistingLineBreaks
       = try container.decodeIfPresent(Bool.self, forKey: .respectsExistingLineBreaks) ?? true
     self.lineBreakBeforeControlFlowKeywords
@@ -193,6 +200,7 @@ public struct Configuration: Codable, Equatable {
     try container.encode(lineLength, forKey: .lineLength)
     try container.encode(tabWidth, forKey: .tabWidth)
     try container.encode(indentation, forKey: .indentation)
+    try container.encode(whitespaceOnly, forKey: .whitespaceOnly)
     try container.encode(respectsExistingLineBreaks, forKey: .respectsExistingLineBreaks)
     try container.encode(lineBreakBeforeControlFlowKeywords, forKey: .lineBreakBeforeControlFlowKeywords)
     try container.encode(lineBreakBeforeEachArgument, forKey: .lineBreakBeforeEachArgument)

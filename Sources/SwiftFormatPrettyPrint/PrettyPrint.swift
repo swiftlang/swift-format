@@ -546,14 +546,15 @@ public class PrettyPrinter {
         fatalError("Found trailing comma end with no corresponding start.")
       }
 
-      let shouldHaveTrailingComma = startLineNumber != openCloseBreakCompensatingLineNumber
-      if shouldHaveTrailingComma && !hasTrailingComma {
+      let shouldWriteComma = whitespaceOnly ? hasTrailingComma :
+        startLineNumber != openCloseBreakCompensatingLineNumber
+
+      if shouldWriteComma && !hasTrailingComma {
         diagnose(.addTrailingComma)
-      } else if !shouldHaveTrailingComma && hasTrailingComma {
+      } else if !shouldWriteComma && hasTrailingComma {
         diagnose(.removeTrailingComma)
       }
 
-      let shouldWriteComma = whitespaceOnly ? hasTrailingComma : shouldHaveTrailingComma
       if shouldWriteComma {
         write(",")
         spaceRemaining -= 1

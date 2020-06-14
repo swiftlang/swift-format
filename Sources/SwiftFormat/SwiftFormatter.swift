@@ -113,7 +113,7 @@ public final class SwiftFormatter {
       operatorContext: operatorContext,
       node: transformedSyntax,
       printTokenStream: debugOptions.contains(.dumpTokenStream),
-      whitespaceOnly: false)
+      whitespaceOnly: configuration.whitespaceOnly)
     outputStream.write(printer.prettyPrint())
   }
 }
