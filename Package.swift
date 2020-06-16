@@ -13,6 +13,12 @@
 
 import PackageDescription
 
+#if os(Linux)
+import Glibc
+#else
+import Darwin.C
+#endif
+
 let package = Package(
   name: "swift-format",
   products: [
@@ -21,14 +27,6 @@ let package = Package(
     .library(name: "SwiftFormatConfiguration", targets: ["SwiftFormatConfiguration"]),
   ],
   dependencies: [
-    .package(
-      url: "https://github.com/apple/swift-syntax",
-      .revision("swift-DEVELOPMENT-SNAPSHOT-2020-04-19-a")
-    ),
-    .package(
-      url: "https://github.com/apple/swift-argument-parser.git",
-      .upToNextMinor(from: "0.0.4")
-    ),
   ],
   targets: [
     .target(
@@ -134,3 +132,17 @@ let package = Package(
     ),
   ]
 )
+
+
+if getenv("SWIFTCI_USE_LOCAL_DEPS") == nil {
+  // Building standalone.
+  package.dependencies += [
+    .package(url: "https://github.com/apple/swift-syntax", .branch("master")),
+    .package(url: "https://github.com/apple/swift-argument-parser.git", .branch("master")),
+  ]
+} else {
+  package.dependencies += [
+    .package(path: "../swift-syntax"),
+    .package(path: "../swift-argument-parser"),
+  ]
+}
