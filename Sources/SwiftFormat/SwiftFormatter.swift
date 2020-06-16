@@ -101,7 +101,7 @@ public final class SwiftFormatter {
     syntax: SourceFileSyntax, assumingFileURL url: URL?, source: String?,
     to outputStream: inout Output
   ) throws {
-    if let position = firstInvalidSyntaxPosition(in: Syntax(syntax)) {
+    if let position = _firstInvalidSyntaxPosition(in: Syntax(syntax)) {
       throw SwiftFormatError.fileContainsInvalidSyntax(position: position)
     }
 

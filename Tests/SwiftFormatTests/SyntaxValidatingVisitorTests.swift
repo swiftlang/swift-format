@@ -1,7 +1,6 @@
+import SwiftFormat
 import SwiftSyntax
 import XCTest
-
-@testable import SwiftFormat
 
 final class SyntaxValidatingVisitorTests: XCTestCase {
   func testValidSyntax() {
@@ -18,7 +17,7 @@ final class SyntaxValidatingVisitorTests: XCTestCase {
       @unknown default: break
       }
       """
-    XCTAssertNil(firstInvalidSyntaxPosition(in: createSyntax(from: input)))
+    XCTAssertNil(_firstInvalidSyntaxPosition(in: createSyntax(from: input)))
   }
 
   func testInvalidSyntax() {
@@ -56,7 +55,7 @@ final class SyntaxValidatingVisitorTests: XCTestCase {
   private func assertInvalidSyntax(
     in source: String, atLine: Int, column: Int, file: StaticString = #file, line: UInt = #line
   ) {
-    guard let position = firstInvalidSyntaxPosition(in: createSyntax(from: source)) else {
+    guard let position = _firstInvalidSyntaxPosition(in: createSyntax(from: source)) else {
       XCTFail("No invalid syntax was found", file: file, line: line)
       return
     }
