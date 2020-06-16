@@ -68,7 +68,7 @@ fileprivate class SyntaxValidatingVisitor: SyntaxVisitor {
 /// syntax is valid.
 ///
 /// - Parameter syntax: The root of a tree of syntax nodes to check for compatibility.
-func firstInvalidSyntaxPosition(in syntax: Syntax) -> AbsolutePosition? {
+public func _firstInvalidSyntaxPosition(in syntax: Syntax) -> AbsolutePosition? {
   let visitor = SyntaxValidatingVisitor()
   visitor.walk(syntax)
   return visitor.invalidSyntaxStartPosition

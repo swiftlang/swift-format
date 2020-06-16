@@ -82,7 +82,7 @@ public final class SwiftLinter {
   }
 
   private func lint(syntax: SourceFileSyntax, assumingFileURL url: URL, source: String?) throws {
-    if let position = firstInvalidSyntaxPosition(in: Syntax(syntax)) {
+    if let position = _firstInvalidSyntaxPosition(in: Syntax(syntax)) {
       throw SwiftFormatError.fileContainsInvalidSyntax(position: position)
     }
 
