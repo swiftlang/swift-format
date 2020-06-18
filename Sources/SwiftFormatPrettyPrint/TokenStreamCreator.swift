@@ -644,10 +644,27 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: SwitchCaseSyntax) -> SyntaxVisitorContinueKind {
-    before(node.firstToken, tokens: .break(.same, newlines: .soft))
+    // If switch/case labels were configured to be indented, use an `open` break; otherwise, use
+    // the default `same` break.
+    let openBreak: Token
+    if config.indentSwitchCaseLabels {
+      openBreak = .break(.open, newlines: .elective)
+    } else {
+      openBreak = .break(.same, newlines: .soft)
+    }
+    before(node.firstToken, tokens: openBreak)
+
     after(node.unknownAttr?.lastToken, tokens: .space)
     after(node.label.lastToken, tokens: .break(.reset, size: 0), .break(.open), .open)
-    after(node.lastToken, tokens: .break(.close, size: 0), .close)
+
+    // If switch/case labels were configured to be indented, insert an extra `close` break after the
+    // case body to match the `open` break above
+    var afterLastTokenTokens: [Token] = [.break(.close, size: 0), .close]
+    if config.indentSwitchCaseLabels {
+      afterLastTokenTokens.append(.break(.close, size: 0))
+    }
+    after(node.lastToken, tokens: afterLastTokenTokens)
+
     return .visitChildren
   }
 
@@ -2028,7 +2045,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     }
     return .visitChildren
   }
-  
+
   override func visit(_ node: SameTypeRequirementSyntax) -> SyntaxVisitorContinueKind {
     before(node.equalityToken, tokens: .break)
     after(node.equalityToken, tokens: .space)
