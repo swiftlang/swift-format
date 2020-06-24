@@ -25,7 +25,7 @@ is also expressed in the `SwiftSyntax` dependency in
 
 | Xcode Release | Swift Version                           | `swift-format` Branch |
 |:-------------:|:---------------------------------------:|:----------------------|
-| –             | swift-DEVELOPMENT-SNAPSHOT-2020-04-19-a | `master`              |
+| –             | Swift at `master`                       | `master`              |
 | Xcode 11.4    | Swift 5.2                               | `swift-5.2-branch`    |
 | Xcode 11.0    | Swift 5.1                               | `swift-5.1-branch`    |
 
