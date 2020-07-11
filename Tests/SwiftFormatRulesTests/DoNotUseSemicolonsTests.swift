@@ -89,4 +89,41 @@ final class DoNotUseSemicolonsTests: LintOrFormatRuleTestCase {
                 print("7")
                 """)
   }
+  
+  func testSemicolonsSeparatingDoWhile() {
+    XCTAssertFormatting(
+      DoNotUseSemicolons.self,
+      input: """
+             do { f() };
+             while someCondition { g() }
+
+             do {
+               f()
+             };
+
+             // Comment and whitespace separating blocks.
+             while someCondition {
+               g()
+             }
+
+             do { f() };
+             for _ in 0..<10 { g() }
+             """,
+      expected: """
+                do { f() };
+                while someCondition { g() }
+
+                do {
+                  f()
+                };
+
+                // Comment and whitespace separating blocks.
+                while someCondition {
+                  g()
+                }
+
+                do { f() }
+                for _ in 0..<10 { g() }
+                """)
+  }
 }
