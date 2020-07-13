@@ -53,6 +53,7 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
       }
 
       var newItem = visitedItem
+      defer { newItems[idx] = newItem }
 
       // Check if the leading trivia for this statement needs a new line.
       if previousHadSemicolon, let firstToken = newItem.firstToken,
@@ -68,6 +69,19 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
 
       // If there's a semicolon, diagnose and remove it.
       if let semicolon = item.semicolon {
+
+        // Exception: do not remove the semicolon if it is separating a 'do' statement from a 'while' statement.
+        if Syntax(item).as(CodeBlockItemSyntax.self)?.children.first?.is(DoStmtSyntax.self) == true,
+          idx < node.count - 1
+        {
+          let nextItem = node.children[node.children.index(after: item.index)]
+          if Syntax(nextItem).as(CodeBlockItemSyntax.self)?
+            .children.first?.is(WhileStmtSyntax.self) == true
+          {
+            continue
+          }
+        }
+
         // This discards any trailingTrivia from the semicolon. That trivia is at most some spaces,
         // and the pretty printer adds any necessary spaces so it's safe to discard.
         newItem = newItem.withSemicolon(nil)
@@ -77,7 +91,6 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
           diagnose(.removeSemicolon, on: semicolon)
         }
       }
-      newItems[idx] = newItem
     }
     return nodeCreator(newItems)
   }
