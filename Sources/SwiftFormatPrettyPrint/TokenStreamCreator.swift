@@ -2730,10 +2730,15 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       case .blockComment(let text):
         if index > 0 || isStartOfFile {
           appendToken(.comment(Comment(kind: .block, text: text), wasEndOfLine: false))
-          // We place a size-0 break after the comment to allow a discretionary newline after the
-          // comment if the user places one here but the comment is otherwise adjacent to a text
-          // token.
-          appendToken(.break(.same, size: 0))
+          // There is always a break after the comment to allow a discretionary newline after it.
+          var breakSize = 0
+          if index + 1 < trivia.endIndex {
+            let nextPiece = trivia[index + 1]
+            // The original number of spaces is intentionally discarded, but 1 space is allowed in
+            // case the comment is followed by another token instead of a newline.
+            if case .spaces = nextPiece { breakSize = 1 }
+          }
+          appendToken(.break(.same, size: breakSize))
           isStartOfFile = false
         }
         requiresNextNewline = false
