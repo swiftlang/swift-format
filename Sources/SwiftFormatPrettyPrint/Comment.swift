@@ -14,6 +14,24 @@ import Foundation
 import SwiftFormatConfiguration
 import SwiftSyntax
 
+extension StringProtocol {
+  /// Trims whitespace from the end of a string, returning a new string with no trailing whitespace.
+  ///
+  /// If the string is only whitespace, an empty string is returned.
+  ///
+  /// - Returns: The string with trailing whitespace removed.
+  func trimmingTrailingWhitespace() -> String {
+    if isEmpty { return String() }
+    let scalars = unicodeScalars
+    var idx = scalars.index(before: scalars.endIndex)
+    while scalars[idx].properties.isWhitespace {
+      if idx == scalars.startIndex { return String() }
+      idx = scalars.index(before: idx)
+    }
+    return String(String.UnicodeScalarView(scalars[...idx]))
+  }
+}
+
 struct Comment {
   enum Kind {
     case line, docLine, block, docBlock
@@ -47,7 +65,7 @@ struct Comment {
 
     switch kind {
     case .line, .docLine:
-      self.text = [text]
+      self.text = [text.trimmingTrailingWhitespace()]
       self.text[0].removeFirst(kind.prefixLength)
       self.length = self.text.reduce(0, { $0 + $1.count + kind.prefixLength + 1 })
 
@@ -55,9 +73,15 @@ struct Comment {
       var fulltext: String = text
       fulltext.removeFirst(kind.prefixLength)
       fulltext.removeLast(2)
-      self.text = fulltext.split(separator: "\n", omittingEmptySubsequences: false).map {
-        String($0)
+      let lines = fulltext.split(separator: "\n", omittingEmptySubsequences: false)
+
+      // The last line in a block style comment contains the "*/" pattern to end the comment. The
+      // trailing space(s) need to be kept in that line to have space between text and "*/".
+      var trimmedLines = lines.dropLast().map({ $0.trimmingTrailingWhitespace() })
+      if let lastLine = lines.last {
+        trimmedLines.append(String(lastLine))
       }
+      self.text = trimmedLines
       self.length = self.text.reduce(0, { $0 + $1.count }) + kind.prefixLength + 3
     }
   }

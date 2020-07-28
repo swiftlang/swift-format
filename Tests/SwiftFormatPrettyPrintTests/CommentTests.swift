@@ -639,5 +639,47 @@ final class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
   }
 
+  func testTrailingSpacesInComments() {
+    // Xcode has a commonly enabled setting to delete trailing spaces, which also applies to
+    // multi-line strings. The trailing spaces are intentionally written using a unicode escape
+    // sequence to ensure they aren't deleted.
+    let input = """
+      /// This is a trailing space documentation comment.\u{0020}\u{0020}\u{0020}\u{0020}\u{0020}
+      ///        This is a leading space documentation comment.
+      func foo() {
+        //       leading spaces are fine
+        // trailing spaces should go\u{0020}\u{0020}\u{0020}\u{0020}\u{0020}
+        let out = "123"
+      }
 
+      /**
+       *    This is a leading space doc block comment
+       * This is a trailing space doc block comment\u{0020}\u{0020}\u{0020}\u{0020}\u{0020}
+       */
+      func foo() {
+        /*    block comment    */ let out = "123"
+      }
+      """
+
+    let expected = """
+      /// This is a trailing space documentation comment.
+      ///        This is a leading space documentation comment.
+      func foo() {
+        //       leading spaces are fine
+        // trailing spaces should go
+        let out = "123"
+      }
+
+      /**
+       *    This is a leading space doc block comment
+       * This is a trailing space doc block comment
+       */
+      func foo() {
+        /*    block comment    */ let out = "123"
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
+  }
 }
