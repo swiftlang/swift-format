@@ -61,6 +61,31 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
     XCTAssertDiagnosed(.parametersDontMatch(funcName: "foo"))
   }
 
+  func testThrowsDocumentation() {
+    let input =
+    """
+    /// One sentence summary.
+    ///
+    /// - Parameters:
+    ///   - p1: Parameter 1.
+    ///   - p2: Parameter 2.
+    ///   - p3: Parameter 3.
+    /// - Throws: an error.
+    func noThrows(p1: Int, p2: Int, p3: Int) {}
+
+    /// One sentence summary.
+    ///
+    /// - Parameters:
+    ///   - p1: Parameter 1.
+    ///   - p2: Parameter 2.
+    ///   - p3: Parameter 3.
+    func foo(p1: Int, p2: Int, p3: Int) throws {}
+    """
+    performLint(ValidateDocumentationComments.self, input: input)
+    XCTAssertDiagnosed(.removeThrowsComment(funcName: "noThrows"))
+    XCTAssertDiagnosed(.documentErrorsThrown(funcName: "foo"))
+  }
+
   func testReturnDocumentation() {
     let input =
     """

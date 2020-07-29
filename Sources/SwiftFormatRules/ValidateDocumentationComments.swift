@@ -24,12 +24,12 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
 
   public override func visit(_ node: InitializerDeclSyntax) -> SyntaxVisitorContinueKind {
     return checkFunctionLikeDocumentation(
-      DeclSyntax(node), name: "init", parameters: node.parameters.parameterList)
+      DeclSyntax(node), name: "init", parameters: node.parameters.parameterList, throwsOrRethrowsKeyword: node.throwsOrRethrowsKeyword)
   }
 
   public override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
     return checkFunctionLikeDocumentation(
-      DeclSyntax(node), name: node.identifier.text, parameters: node.signature.input.parameterList,
+      DeclSyntax(node), name: node.identifier.text, parameters: node.signature.input.parameterList, throwsOrRethrowsKeyword: node.signature.throwsOrRethrowsKeyword,
       returnClause: node.signature.output)
   }
 
@@ -37,6 +37,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
     _ node: DeclSyntax,
     name: String,
     parameters: FunctionParameterListSyntax,
+    throwsOrRethrowsKeyword: TokenSyntax?,
     returnClause: ReturnClauseSyntax? = nil
   ) -> SyntaxVisitorContinueKind {
     guard let declComment = node.docComment else { return .skipChildren }
@@ -57,6 +58,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
       $0.trimmingCharacters(in: .whitespaces).starts(with: "- Parameters")
     }
 
+    validateThrows(throwsOrRethrowsKeyword, name: name, throwsDesc: commentInfo.throwsDescription)
     validateReturn(returnClause, name: name, returnDesc: commentInfo.returnsDescription)
     let funcParameters = funcParametersIdentifiers(in: parameters)
 
@@ -95,6 +97,21 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
       diagnose(.documentReturnValue(funcName: name), on: returnClause)
     }
   }
+
+  /// Ensures the function has throws documentation if it may actually throw
+  /// an error.
+  private func validateThrows(
+    _ throwsOrRethrowsKeyword: TokenSyntax?,
+    name: String,
+    throwsDesc: String?
+  ) {
+    if throwsOrRethrowsKeyword == nil && throwsDesc != nil {
+      diagnose(.removeThrowsComment(funcName: name), on: throwsOrRethrowsKeyword)
+    } else if throwsOrRethrowsKeyword != nil && throwsDesc == nil {
+      diagnose(.documentErrorsThrown(funcName: name), on: throwsOrRethrowsKeyword)
+    }
+  }
+
 }
 
 /// Iterates through every parameter of paramList and returns a list of the
@@ -153,4 +170,15 @@ extension Diagnostic.Message {
     "replace the singular inline form of 'Parameter' tag with a plural 'Parameters' tag "
       + "and group each parameter as a nested list"
   )
+
+  public static func removeThrowsComment(funcName: String) -> Diagnostic.Message {
+    return Diagnostic.Message(
+      .warning,
+      "remove the throws comment of \(funcName), it doesn't throw an error"
+    )
+  }
+
+  public static func documentErrorsThrown(funcName: String) -> Diagnostic.Message {
+    return Diagnostic.Message(.warning, "document the errors thrown by \(funcName)")
+  }
 }

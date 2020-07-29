@@ -84,8 +84,10 @@ extension DeclSyntaxProtocol {
     var params = [ParseComment.Parameter]()
     var commentParagraphs = [String]()
     var hasFoundParameterList = false
+    var hasFoundThrows = false
     var hasFoundReturn = false
     var returnsDescription: String?
+    var throwsDescription: String?
     // Takes the first sentence of the comment, and counts the number of lines it uses.
     let oneSenteceSummary = docComment.components(separatedBy: ".").first
     let numOfOneSentenceLines = oneSenteceSummary!.components(separatedBy: .newlines).count
@@ -98,15 +100,21 @@ extension DeclSyntaxProtocol {
       if trimmedLine.starts(with: "- Parameters") {
         hasFoundParameterList = true
       } else if trimmedLine.starts(with: "- Parameter") {
-        // If it's only a parameter it's information is inline eith the parameter
+        // If it's only a parameter it's information is inline with the parameter
         // tag, just after the ':'.
         guard let index = trimmedLine.firstIndex(of: ":") else { continue }
         let name = trimmedLine.dropFirst("- Parameter".count)[..<index]
           .trimmingCharacters(in: .init(charactersIn: " -:"))
         let summary = trimmedLine[index...].trimmingCharacters(in: .init(charactersIn: " -:"))
         params.append(ParseComment.Parameter(name: name, summary: summary))
+      } else if trimmedLine.starts(with: "- Throws:") {
+        hasFoundParameterList = false
+        hasFoundReturn = false
+        hasFoundThrows = true
+        throwsDescription = String(trimmedLine.dropFirst("- Throws:".count))
       } else if trimmedLine.starts(with: "- Returns:") {
         hasFoundParameterList = false
+        hasFoundThrows = false
         hasFoundReturn = true
         returnsDescription = String(trimmedLine.dropFirst("- Returns:".count))
       } else if hasFoundParameterList {
@@ -119,6 +127,9 @@ extension DeclSyntaxProtocol {
       } else if hasFoundReturn {
         // Appends the return description that is not inline with the return tag.
         returnsDescription!.append(trimmedLine)
+      } else if hasFoundThrows {
+        // Appends the throws description that is not inline with the throws tag.
+        throwsDescription!.append(trimmedLine)
       } else if trimmedLine != "" {
         commentParagraphs.append(" " + trimmedLine)
       }
@@ -127,6 +138,7 @@ extension DeclSyntaxProtocol {
       oneSentenceSummary: oneSenteceSummary,
       commentParagraphs: commentParagraphs,
       parameters: params,
+      throwsDescription: throwsDescription,
       returnsDescription: returnsDescription
     )
   }
@@ -141,5 +153,6 @@ struct ParseComment {
   var oneSentenceSummary: String?
   var commentParagraphs: [String]?
   var parameters: [Parameter]?
+  var throwsDescription: String?
   var returnsDescription: String?
 }
