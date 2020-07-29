@@ -129,9 +129,10 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
     /// - Parameters:
     ///   - command: The command to execute in the shell environment.
     ///   - stdin: The string to use as standard input.
+    /// - Throws: An error, possibly.
     /// - Returns: A string containing the contents of the invoked process's
     ///   standard output.
-    func pluralParam(command: String, stdin: String) -> String {
+    func pluralParam(command: String, stdin: String) throws -> String {
     // ...
     }
 
@@ -151,6 +152,8 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
     XCTAssertNotDiagnosed(.documentReturnValue(funcName: "pluralParam"))
     XCTAssertNotDiagnosed(.removeReturnComment(funcName: "pluralParam"))
     XCTAssertNotDiagnosed(.parametersDontMatch(funcName: "pluralParam"))
+    XCTAssertNotDiagnosed(.documentErrorsThrown(funcName: "pluralParam"))
+    XCTAssertNotDiagnosed(.removeThrowsComment(funcName: "pluralParam"))
 
     XCTAssertNotDiagnosed(.documentReturnValue(funcName: "ommitedFunc"))
     XCTAssertNotDiagnosed(.removeReturnComment(funcName: "ommitedFunc"))
@@ -232,6 +235,16 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
       init(label command: String, label2 stdin: String) {
       // ...
       }
+
+      /// Brief summary.
+      ///
+      /// - Parameters:
+      ///   - command: The command to execute in the shell environment.
+      ///   - stdin: The string to use as standard input.
+      /// - Throws: An error.
+      init(label command: String, label2 stdin: String) throws {
+      // ...
+      }
     }
     """
     performLint(ValidateDocumentationComments.self, input: input)
@@ -248,5 +261,11 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
     XCTAssertNotDiagnosed(.documentReturnValue(funcName: "init"))
     XCTAssertNotDiagnosed(.removeReturnComment(funcName: "init"))
     XCTAssertNotDiagnosed(.parametersDontMatch(funcName: "init"))
+
+    XCTAssertNotDiagnosed(.documentReturnValue(funcName: "init"))
+    XCTAssertNotDiagnosed(.removeReturnComment(funcName: "init"))
+    XCTAssertNotDiagnosed(.parametersDontMatch(funcName: "init"))
+    XCTAssertNotDiagnosed(.documentErrorsThrown(funcName: "init"))
+    XCTAssertNotDiagnosed(.removeThrowsComment(funcName: "init"))
   }
 }
