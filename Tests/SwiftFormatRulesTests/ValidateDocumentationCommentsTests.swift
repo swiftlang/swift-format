@@ -71,7 +71,7 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
     ///   - p2: Parameter 2.
     ///   - p3: Parameter 3.
     /// - Throws: an error.
-    func noThrows(p1: Int, p2: Int, p3: Int) {}
+    func doesNotThrow(p1: Int, p2: Int, p3: Int) {}
 
     /// One sentence summary.
     ///
@@ -79,11 +79,18 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
     ///   - p1: Parameter 1.
     ///   - p2: Parameter 2.
     ///   - p3: Parameter 3.
-    func foo(p1: Int, p2: Int, p3: Int) throws {}
+    func doesThrow(p1: Int, p2: Int, p3: Int) throws {}
+
+    /// One sentence summary.
+    ///
+    /// - Parameter p1: Parameter 1.
+    /// - Throws: doesn't really throw, just rethrows
+    func doesRethrow(p1: (() throws -> ())) rethrows {}
     """
     performLint(ValidateDocumentationComments.self, input: input)
-    XCTAssertDiagnosed(.removeThrowsComment(funcName: "noThrows"))
-    XCTAssertDiagnosed(.documentErrorsThrown(funcName: "foo"))
+    XCTAssertDiagnosed(.removeThrowsComment(funcName: "doesNotThrow"))
+    XCTAssertDiagnosed(.documentErrorsThrown(funcName: "doesThrow"))
+    XCTAssertDiagnosed(.removeThrowsComment(funcName: "doesRethrow"))
   }
 
   func testReturnDocumentation() {
@@ -136,6 +143,13 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
     // ...
     }
 
+    /// One sentence summary.
+    ///
+    /// - Parameter p1: Parameter 1.
+    func rethrower(p1: (() throws -> ())) rethrows {
+    // ...
+    }
+
     /// Parameter(s) and Returns tags may be omitted only if the single-sentence
     /// brief summary fully describes the meaning of those items and including the
     /// tags would only repeat what has already been said
@@ -152,6 +166,9 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
     XCTAssertNotDiagnosed(.documentReturnValue(funcName: "pluralParam"))
     XCTAssertNotDiagnosed(.removeReturnComment(funcName: "pluralParam"))
     XCTAssertNotDiagnosed(.parametersDontMatch(funcName: "pluralParam"))
+    XCTAssertNotDiagnosed(.documentErrorsThrown(funcName: "pluralParam"))
+    XCTAssertNotDiagnosed(.removeThrowsComment(funcName: "pluralParam"))
+
     XCTAssertNotDiagnosed(.documentErrorsThrown(funcName: "pluralParam"))
     XCTAssertNotDiagnosed(.removeThrowsComment(funcName: "pluralParam"))
 

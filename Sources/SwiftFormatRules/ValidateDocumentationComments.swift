@@ -105,9 +105,11 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
     name: String,
     throwsDesc: String?
   ) {
-    if throwsOrRethrowsKeyword == nil && throwsDesc != nil {
+    let needsThrowsDesc = throwsOrRethrowsKeyword != nil && throwsOrRethrowsKeyword!.tokenKind == .throwsKeyword
+
+    if !needsThrowsDesc && throwsDesc != nil {
       diagnose(.removeThrowsComment(funcName: name), on: throwsOrRethrowsKeyword)
-    } else if throwsOrRethrowsKeyword != nil && throwsDesc == nil {
+    } else if needsThrowsDesc && throwsDesc == nil {
       diagnose(.documentErrorsThrown(funcName: name), on: throwsOrRethrowsKeyword)
     }
   }
