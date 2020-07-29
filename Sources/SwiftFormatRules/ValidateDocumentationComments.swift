@@ -111,7 +111,6 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
       diagnose(.documentErrorsThrown(funcName: name), on: throwsOrRethrowsKeyword)
     }
   }
-
 }
 
 /// Iterates through every parameter of paramList and returns a list of the
