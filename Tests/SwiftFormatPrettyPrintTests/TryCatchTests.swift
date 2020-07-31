@@ -231,4 +231,46 @@ final class TryCatchTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 25)
   }
+
+  func testTryKeywordBreaking() {
+    let input =
+      """
+      let aVeryLongArgumentName = try foo.bar()
+      let aVeryLongArgumentName = try? foo.bar()
+      let abc = try foo.baz().quxxe(a, b, c).bar()
+      let abc = try foo
+        .baz().quxxe(a, b, c).bar()
+      let abc = try [1, 2, 3, 4, 5, 6, 7].baz().quxxe(a, b, c).bar()
+      let abc = try [1, 2, 3, 4, 5, 6, 7]
+        .baz().quxxe(a, b, c).bar()
+      let abc = try foo.baz().quxxe(a, b, c).bar[0]
+      let abc = try foo
+        .baz().quxxe(a, b, c).bar[0]
+      """
+
+    let expected =
+      """
+      let aVeryLongArgumentName =
+        try foo.bar()
+      let aVeryLongArgumentName =
+        try? foo.bar()
+      let abc = try foo.baz().quxxe(a, b, c)
+        .bar()
+      let abc =
+        try foo
+        .baz().quxxe(a, b, c).bar()
+      let abc = try [1, 2, 3, 4, 5, 6, 7]
+        .baz().quxxe(a, b, c).bar()
+      let abc = try [1, 2, 3, 4, 5, 6, 7]
+        .baz().quxxe(a, b, c).bar()
+      let abc = try foo.baz().quxxe(a, b, c)
+        .bar[0]
+      let abc =
+        try foo
+        .baz().quxxe(a, b, c).bar[0]
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+  }
 }

@@ -880,8 +880,13 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
     if let calledMemberAccessExpr = node.calledExpression.as(MemberAccessExprSyntax.self) {
       if let base = calledMemberAccessExpr.base, base.is(IdentifierExprSyntax.self) {
-        before(base.firstToken, tokens: .open)
-        after(calledMemberAccessExpr.name.lastToken, tokens: .close)
+        // When this function call is wrapped by a try-expr, the group applied when visiting the
+        // try-expr is sufficient. Adding another gruop here in that case can result in
+        // unnecessarily breaking after the try keyword.
+        if !(base.firstToken?.previousToken?.parent?.is(TryExprSyntax.self) ?? false) {
+          before(base.firstToken, tokens: .open)
+          after(calledMemberAccessExpr.name.lastToken, tokens: .close)
+        }
       }
     }
 
@@ -1416,7 +1421,39 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: TryExprSyntax) -> SyntaxVisitorContinueKind {
     before(node.expression.firstToken, tokens: .break)
+
+    // Check for an anchor token inside of the expression to group with the try keyword.
+    if let anchorToken = findTryExprConnectingToken(inExpr: node.expression) {
+      before(node.tryKeyword, tokens: .open)
+      after(anchorToken, tokens: .close)
+    }
+
     return .visitChildren
+  }
+
+  /// Searches the AST from `expr` to find a token that should be grouped with an enclosing
+  /// try-expr. Returns that token, or nil when no such token is found.
+  ///
+  /// - Parameter expr: An expression that is wrapped by a try-expr.
+  /// - Returns: A token that should be grouped with the try-expr, or nil.
+  func findTryExprConnectingToken(inExpr expr: ExprSyntax) -> TokenSyntax? {
+    if let callingExpr = expr.asProtocol(CallingExprSyntaxProtocol.self) {
+      return findTryExprConnectingToken(inExpr: callingExpr.calledExpression)
+    }
+    if let memberAccessExpr = expr.as(MemberAccessExprSyntax.self), let base = memberAccessExpr.base
+    {
+      // When there's a simple base (i.e. identifier), group the entire `try <base>.<name>`
+      // sequence. This check has to happen here so that the `MemberAccessExprSyntax.name` is
+      // available.
+      if base.is(IdentifierExprSyntax.self) {
+        return memberAccessExpr.name.lastToken
+      }
+      return findTryExprConnectingToken(inExpr: base)
+    }
+    if expr.is(IdentifierExprSyntax.self) {
+      return expr.lastToken
+    }
+    return nil
   }
 
   override func visit(_ node: TypeExprSyntax) -> SyntaxVisitorContinueKind {
