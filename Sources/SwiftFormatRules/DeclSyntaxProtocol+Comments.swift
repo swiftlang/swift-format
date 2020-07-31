@@ -83,9 +83,7 @@ extension DeclSyntaxProtocol {
     let comments = docComment.components(separatedBy: .newlines)
     var params = [ParseComment.Parameter]()
     var commentParagraphs = [String]()
-    var hasFoundParameterList = false
-    var hasFoundThrows = false
-    var hasFoundReturn = false
+    var currentSection: DocCommentSection = .commentParagraphs
     var returnsDescription: String?
     var throwsDescription: String?
     // Takes the first sentence of the comment, and counts the number of lines it uses.
@@ -98,7 +96,7 @@ extension DeclSyntaxProtocol {
       let trimmedLine = line.trimmingCharacters(in: .whitespaces)
 
       if trimmedLine.starts(with: "- Parameters") {
-        hasFoundParameterList = true
+        currentSection = .parameters
       } else if trimmedLine.starts(with: "- Parameter") {
         // If it's only a parameter it's information is inline with the parameter
         // tag, just after the ':'.
@@ -108,32 +106,37 @@ extension DeclSyntaxProtocol {
         let summary = trimmedLine[index...].trimmingCharacters(in: .init(charactersIn: " -:"))
         params.append(ParseComment.Parameter(name: name, summary: summary))
       } else if trimmedLine.starts(with: "- Throws:") {
-        hasFoundParameterList = false
-        hasFoundReturn = false
-        hasFoundThrows = true
+        currentSection = .throwsDescription
         throwsDescription = String(trimmedLine.dropFirst("- Throws:".count))
       } else if trimmedLine.starts(with: "- Returns:") {
-        hasFoundParameterList = false
-        hasFoundThrows = false
-        hasFoundReturn = true
+        currentSection = .returnsDescription
         returnsDescription = String(trimmedLine.dropFirst("- Returns:".count))
-      } else if hasFoundParameterList {
-        // After the paramters tag is found the following lines should be the parameters
-        // description.
-        guard let index = trimmedLine.firstIndex(of: ":") else { continue }
-        let name = trimmedLine[..<index].trimmingCharacters(in: .init(charactersIn: " -:"))
-        let summary = trimmedLine[index...].trimmingCharacters(in: .init(charactersIn: " -:"))
-        params.append(ParseComment.Parameter(name: name, summary: summary))
-      } else if hasFoundReturn {
-        // Appends the return description that is not inline with the return tag.
-        returnsDescription!.append(trimmedLine)
-      } else if hasFoundThrows {
-        // Appends the throws description that is not inline with the throws tag.
-        throwsDescription!.append(trimmedLine)
-      } else if trimmedLine != "" {
-        commentParagraphs.append(" " + trimmedLine)
+      } else {
+        switch currentSection {
+        case .parameters:
+          // After the paramters tag is found the following lines should be the parameters
+          // description.
+          guard let index = trimmedLine.firstIndex(of: ":") else { continue }
+          let name = trimmedLine[..<index].trimmingCharacters(in: .init(charactersIn: " -:"))
+          let summary = trimmedLine[index...].trimmingCharacters(in: .init(charactersIn: " -:"))
+          params.append(ParseComment.Parameter(name: name, summary: summary))
+
+        case .returnsDescription:
+          // Appends the return description that is not inline with the return tag.
+          returnsDescription!.append(trimmedLine)
+
+        case .throwsDescription:
+          // Appends the throws description that is not inline with the throws tag.
+          throwsDescription!.append(trimmedLine)
+
+        case .commentParagraphs:
+          if trimmedLine != "" {
+            commentParagraphs.append(" " + trimmedLine)
+          }
+        }
       }
     }
+
     return ParseComment(
       oneSentenceSummary: oneSenteceSummary,
       commentParagraphs: commentParagraphs,
@@ -142,6 +145,13 @@ extension DeclSyntaxProtocol {
       returnsDescription: returnsDescription
     )
   }
+}
+
+private enum DocCommentSection {
+    case commentParagraphs
+    case parameters
+    case throwsDescription
+    case returnsDescription
 }
 
 struct ParseComment {
