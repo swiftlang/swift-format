@@ -105,7 +105,10 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
     name: String,
     throwsDesc: String?
   ) {
-    let needsThrowsDesc = throwsOrRethrowsKeyword != nil && throwsOrRethrowsKeyword!.tokenKind == .throwsKeyword
+    // If a function is marked as `rethrows`, it doesn't have any errors of its
+    // own that should be documented. So only require documentation for
+    // functions marked `throws`.
+    let needsThrowsDesc = throwsOrRethrowsKeyword?.tokenKind == .throwsKeyword
 
     if !needsThrowsDesc && throwsDesc != nil {
       diagnose(.removeThrowsComment(funcName: name), on: throwsOrRethrowsKeyword)
@@ -175,11 +178,14 @@ extension Diagnostic.Message {
   public static func removeThrowsComment(funcName: String) -> Diagnostic.Message {
     return Diagnostic.Message(
       .warning,
-      "remove the throws comment of \(funcName), it doesn't throw an error"
+      "remove the 'Throws' tag for non-throwing function \(funcName)"
     )
   }
 
   public static func documentErrorsThrown(funcName: String) -> Diagnostic.Message {
-    return Diagnostic.Message(.warning, "document the errors thrown by \(funcName)")
+    return Diagnostic.Message(
+      .warning,
+      "add a 'Throws' tag describing the errors thrown by \(funcName)"
+    )
   }
 }
