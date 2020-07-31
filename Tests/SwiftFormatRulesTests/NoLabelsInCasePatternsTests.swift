@@ -8,7 +8,7 @@ final class NoLabelsInCasePatternsTests: LintOrFormatRuleTestCase {
              switch treeNode {
              case .root(let data):
                break
-             case .subtree(left: let left, right: let right):
+             case .subtree(left: let /*hello*/left, right: let right):
                break
              case .leaf(element: let element):
                break
@@ -18,7 +18,7 @@ final class NoLabelsInCasePatternsTests: LintOrFormatRuleTestCase {
                 switch treeNode {
                 case .root(let data):
                   break
-                case .subtree(let left, let right):
+                case .subtree(let /*hello*/left, let right):
                   break
                 case .leaf(let element):
                   break

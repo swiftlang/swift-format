@@ -45,7 +45,8 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
 
       if isFallthroughOnly(switchCase), let label = switchCase.label.as(SwitchCaseLabelSyntax.self) {
         // If the case is fallthrough-only, store it as a violation that we will merge later.
-        diagnose(.collapseCase(name: "\(label)"), on: switchCase)
+        diagnose(
+          .collapseCase(name: label.caseItems.withoutTrivia().description), on: switchCase)
         fallthroughOnlyCases.append(switchCase)
       } else {
         guard !fallthroughOnlyCases.isEmpty else {

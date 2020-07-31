@@ -53,7 +53,18 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         case .empty: fallthrough
         default: break
         }
-        """)
+        """,
+      checkForUnassertedDiagnostics: true)
+
+    XCTAssertDiagnosed(.collapseCase(name: "2"), line: 3, column: 1)
+    XCTAssertDiagnosed(.collapseCase(name: "3"), line: 4, column: 1)
+    XCTAssertDiagnosed(.collapseCase(name: "5"), line: 6, column: 1)
+    XCTAssertDiagnosed(.collapseCase(name: "\"a\""), line: 11, column: 1)
+    XCTAssertDiagnosed(.collapseCase(name: "\"b\", \"c\""), line: 12, column: 1)
+    XCTAssertDiagnosed(.collapseCase(name: "\"f\""), line: 15, column: 1)
+    XCTAssertDiagnosed(.collapseCase(name: ".rightBrace"), line: 21, column: 1)
+    XCTAssertDiagnosed(.collapseCase(name: ".leftBrace"), line: 22, column: 1)
+    XCTAssertDiagnosed(.collapseCase(name: ".empty"), line: 25, column: 1)
   }
 
   func testFallthroughCasesWithCommentsAreNotCombined() {
