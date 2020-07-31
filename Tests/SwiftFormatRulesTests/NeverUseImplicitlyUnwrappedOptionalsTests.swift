@@ -10,12 +10,14 @@ final class NeverUseImplicitlyUnwrappedOptionalsTests: LintOrFormatRuleTestCase 
 
       var foo: Int?
       var s: String!
+      var f: /*this is a Foo*/Foo!
       var c, d, e: Float
       @IBOutlet var button: UIButton!
       """
     performLint(NeverUseImplicitlyUnwrappedOptionals.self, input: input)
     XCTAssertNotDiagnosed(.doNotUseImplicitUnwrapping(identifier: "Int"))
     XCTAssertDiagnosed(.doNotUseImplicitUnwrapping(identifier: "String"))
+    XCTAssertDiagnosed(.doNotUseImplicitUnwrapping(identifier: "Foo"))
     XCTAssertNotDiagnosed(.doNotUseImplicitUnwrapping(identifier: "Float"))
     XCTAssertNotDiagnosed(.doNotUseImplicitUnwrapping(identifier: "UIButton"))
   }

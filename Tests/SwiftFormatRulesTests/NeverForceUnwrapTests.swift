@@ -10,6 +10,8 @@ final class NeverForceUnwrapTests: LintOrFormatRuleTestCase {
       let c = (someValue())!
       let d = String(a)!
       let regex = try! NSRegularExpression(pattern: "a*b+c?")
+      let e = /*comment about stuff*/ [1: a, 2: b, 3: c][4]!
+      var f = a as! /*comment about this type*/ FooBarType
       return a!
     }
     """
@@ -20,6 +22,8 @@ final class NeverForceUnwrapTests: LintOrFormatRuleTestCase {
     XCTAssertNotDiagnosed(.doNotForceCast(name: "try"))
     XCTAssertNotDiagnosed(.doNotForceUnwrap(name: "try"))
     XCTAssertDiagnosed(.doNotForceUnwrap(name: "a"))
+    XCTAssertDiagnosed(.doNotForceUnwrap(name: "[1: a, 2: b, 3: c][4]"))
+    XCTAssertDiagnosed(.doNotForceCast(name: "FooBarType"))
   }
 
   func testIgnoreTestCode() {
