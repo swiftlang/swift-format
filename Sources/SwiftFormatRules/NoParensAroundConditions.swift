@@ -40,18 +40,28 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
       $0.highlight(expr.sourceRange(converter: self.context.sourceLocationConverter))
     }
 
+    guard
+      let visitedTuple = visit(tuple).as(TupleExprSyntax.self),
+      let visitedExpr = visitedTuple.elementList.first?.expression
+    else {
+      return expr
+    }
     return replaceTrivia(
-      on: expr,
-      token: expr.lastToken,
-      leadingTrivia: tuple.leftParen.leadingTrivia,
-      trailingTrivia: tuple.rightParen.trailingTrivia
+      on: visitedExpr,
+      token: visitedExpr.lastToken,
+      leadingTrivia: visitedTuple.leftParen.leadingTrivia,
+      trailingTrivia: visitedTuple.rightParen.trailingTrivia
     )
   }
 
   public override func visit(_ node: IfStmtSyntax) -> StmtSyntax {
     let conditions = visit(node.conditions).as(ConditionElementListSyntax.self)!
-    let result = node.withIfKeyword(node.ifKeyword.withOneTrailingSpace())
+    var result = node.withIfKeyword(node.ifKeyword.withOneTrailingSpace())
       .withConditions(conditions)
+      .withBody(CodeBlockSyntax(visit(node.body)))
+    if let elseBody = node.elseBody {
+      result = result.withElseBody(visit(elseBody))
+    }
     return StmtSyntax(result)
   }
 
@@ -59,7 +69,7 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
     guard let tup = node.condition.as(TupleExprSyntax.self),
       tup.elementList.firstAndOnly != nil
     else {
-      return Syntax(node)
+      return super.visit(node)
     }
     return Syntax(node.withCondition(Syntax(extractExpr(tup))))
   }
@@ -69,19 +79,21 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
     guard let tup = node.expression.as(TupleExprSyntax.self),
       tup.elementList.firstAndOnly != nil
     else {
-      return StmtSyntax(node)
+      return super.visit(node)
     }
-    return StmtSyntax(node.withExpression(extractExpr(tup)))
+    return StmtSyntax(
+      node.withExpression(extractExpr(tup)).withCases(SwitchCaseListSyntax(visit(node.cases))))
   }
 
   public override func visit(_ node: RepeatWhileStmtSyntax) -> StmtSyntax {
     guard let tup = node.condition.as(TupleExprSyntax.self),
       tup.elementList.firstAndOnly != nil
     else {
-      return StmtSyntax(node)
+      return super.visit(node)
     }
     let newNode = node.withCondition(extractExpr(tup))
       .withWhileKeyword(node.whileKeyword.withOneTrailingSpace())
+      .withBody(CodeBlockSyntax(visit(node.body)))
     return StmtSyntax(newNode)
   }
 }
