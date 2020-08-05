@@ -236,6 +236,8 @@ final class TryCatchTests: PrettyPrintTestCase {
     let input =
       """
       let aVeryLongArgumentName = try foo.bar()
+      let aVeryLongArgumentName = try
+        foo.bar()
       let aVeryLongArgumentName = try? foo.bar()
       let abc = try foo.baz().quxxe(a, b, c).bar()
       let abc = try foo
@@ -246,10 +248,15 @@ final class TryCatchTests: PrettyPrintTestCase {
       let abc = try foo.baz().quxxe(a, b, c).bar[0]
       let abc = try foo
         .baz().quxxe(a, b, c).bar[0]
+      let abc = try
+        foo
+        .baz().quxxe(a, b, c).bar[0]
       """
 
     let expected =
       """
+      let aVeryLongArgumentName =
+        try foo.bar()
       let aVeryLongArgumentName =
         try foo.bar()
       let aVeryLongArgumentName =
@@ -265,6 +272,9 @@ final class TryCatchTests: PrettyPrintTestCase {
         .baz().quxxe(a, b, c).bar()
       let abc = try foo.baz().quxxe(a, b, c)
         .bar[0]
+      let abc =
+        try foo
+        .baz().quxxe(a, b, c).bar[0]
       let abc =
         try foo
         .baz().quxxe(a, b, c).bar[0]

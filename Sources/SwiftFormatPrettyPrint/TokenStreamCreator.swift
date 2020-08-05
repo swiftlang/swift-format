@@ -1420,7 +1420,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: TryExprSyntax) -> SyntaxVisitorContinueKind {
-    before(node.expression.firstToken, tokens: .break)
+    before(
+      node.expression.firstToken,
+      tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
 
     // Check for an anchor token inside of the expression to group with the try keyword.
     if let anchorToken = findTryExprConnectingToken(inExpr: node.expression) {
