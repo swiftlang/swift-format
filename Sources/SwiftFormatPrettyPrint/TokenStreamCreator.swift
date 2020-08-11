@@ -1401,6 +1401,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   override func visit(_ node: FunctionTypeSyntax) -> SyntaxVisitorContinueKind {
     after(node.leftParen, tokens: .break(.open, size: 0), .open)
     before(node.rightParen, tokens: .break(.close, size: 0), .close)
+    before(node.asyncKeyword, tokens: .break)
     before(node.throwsOrRethrowsKeyword, tokens: .break)
     before(node.arrow, tokens: .break)
     before(node.returnType.firstToken, tokens: .break)
@@ -1603,6 +1604,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: FunctionSignatureSyntax) -> SyntaxVisitorContinueKind {
+    before(node.asyncKeyword, tokens: .break)
     before(node.throwsOrRethrowsKeyword, tokens: .break)
     before(node.output?.firstToken, tokens: .break)
     return .visitChildren
