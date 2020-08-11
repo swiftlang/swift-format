@@ -414,6 +414,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         leftParen: functionType.leftParen,
         argumentTypes: functionType.arguments,
         rightParen: functionType.rightParen,
+        asyncKeyword: functionType.asyncKeyword,
         throwsOrRethrowsKeyword: functionType.throwsOrRethrowsKeyword,
         arrow: functionType.arrow,
         returnType: functionType.returnType
@@ -455,6 +456,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     leftParen: TokenSyntax,
     argumentTypes: TupleTypeElementListSyntax,
     rightParen: TokenSyntax,
+    asyncKeyword: TokenSyntax?,
     throwsOrRethrowsKeyword: TokenSyntax?,
     arrow: TokenSyntax,
     returnType: TypeSyntax
@@ -471,6 +473,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       elementList: argumentTypeExprs,
       rightParen: rightParen)
     let arrowExpr = SyntaxFactory.makeArrowExpr(
+      asyncKeyword: asyncKeyword,
       throwsToken: throwsOrRethrowsKeyword,
       arrowToken: arrow)
 
