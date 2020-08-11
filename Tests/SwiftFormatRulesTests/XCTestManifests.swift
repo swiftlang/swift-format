@@ -398,6 +398,7 @@ extension ValidateDocumentationCommentsTests {
         ("testInitializer", testInitializer),
         ("testParameterDocumentation", testParameterDocumentation),
         ("testParametersName", testParametersName),
+        ("testThrowsDocumentation", testThrowsDocumentation),
         ("testReturnDocumentation", testReturnDocumentation),
         ("testSeparateLabelAndIdentifier", testSeparateLabelAndIdentifier),
         ("testValidDocumentation", testValidDocumentation),
