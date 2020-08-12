@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import SwiftFormatCore
 import SwiftSyntax
 
 // These rules will not be added to the pipeline.
@@ -19,7 +20,7 @@ let suppressRules = ["UseEarlyExits", "UseWhereClausesInForLoops"]
 /// Collects information about rules in the formatter code base.
 final class RuleCollector {
   /// Information about a detected rule.
-  private struct DetectedRule {
+  struct DetectedRule: Hashable {
     /// The type name of the rule.
     let typeName: String
 
@@ -28,13 +29,16 @@ final class RuleCollector {
 
     /// Indicates whether the rule can format code (all rules can lint).
     let canFormat: Bool
+
+    /// Indicates whether the rule is disabled by default, i.e. requires opting in to use it.
+    let isOptIn: Bool
   }
 
   /// A list of all rules that can lint (thus also including format rules) found in the code base.
-  var allLinters = Set<String>()
+  var allLinters = Set<DetectedRule>()
 
   /// A list of all the format-only rules found in the code base.
-  var allFormatters = Set<String>()
+  var allFormatters = Set<DetectedRule>()
 
   /// A dictionary mapping syntax node types to the lint/format rules that visit them.
   var syntaxNodeLinters = [String: [String]]()
@@ -63,13 +67,13 @@ final class RuleCollector {
         if detectedRule.canFormat {
           // Format rules just get added to their own list; we run them each over the entire tree in
           // succession.
-          allFormatters.insert(detectedRule.typeName)
+          allFormatters.insert(detectedRule)
         }
 
         // Lint rules (this includes format rules, which can also lint) get added to a mapping over
         // the names of the types they touch so that they can be interleaved into one pass over the
         // tree.
-        allLinters.insert(detectedRule.typeName)
+        allLinters.insert(detectedRule)
         for visitedNode in detectedRule.visitedNodes {
           syntaxNodeLinters[visitedNode, default: []].append(detectedRule.typeName)
         }
@@ -132,7 +136,12 @@ final class RuleCollector {
       /// Ignore it if it doesn't have any; there's no point in putting no-op rules in the pipeline.
       /// Otherwise, return it (we don't need to look at the rest of the inheritances).
       guard !visitedNodes.isEmpty else { return nil }
-      return DetectedRule(typeName: typeName, visitedNodes: visitedNodes, canFormat: canFormat)
+      guard let ruleType = _typeByName("SwiftFormatRules.\(typeName)") as? Rule.Type else {
+        preconditionFailure("Failed to find type for rule named \(typeName)")
+      }
+      return DetectedRule(
+        typeName: typeName, visitedNodes: visitedNodes, canFormat: canFormat,
+        isOptIn: ruleType.isOptIn)
     }
 
     return nil

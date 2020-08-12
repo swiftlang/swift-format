@@ -14,6 +14,12 @@ import SwiftSyntax
 
 /// A rule that both formats and lints a given file.
 open class SyntaxFormatRule: SyntaxRewriter, Rule {
+  /// Whether this rule is opt-in, meaning it's disabled by default. Rules are opt-out unless they
+  /// override this property.
+  open class var isOptIn: Bool {
+    return false
+  }
+
   /// The context in which the rule is executed.
   public let context: Context
 
