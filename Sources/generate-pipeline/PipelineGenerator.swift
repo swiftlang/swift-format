@@ -96,7 +96,7 @@ final class PipelineGenerator: FileGenerator {
       """
     )
 
-    for ruleName in ruleCollector.allFormatters.sorted() {
+    for ruleName in ruleCollector.allFormatters.map({ $0.typeName }).sorted() {
       handle.write(
         """
             node = \(ruleName)(context: context).visit(node)

@@ -46,8 +46,8 @@ final class RuleRegistryGenerator: FileGenerator {
       """
     )
 
-    for ruleName in ruleCollector.allLinters.sorted() {
-      handle.write("    \"\(ruleName)\": true,\n")
+    for detectedRule in ruleCollector.allLinters.sorted(by: { $0.typeName < $1.typeName }) {
+      handle.write("    \"\(detectedRule.typeName)\": \(!detectedRule.isOptIn),\n")
     }
     handle.write("  ]\n}\n")
   }

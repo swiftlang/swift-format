@@ -18,6 +18,9 @@ public protocol Rule {
   /// The human-readable name of the rule. This defaults to the class name.
   static var ruleName: String { get }
 
+  /// Whether this rule is opt-in, meaning it is disabled by default.
+  static var isOptIn: Bool { get }
+
   /// Creates a new Rule in a given context.
   init(context: Context)
 }
