@@ -49,19 +49,19 @@ class LintPipeline: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: ClosureExprSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(OneVariableDeclarationPerLine.visit, in: context, for: node)
+  override func visit(_ node: ClosureSignatureSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(ReturnVoidInsteadOfEmptyTuple.visit, in: context, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: CodeBlockItemListSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(DoNotUseSemicolons.visit, in: context, for: node)
+    visitIfEnabled(OneVariableDeclarationPerLine.visit, in: context, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: CodeBlockSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AmbiguousTrailingClosureOverload.visit, in: context, for: node)
-    visitIfEnabled(OneVariableDeclarationPerLine.visit, in: context, for: node)
     return .visitChildren
   }
 
@@ -210,7 +210,6 @@ class LintPipeline: SyntaxVisitor {
     visitIfEnabled(NeverForceUnwrap.visit, in: context, for: node)
     visitIfEnabled(NeverUseForceTry.visit, in: context, for: node)
     visitIfEnabled(NeverUseImplicitlyUnwrappedOptionals.visit, in: context, for: node)
-    visitIfEnabled(OneVariableDeclarationPerLine.visit, in: context, for: node)
     visitIfEnabled(OrderedImports.visit, in: context, for: node)
     return .visitChildren
   }
