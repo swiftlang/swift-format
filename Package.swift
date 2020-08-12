@@ -61,7 +61,14 @@ let package = Package(
         "SwiftSyntax",
       ]
     ),
-    .target(name: "generate-pipeline", dependencies: ["SwiftSyntax"]),
+    .target(
+      name: "generate-pipeline",
+      dependencies: [
+        "SwiftFormatCore",
+        "SwiftFormatRules",
+        "SwiftSyntax",
+      ]
+    ),
     .target(
       name: "swift-format",
       dependencies: [
