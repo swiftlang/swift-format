@@ -58,8 +58,10 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
       $0.trimmingCharacters(in: .whitespaces).starts(with: "- Parameters")
     }
 
-    validateThrows(throwsOrRethrowsKeyword, name: name, throwsDesc: commentInfo.throwsDescription)
-    validateReturn(returnClause, name: name, returnDesc: commentInfo.returnsDescription)
+    validateThrows(
+      throwsOrRethrowsKeyword, name: name, throwsDesc: commentInfo.throwsDescription, node: node)
+    validateReturn(
+      returnClause, name: name, returnDesc: commentInfo.returnsDescription, node: node)
     let funcParameters = funcParametersIdentifiers(in: parameters)
 
     // If the documentation of the parameters is wrong 'docCommentInfo' won't
@@ -89,10 +91,11 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
   private func validateReturn(
     _ returnClause: ReturnClauseSyntax?,
     name: String,
-    returnDesc: String?
+    returnDesc: String?,
+    node: DeclSyntax
   ) {
     if returnClause == nil && returnDesc != nil {
-      diagnose(.removeReturnComment(funcName: name), on: returnClause)
+      diagnose(.removeReturnComment(funcName: name), on: node)
     } else if returnClause != nil && returnDesc == nil {
       diagnose(.documentReturnValue(funcName: name), on: returnClause)
     }
@@ -103,7 +106,8 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
   private func validateThrows(
     _ throwsOrRethrowsKeyword: TokenSyntax?,
     name: String,
-    throwsDesc: String?
+    throwsDesc: String?,
+    node: DeclSyntax
   ) {
     // If a function is marked as `rethrows`, it doesn't have any errors of its
     // own that should be documented. So only require documentation for
@@ -111,7 +115,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
     let needsThrowsDesc = throwsOrRethrowsKeyword?.tokenKind == .throwsKeyword
 
     if !needsThrowsDesc && throwsDesc != nil {
-      diagnose(.removeThrowsComment(funcName: name), on: throwsOrRethrowsKeyword)
+      diagnose(.removeThrowsComment(funcName: name), on: throwsOrRethrowsKeyword ?? node.firstToken)
     } else if needsThrowsDesc && throwsDesc == nil {
       diagnose(.documentErrorsThrown(funcName: name), on: throwsOrRethrowsKeyword)
     }

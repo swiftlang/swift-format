@@ -1,6 +1,11 @@
 import SwiftFormatRules
 
 final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
+  override func setUp() {
+    super.setUp()
+    shouldCheckForUnassertedDiagnostics = true
+  }
+
   func testParameterDocumentation() {
     let input =
     """
@@ -32,9 +37,9 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
     func testInvalidParameterDesc(command: String, stdin: String) -> String {}
     """
     performLint(ValidateDocumentationComments.self, input: input)
-    XCTAssertDiagnosed(.useSingularParameter)
-    XCTAssertDiagnosed(.usePluralParameters)
-    XCTAssertDiagnosed(.usePluralParameters)
+    XCTAssertDiagnosed(.useSingularParameter, line: 6, column: 1)
+    XCTAssertDiagnosed(.usePluralParameters, line: 15, column: 1)
+    XCTAssertDiagnosed(.usePluralParameters, line: 26, column: 1)
   }
 
   func testParametersName() {
@@ -57,8 +62,8 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
     func foo(p1: Int, p2: Int, p3: Int) -> Int {}
     """
     performLint(ValidateDocumentationComments.self, input: input)
-    XCTAssertDiagnosed(.parametersDontMatch(funcName: "sum"))
-    XCTAssertDiagnosed(.parametersDontMatch(funcName: "foo"))
+    XCTAssertDiagnosed(.parametersDontMatch(funcName: "sum"), line: 7, column: 1)
+    XCTAssertDiagnosed(.parametersDontMatch(funcName: "foo"), line: 15, column: 1)
   }
 
   func testThrowsDocumentation() {
@@ -88,9 +93,9 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
     func doesRethrow(p1: (() throws -> ())) rethrows {}
     """
     performLint(ValidateDocumentationComments.self, input: input)
-    XCTAssertDiagnosed(.removeThrowsComment(funcName: "doesNotThrow"))
-    XCTAssertDiagnosed(.documentErrorsThrown(funcName: "doesThrow"))
-    XCTAssertDiagnosed(.removeThrowsComment(funcName: "doesRethrow"))
+    XCTAssertDiagnosed(.removeThrowsComment(funcName: "doesNotThrow"), line: 8, column: 1)
+    XCTAssertDiagnosed(.documentErrorsThrown(funcName: "doesThrow"), line: 16, column: 43)
+    XCTAssertDiagnosed(.removeThrowsComment(funcName: "doesRethrow"), line: 22, column: 41)
   }
 
   func testReturnDocumentation() {
@@ -114,8 +119,8 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
     func foo(p1: Int, p2: Int, p3: Int) -> Int {}
     """
     performLint(ValidateDocumentationComments.self, input: input)
-    XCTAssertDiagnosed(.removeReturnComment(funcName: "noReturn"))
-    XCTAssertDiagnosed(.documentReturnValue(funcName: "foo"))
+    XCTAssertDiagnosed(.removeReturnComment(funcName: "noReturn"), line: 8, column: 1)
+    XCTAssertDiagnosed(.documentReturnValue(funcName: "foo"), line: 16, column: 37)
   }
 
   func testValidDocumentation() {
@@ -214,7 +219,7 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
     XCTAssertNotDiagnosed(.useSingularParameter)
     XCTAssertNotDiagnosed(.usePluralParameters)
 
-    XCTAssertDiagnosed(.parametersDontMatch(funcName: "incorrectParam"))
+    XCTAssertDiagnosed(.parametersDontMatch(funcName: "incorrectParam"), line: 6, column: 1)
 
     XCTAssertNotDiagnosed(.documentReturnValue(funcName: "singularParam"))
     XCTAssertNotDiagnosed(.removeReturnComment(funcName: "singularParam"))
@@ -268,8 +273,8 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
     XCTAssertNotDiagnosed(.useSingularParameter)
     XCTAssertNotDiagnosed(.usePluralParameters)
 
-    XCTAssertDiagnosed(.parametersDontMatch(funcName: "init"))
-    XCTAssertDiagnosed(.removeReturnComment(funcName: "init"))
+    XCTAssertDiagnosed(.parametersDontMatch(funcName: "init"), line: 6, column: 3)
+    XCTAssertDiagnosed(.removeReturnComment(funcName: "init"), line: 6, column: 3)
 
     XCTAssertNotDiagnosed(.documentReturnValue(funcName: "init"))
     XCTAssertNotDiagnosed(.removeReturnComment(funcName: "init"))
