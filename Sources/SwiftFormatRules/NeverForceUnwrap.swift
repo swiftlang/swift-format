@@ -19,7 +19,7 @@ import SwiftSyntax
 public final class NeverForceUnwrap: SyntaxLintRule {
 
   public override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
-    // Tracks whether "XCTest" is imported in the source file before processing the individual
+    // Tracks whether "XCTest" is imported in the source file before processing individual nodes.
     setImportsXCTest(context: context, sourceFile: node)
     return .visitChildren
   }
