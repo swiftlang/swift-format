@@ -18,6 +18,11 @@ import SwiftSyntax
 /// Lint: If a force unwrap is used, a lint warning is raised.
 public final class NeverForceUnwrap: SyntaxLintRule {
 
+  /// Identifies this rule was being opt-in. While force unwrap is an unsafe pattern (i.e. it can
+  /// crash), there are valid contexts for force unwrap where it won't crash. This rule can't
+  /// evaluate the context around the force unwrap to make that determination.
+  public override class var isOptIn: Bool { return true }
+
   public override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
     // Tracks whether "XCTest" is imported in the source file before processing individual nodes.
     setImportsXCTest(context: context, sourceFile: node)
