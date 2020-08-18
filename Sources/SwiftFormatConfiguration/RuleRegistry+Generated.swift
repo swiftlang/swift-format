@@ -14,7 +14,7 @@
 
 enum RuleRegistry {
   static let rules: [String: Bool] = [
-    "AllPublicDeclarationsHaveDocumentation": true,
+    "AllPublicDeclarationsHaveDocumentation": false,
     "AlwaysUseLowerCamelCase": true,
     "AmbiguousTrailingClosureOverload": true,
     "BeginDocumentationCommentWithOneLineSummary": true,
@@ -24,9 +24,9 @@ enum RuleRegistry {
     "FullyIndirectEnum": true,
     "GroupNumericLiterals": true,
     "IdentifiersMustBeASCII": true,
-    "NeverForceUnwrap": true,
-    "NeverUseForceTry": true,
-    "NeverUseImplicitlyUnwrappedOptionals": true,
+    "NeverForceUnwrap": false,
+    "NeverUseForceTry": false,
+    "NeverUseImplicitlyUnwrappedOptionals": false,
     "NoAccessLevelOnExtensionDeclaration": true,
     "NoBlockComments": true,
     "NoCasesWithOnlyFallthrough": true,
