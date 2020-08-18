@@ -42,6 +42,7 @@ class LintPipeline: SyntaxVisitor {
 
   override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, in: context, for: node)
+    visitIfEnabled(AlwaysUseLowerCamelCase.visit, in: context, for: node)
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, in: context, for: node)
     visitIfEnabled(DontRepeatTypeInStaticProperties.visit, in: context, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, in: context, for: node)
@@ -205,6 +206,7 @@ class LintPipeline: SyntaxVisitor {
   }
 
   override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(AlwaysUseLowerCamelCase.visit, in: context, for: node)
     visitIfEnabled(AmbiguousTrailingClosureOverload.visit, in: context, for: node)
     visitIfEnabled(FileScopedDeclarationPrivacy.visit, in: context, for: node)
     visitIfEnabled(NeverForceUnwrap.visit, in: context, for: node)
