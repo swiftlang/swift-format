@@ -18,6 +18,12 @@ import SwiftSyntax
 /// Lint: If a public declaration is missing a documentation comment, a lint error is raised.
 public final class AllPublicDeclarationsHaveDocumentation: SyntaxLintRule {
 
+  /// Identifies this rule was being opt-in. While docs on most public declarations are beneficial,
+  /// there are a number of public decls where docs are either redundant or superfluous. This rule
+  /// can't differentiate those situations and will make a lot of noise for projects that are
+  /// intentionally avoiding docs on some decls.
+  public override class var isOptIn: Bool { return true }
+
   public override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseMissingDocComment(DeclSyntax(node), name: node.fullDeclName, modifiers: node.modifiers)
     return .skipChildren
