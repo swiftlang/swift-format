@@ -55,7 +55,8 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
       guard let pat = binding.pattern.as(IdentifierPatternSyntax.self) else {
         continue
       }
-      diagnoseLowerCamelCaseViolations(pat.identifier, allowUnderscores: false)
+      diagnoseLowerCamelCaseViolations(
+        pat.identifier, allowUnderscores: false, description: identifierDescription(for: node))
     }
     return .skipChildren
   }
@@ -64,23 +65,44 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
     // We allow underscores in test names, because there's an existing convention of using
     // underscores to separate phrases in very detailed test names.
     let allowUnderscores = testCaseFuncs.contains(node)
-    diagnoseLowerCamelCaseViolations(node.identifier, allowUnderscores: allowUnderscores)
+    diagnoseLowerCamelCaseViolations(
+      node.identifier, allowUnderscores: allowUnderscores,
+      description: identifierDescription(for: node))
     return .skipChildren
   }
 
   public override func visit(_ node: EnumCaseElementSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseLowerCamelCaseViolations(node.identifier, allowUnderscores: false)
+    diagnoseLowerCamelCaseViolations(
+      node.identifier, allowUnderscores: false, description: identifierDescription(for: node))
     return .skipChildren
   }
 
-  private func diagnoseLowerCamelCaseViolations(_ identifier: TokenSyntax, allowUnderscores: Bool) {
+  private func diagnoseLowerCamelCaseViolations(
+    _ identifier: TokenSyntax, allowUnderscores: Bool, description: String
+  ) {
     guard case .identifier(let text) = identifier.tokenKind else { return }
     if text.isEmpty { return }
     if (text.dropFirst().contains("_") && !allowUnderscores) || ("A"..."Z").contains(text.first!) {
-      diagnose(.variableNameMustBeLowerCamelCase(text), on: identifier) {
+      diagnose(.nameMustBeLowerCamelCase(text, description: description), on: identifier) {
         $0.highlight(identifier.sourceRange(converter: self.context.sourceLocationConverter))
       }
     }
+  }
+}
+
+/// Returns a human readable description of the node type that can be used to describe the
+/// identifier of the node in diagnostics from this rule.
+///
+/// - Parameter node: A node whose identifier may be used in diagnostics.
+/// - Returns: A human readable description of the node and its identifier.
+fileprivate func identifierDescription<NodeType: SyntaxProtocol>(for node: NodeType) -> String {
+  switch Syntax(node).as(SyntaxEnum.self) {
+  case .enumCaseElement: return "enum case"
+  case .functionDecl: return "function"
+  case .variableDecl(let variableDecl):
+    return variableDecl.letOrVarKeyword.tokenKind == .varKeyword ? "variable" : "constant"
+  default:
+    return "identifier"
   }
 }
 
@@ -98,7 +120,9 @@ extension ReturnClauseSyntax {
 }
 
 extension Diagnostic.Message {
-  public static func variableNameMustBeLowerCamelCase(_ name: String) -> Diagnostic.Message {
-    return .init(.warning, "rename variable '\(name)' using lower-camel-case")
+  public static func nameMustBeLowerCamelCase(
+    _ name: String, description: String
+  ) -> Diagnostic.Message {
+    return .init(.warning, "rename \(description) '\(name)' using lower-camel-case")
   }
 }
