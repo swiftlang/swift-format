@@ -19,16 +19,26 @@ final class AlwaysUseLowerCamelCaseTests: LintOrFormatRuleTestCase {
       class UnitTests: XCTestCase {
         func test_HappyPath_Through_GoodCode() {}
       }
+      enum FooBarCases {
+        case UpperCamelCase
+        case lowerCamelCase
+      }
       """
     performLint(AlwaysUseLowerCamelCase.self, input: input)
-    XCTAssertDiagnosed(.variableNameMustBeLowerCamelCase("Test"), line: 1, column: 5)
-    XCTAssertNotDiagnosed(.variableNameMustBeLowerCamelCase("foo"))
-    XCTAssertDiagnosed(.variableNameMustBeLowerCamelCase("bad_name"), line: 3, column: 5)
-    XCTAssertNotDiagnosed(.variableNameMustBeLowerCamelCase("_okayName"))
-    XCTAssertNotDiagnosed(.variableNameMustBeLowerCamelCase("Foo"))
-    XCTAssertDiagnosed(.variableNameMustBeLowerCamelCase("FooFunc"), line: 6, column: 8)
     XCTAssertDiagnosed(
-      .variableNameMustBeLowerCamelCase("test_HappyPath_Through_GoodCode"), line: 9, column: 8)
+      .nameMustBeLowerCamelCase("Test", description: "constant"), line: 1, column: 5)
+    XCTAssertNotDiagnosed(.nameMustBeLowerCamelCase("foo", description: "variable"))
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("bad_name", description: "variable"), line: 3, column: 5)
+    XCTAssertNotDiagnosed(.nameMustBeLowerCamelCase("_okayName", description: "variable"))
+    XCTAssertNotDiagnosed(.nameMustBeLowerCamelCase("Foo", description: "struct"))
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("FooFunc", description: "function"), line: 6, column: 8)
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("test_HappyPath_Through_GoodCode", description: "function"),
+      line: 9, column: 8)
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("UpperCamelCase", description: "enum case"), line: 12, column: 8)
   }
 
   func testIgnoresUnderscoresInTestNames() {
@@ -50,21 +60,30 @@ final class AlwaysUseLowerCamelCaseTests: LintOrFormatRuleTestCase {
       }
       """
     performLint(AlwaysUseLowerCamelCase.self, input: input)
-    XCTAssertDiagnosed(.variableNameMustBeLowerCamelCase("Test"), line: 3, column: 5)
-    XCTAssertDiagnosed(.variableNameMustBeLowerCamelCase("My_Constant_Value"), line: 5, column: 14)
-    XCTAssertNotDiagnosed(.variableNameMustBeLowerCamelCase("test_HappyPath_Through_GoodCode"))
-    XCTAssertDiagnosed(.variableNameMustBeLowerCamelCase("FooFunc"), line: 7, column: 16)
     XCTAssertDiagnosed(
-      .variableNameMustBeLowerCamelCase("helperFunc_For_HappyPath_Setup"), line: 8, column: 16)
+      .nameMustBeLowerCamelCase("Test", description: "constant"), line: 3, column: 5)
     XCTAssertDiagnosed(
-      .variableNameMustBeLowerCamelCase("testLikeMethod_With_Underscores"), line: 9, column: 16)
+      .nameMustBeLowerCamelCase("My_Constant_Value", description: "constant"), line: 5, column: 14)
+    XCTAssertNotDiagnosed(
+      .nameMustBeLowerCamelCase("test_HappyPath_Through_GoodCode", description: "function"))
     XCTAssertDiagnosed(
-      .variableNameMustBeLowerCamelCase("testLikeMethod_With_Underscores2"), line: 10, column: 16)
+      .nameMustBeLowerCamelCase("FooFunc", description: "function"), line: 7, column: 16)
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("helperFunc_For_HappyPath_Setup", description: "function"),
+      line: 8, column: 16)
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("testLikeMethod_With_Underscores", description: "function"),
+      line: 9, column: 16)
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("testLikeMethod_With_Underscores2", description: "function"),
+      line: 10, column: 16)
     XCTAssertNotDiagnosed(
-      .variableNameMustBeLowerCamelCase("test_HappyPath_Through_GoodCode_ReturnsVoid"))
+      .nameMustBeLowerCamelCase(
+        "test_HappyPath_Through_GoodCode_ReturnsVoid", description: "function"))
     XCTAssertNotDiagnosed(
-      .variableNameMustBeLowerCamelCase("test_HappyPath_Through_GoodCode_ReturnsShortVoid"))
+      .nameMustBeLowerCamelCase(
+        "test_HappyPath_Through_GoodCode_ReturnsShortVoid", description: "function"))
     XCTAssertNotDiagnosed(
-      .variableNameMustBeLowerCamelCase("test_HappyPath_Through_GoodCode_Throws"))
+      .nameMustBeLowerCamelCase("test_HappyPath_Through_GoodCode_Throws", description: "function"))
   }
 }
