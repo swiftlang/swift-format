@@ -58,7 +58,39 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
       diagnoseLowerCamelCaseViolations(
         pat.identifier, allowUnderscores: false, description: identifierDescription(for: node))
     }
-    return .skipChildren
+    return .visitChildren
+  }
+
+  public override func visit(_ node: OptionalBindingConditionSyntax) -> SyntaxVisitorContinueKind {
+    guard let pattern = node.pattern.as(IdentifierPatternSyntax.self) else {
+      return .visitChildren
+    }
+    diagnoseLowerCamelCaseViolations(
+      pattern.identifier, allowUnderscores: false, description: identifierDescription(for: node))
+    return .visitChildren
+  }
+
+  public override func visit(_ node: ClosureSignatureSyntax) -> SyntaxVisitorContinueKind {
+    if let input = node.input {
+      if let closureParamList = input.as(ClosureParamListSyntax.self) {
+        for param in closureParamList {
+          diagnoseLowerCamelCaseViolations(
+            param.name, allowUnderscores: false, description: identifierDescription(for: node))
+        }
+      } else if let parameterClause = input.as(ParameterClauseSyntax.self) {
+        for param in parameterClause.parameterList {
+          if let firstName = param.firstName {
+            diagnoseLowerCamelCaseViolations(
+              firstName, allowUnderscores: false, description: identifierDescription(for: node))
+          }
+          if let secondName = param.secondName {
+            diagnoseLowerCamelCaseViolations(
+              secondName, allowUnderscores: false, description: identifierDescription(for: node))
+          }
+        }
+      }
+    }
+    return .visitChildren
   }
 
   public override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
@@ -68,7 +100,19 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
     diagnoseLowerCamelCaseViolations(
       node.identifier, allowUnderscores: allowUnderscores,
       description: identifierDescription(for: node))
-    return .skipChildren
+    for param in node.signature.input.parameterList {
+      // These identifiers aren't described using `identifierDescription(for:)` because no single
+      // node can disambiguate the argument label from the parameter name.
+      if let label = param.firstName {
+        diagnoseLowerCamelCaseViolations(
+          label, allowUnderscores: false, description: "argument label")
+      }
+      if let paramName = param.secondName {
+        diagnoseLowerCamelCaseViolations(
+          paramName, allowUnderscores: false, description: "function parameter")
+      }
+    }
+    return .visitChildren
   }
 
   public override func visit(_ node: EnumCaseElementSyntax) -> SyntaxVisitorContinueKind {
@@ -97,8 +141,11 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
 /// - Returns: A human readable description of the node and its identifier.
 fileprivate func identifierDescription<NodeType: SyntaxProtocol>(for node: NodeType) -> String {
   switch Syntax(node).as(SyntaxEnum.self) {
+  case .closureSignature: return "closure parameter"
   case .enumCaseElement: return "enum case"
   case .functionDecl: return "function"
+  case .optionalBindingCondition(let binding):
+    return binding.letOrVarKeyword.tokenKind == .varKeyword ? "variable" : "constant"
   case .variableDecl(let variableDecl):
     return variableDecl.letOrVarKeyword.tokenKind == .varKeyword ? "variable" : "constant"
   default:

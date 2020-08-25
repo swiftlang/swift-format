@@ -23,6 +23,19 @@ final class AlwaysUseLowerCamelCaseTests: LintOrFormatRuleTestCase {
         case UpperCamelCase
         case lowerCamelCase
       }
+      if let Baz = foo { }
+      guard let foo = [1, 2, 3, 4].first(where: { BadName -> Bool in
+        let TerribleName = BadName
+        return TerribleName != 0
+      }) else { return }
+      var fooVar = [1, 2, 3, 4].first(where: { BadNameInFooVar -> Bool in
+        let TerribleNameInFooVar = BadName
+        return TerribleName != 0
+      })
+      var abc = array.first(where: { (CParam1, _ CParam2: Type, cparam3) -> Bool in return true })
+      func wellNamedFunc(_ BadFuncArg1: Int, BadFuncArgLabel goodFuncArg: String) {
+        var PoorlyNamedVar = 0
+      }
       """
     performLint(AlwaysUseLowerCamelCase.self, input: input)
     XCTAssertDiagnosed(
@@ -39,6 +52,30 @@ final class AlwaysUseLowerCamelCaseTests: LintOrFormatRuleTestCase {
       line: 9, column: 8)
     XCTAssertDiagnosed(
       .nameMustBeLowerCamelCase("UpperCamelCase", description: "enum case"), line: 12, column: 8)
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("Baz", description: "constant"), line: 15, column: 8)
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("BadName", description: "closure parameter"), line: 16, column: 45)
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("TerribleName", description: "constant"), line: 17, column: 7)
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("BadNameInFooVar", description: "closure parameter"),
+      line: 20, column: 42)
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("TerribleNameInFooVar", description: "constant"),
+      line: 21, column: 7)
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("CParam1", description: "closure parameter"), line: 24, column: 33)
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("CParam2", description: "closure parameter"), line: 24, column: 44)
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("BadFuncArg1", description: "function parameter"),
+      line: 25, column: 22)
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("BadFuncArgLabel", description: "argument label"),
+      line: 25, column: 40)
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("PoorlyNamedVar", description: "variable"), line: 26, column: 7)
   }
 
   func testIgnoresUnderscoresInTestNames() {

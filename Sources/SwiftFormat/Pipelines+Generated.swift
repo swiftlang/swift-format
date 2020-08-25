@@ -51,6 +51,7 @@ class LintPipeline: SyntaxVisitor {
   }
 
   override func visit(_ node: ClosureSignatureSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(AlwaysUseLowerCamelCase.visit, in: context, for: node)
     visitIfEnabled(ReturnVoidInsteadOfEmptyTuple.visit, in: context, for: node)
     return .visitChildren
   }
@@ -173,6 +174,11 @@ class LintPipeline: SyntaxVisitor {
 
   override func visit(_ node: MemberDeclListSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(DoNotUseSemicolons.visit, in: context, for: node)
+    return .visitChildren
+  }
+
+  override func visit(_ node: OptionalBindingConditionSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(AlwaysUseLowerCamelCase.visit, in: context, for: node)
     return .visitChildren
   }
 
