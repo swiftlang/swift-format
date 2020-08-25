@@ -96,7 +96,12 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
   ) {
     if returnClause == nil && returnDesc != nil {
       diagnose(.removeReturnComment(funcName: name), on: node)
-    } else if returnClause != nil && returnDesc == nil {
+    } else if let returnClause = returnClause, returnDesc == nil {
+      if let returnTypeIdentifier = returnClause.returnType.as(SimpleTypeIdentifierSyntax.self),
+         returnTypeIdentifier.name.text == "Never"
+      {
+        return
+      }
       diagnose(.documentReturnValue(funcName: name), on: returnClause)
     }
   }

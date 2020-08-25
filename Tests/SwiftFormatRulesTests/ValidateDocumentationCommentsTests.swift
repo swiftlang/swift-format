@@ -117,10 +117,29 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
     ///   - p2: Parameter 2.
     ///   - p3: Parameter 3.
     func foo(p1: Int, p2: Int, p3: Int) -> Int {}
+
+    /// One sentence summary.
+    ///
+    /// - Parameters:
+    ///   - p1: Parameter 1.
+    ///   - p2: Parameter 2.
+    ///   - p3: Parameter 3.
+    func neverReturns(p1: Int, p2: Int, p3: Int) -> Never {}
+
+    /// One sentence summary.
+    ///
+    /// - Parameters:
+    ///   - p1: Parameter 1.
+    ///   - p2: Parameter 2.
+    ///   - p3: Parameter 3.
+    /// - Returns: Never returns.
+    func documentedNeverReturns(p1: Int, p2: Int, p3: Int) -> Never {}
     """
     performLint(ValidateDocumentationComments.self, input: input)
     XCTAssertDiagnosed(.removeReturnComment(funcName: "noReturn"), line: 8, column: 1)
     XCTAssertDiagnosed(.documentReturnValue(funcName: "foo"), line: 16, column: 37)
+    XCTAssertNotDiagnosed(.documentReturnValue(funcName: "neverReturns"))
+    XCTAssertNotDiagnosed(.removeReturnComment(funcName: "documentedNeverReturns"))
   }
 
   func testValidDocumentation() {
