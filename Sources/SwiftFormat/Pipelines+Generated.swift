@@ -24,266 +24,270 @@ class LintPipeline: SyntaxVisitor {
   /// The formatter context.
   let context: Context
 
+  /// Stores lint and format rule instances, indexed by the `ObjectIdentifier` of a rule's
+  /// class type.
+  var ruleCache = [ObjectIdentifier: Rule]()
+
   /// Creates a new lint pipeline.
   init(context: Context) {
     self.context = context
   }
 
   override func visit(_ node: AsExprSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(NeverForceUnwrap.visit, in: context, for: node)
+    visitIfEnabled(NeverForceUnwrap.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: AssociatedtypeDeclSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, in: context, for: node)
-    visitIfEnabled(NoLeadingUnderscores.visit, in: context, for: node)
+    visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
+    visitIfEnabled(NoLeadingUnderscores.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, in: context, for: node)
-    visitIfEnabled(AlwaysUseLowerCamelCase.visit, in: context, for: node)
-    visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, in: context, for: node)
-    visitIfEnabled(DontRepeatTypeInStaticProperties.visit, in: context, for: node)
-    visitIfEnabled(NoLeadingUnderscores.visit, in: context, for: node)
-    visitIfEnabled(UseTripleSlashForDocumentationComments.visit, in: context, for: node)
+    visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
+    visitIfEnabled(AlwaysUseLowerCamelCase.visit, for: node)
+    visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
+    visitIfEnabled(DontRepeatTypeInStaticProperties.visit, for: node)
+    visitIfEnabled(NoLeadingUnderscores.visit, for: node)
+    visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: ClosureSignatureSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(AlwaysUseLowerCamelCase.visit, in: context, for: node)
-    visitIfEnabled(ReturnVoidInsteadOfEmptyTuple.visit, in: context, for: node)
+    visitIfEnabled(AlwaysUseLowerCamelCase.visit, for: node)
+    visitIfEnabled(ReturnVoidInsteadOfEmptyTuple.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: CodeBlockItemListSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(DoNotUseSemicolons.visit, in: context, for: node)
-    visitIfEnabled(OneVariableDeclarationPerLine.visit, in: context, for: node)
+    visitIfEnabled(DoNotUseSemicolons.visit, for: node)
+    visitIfEnabled(OneVariableDeclarationPerLine.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: CodeBlockSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(AmbiguousTrailingClosureOverload.visit, in: context, for: node)
+    visitIfEnabled(AmbiguousTrailingClosureOverload.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: ConditionElementSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(NoParensAroundConditions.visit, in: context, for: node)
+    visitIfEnabled(NoParensAroundConditions.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: DeinitializerDeclSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, in: context, for: node)
-    visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, in: context, for: node)
-    visitIfEnabled(UseTripleSlashForDocumentationComments.visit, in: context, for: node)
+    visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
+    visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
+    visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: EnumCaseElementSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(AlwaysUseLowerCamelCase.visit, in: context, for: node)
-    visitIfEnabled(NoLeadingUnderscores.visit, in: context, for: node)
+    visitIfEnabled(AlwaysUseLowerCamelCase.visit, for: node)
+    visitIfEnabled(NoLeadingUnderscores.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, in: context, for: node)
-    visitIfEnabled(DontRepeatTypeInStaticProperties.visit, in: context, for: node)
-    visitIfEnabled(FullyIndirectEnum.visit, in: context, for: node)
-    visitIfEnabled(NoLeadingUnderscores.visit, in: context, for: node)
-    visitIfEnabled(OneCasePerLine.visit, in: context, for: node)
-    visitIfEnabled(UseTripleSlashForDocumentationComments.visit, in: context, for: node)
+    visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
+    visitIfEnabled(DontRepeatTypeInStaticProperties.visit, for: node)
+    visitIfEnabled(FullyIndirectEnum.visit, for: node)
+    visitIfEnabled(NoLeadingUnderscores.visit, for: node)
+    visitIfEnabled(OneCasePerLine.visit, for: node)
+    visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: ExtensionDeclSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(DontRepeatTypeInStaticProperties.visit, in: context, for: node)
-    visitIfEnabled(NoAccessLevelOnExtensionDeclaration.visit, in: context, for: node)
-    visitIfEnabled(UseTripleSlashForDocumentationComments.visit, in: context, for: node)
+    visitIfEnabled(DontRepeatTypeInStaticProperties.visit, for: node)
+    visitIfEnabled(NoAccessLevelOnExtensionDeclaration.visit, for: node)
+    visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: ForcedValueExprSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(NeverForceUnwrap.visit, in: context, for: node)
+    visitIfEnabled(NeverForceUnwrap.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(NoEmptyTrailingClosureParentheses.visit, in: context, for: node)
-    visitIfEnabled(OnlyOneTrailingClosureArgument.visit, in: context, for: node)
+    visitIfEnabled(NoEmptyTrailingClosureParentheses.visit, for: node)
+    visitIfEnabled(OnlyOneTrailingClosureArgument.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, in: context, for: node)
-    visitIfEnabled(AlwaysUseLowerCamelCase.visit, in: context, for: node)
-    visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, in: context, for: node)
-    visitIfEnabled(NoLeadingUnderscores.visit, in: context, for: node)
-    visitIfEnabled(UseTripleSlashForDocumentationComments.visit, in: context, for: node)
-    visitIfEnabled(ValidateDocumentationComments.visit, in: context, for: node)
+    visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
+    visitIfEnabled(AlwaysUseLowerCamelCase.visit, for: node)
+    visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
+    visitIfEnabled(NoLeadingUnderscores.visit, for: node)
+    visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
+    visitIfEnabled(ValidateDocumentationComments.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: FunctionParameterSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(NoLeadingUnderscores.visit, in: context, for: node)
+    visitIfEnabled(NoLeadingUnderscores.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: FunctionSignatureSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(NoVoidReturnOnFunctionSignature.visit, in: context, for: node)
+    visitIfEnabled(NoVoidReturnOnFunctionSignature.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: FunctionTypeSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(ReturnVoidInsteadOfEmptyTuple.visit, in: context, for: node)
+    visitIfEnabled(ReturnVoidInsteadOfEmptyTuple.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: GenericParameterSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(NoLeadingUnderscores.visit, in: context, for: node)
+    visitIfEnabled(NoLeadingUnderscores.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: IdentifierPatternSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(IdentifiersMustBeASCII.visit, in: context, for: node)
-    visitIfEnabled(NoLeadingUnderscores.visit, in: context, for: node)
+    visitIfEnabled(IdentifiersMustBeASCII.visit, for: node)
+    visitIfEnabled(NoLeadingUnderscores.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: IfStmtSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(NoParensAroundConditions.visit, in: context, for: node)
+    visitIfEnabled(NoParensAroundConditions.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: InitializerDeclSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, in: context, for: node)
-    visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, in: context, for: node)
-    visitIfEnabled(UseTripleSlashForDocumentationComments.visit, in: context, for: node)
-    visitIfEnabled(ValidateDocumentationComments.visit, in: context, for: node)
+    visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
+    visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
+    visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
+    visitIfEnabled(ValidateDocumentationComments.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: IntegerLiteralExprSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(GroupNumericLiterals.visit, in: context, for: node)
+    visitIfEnabled(GroupNumericLiterals.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: MemberDeclBlockSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(AmbiguousTrailingClosureOverload.visit, in: context, for: node)
+    visitIfEnabled(AmbiguousTrailingClosureOverload.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: MemberDeclListSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(DoNotUseSemicolons.visit, in: context, for: node)
+    visitIfEnabled(DoNotUseSemicolons.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: OptionalBindingConditionSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(AlwaysUseLowerCamelCase.visit, in: context, for: node)
+    visitIfEnabled(AlwaysUseLowerCamelCase.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: PatternBindingSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(UseSingleLinePropertyGetter.visit, in: context, for: node)
+    visitIfEnabled(UseSingleLinePropertyGetter.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: PrecedenceGroupDeclSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(NoLeadingUnderscores.visit, in: context, for: node)
+    visitIfEnabled(NoLeadingUnderscores.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, in: context, for: node)
-    visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, in: context, for: node)
-    visitIfEnabled(DontRepeatTypeInStaticProperties.visit, in: context, for: node)
-    visitIfEnabled(NoLeadingUnderscores.visit, in: context, for: node)
-    visitIfEnabled(UseTripleSlashForDocumentationComments.visit, in: context, for: node)
+    visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
+    visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
+    visitIfEnabled(DontRepeatTypeInStaticProperties.visit, for: node)
+    visitIfEnabled(NoLeadingUnderscores.visit, for: node)
+    visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: RepeatWhileStmtSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(NoParensAroundConditions.visit, in: context, for: node)
+    visitIfEnabled(NoParensAroundConditions.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: SimpleTypeIdentifierSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(UseShorthandTypeNames.visit, in: context, for: node)
+    visitIfEnabled(UseShorthandTypeNames.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(AlwaysUseLowerCamelCase.visit, in: context, for: node)
-    visitIfEnabled(AmbiguousTrailingClosureOverload.visit, in: context, for: node)
-    visitIfEnabled(FileScopedDeclarationPrivacy.visit, in: context, for: node)
-    visitIfEnabled(NeverForceUnwrap.visit, in: context, for: node)
-    visitIfEnabled(NeverUseForceTry.visit, in: context, for: node)
-    visitIfEnabled(NeverUseImplicitlyUnwrappedOptionals.visit, in: context, for: node)
-    visitIfEnabled(OrderedImports.visit, in: context, for: node)
+    visitIfEnabled(AlwaysUseLowerCamelCase.visit, for: node)
+    visitIfEnabled(AmbiguousTrailingClosureOverload.visit, for: node)
+    visitIfEnabled(FileScopedDeclarationPrivacy.visit, for: node)
+    visitIfEnabled(NeverForceUnwrap.visit, for: node)
+    visitIfEnabled(NeverUseForceTry.visit, for: node)
+    visitIfEnabled(NeverUseImplicitlyUnwrappedOptionals.visit, for: node)
+    visitIfEnabled(OrderedImports.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: SpecializeExprSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(UseShorthandTypeNames.visit, in: context, for: node)
+    visitIfEnabled(UseShorthandTypeNames.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, in: context, for: node)
-    visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, in: context, for: node)
-    visitIfEnabled(DontRepeatTypeInStaticProperties.visit, in: context, for: node)
-    visitIfEnabled(NoLeadingUnderscores.visit, in: context, for: node)
-    visitIfEnabled(UseSynthesizedInitializer.visit, in: context, for: node)
-    visitIfEnabled(UseTripleSlashForDocumentationComments.visit, in: context, for: node)
+    visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
+    visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
+    visitIfEnabled(DontRepeatTypeInStaticProperties.visit, for: node)
+    visitIfEnabled(NoLeadingUnderscores.visit, for: node)
+    visitIfEnabled(UseSynthesizedInitializer.visit, for: node)
+    visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: SubscriptDeclSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, in: context, for: node)
-    visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, in: context, for: node)
-    visitIfEnabled(UseTripleSlashForDocumentationComments.visit, in: context, for: node)
+    visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
+    visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
+    visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: SwitchCaseLabelSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(NoLabelsInCasePatterns.visit, in: context, for: node)
-    visitIfEnabled(UseLetInEveryBoundCaseVariable.visit, in: context, for: node)
+    visitIfEnabled(NoLabelsInCasePatterns.visit, for: node)
+    visitIfEnabled(UseLetInEveryBoundCaseVariable.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: SwitchCaseListSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(NoCasesWithOnlyFallthrough.visit, in: context, for: node)
+    visitIfEnabled(NoCasesWithOnlyFallthrough.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: SwitchStmtSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(NoParensAroundConditions.visit, in: context, for: node)
+    visitIfEnabled(NoParensAroundConditions.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: TokenSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(NoBlockComments.visit, in: context, for: node)
+    visitIfEnabled(NoBlockComments.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: TryExprSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(NeverUseForceTry.visit, in: context, for: node)
+    visitIfEnabled(NeverUseForceTry.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: TypealiasDeclSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, in: context, for: node)
-    visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, in: context, for: node)
-    visitIfEnabled(NoLeadingUnderscores.visit, in: context, for: node)
-    visitIfEnabled(UseTripleSlashForDocumentationComments.visit, in: context, for: node)
+    visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
+    visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
+    visitIfEnabled(NoLeadingUnderscores.visit, for: node)
+    visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     return .visitChildren
   }
 
   override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, in: context, for: node)
-    visitIfEnabled(AlwaysUseLowerCamelCase.visit, in: context, for: node)
-    visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, in: context, for: node)
-    visitIfEnabled(NeverUseImplicitlyUnwrappedOptionals.visit, in: context, for: node)
-    visitIfEnabled(UseTripleSlashForDocumentationComments.visit, in: context, for: node)
+    visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
+    visitIfEnabled(AlwaysUseLowerCamelCase.visit, for: node)
+    visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
+    visitIfEnabled(NeverUseImplicitlyUnwrappedOptionals.visit, for: node)
+    visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     return .visitChildren
   }
 }

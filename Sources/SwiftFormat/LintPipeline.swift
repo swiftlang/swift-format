@@ -27,10 +27,10 @@ extension LintPipeline {
   ///   - node: The syntax node on which the rule will be applied. This lets us check whether the
   ///     rule is enabled for the particular source range where the node occurs.
   func visitIfEnabled<Rule: SyntaxLintRule, Node: SyntaxProtocol>(
-    _ visitor: (Rule) -> (Node) -> SyntaxVisitorContinueKind, in context: Context, for node: Node
+    _ visitor: (Rule) -> (Node) -> SyntaxVisitorContinueKind, for node: Node
   ) {
     guard context.isRuleEnabled(Rule.self.ruleName, node: Syntax(node)) else { return }
-    let rule = Rule(context: context)
+    let rule = self.rule(Rule.self)
     _ = visitor(rule)(node)
   }
 
@@ -44,14 +44,30 @@ extension LintPipeline {
   ///   - node: The syntax node on which the rule will be applied. This lets us check whether the
   ///     rule is enabled for the particular source range where the node occurs.
   func visitIfEnabled<Rule: SyntaxFormatRule, Node: SyntaxProtocol>(
-    _ visitor: (Rule) -> (Node) -> Any, in context: Context, for node: Node
+    _ visitor: (Rule) -> (Node) -> Any, for node: Node
   ) {
     // Note that visitor function type is expressed as `Any` because we ignore the return value, but
     // more importantly because the `visit` methods return protocol refinements of `Syntax` that
     // cannot currently be expressed as constraints without duplicating this function for each of
     // them individually.
     guard context.isRuleEnabled(Rule.self.ruleName, node: Syntax(node)) else { return }
-    let rule = Rule(context: context)
+    let rule = self.rule(Rule.self)
     _ = visitor(rule)(node)
+  }
+
+  /// Retrieves an instance of a lint or format rule based on its type.
+  ///
+  /// There is at most 1 instance of each rule allocated per `LintPipeline`. This method will
+  /// create that instance as needed, using `ruleCache` to cache rules.
+  /// - Parameter type: The type of the rule to retrieve.
+  /// - Returns: An instance of the given type.
+  private func rule<R: Rule>(_ type: R.Type) -> R {
+    let identifier = ObjectIdentifier(type)
+    if let cachedRule = ruleCache[identifier] {
+      return cachedRule as! R
+    }
+    let rule = R(context: context)
+    ruleCache[identifier] = rule
+    return rule
   }
 }
