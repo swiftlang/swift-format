@@ -52,6 +52,10 @@ final class PipelineGenerator: FileGenerator {
         /// The formatter context.
         let context: Context
 
+        /// Stores lint and format rule instances, indexed by the `ObjectIdentifier` of a rule's
+        /// class type.
+        var ruleCache = [ObjectIdentifier: Rule]()
+
         /// Creates a new lint pipeline.
         init(context: Context) {
           self.context = context
@@ -71,7 +75,7 @@ final class PipelineGenerator: FileGenerator {
       for ruleName in lintRules.sorted() {
         handle.write(
           """
-              visitIfEnabled(\(ruleName).visit, in: context, for: node)
+              visitIfEnabled(\(ruleName).visit, for: node)
 
           """)
       }
