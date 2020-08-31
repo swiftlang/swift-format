@@ -25,6 +25,12 @@ import SwiftSyntax
 /// Lint: Declaring an identifier with a leading underscore yields a lint error.
 public final class NoLeadingUnderscores: SyntaxLintRule {
 
+  /// Identifies this rule as being opt-in. While leading underscores aren't meant to be used in
+  /// normal circumstances, there are situations where they can be used to hint which APIs should be
+  /// avoided by general users. In particular when APIs must be exported publicly, but the author
+  /// doesn't intend for arbitrary usage.
+  public override class var isOptIn: Bool { return true }
+
   public override func visit(_ node: AssociatedtypeDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseIfNameStartsWithUnderscore(node.identifier)
     return .visitChildren
