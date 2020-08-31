@@ -22,6 +22,11 @@ import SwiftSyntax
 ///       invalid (uses `Parameters` when there is only one parameter) will yield a lint error.
 public final class ValidateDocumentationComments: SyntaxLintRule {
 
+  /// Identifies this rule as being opt-in. Accurate and complete documentation comments are
+  /// important, but this rule isn't able to handle situations where portions of documentation are
+  /// redundant. For example when the returns clause is redundant for a simple declaration.
+  public override class var isOptIn: Bool { return true }
+
   public override func visit(_ node: InitializerDeclSyntax) -> SyntaxVisitorContinueKind {
     return checkFunctionLikeDocumentation(
       DeclSyntax(node), name: "init", parameters: node.parameters.parameterList, throwsOrRethrowsKeyword: node.throwsOrRethrowsKeyword)
