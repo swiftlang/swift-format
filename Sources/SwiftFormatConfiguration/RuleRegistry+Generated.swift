@@ -32,7 +32,7 @@ enum RuleRegistry {
     "NoCasesWithOnlyFallthrough": true,
     "NoEmptyTrailingClosureParentheses": true,
     "NoLabelsInCasePatterns": true,
-    "NoLeadingUnderscores": true,
+    "NoLeadingUnderscores": false,
     "NoParensAroundConditions": true,
     "NoVoidReturnOnFunctionSignature": true,
     "OneCasePerLine": true,
@@ -45,6 +45,6 @@ enum RuleRegistry {
     "UseSingleLinePropertyGetter": true,
     "UseSynthesizedInitializer": true,
     "UseTripleSlashForDocumentationComments": true,
-    "ValidateDocumentationComments": true,
+    "ValidateDocumentationComments": false,
   ]
 }
