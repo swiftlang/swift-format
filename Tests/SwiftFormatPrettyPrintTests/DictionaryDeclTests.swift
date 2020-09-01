@@ -92,6 +92,9 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
   func testWhitespaceOnlyDoesNotChangeTrailingComma() {
     let input =
       """
+      let a = [
+        1: "a",
+      ]
       let a = [1: "a", 2: "b", 3: "c",]
       let a: [Int: String] = [
         1: "a", 2: "b", 3: "c", 4: "d", 5: "e", 6: "f",

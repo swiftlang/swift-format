@@ -541,12 +541,18 @@ public class PrettyPrinter {
     case .commaDelimitedRegionStart:
       commaDelimitedRegionStack.append(openCloseBreakCompensatingLineNumber)
 
-    case .commaDelimitedRegionEnd(let hasTrailingComma):
+    case .commaDelimitedRegionEnd(let hasTrailingComma, let isSingleElement):
       guard let startLineNumber = commaDelimitedRegionStack.popLast() else {
         fatalError("Found trailing comma end with no corresponding start.")
       }
 
-      let shouldHaveTrailingComma = startLineNumber != openCloseBreakCompensatingLineNumber
+      // We need to specifically disable trailing commas on elements of single item collections.
+      // The syntax library can't distinguish a collection's initializer (where the elements are
+      // types) from a literal (where the elements are the contents of a collection instance).
+      // We never want to add a trailing comma in an initializer so we disable trailing commas on
+      // single element collections.
+      let shouldHaveTrailingComma =
+        startLineNumber != openCloseBreakCompensatingLineNumber && !isSingleElement
       if shouldHaveTrailingComma && !hasTrailingComma {
         diagnose(.addTrailingComma)
       } else if !shouldHaveTrailingComma && hasTrailingComma {
@@ -653,14 +659,15 @@ public class PrettyPrinter {
       case .commaDelimitedRegionStart:
         lengths.append(0)
 
-      case .commaDelimitedRegionEnd:
+      case .commaDelimitedRegionEnd(_, let isSingleElement):
         // The token's length is only necessary when a comma will be printed, but it's impossible to
         // know at this point whether the region-start token will be on the same line as this token.
         // Without adding this length to the total, it would be possible for this comma to be
         // printed in column `maxLineLength`. Unfortunately, this can cause breaks to fire
         // unnecessarily when the enclosed tokens comma would fit within `maxLineLength`.
-        total += 1
-        lengths.append(1)
+        let length = isSingleElement ? 0 : 1
+        total += length
+        lengths.append(length)
       }
     }
 
