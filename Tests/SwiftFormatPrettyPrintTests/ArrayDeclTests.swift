@@ -103,6 +103,9 @@ final class ArrayDeclTests: PrettyPrintTestCase {
   func testWhitespaceOnlyDoesNotChangeTrailingComma() {
     let input =
       """
+      let a = [
+        "String",
+      ]
       let a = [1, 2, 3,]
       let a: [String] = [
         "One", "Two", "Three", "Four", "Five",
