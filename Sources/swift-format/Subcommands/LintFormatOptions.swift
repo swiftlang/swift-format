@@ -37,7 +37,7 @@ struct LintFormatOptions: ParsableArguments {
   @Flag(
     name: .shortAndLong,
     help: "Recursively run on '.swift' files in any provided directories.")
-  var recursive: Bool
+  var recursive: Bool = false
 
   /// Whether unparsable files, due to syntax errors or unrecognized syntax, should be ignored or
   /// treated as containing an error. When ignored, unparsable files are output verbatim in format
@@ -47,14 +47,14 @@ struct LintFormatOptions: ParsableArguments {
     Ignores unparsable files, disabling all diagnostics and formatting for files that contain \
     invalid syntax.
     """)
-  var ignoreUnparsableFiles: Bool
+  var ignoreUnparsableFiles: Bool = false
 
   /// The list of paths to Swift source files that should be formatted or linted.
   @Argument(help: "Zero or more input filenames.")
   var paths: [String] = []
 
-  @Flag(help: .hidden) var debugDisablePrettyPrint: Bool
-  @Flag(help: .hidden) var debugDumpTokenStream: Bool
+  @Flag(help: .hidden) var debugDisablePrettyPrint: Bool = false
+  @Flag(help: .hidden) var debugDumpTokenStream: Bool = false
 
   mutating func validate() throws {
     if recursive && paths.isEmpty {

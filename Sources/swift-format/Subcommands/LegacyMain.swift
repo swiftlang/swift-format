@@ -28,9 +28,8 @@ extension SwiftFormatCommand {
     /// If not specified, the tool will be run in format mode.
     @Option(
       name: .shortAndLong,
-      default: .format,
       help: "The mode to run swift-format in. Either 'format', 'lint', or 'dump-configuration'.")
-    var mode: ToolMode
+    var mode: ToolMode = .format
 
     @OptionGroup()
     var lintFormatOptions: LintFormatOptions
@@ -41,7 +40,7 @@ extension SwiftFormatCommand {
     @Flag(
       name: .shortAndLong,
       help: "Overwrite the current file when formatting ('format' mode only).")
-    var inPlace: Bool
+    var inPlace: Bool = false
 
     mutating func validate() throws {
       if inPlace && (mode != .format || lintFormatOptions.paths.isEmpty) {
