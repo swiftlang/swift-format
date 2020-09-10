@@ -25,7 +25,7 @@ extension SwiftFormatCommand {
     @Flag(
       name: .shortAndLong,
       help: "Overwrite the current file when formatting.")
-    var inPlace: Bool
+    var inPlace: Bool = false
 
     @OptionGroup()
     var formatOptions: LintFormatOptions
