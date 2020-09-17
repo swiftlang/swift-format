@@ -342,4 +342,42 @@ final class FunctionCallTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 70)
   }
+
+  func testMultipleTrailingClosures() {
+    let input =
+      """
+      a = f { b } c: { d }
+      let a = f { b } c: { d }
+      let a = foo { b in b } c: { d in d }
+      let a = foo { abcdefg in b } c: { d in d }
+      """
+
+    let expected =
+      """
+      a = f {
+        b
+      } c: {
+        d
+      }
+      let a = f {
+        b
+      } c: {
+        d
+      }
+      let a = foo { b in
+        b
+      } c: { d in
+        d
+      }
+      let a = foo {
+        abcdefg in
+        b
+      } c: { d in
+        d
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 23)
+  }
 }

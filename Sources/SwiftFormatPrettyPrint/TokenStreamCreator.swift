@@ -54,6 +54,10 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   /// moved past these tokens.
   private var closingDelimiterTokens = Set<TokenSyntax>()
 
+  /// Tracks closures that are never allowed to be laid out entirely on one line (e.g., closures
+  /// in a function call containing multiple trailing closures).
+  private var forcedBreakingClosures = Set<SyntaxIdentifier>()
+
   init(configuration: Configuration, operatorContext: OperatorContext) {
     self.config = configuration
     self.operatorContext = operatorContext
@@ -870,6 +874,16 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
     preVisitInsertingContextualBreaks(node)
 
+    // If there are multiple trailing closures, force all the closures in the call to break.
+    if let additionalTrailingClosures = node.additionalTrailingClosures {
+      if let closure = node.trailingClosure {
+        forcedBreakingClosures.insert(closure.id)
+      }
+      for additionalTrailingClosure in additionalTrailingClosures {
+        forcedBreakingClosures.insert(additionalTrailingClosure.closure.id)
+      }
+    }
+
     if let calledMemberAccessExpr = node.calledExpression.as(MemberAccessExprSyntax.self) {
       if let base = calledMemberAccessExpr.base, base.is(IdentifierExprSyntax.self) {
         // When this function call is wrapped by a try-expr, the group applied when visiting the
@@ -905,6 +919,14 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   override func visitPost(_ node: FunctionCallExprSyntax) {
     clearContextualBreakState(node)
+  }
+
+  override func visit(_ node: MultipleTrailingClosureElementSyntax)
+    -> SyntaxVisitorContinueKind
+  {
+    before(node.label, tokens: .space)
+    after(node.colon, tokens: .space)
+    return .visitChildren
   }
 
   /// Arrange the given argument list (or equivalently, tuple expression list) as a list of function
@@ -979,12 +1001,19 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: ClosureExprSyntax) -> SyntaxVisitorContinueKind {
+    let newlineBehavior: NewlineBehavior
+    if forcedBreakingClosures.remove(node.id) != nil {
+      newlineBehavior = .soft
+    } else {
+      newlineBehavior = .elective
+    }
+
     if let signature = node.signature {
       after(node.leftBrace, tokens: .break(.open))
       if node.statements.count > 0 {
-        after(signature.inTok, tokens: .break(.same))
+        after(signature.inTok, tokens: .break(.same, newlines: newlineBehavior))
       } else {
-        after(signature.inTok, tokens: .break(.same, size: 0))
+        after(signature.inTok, tokens: .break(.same, size: 0, newlines: newlineBehavior))
       }
       before(node.rightBrace, tokens: .break(.close))
     } else {
@@ -994,7 +1023,10 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       // or part of some other expression (where we want that expression's same/continue behavior to
       // apply).
       arrangeBracesAndContents(
-        of: node, contentsKeyPath: \.statements, shouldResetBeforeLeftBrace: false)
+        of: node,
+        contentsKeyPath: \.statements,
+        shouldResetBeforeLeftBrace: false,
+        openBraceNewlineBehavior: newlineBehavior)
     }
     return .visitChildren
   }
@@ -2537,10 +2569,13 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   ///     if you have already placed a `reset` elsewhere (for example, in a `guard` statement, the
   ///     `reset` is inserted before the `else` keyword to force both it and the brace down to the
   ///     next line).
+  ///   - openBraceNewlineBehavior: The newline behavior to apply to the break following the open
+  ///     brace; defaults to `.elective`.
   private func arrangeBracesAndContents<Node: BracedSyntax, BodyContents: SyntaxCollection>(
     of node: Node?,
     contentsKeyPath: KeyPath<Node, BodyContents>?,
-    shouldResetBeforeLeftBrace: Bool = true
+    shouldResetBeforeLeftBrace: Bool = true,
+    openBraceNewlineBehavior: NewlineBehavior = .elective
   ) where BodyContents.Element: SyntaxProtocol {
     guard let node = node, let contentsKeyPath = contentsKeyPath else { return }
 
@@ -2550,10 +2585,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         tokens: .break(.reset, size: 1, newlines: .elective(ignoresDiscretionary: true)))
     }
     if !areBracesCompletelyEmpty(node, contentsKeyPath: contentsKeyPath) {
-      after(node.leftBrace, tokens: .break(.open, size: 1), .open)
+      after(
+        node.leftBrace, tokens: .break(.open, size: 1, newlines: openBraceNewlineBehavior), .open)
       before(node.rightBrace, tokens: .break(.close, size: 1), .close)
     } else {
-      after(node.leftBrace, tokens: .break(.open, size: 0))
+      after(node.leftBrace, tokens: .break(.open, size: 0, newlines: openBraceNewlineBehavior))
       before(node.rightBrace, tokens: .break(.close, size: 0))
     }
   }
