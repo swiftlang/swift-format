@@ -26,14 +26,15 @@ is also expressed in the `SwiftSyntax` dependency in
 | Xcode Release | Swift Version                           | `swift-format` Branch |
 |:-------------:|:---------------------------------------:|:----------------------|
 | –             | Swift at `master`                       | `master`              |
+| Xcode 12.0    | Swift 5.3                               | `swift-5.3-branch`    |
 | Xcode 11.4    | Swift 5.2                               | `swift-5.2-branch`    |
 | Xcode 11.0    | Swift 5.1                               | `swift-5.1-branch`    |
 
-For example, if you are using Xcode 11.4 (Swift 5.2), you can check out and
+For example, if you are using Xcode 12.0 (Swift 5.3), you can check out and
 build `swift-format` using the following commands:
 
 ```
-git clone -b swift-5.2-branch https://github.com/apple/swift-format.git
+git clone -b swift-5.3-branch https://github.com/apple/swift-format.git
 cd swift-format
 swift build
 ```
