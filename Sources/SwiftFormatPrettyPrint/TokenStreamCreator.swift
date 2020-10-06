@@ -640,6 +640,17 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     before(node.leftBrace, tokens: .break(.reset))
     after(node.leftBrace, tokens: .close)
 
+    // An if-configuration clause around a switch-case encloses the case's node, so an
+    // if-configuration clause requires a break here in order to be allowed on a new line.
+    for ifConfigDecl in node.cases.filter({ $0.is(IfConfigDeclSyntax.self) }) {
+      if config.indentSwitchCaseLabels {
+        before(ifConfigDecl.firstToken, tokens: .break(.open))
+        after(ifConfigDecl.lastToken, tokens: .break(.close, size: 0))
+      } else {
+        before(ifConfigDecl.firstToken, tokens: .break(.same))
+      }
+    }
+
     let newlines: NewlineBehavior =
       areBracesCompletelyEmpty(node, contentsKeyPath: \.cases) ? .elective : .soft
     before(node.rightBrace, tokens: .break(.same, size: 0, newlines: newlines))
