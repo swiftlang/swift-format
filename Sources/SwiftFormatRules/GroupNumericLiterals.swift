@@ -59,11 +59,15 @@ public final class GroupNumericLiterals: SyntaxFormatRule {
     }
 
     newDigits = isNegative ? "-" + newDigits : newDigits
-    let result = node.withDigits(
-      SyntaxFactory.makeIntegerLiteral(
-        newDigits,
-        leadingTrivia: node.digits.leadingTrivia,
-        trailingTrivia: node.digits.trailingTrivia))
+    guard
+      let result = node.withDigits(
+        SyntaxFactory.makeIntegerLiteral(
+          newDigits,
+          leadingTrivia: node.digits.leadingTrivia,
+          trailingTrivia: node.digits.trailingTrivia))
+    else {
+      return ExprSyntax(node)
+    }
     return ExprSyntax(result)
   }
 
