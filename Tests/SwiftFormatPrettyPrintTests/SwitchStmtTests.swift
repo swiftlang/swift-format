@@ -1,3 +1,5 @@
+import SwiftFormatConfiguration
+
 final class SwitchStmtTests: PrettyPrintTestCase {
   func testBasicSwitch() {
     let input =
@@ -331,5 +333,98 @@ final class SwitchStmtTests: PrettyPrintTestCase {
       """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
+  }
+
+  func testConditionalCases() {
+    let input =
+      """
+      switch foo {
+      #if CONDITION_A
+      case bar:
+        callForBar()
+      #endif
+      case baz:
+        callForBaz()
+      }
+      switch foo2 {
+      case bar2:
+        callForBar()
+      #if CONDITION_B
+      case baz2:
+        callForBaz()
+      #endif
+      }
+      """
+
+    let expected =
+      """
+      switch foo {
+      #if CONDITION_A
+        case bar:
+          callForBar()
+      #endif
+      case baz:
+        callForBaz()
+      }
+      switch foo2 {
+      case bar2:
+        callForBar()
+      #if CONDITION_B
+        case baz2:
+          callForBaz()
+      #endif
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+  }
+
+  func testConditionalCasesIndenting() {
+    let input =
+      """
+      switch foo {
+      #if CONDITION_A
+      case bar:
+        callForBar()
+      #endif
+      case baz:
+        callForBaz()
+      }
+      switch foo2 {
+      case bar2:
+        callForBar()
+      #if CONDITION_B
+      case baz2:
+        callForBaz()
+      #endif
+      }
+      """
+
+    let expected =
+      """
+      switch foo {
+        #if CONDITION_A
+          case bar:
+            callForBar()
+        #endif
+        case baz:
+          callForBaz()
+      }
+      switch foo2 {
+        case bar2:
+          callForBar()
+        #if CONDITION_B
+          case baz2:
+            callForBaz()
+        #endif
+      }
+
+      """
+
+    var configuration = Configuration()
+    configuration.indentSwitchCaseLabels = true
+    assertPrettyPrintEqual(
+      input: input, expected: expected, linelength: 40, configuration: configuration)
   }
 }
