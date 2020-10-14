@@ -246,7 +246,13 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     before(firstTokenAfterAttributes, tokens: .open)
     after(typeKeyword, tokens: .break)
 
-    arrangeBracesAndContents(of: members, contentsKeyPath: \.members)
+    arrangeBracesAndContents(
+      of: members,
+      contentsKeyPath: \.members,
+      openBraceNewlineBehavior: !areBracesCompletelyEmpty(members, contentsKeyPath: \.members)
+        && config.lineBreakBeforeTypeBodies
+        ? .hard : .elective
+    )
 
     if let genericWhereClause = genericWhereClause {
       before(genericWhereClause.firstToken, tokens: .break(.same), .open)

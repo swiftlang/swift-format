@@ -32,6 +32,7 @@ public struct Configuration: Codable, Equatable {
     case lineBreakBeforeFuncBodies
     case lineBreakBeforeEachGenericRequirement
     case lineBreakBeforeSwitchCaseOrDefaultBodies
+    case lineBreakBeforeTypeBodies
     case prioritizeKeepingFunctionOutputTogether
     case indentConditionalCompilationBlocks
     case lineBreakAroundMultilineExpressionChainComponents
@@ -125,6 +126,14 @@ public struct Configuration: Codable, Equatable {
   /// will be laid out on the same line as the `case` or `default`, with line breaks only being added
   /// when the line length would be exceeded.
   public var lineBreakBeforeSwitchCaseOrDefaultBodies = false
+
+  /// Determines the line-breaking behavior for the bodies of types: `class`, `enum`, `extension`,
+  /// `protocol`, and `struct`.
+  ///
+  /// If true, a line break will be added after the opening brace for all non-empty types. If false
+  /// (the default), these bodies will be laid out on the same line as the type declaration, with
+  /// line breaks only being added when the line length would be exceeded.
+  public var lineBreakBeforeTypeBodies = false
 
   /// Determines if function-like declaration outputs should be prioritized to be together with the
   /// function signature right (closing) parenthesis.
@@ -222,6 +231,8 @@ public struct Configuration: Codable, Equatable {
       = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeFuncBodies) ?? false
     self.lineBreakBeforeSwitchCaseOrDefaultBodies
       = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeSwitchCaseOrDefaultBodies) ?? false
+    self.lineBreakBeforeTypeBodies
+      = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeTypeBodies) ?? false
     self.prioritizeKeepingFunctionOutputTogether
       = try container.decodeIfPresent(Bool.self, forKey: .prioritizeKeepingFunctionOutputTogether) ?? false
     self.indentConditionalCompilationBlocks
@@ -259,6 +270,7 @@ public struct Configuration: Codable, Equatable {
     try container.encode(lineBreakBeforeEachGenericRequirement, forKey: .lineBreakBeforeEachGenericRequirement)
     try container.encode(lineBreakBeforeFuncBodies, forKey: .lineBreakBeforeFuncBodies)
     try container.encode(lineBreakBeforeSwitchCaseOrDefaultBodies, forKey: .lineBreakBeforeSwitchCaseOrDefaultBodies)
+    try container.encode(lineBreakBeforeTypeBodies, forKey: .lineBreakBeforeTypeBodies)
     try container.encode(prioritizeKeepingFunctionOutputTogether, forKey: .prioritizeKeepingFunctionOutputTogether)
     try container.encode(indentConditionalCompilationBlocks, forKey: .indentConditionalCompilationBlocks)
     try container.encode(
