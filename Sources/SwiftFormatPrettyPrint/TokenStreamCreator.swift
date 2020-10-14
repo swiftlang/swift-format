@@ -411,12 +411,18 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     attributes: AttributeListSyntax?,
     genericWhereClause: GenericWhereClauseSyntax?,
     body: Node?,
-    bodyContentsKeyPath: KeyPath<Node, BodyContents>?
+    bodyContentsKeyPath: KeyPath<Node, BodyContents>
   ) where BodyContents.Element: SyntaxProtocol {
     before(node.firstToken, tokens: .open)
 
     arrangeAttributeList(attributes)
-    arrangeBracesAndContents(of: body, contentsKeyPath: bodyContentsKeyPath)
+    arrangeBracesAndContents(
+      of: body,
+      contentsKeyPath: bodyContentsKeyPath,
+      openBraceNewlineBehavior: config.lineBreakBeforeFuncBodies
+        && body.map { !areBracesCompletelyEmpty($0, contentsKeyPath: bodyContentsKeyPath) } ?? false
+        ? .hard : .elective
+    )
 
     if let genericWhereClause = genericWhereClause {
       before(genericWhereClause.firstToken, tokens: .break(.same), .open)

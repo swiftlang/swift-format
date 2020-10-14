@@ -28,6 +28,7 @@ public struct Configuration: Codable, Equatable {
     case respectsExistingLineBreaks
     case lineBreakBeforeControlFlowKeywords
     case lineBreakBeforeEachArgument
+    case lineBreakBeforeFuncBodies
     case lineBreakBeforeEachGenericRequirement
     case lineBreakBeforeSwitchCaseOrDefaultBodies
     case prioritizeKeepingFunctionOutputTogether
@@ -97,6 +98,15 @@ public struct Configuration: Codable, Equatable {
   /// list to be laid out vertically. If false (the default), requirements will be laid out
   /// horizontally first, with line breaks only being fired when the line length would be exceeded.
   public var lineBreakBeforeEachGenericRequirement = false
+
+  /// Determins the line-breaking behavior for the bodies of functions declared with `func`, as
+  /// well as "`func`-like" declarations: initializers, deinitializers, and subscripts.
+  ///
+  /// If true, a line break will be added after the opening brace of function bodies, forcing the
+  /// body to be on a separate line from the function. If false (the default), these bodies will be
+  /// laid out on the same line as the declaration, with line breaks only being added when the line
+  /// length would be exceeded.
+  public var lineBreakBeforeFuncBodies = false
 
   /// Determines the line-breaking behavior for the bodies of `case` and `default` items within
   /// a `switch` statement.
@@ -197,6 +207,8 @@ public struct Configuration: Codable, Equatable {
       = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeEachArgument) ?? false
     self.lineBreakBeforeEachGenericRequirement
       = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeEachGenericRequirement) ?? false
+    self.lineBreakBeforeFuncBodies
+      = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeFuncBodies) ?? false
     self.lineBreakBeforeSwitchCaseOrDefaultBodies
       = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeSwitchCaseOrDefaultBodies) ?? false
     self.prioritizeKeepingFunctionOutputTogether
@@ -233,6 +245,7 @@ public struct Configuration: Codable, Equatable {
     try container.encode(lineBreakBeforeControlFlowKeywords, forKey: .lineBreakBeforeControlFlowKeywords)
     try container.encode(lineBreakBeforeEachArgument, forKey: .lineBreakBeforeEachArgument)
     try container.encode(lineBreakBeforeEachGenericRequirement, forKey: .lineBreakBeforeEachGenericRequirement)
+    try container.encode(lineBreakBeforeFuncBodies, forKey: .lineBreakBeforeFuncBodies)
     try container.encode(lineBreakBeforeSwitchCaseOrDefaultBodies, forKey: .lineBreakBeforeSwitchCaseOrDefaultBodies)
     try container.encode(prioritizeKeepingFunctionOutputTogether, forKey: .prioritizeKeepingFunctionOutputTogether)
     try container.encode(indentConditionalCompilationBlocks, forKey: .indentConditionalCompilationBlocks)
