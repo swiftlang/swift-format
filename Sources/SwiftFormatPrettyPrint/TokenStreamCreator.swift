@@ -659,7 +659,12 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     before(node.firstToken, tokens: openBreak)
 
     after(node.unknownAttr?.lastToken, tokens: .space)
-    after(node.label.lastToken, tokens: .break(.reset, size: 0), .break(.open), .open)
+    after(
+      node.label.lastToken,
+      tokens: .break(.reset, size: 0),
+      .break(.open, newlines: config.lineBreakBeforeSwitchCaseOrDefaultBodies ? .hard : .elective),
+      .open
+    )
 
     // If switch/case labels were configured to be indented, insert an extra `close` break after the
     // case body to match the `open` break above
