@@ -26,6 +26,7 @@ public struct Configuration: Codable, Equatable {
     case tabWidth
     case indentation
     case respectsExistingLineBreaks
+    case lineBreakBeforeControlFlowBodies
     case lineBreakBeforeControlFlowKeywords
     case lineBreakBeforeEachArgument
     case lineBreakBeforeFuncBodies
@@ -74,6 +75,14 @@ public struct Configuration: Codable, Equatable {
   public var respectsExistingLineBreaks = true
 
   /// MARK: Rule-specific configuration
+
+  /// Determines the line-breaking behavior for bodies of control flow keywords, like `if` and
+  /// `for`.
+  ///
+  /// If true, a line break will be added after the opening brace of these bodies, forcing them
+  /// onto their own lines. If false (the default), these bodies will be laid out on the same line
+  /// as the keyword, with line breaks only being added when the line length would be exceeded.
+  public var lineBreakBeforeControlFlowBodies = false
 
   /// Determines the line-breaking behavior for control flow keywords that follow a closing brace,
   /// like `else` and `catch`.
@@ -201,6 +210,8 @@ public struct Configuration: Codable, Equatable {
       = try container.decodeIfPresent(Indent.self, forKey: .indentation) ?? .spaces(2)
     self.respectsExistingLineBreaks
       = try container.decodeIfPresent(Bool.self, forKey: .respectsExistingLineBreaks) ?? true
+    self.lineBreakBeforeControlFlowBodies
+      = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeControlFlowBodies) ?? false
     self.lineBreakBeforeControlFlowKeywords
       = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeControlFlowKeywords) ?? false
     self.lineBreakBeforeEachArgument
@@ -242,6 +253,7 @@ public struct Configuration: Codable, Equatable {
     try container.encode(tabWidth, forKey: .tabWidth)
     try container.encode(indentation, forKey: .indentation)
     try container.encode(respectsExistingLineBreaks, forKey: .respectsExistingLineBreaks)
+    try container.encode(lineBreakBeforeControlFlowBodies, forKey: .lineBreakBeforeControlFlowBodies)
     try container.encode(lineBreakBeforeControlFlowKeywords, forKey: .lineBreakBeforeControlFlowKeywords)
     try container.encode(lineBreakBeforeEachArgument, forKey: .lineBreakBeforeEachArgument)
     try container.encode(lineBreakBeforeEachGenericRequirement, forKey: .lineBreakBeforeEachGenericRequirement)

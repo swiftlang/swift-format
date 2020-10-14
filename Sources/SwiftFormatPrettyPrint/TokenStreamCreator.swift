@@ -476,7 +476,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       after(condition.lastToken, tokens: .break(.close(mustBreak: false), size: 0))
     }
 
-    arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
+    arrangeBracesAndContents(
+      of: node.body,
+      contentsKeyPath: \.statements,
+      openBraceNewlineBehavior: config.lineBreakBeforeControlFlowBodies ? .hard : .elective
+    )
 
     if let elseKeyword = node.elseKeyword {
       // Add a token before the else keyword. Breaking before `else` is explicitly allowed when
@@ -498,7 +502,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       }
     }
 
-    arrangeBracesAndContents(of: node.elseBody?.as(CodeBlockSyntax.self), contentsKeyPath: \.statements)
+    arrangeBracesAndContents(
+      of: node.elseBody?.as(CodeBlockSyntax.self),
+      contentsKeyPath: \.statements,
+      openBraceNewlineBehavior: config.lineBreakBeforeControlFlowBodies ? .hard : .elective
+    )
 
     return .visitChildren
   }
@@ -537,7 +545,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       after(typeAnnotation.lastToken, tokens: .break(.close(mustBreak: false), size: 0))
     }
 
-    arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
+    arrangeBracesAndContents(
+      of: node.body,
+      contentsKeyPath: \.statements,
+      openBraceNewlineBehavior: config.lineBreakBeforeControlFlowBodies ? .hard : .elective
+    )
 
     return .visitChildren
   }
@@ -559,14 +571,22 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       after(condition.lastToken, tokens: .break(.close(mustBreak: false), size: 0))
     }
 
-    arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
+    arrangeBracesAndContents(
+      of: node.body,
+      contentsKeyPath: \.statements,
+      openBraceNewlineBehavior: config.lineBreakBeforeControlFlowBodies ? .hard : .elective
+    )
 
     return .visitChildren
   }
 
   override func visit(_ node: RepeatWhileStmtSyntax) -> SyntaxVisitorContinueKind {
     after(node.labelColon, tokens: .space)
-    arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
+    arrangeBracesAndContents(
+      of: node.body,
+      contentsKeyPath: \.statements,
+      openBraceNewlineBehavior: config.lineBreakBeforeControlFlowBodies ? .hard : .elective
+    )
 
     if config.lineBreakBeforeControlFlowKeywords {
       before(node.whileKeyword, tokens: .break(.same), .open)
@@ -586,7 +606,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: DoStmtSyntax) -> SyntaxVisitorContinueKind {
     after(node.labelColon, tokens: .space)
-    arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
+    arrangeBracesAndContents(
+      of: node.body,
+      contentsKeyPath: \.statements,
+      openBraceNewlineBehavior: config.lineBreakBeforeControlFlowBodies ? .hard : .elective
+    )
     return .visitChildren
   }
 
@@ -609,7 +633,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       }
     }
 
-    arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
+    arrangeBracesAndContents(
+      of: node.body,
+      contentsKeyPath: \.statements,
+      openBraceNewlineBehavior: config.lineBreakBeforeControlFlowBodies ? .hard : .elective
+    )
 
     return .visitChildren
   }
