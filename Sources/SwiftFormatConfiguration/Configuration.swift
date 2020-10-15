@@ -26,9 +26,13 @@ public struct Configuration: Codable, Equatable {
     case tabWidth
     case indentation
     case respectsExistingLineBreaks
+    case lineBreakBeforeControlFlowBodies
     case lineBreakBeforeControlFlowKeywords
     case lineBreakBeforeEachArgument
+    case lineBreakBeforeFuncBodies
     case lineBreakBeforeEachGenericRequirement
+    case lineBreakBeforeSwitchCaseOrDefaultBodies
+    case lineBreakBeforeTypeBodies
     case prioritizeKeepingFunctionOutputTogether
     case indentConditionalCompilationBlocks
     case lineBreakAroundMultilineExpressionChainComponents
@@ -73,6 +77,14 @@ public struct Configuration: Codable, Equatable {
 
   /// MARK: Rule-specific configuration
 
+  /// Determines the line-breaking behavior for bodies of control flow keywords, like `if` and
+  /// `for`.
+  ///
+  /// If true, a line break will be added after the opening brace of these bodies, forcing them
+  /// onto their own lines. If false (the default), these bodies will be laid out on the same line
+  /// as the keyword, with line breaks only being added when the line length would be exceeded.
+  public var lineBreakBeforeControlFlowBodies = false
+
   /// Determines the line-breaking behavior for control flow keywords that follow a closing brace,
   /// like `else` and `catch`.
   ///
@@ -96,6 +108,32 @@ public struct Configuration: Codable, Equatable {
   /// list to be laid out vertically. If false (the default), requirements will be laid out
   /// horizontally first, with line breaks only being fired when the line length would be exceeded.
   public var lineBreakBeforeEachGenericRequirement = false
+
+  /// Determins the line-breaking behavior for the bodies of functions declared with `func`, as
+  /// well as "`func`-like" declarations: initializers, deinitializers, and subscripts.
+  ///
+  /// If true, a line break will be added after the opening brace of function bodies, forcing the
+  /// body to be on a separate line from the function. If false (the default), these bodies will be
+  /// laid out on the same line as the declaration, with line breaks only being added when the line
+  /// length would be exceeded.
+  public var lineBreakBeforeFuncBodies = false
+
+  /// Determines the line-breaking behavior for the bodies of `case` and `default` items within
+  /// a `switch` statement.
+  ///
+  /// If true, a line break will be added after the colon following `case` or `default`, forcing the
+  /// body to be on a separate line from the `case` or `default`. If false (the default), these bodies
+  /// will be laid out on the same line as the `case` or `default`, with line breaks only being added
+  /// when the line length would be exceeded.
+  public var lineBreakBeforeSwitchCaseOrDefaultBodies = false
+
+  /// Determines the line-breaking behavior for the bodies of types: `class`, `enum`, `extension`,
+  /// `protocol`, and `struct`.
+  ///
+  /// If true, a line break will be added after the opening brace for all non-empty types. If false
+  /// (the default), these bodies will be laid out on the same line as the type declaration, with
+  /// line breaks only being added when the line length would be exceeded.
+  public var lineBreakBeforeTypeBodies = false
 
   /// Determines if function-like declaration outputs should be prioritized to be together with the
   /// function signature right (closing) parenthesis.
@@ -181,12 +219,20 @@ public struct Configuration: Codable, Equatable {
       = try container.decodeIfPresent(Indent.self, forKey: .indentation) ?? .spaces(2)
     self.respectsExistingLineBreaks
       = try container.decodeIfPresent(Bool.self, forKey: .respectsExistingLineBreaks) ?? true
+    self.lineBreakBeforeControlFlowBodies
+      = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeControlFlowBodies) ?? false
     self.lineBreakBeforeControlFlowKeywords
       = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeControlFlowKeywords) ?? false
     self.lineBreakBeforeEachArgument
       = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeEachArgument) ?? false
     self.lineBreakBeforeEachGenericRequirement
       = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeEachGenericRequirement) ?? false
+    self.lineBreakBeforeFuncBodies
+      = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeFuncBodies) ?? false
+    self.lineBreakBeforeSwitchCaseOrDefaultBodies
+      = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeSwitchCaseOrDefaultBodies) ?? false
+    self.lineBreakBeforeTypeBodies
+      = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeTypeBodies) ?? false
     self.prioritizeKeepingFunctionOutputTogether
       = try container.decodeIfPresent(Bool.self, forKey: .prioritizeKeepingFunctionOutputTogether) ?? false
     self.indentConditionalCompilationBlocks
@@ -218,9 +264,13 @@ public struct Configuration: Codable, Equatable {
     try container.encode(tabWidth, forKey: .tabWidth)
     try container.encode(indentation, forKey: .indentation)
     try container.encode(respectsExistingLineBreaks, forKey: .respectsExistingLineBreaks)
+    try container.encode(lineBreakBeforeControlFlowBodies, forKey: .lineBreakBeforeControlFlowBodies)
     try container.encode(lineBreakBeforeControlFlowKeywords, forKey: .lineBreakBeforeControlFlowKeywords)
     try container.encode(lineBreakBeforeEachArgument, forKey: .lineBreakBeforeEachArgument)
     try container.encode(lineBreakBeforeEachGenericRequirement, forKey: .lineBreakBeforeEachGenericRequirement)
+    try container.encode(lineBreakBeforeFuncBodies, forKey: .lineBreakBeforeFuncBodies)
+    try container.encode(lineBreakBeforeSwitchCaseOrDefaultBodies, forKey: .lineBreakBeforeSwitchCaseOrDefaultBodies)
+    try container.encode(lineBreakBeforeTypeBodies, forKey: .lineBreakBeforeTypeBodies)
     try container.encode(prioritizeKeepingFunctionOutputTogether, forKey: .prioritizeKeepingFunctionOutputTogether)
     try container.encode(indentConditionalCompilationBlocks, forKey: .indentConditionalCompilationBlocks)
     try container.encode(
