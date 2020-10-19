@@ -10,6 +10,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
+
 /// A Rule is a linting or formatting pass that executes in a given context.
 public protocol Rule {
   /// The context in which the rule is executed.
@@ -26,16 +28,26 @@ public protocol Rule {
 }
 
 fileprivate var nameCache = [ObjectIdentifier: String]()
+fileprivate var nameCacheQueue = DispatchQueue(
+      label: "com.apple.SwiftFormat.NameCache", attributes: .concurrent)
 
 extension Rule {
   /// By default, the `ruleName` is just the name of the implementing rule class.
   public static var ruleName: String {
     let identifier = ObjectIdentifier(self)
-    if let cachedName = nameCache[identifier] {
+    let cachedName = nameCacheQueue.sync {
+        nameCache[identifier]
+    }
+
+    if let cachedName = cachedName {
       return cachedName
     }
+
     let name = String("\(self)".split(separator: ".").last!)
-    nameCache[identifier] = name
+    nameCacheQueue.async(flags: .barrier) {
+        nameCache[identifier] = name
+    }
+
     return name
   }
 }
