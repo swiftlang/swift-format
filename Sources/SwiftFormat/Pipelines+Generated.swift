@@ -250,7 +250,6 @@ class LintPipeline: SyntaxVisitor {
 
   override func visit(_ node: SwitchCaseLabelSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(NoLabelsInCasePatterns.visit, for: node)
-    visitIfEnabled(UseLetInEveryBoundCaseVariable.visit, for: node)
     return .visitChildren
   }
 
@@ -279,6 +278,11 @@ class LintPipeline: SyntaxVisitor {
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
+    return .visitChildren
+  }
+
+  override func visit(_ node: ValueBindingPatternSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(UseLetInEveryBoundCaseVariable.visit, for: node)
     return .visitChildren
   }
 

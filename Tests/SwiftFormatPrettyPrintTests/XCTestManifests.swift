@@ -164,6 +164,7 @@ extension CommentTests {
         ("testDoesNotInsertExtraNewlinesAfterTrailingComments", testDoesNotInsertExtraNewlinesAfterTrailingComments),
         ("testLineCommentAtEndOfMemberDeclList", testLineCommentAtEndOfMemberDeclList),
         ("testLineComments", testLineComments),
+        ("testTrailingSpacesInComments", testTrailingSpacesInComments),
     ]
 }
 
@@ -302,6 +303,7 @@ extension FunctionCallTests {
         ("testDiscretionaryLineBreakBeforeTrailingClosure", testDiscretionaryLineBreakBeforeTrailingClosure),
         ("testDiscretionaryLineBreaksAreSelfCorrecting", testDiscretionaryLineBreaksAreSelfCorrecting),
         ("testGroupsTrailingComma", testGroupsTrailingComma),
+        ("testMultipleTrailingClosures", testMultipleTrailingClosures),
         ("testNestedFunctionCallExprSequences", testNestedFunctionCallExprSequences),
         ("testSingleUnlabeledArgumentWithDelimiters", testSingleUnlabeledArgumentWithDelimiters),
     ]
@@ -728,6 +730,8 @@ extension SwitchStmtTests {
     // to regenerate.
     static let __allTests__SwitchStmtTests = [
         ("testBasicSwitch", testBasicSwitch),
+        ("testConditionalCases", testConditionalCases),
+        ("testConditionalCasesIndenting", testConditionalCasesIndenting),
         ("testLabeledSwitchStmt", testLabeledSwitchStmt),
         ("testNestedSwitch", testNestedSwitch),
         ("testNewlinesDisambiguatingWhereClauses", testNewlinesDisambiguatingWhereClauses),
@@ -765,6 +769,7 @@ extension TryCatchTests {
         ("testDoTryCatch_noBreakBeforeCatch", testDoTryCatch_noBreakBeforeCatch),
         ("testMultipleCatchItems", testMultipleCatchItems),
         ("testNestedDo", testNestedDo),
+        ("testTryKeywordBreaking", testTryKeywordBreaking),
     ]
 }
 
