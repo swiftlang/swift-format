@@ -15,6 +15,7 @@ extension AlwaysUseLowerCamelCaseTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__AlwaysUseLowerCamelCaseTests = [
+        ("testIgnoresUnderscoresInTestNames", testIgnoresUnderscoresInTestNames),
         ("testInvalidVariableCasing", testInvalidVariableCasing),
     ]
 }
@@ -47,6 +48,7 @@ extension DoNotUseSemicolonsTests {
         ("testNewlinesAfterSemicolons", testNewlinesAfterSemicolons),
         ("testSemicolonsInMemberLists", testSemicolonsInMemberLists),
         ("testSemicolonsInNestedStatements", testSemicolonsInNestedStatements),
+        ("testSemicolonsSeparatingDoWhile", testSemicolonsSeparatingDoWhile),
         ("testSemicolonUse", testSemicolonUse),
     ]
 }
@@ -216,6 +218,8 @@ extension NoParensAroundConditionsTests {
     // to regenerate.
     static let __allTests__NoParensAroundConditionsTests = [
         ("testParensAroundConditions", testParensAroundConditions),
+        ("testParensAroundNestedParenthesizedStatements", testParensAroundNestedParenthesizedStatements),
+        ("testParensAroundNestedUnparenthesizedStatements", testParensAroundNestedUnparenthesizedStatements),
     ]
 }
 
@@ -245,6 +249,11 @@ extension OneVariableDeclarationPerLineTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__OneVariableDeclarationPerLineTests = [
+        ("testCommentPrecedingDeclIsNotRepeated", testCommentPrecedingDeclIsNotRepeated),
+        ("testCommentsPrecedingBindingsAreKept", testCommentsPrecedingBindingsAreKept),
+        ("testInvalidBindingsAreNotDestroyed", testInvalidBindingsAreNotDestroyed),
+        ("testMixedInitializedAndTypedBindings", testMixedInitializedAndTypedBindings),
+        ("testMultipleBindingsWithAccessorsAreCorrected", testMultipleBindingsWithAccessorsAreCorrected),
         ("testMultipleVariableBindings", testMultipleVariableBindings),
         ("testNestedVariableBindings", testNestedVariableBindings),
     ]
@@ -316,7 +325,11 @@ extension UseLetInEveryBoundCaseVariableTests {
     //   `swift test --generate-linuxmain`
     // to regenerate.
     static let __allTests__UseLetInEveryBoundCaseVariableTests = [
-        ("testInvalidLetBoundCase", testInvalidLetBoundCase),
+        ("testForCase", testForCase),
+        ("testGuardCase", testGuardCase),
+        ("testIfCase", testIfCase),
+        ("testSwitchCase", testSwitchCase),
+        ("testWhileCase", testWhileCase),
     ]
 }
 
@@ -398,9 +411,9 @@ extension ValidateDocumentationCommentsTests {
         ("testInitializer", testInitializer),
         ("testParameterDocumentation", testParameterDocumentation),
         ("testParametersName", testParametersName),
-        ("testThrowsDocumentation", testThrowsDocumentation),
         ("testReturnDocumentation", testReturnDocumentation),
         ("testSeparateLabelAndIdentifier", testSeparateLabelAndIdentifier),
+        ("testThrowsDocumentation", testThrowsDocumentation),
         ("testValidDocumentation", testValidDocumentation),
     ]
 }
