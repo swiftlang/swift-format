@@ -13,24 +13,60 @@
 import SwiftFormatCore
 import SwiftSyntax
 
-/// Every element bound in a `case` must have its own `let`.
+/// Every variable bound in a `case` pattern must have its own `let/var`.
 ///
-/// e.g. `case let .label(foo, bar)` is forbidden.
+/// For example, `case let .identifier(x, y)` is forbidden. Use
+/// `case .identifier(let x, let y)` instead.
 ///
-/// Lint: `case let ...` will yield a lint error.
+/// Lint: `case let .identifier(...)` will yield a lint error.
 public final class UseLetInEveryBoundCaseVariable: SyntaxLintRule {
 
-  public override func visit(_ node: SwitchCaseLabelSyntax) -> SyntaxVisitorContinueKind {
-    for item in node.caseItems {
-      guard item.pattern.is(ValueBindingPatternSyntax.self) else { continue }
+  public override func visit(_ node: ValueBindingPatternSyntax) -> SyntaxVisitorContinueKind {
+    // Diagnose a pattern binding if it is a function call and the callee is a member access
+    // expression (e.g., `case let .x(y)` or `case let T.x(y)`).
+    if canDistributeLetVarThroughPattern(node.valuePattern) {
       diagnose(.useLetInBoundCaseVariables, on: node)
     }
-    return .skipChildren
+    return .visitChildren
+  }
+
+  /// Returns true if the given pattern is one that allows a `let/var` to be distributed
+  /// through to subpatterns.
+  private func canDistributeLetVarThroughPattern(_ pattern: PatternSyntax) -> Bool {
+    guard let exprPattern = pattern.as(ExpressionPatternSyntax.self) else { return false }
+
+    // Drill down into any optional patterns that we encounter (e.g., `case let .foo(x)?`).
+    var expression = exprPattern.expression
+    while true {
+      if let optionalExpr = expression.as(OptionalChainingExprSyntax.self) {
+        expression = optionalExpr.expression
+      } else if let forcedExpr = expression.as(ForcedValueExprSyntax.self) {
+        expression = forcedExpr.expression
+      } else {
+        break
+      }
+    }
+
+    // Enum cases are written as function calls on member access expressions. The arguments
+    // are the associated values, so the `let/var` can be distributed into those.
+    if let functionCall = expression.as(FunctionCallExprSyntax.self),
+      functionCall.calledExpression.is(MemberAccessExprSyntax.self)
+    {
+      return true
+    }
+
+    // A tuple expression can have the `let/var` distributed into the elements.
+    if expression.is(TupleExprSyntax.self) {
+      return true
+    }
+
+    // Otherwise, we're not sure this is a pattern we can distribute through.
+    return false
   }
 }
 
 extension Diagnostic.Message {
   public static let useLetInBoundCaseVariables = Diagnostic.Message(
     .warning,
-    "distribute 'let' to each bound case variable")
+    "move 'let' keyword to precede each variable bound in the `case` pattern")
 }
