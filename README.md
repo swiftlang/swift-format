@@ -25,7 +25,7 @@ is also expressed in the `SwiftSyntax` dependency in
 
 | Xcode Release | Swift Version                           | `swift-format` Branch |
 |:-------------:|:---------------------------------------:|:----------------------|
-| –             | Swift at `master`                       | `master`              |
+| –             | Swift at `main`                         | `main`                |
 | Xcode 12.0    | Swift 5.3                               | `swift-5.3-branch`    |
 | Xcode 11.4    | Swift 5.2                               | `swift-5.2-branch`    |
 | Xcode 11.0    | Swift 5.1                               | `swift-5.1-branch`    |
@@ -42,8 +42,8 @@ swift build
 You can also add the `--single-branch` option if you only want to clone that
 specific branch.
 
-The `master` branch is used for development and may depend on either a release
-version of Swift or on a developer snapshot. Changes committed to `master`
+The `main` branch is used for development and may depend on either a release
+version of Swift or on a developer snapshot. Changes committed to `main`
 that are compatible with the latest release branch will be cherry-picked into
 that branch.
 
