@@ -82,6 +82,9 @@ as well as the following command line options:
 * `-i/--in-place`: Overwrites the input files when formatting instead of
   printing the results to standard output.
 
+* `-p/--parallel`: Process files in parallel, simultaneously across
+  multiple cores.
+
 * `-r/--recursive`: If specified, then the tool will process `.swift` source
   files in any directories listed on the command line and their descendants.
   Without this flag, it is an error to list a directory on the command line.
