@@ -12,12 +12,7 @@
 //===----------------------------------------------------------------------===//
 
 import PackageDescription
-
-#if os(Linux)
-import Glibc
-#else
-import Darwin.C
-#endif
+import Foundation
 
 let package = Package(
   name: "swift-format",
@@ -141,7 +136,7 @@ let package = Package(
 )
 
 
-if getenv("SWIFTCI_USE_LOCAL_DEPS") == nil {
+if ProcessInfo.processInfo.environment["SWIFTCI_USE_LOCAL_DEPS"] == nil {
   // Building standalone.
   package.dependencies += [
     .package(url: "https://github.com/apple/swift-syntax", .branch("main")),
