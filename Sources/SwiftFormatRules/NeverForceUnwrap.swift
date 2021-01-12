@@ -18,7 +18,7 @@ import SwiftSyntax
 /// Lint: If a force unwrap is used, a lint warning is raised.
 public final class NeverForceUnwrap: SyntaxLintRule {
 
-  /// Identifies this rule was being opt-in. While force unwrap is an unsafe pattern (i.e. it can
+  /// Identifies this rule as being opt-in. While force unwrap is an unsafe pattern (i.e. it can
   /// crash), there are valid contexts for force unwrap where it won't crash. This rule can't
   /// evaluate the context around the force unwrap to make that determination.
   public override class var isOptIn: Bool { return true }

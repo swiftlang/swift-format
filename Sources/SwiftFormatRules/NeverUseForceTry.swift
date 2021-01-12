@@ -23,7 +23,7 @@ import SwiftSyntax
 /// TODO: Create exception for NSRegularExpression
 public final class NeverUseForceTry: SyntaxLintRule {
 
-  /// Identifies this rule was being opt-in. While force try is an unsafe pattern (i.e. it can
+  /// Identifies this rule as being opt-in. While force try is an unsafe pattern (i.e. it can
   /// crash), there are valid contexts for force try where it won't crash. This rule can't
   /// evaluate the context around the force try to make that determination.
   public override class var isOptIn: Bool { return true }

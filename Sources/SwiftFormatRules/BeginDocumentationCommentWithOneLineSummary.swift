@@ -26,6 +26,10 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
   /// This allows test runs on those platforms to test both implementations.
   public static var _forcesFallbackModeForTesting = false
 
+  /// Identifies this rule as being opt-in. Well written docs on declarations are important, but
+  /// this rule isn't linguistically advanced enough on all platforms to be applied universally.
+  public override class var isOptIn: Bool { return true }
+
   public override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseDocComments(in: DeclSyntax(node))
     return .skipChildren
