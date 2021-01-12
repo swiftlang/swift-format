@@ -18,7 +18,7 @@ import SwiftSyntax
 /// Lint: If a public declaration is missing a documentation comment, a lint error is raised.
 public final class AllPublicDeclarationsHaveDocumentation: SyntaxLintRule {
 
-  /// Identifies this rule was being opt-in. While docs on most public declarations are beneficial,
+  /// Identifies this rule as being opt-in. While docs on most public declarations are beneficial,
   /// there are a number of public decls where docs are either redundant or superfluous. This rule
   /// can't differentiate those situations and will make a lot of noise for projects that are
   /// intentionally avoiding docs on some decls.
