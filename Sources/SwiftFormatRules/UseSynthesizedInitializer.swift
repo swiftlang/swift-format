@@ -39,9 +39,6 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
         storedProperties.append(varDecl)
         // Collect any possible redundant initializers into a list
       } else if let initDecl = member.as(InitializerDeclSyntax.self) {
-        guard initDecl.modifiers == nil || initDecl.modifiers!.has(modifier: "internal") else {
-          continue
-        }
         guard initDecl.optionalMark == nil else { continue }
         guard initDecl.throwsOrRethrowsKeyword == nil else { continue }
         initializers.append(initDecl)
@@ -62,6 +59,8 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
           variables: storedProperties,
           initBody: initializer.body)
       else { continue }
+      guard matchesAccessLevel(modifiers: initializer.modifiers, properties: storedProperties)
+      else { continue }
       extraneousInitializers.append(initializer)
     }
 
@@ -74,6 +73,29 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
     }
 
     return .skipChildren
+  }
+
+  /// Compares the actual access level of an initializer with the access level of a synthesized
+  /// memberwise initializer.
+  ///
+  /// - Parameters:
+  ///   - modifiers: The modifier list from the initializer.
+  ///   - properties: The properties from the enclosing type.
+  /// - Returns: Whether the initializer has the same access level as the synthesized initializer.
+  private func matchesAccessLevel(
+    modifiers: ModifierListSyntax?, properties: [VariableDeclSyntax]
+  ) -> Bool {
+    let synthesizedAccessLevel = synthesizedInitAccessLevel(using: properties)
+    let accessLevel = modifiers?.accessLevelModifier
+    switch synthesizedAccessLevel {
+    case .internal:
+      // No explicit access level or internal are equivalent.
+      return accessLevel == nil || accessLevel!.name.tokenKind == .internalKeyword
+    case .fileprivate:
+      return accessLevel != nil && accessLevel!.name.tokenKind == .fileprivateKeyword
+    case .private:
+      return accessLevel != nil && accessLevel!.name.tokenKind == .privateKeyword
+    }
   }
 
   // Compares initializer parameters to stored properties of the struct
@@ -159,4 +181,37 @@ extension Diagnostic.Message {
   public static let removeRedundantInitializer = Diagnostic.Message(
     .warning,
     "remove initializer and use the synthesized initializer")
+}
+
+/// Defines the access levels which may be assigned to a synthesized memberwise initializer.
+fileprivate enum AccessLevel {
+  case `internal`
+  case `fileprivate`
+  case `private`
+}
+
+/// Computes the access level which would be applied to the synthesized memberwise initializer of
+/// a struct that contains the given properties.
+///
+/// The rules for default memberwise initializer access levels are defined in The Swift
+/// Programming Languge:
+/// https://docs.swift.org/swift-book/LanguageGuide/AccessControl.html#ID21
+///
+/// - Parameter properties: The properties contained within the struct.
+/// - Returns: The synthesized memberwise initializer's access level.
+fileprivate func synthesizedInitAccessLevel(using properties: [VariableDeclSyntax]) -> AccessLevel {
+  var hasFileprivate = false
+  for property in properties {
+    guard let modifiers = property.modifiers else { continue }
+
+    // Private takes precedence, so finding 1 private property defines the access level.
+    if modifiers.contains(where: {$0.name.tokenKind == .privateKeyword && $0.detail == nil}) {
+      return .private
+    }
+    if modifiers.contains(where: {$0.name.tokenKind == .fileprivateKeyword && $0.detail == nil}) {
+      hasFileprivate = true
+      // Can't break here because a later property might be private.
+    }
+  }
+  return hasFileprivate ? .fileprivate : .internal
 }

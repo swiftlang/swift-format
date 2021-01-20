@@ -1,6 +1,10 @@
 import SwiftFormatRules
 
 final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
+  override func setUp() {
+    self.shouldCheckForUnassertedDiagnostics = true
+  }
+
   func testMemberwiseInitializerIsDiagnosed() {
     let input =
       """
@@ -8,7 +12,7 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
 
         public var name: String
         let phoneNumber: String
-        private let address: String
+        internal let address: String
 
         init(name: String, phoneNumber: String, address: String) {
           self.name = name
@@ -19,8 +23,28 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
       """
 
     performLint(UseSynthesizedInitializer.self, input: input)
-    XCTAssertDiagnosed(.removeRedundantInitializer)
-    XCTAssertNotDiagnosed(.removeRedundantInitializer)
+    XCTAssertDiagnosed(.removeRedundantInitializer, line: 7)
+  }
+
+  func testInternalMemberwiseInitializerIsDiagnosed() {
+    let input =
+      """
+      public struct Person {
+
+        public var name: String
+        let phoneNumber: String
+        internal let address: String
+
+        internal init(name: String, phoneNumber: String, address: String) {
+          self.name = name
+          self.address = address
+          self.phoneNumber = phoneNumber
+        }
+      }
+      """
+
+    performLint(UseSynthesizedInitializer.self, input: input)
+    XCTAssertDiagnosed(.removeRedundantInitializer, line: 7)
   }
 
   func testMemberwiseInitializerWithDefaultArgumentIsDiagnosed() {
@@ -30,7 +54,7 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
 
          public var name: String = "John Doe"
          let phoneNumber: String
-         private let address: String
+         internal let address: String
 
          init(name: String = "John Doe", phoneNumber: String, address: String) {
            self.name = name
@@ -40,9 +64,8 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
        }
        """
 
-     performLint(UseSynthesizedInitializer.self, input: input)
-     XCTAssertDiagnosed(.removeRedundantInitializer)
-     XCTAssertNotDiagnosed(.removeRedundantInitializer)
+    performLint(UseSynthesizedInitializer.self, input: input)
+    XCTAssertDiagnosed(.removeRedundantInitializer, line: 7)
    }
 
   func testCustomInitializerVoidsSynthesizedInitializerWarning() {
@@ -81,7 +104,7 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
 
          public var name: String
          let phoneNumber: String
-         private let address: String
+         let address: String
 
          init(name: String = "Jane Doe", phoneNumber: String, address: String) {
            self.name = name
@@ -102,7 +125,7 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
 
          public var name: String = "John Doe"
          let phoneNumber: String
-         private let address: String
+         let address: String
 
          init(name: String = "Jane Doe", phoneNumber: String, address: String) {
            self.name = name
@@ -125,7 +148,7 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
 
         public var name: String
         var phoneNumber: String = "+15555550101"
-        private let address: String
+        let address: String
 
         init(name: String, phoneNumber: String, address: String) {
           self.name = name
@@ -146,7 +169,7 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
 
         public var name: String
         var phoneNumber: String?
-        private let address: String
+        let address: String
 
         init(name: String, phoneNumber: String, address: String) {
           self.name = name
@@ -167,7 +190,7 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
 
         public var name: String
         var phoneNumber: String?
-        private let address: String
+        let address: String
 
         init(name: String, phoneNumber: String?, address: String, anotherArg: Int) {
           self.name = name
@@ -188,7 +211,7 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
 
         public var name: String
         var phoneNumber: String?
-        private let address: String
+        let address: String
 
         init(name: String, phoneNumber: String?, address: String) {
           self.name = name
@@ -211,7 +234,7 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
 
         public var name: String
         let phoneNumber: String
-        private let address: String
+        let address: String
 
         init?(name: String, phoneNumber: String, address: String) {
           self.name = name
@@ -232,7 +255,7 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
 
         public var name: String
         let phoneNumber: String
-        private let address: String
+        let address: String
 
         init(name: String, phoneNumber: String, address: String) throws {
           self.name = name
@@ -253,7 +276,7 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
 
         public var name: String
         let phoneNumber: String
-        private let address: String
+        let address: String
 
         public init(name: String, phoneNumber: String, address: String) {
           self.name = name
@@ -265,5 +288,120 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
 
     performLint(UseSynthesizedInitializer.self, input: input)
     XCTAssertNotDiagnosed(.removeRedundantInitializer)
+  }
+
+  func testDefaultMemberwiseInitializerIsNotDiagnosed() {
+    // The synthesized initializer is private when any member is private, so an initializer with
+    // default access control (i.e. internal) is not equivalent to the synthesized initializer.
+    let input =
+      """
+      public struct Person {
+
+        let phoneNumber: String
+        private let address: String
+
+        init(phoneNumber: String, address: String) {
+          self.address = address
+          self.phoneNumber = phoneNumber
+        }
+      }
+      """
+
+    performLint(UseSynthesizedInitializer.self, input: input)
+    XCTAssertNotDiagnosed(.removeRedundantInitializer)
+  }
+
+  func testPrivateMemberwiseInitializerWithPrivateMemberIsDiagnosed() {
+    // The synthesized initializer is private when any member is private, so a private initializer
+    // is equivalent to the synthesized initializer.
+    let input =
+      """
+      public struct Person {
+
+        let phoneNumber: String
+        private let address: String
+
+        private init(phoneNumber: String, address: String) {
+          self.address = address
+          self.phoneNumber = phoneNumber
+        }
+      }
+      """
+
+    performLint(UseSynthesizedInitializer.self, input: input)
+    XCTAssertDiagnosed(.removeRedundantInitializer, line: 6)
+  }
+
+  func testFileprivateMemberwiseInitializerWithFileprivateMemberIsDiagnosed() {
+    // The synthesized initializer is fileprivate when any member is fileprivate, so a fileprivate
+    // initializer is equivalent to the synthesized initializer.
+    let input =
+      """
+      public struct Person {
+
+        let phoneNumber: String
+        fileprivate let address: String
+
+        fileprivate init(phoneNumber: String, address: String) {
+          self.address = address
+          self.phoneNumber = phoneNumber
+        }
+      }
+      """
+
+    performLint(UseSynthesizedInitializer.self, input: input)
+    XCTAssertDiagnosed(.removeRedundantInitializer, line: 6)
+  }
+
+  func testCustomSetterAccessLevel() {
+    // When a property has a different access level for its setter, the setter's access level
+    // doesn't change the access level of the synthesized initializer.
+    let input =
+      """
+      public struct Person {
+        let phoneNumber: String
+        private(set) let address: String
+
+        init(phoneNumber: String, address: String) {
+          self.address = address
+          self.phoneNumber = phoneNumber
+        }
+      }
+
+      public struct Person2 {
+        fileprivate let phoneNumber: String
+        private(set) let address: String
+
+        fileprivate init(phoneNumber: String, address: String) {
+          self.address = address
+          self.phoneNumber = phoneNumber
+        }
+      }
+
+      public struct Person3 {
+        fileprivate(set) let phoneNumber: String
+        private(set) let address: String
+
+        init(phoneNumber: String, address: String) {
+          self.address = address
+          self.phoneNumber = phoneNumber
+        }
+      }
+
+      public struct Person4 {
+        private fileprivate(set) let phoneNumber: String
+        private(set) let address: String
+
+        init(phoneNumber: String, address: String) {
+          self.address = address
+          self.phoneNumber = phoneNumber
+        }
+      }
+      """
+
+    performLint(UseSynthesizedInitializer.self, input: input)
+    XCTAssertDiagnosed(.removeRedundantInitializer, line: 5)
+    XCTAssertDiagnosed(.removeRedundantInitializer, line: 15)
+    XCTAssertDiagnosed(.removeRedundantInitializer, line: 25)
   }
 }
