@@ -39,6 +39,10 @@ class LintFrontend: Frontend {
           .error, "Unable to lint \(path): file is not readable or does not exist."))
       return
     } catch SwiftFormatError.fileContainsInvalidSyntax(let position) {
+      guard !lintFormatOptions.ignoreUnparsableFiles else {
+        // The caller wants to silently ignore this error.
+        return
+      }
       let location = SourceLocationConverter(file: path, source: source).location(for: position)
       diagnosticEngine.diagnose(
         Diagnostic.Message(.error, "file contains invalid or unrecognized Swift syntax."),
