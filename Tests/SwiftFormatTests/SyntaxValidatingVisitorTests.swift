@@ -32,15 +32,8 @@ final class SyntaxValidatingVisitorTests: XCTestCase {
     input =
       """
       switch a {
-      case b, c, d: break
       @unknown what_is_this default: break
       }
-      """
-    assertInvalidSyntax(in: input, atLine: 3, column: 1)
-
-    input =
-      """
-      @unknown c class Foo {}
       """
     assertInvalidSyntax(in: input, atLine: 1, column: 1)
   }
