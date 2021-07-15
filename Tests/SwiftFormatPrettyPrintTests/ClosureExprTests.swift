@@ -379,10 +379,19 @@ final class ClosureExprTests: PrettyPrintTestCase {
       (s1: String, s2: String, s3: String) throws -> AVeryLongReturnTypeThatOverflowsFiftyColumns in return s1 > s2
       })
       funcCall(closure: {
+      (s1: String, s2: String, n: Int) async throws -> AVeryLongReturnTypeThatOverflowsFiftyColumns in return s1 > s2
+      })
+      funcCall(closure: {
+      (s1: String, s2: String, s3: String) async throws -> AVeryLongReturnTypeThatOverflowsFiftyColumns in return s1 > s2
+      })
+      funcCall(closure: {
       () throws -> Bool in return s1 > s2
       })
       funcCall(closure: {
       () throws -> AVeryLongReturnTypeThatOverflowsFiftyColumns in return s1 > s2
+      })
+      funcCall(closure: {
+      () async throws -> AVeryLongReturnTypeThatOverflowsFiftyColumns in return s1 > s2
       })
       """
 
@@ -398,10 +407,26 @@ final class ClosureExprTests: PrettyPrintTestCase {
         in return s1 > s2
       })
       funcCall(closure: {
+        (s1: String, s2: String, n: Int) async throws
+          -> AVeryLongReturnTypeThatOverflowsFiftyColumns
+        in return s1 > s2
+      })
+      funcCall(closure: {
+        (s1: String, s2: String, s3: String)
+          async throws
+          -> AVeryLongReturnTypeThatOverflowsFiftyColumns
+        in return s1 > s2
+      })
+      funcCall(closure: {
         () throws -> Bool in return s1 > s2
       })
       funcCall(closure: {
         () throws
+          -> AVeryLongReturnTypeThatOverflowsFiftyColumns
+        in return s1 > s2
+      })
+      funcCall(closure: {
+        () async throws
           -> AVeryLongReturnTypeThatOverflowsFiftyColumns
         in return s1 > s2
       })
@@ -425,10 +450,29 @@ final class ClosureExprTests: PrettyPrintTestCase {
         in return s1 > s2
       })
       funcCall(closure: {
+        (
+          s1: String, s2: String, n: Int
+        ) async throws
+          -> AVeryLongReturnTypeThatOverflowsFiftyColumns
+        in return s1 > s2
+      })
+      funcCall(closure: {
+        (
+          s1: String, s2: String, s3: String
+        ) async throws
+          -> AVeryLongReturnTypeThatOverflowsFiftyColumns
+        in return s1 > s2
+      })
+      funcCall(closure: {
         () throws -> Bool in return s1 > s2
       })
       funcCall(closure: {
         () throws
+          -> AVeryLongReturnTypeThatOverflowsFiftyColumns
+        in return s1 > s2
+      })
+      funcCall(closure: {
+        () async throws
           -> AVeryLongReturnTypeThatOverflowsFiftyColumns
         in return s1 > s2
       })

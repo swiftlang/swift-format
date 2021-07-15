@@ -1136,4 +1136,94 @@ final class FunctionDeclTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 23)
   }
+
+  func testFunctionDeclAsync() {
+    let input =
+      """
+      func myFun(var1: Int) async -> Double {
+        print("Hello World")
+        if badCondition {
+          throw Error
+        }
+        return 1.0
+      }
+      func reallyLongName(var1: Int, var2: Double, var3: Bool) async -> Double {
+        print("Hello World")
+        if badCondition {
+          throw Error
+        }
+        return 1.0
+      }
+      """
+
+    let expected =
+      """
+      func myFun(var1: Int) async -> Double {
+        print("Hello World")
+        if badCondition {
+          throw Error
+        }
+        return 1.0
+      }
+      func reallyLongName(
+        var1: Int, var2: Double, var3: Bool
+      ) async -> Double {
+        print("Hello World")
+        if badCondition {
+          throw Error
+        }
+        return 1.0
+      }
+
+      """
+
+    var config = Configuration()
+    config.lineBreakBeforeEachArgument = false
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 49, configuration: config)
+  }
+
+  func testFunctionDeclAsyncThrows() {
+    let input =
+      """
+      func myFun(var1: Int) async throws -> Double {
+        print("Hello World")
+        if badCondition {
+          throw Error
+        }
+        return 1.0
+      }
+      func reallyLongName(var1: Int, var2: Double, var3: Bool) async throws -> Double {
+        print("Hello World")
+        if badCondition {
+          throw Error
+        }
+        return 1.0
+      }
+      """
+
+    let expected =
+      """
+      func myFun(var1: Int) async throws -> Double {
+        print("Hello World")
+        if badCondition {
+          throw Error
+        }
+        return 1.0
+      }
+      func reallyLongName(
+        var1: Int, var2: Double, var3: Bool
+      ) async throws -> Double {
+        print("Hello World")
+        if badCondition {
+          throw Error
+        }
+        return 1.0
+      }
+
+      """
+
+    var config = Configuration()
+    config.lineBreakBeforeEachArgument = false
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 49, configuration: config)
+  }
 }

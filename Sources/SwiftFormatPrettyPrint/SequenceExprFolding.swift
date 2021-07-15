@@ -96,10 +96,11 @@ extension SequenceExprSyntax {
 
     case 3:
       // A sequence with three elements will not be changed by folding unless
-      // it contains a cast expression, ternary, or `try`. (This may be more
-      // inclusive than it needs to be.)
+      // it contains a cast expression, ternary, `await`, or `try`. (This may
+      // be more inclusive than it needs to be.)
       return elements.contains {
-        $0.is(AsExprSyntax.self) || $0.is(IsExprSyntax.self) || $0.is(TernaryExprSyntax.self)
+        $0.is(AsExprSyntax.self) || $0.is(IsExprSyntax.self)
+          || $0.is(TernaryExprSyntax.self) || $0.is(AwaitExprSyntax.self)
           || $0.is(TryExprSyntax.self)
       }
 
@@ -331,8 +332,8 @@ extension SequenceExprSyntax {
   /// This function takes into account certain corrections that must occur as
   /// part of folding, like repairing ternary and cast expressions (undoing the
   /// even/odd normalization that was performed at the beginning of the
-  /// algorithm), as well as absorbing other operators and operands into `try`
-  /// expressions.
+  /// algorithm), as well as absorbing other operators and operands into
+  /// `await/try` expressions.
   private func makeExpression(
     operator op: ExprSyntax,
     lhs: ExprSyntax,
@@ -341,31 +342,39 @@ extension SequenceExprSyntax {
   ) -> ExprSyntax {
     var lhs = lhs
 
-    // If the left-hand side is a `try`, hoist it up. The compiler will parse an
-    // expression like `try foo() + 1` syntactically as
-    // `SequenceExpr(TryExpr(foo()), +, 1)`, then fold the rest of the
-    // expression into the `try` as `TryExpr(BinaryExpr(foo(), +, 1))`. So, we
-    // temporarily drop down to the subexpression for the purposes of this
-    // function, then before returning below, we wrap the result back in the
-    // `try`.
+    // If the left-hand side is a `try` or `await`, hoist it up. The compiler
+    // will parse an expression like `try|await foo() + 1` syntactically as
+    // `SequenceExpr(TryExpr|AwaitExpr(foo()), +, 1)`, then fold the rest of
+    // the expression into the `try|await` as
+    // `TryExpr|AwaitExpr(BinaryExpr(foo(), +, 1))`. So, we temporarily drop
+    // down to the subexpression for the purposes of this function, then before
+    // returning below, we wrap the result back in the `try|await`.
     //
-    // If the right-hand side is a `try`, it's an error unless the operator is
-    // an assignment or ternary operator and there's nothing to the right that
-    // didn't parse as part of the right operand. The compiler handles that case
-    // so that it can emit an error, but for the purposes of the syntax tree, we
-    // can leave it alone.
+    // If the right-hand side is a `try` or `await`, it's an error unless the
+    // operator is an assignment or ternary operator and there's nothing to the
+    // right that didn't parse as part of the right operand. The compiler
+    // handles that case so that it can emit an error, but for the purposes of
+    // the syntax tree, we can leave it alone.
     let maybeTryExpr = lhs.as(TryExprSyntax.self)
     if let tryExpr = maybeTryExpr {
       lhs = tryExpr.expression
     }
+    let maybeAwaitExpr = lhs.as(AwaitExprSyntax.self)
+    if let awaitExpr = maybeAwaitExpr {
+      lhs = awaitExpr.expression
+    }
 
     let makeResultExpression = { (expr: ExprSyntax) -> ExprSyntax in
-      // Fold the result back into the `try` if it was present; otherwise, just
-      // return the result itself.
-      if let tryExpr = maybeTryExpr {
-        return ExprSyntax(tryExpr.withExpression(expr))
+      // Fold the result back into the `try` and/or `await` if either were
+      // present; otherwise, just return the result itself.
+      var result = expr
+      if let awaitExpr = maybeAwaitExpr {
+        result = ExprSyntax(awaitExpr.withExpression(result))
       }
-      return expr
+      if let tryExpr = maybeTryExpr {
+        result = ExprSyntax(tryExpr.withExpression(result))
+      }
+      return result
     }
 
     switch Syntax(op).as(SyntaxEnum.self) {

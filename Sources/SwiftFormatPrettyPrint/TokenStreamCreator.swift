@@ -519,7 +519,24 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: ForInStmtSyntax) -> SyntaxVisitorContinueKind {
     after(node.labelColon, tokens: .space)
-    after(node.forKeyword, tokens: .space)
+
+    // If we have a `(try) await` clause, allow breaking after the `for` so that the `(try) await`
+    // can fall onto the next line if needed, and if both `try await` are present, keep them
+    // together. Otherwise, keep `for` glued to the token after it so that we break somewhere later
+    // on the line.
+    if let awaitKeyword = node.awaitKeyword {
+      after(node.forKeyword, tokens: .break)
+      if let tryKeyword = node.tryKeyword {
+        before(tryKeyword, tokens: .open)
+        after(tryKeyword, tokens: .break)
+        after(awaitKeyword, tokens: .close, .break)
+      } else {
+        after(awaitKeyword, tokens: .break)
+      }
+    } else {
+      after(node.forKeyword, tokens: .space)
+    }
+
     after(node.caseKeyword, tokens: .space)
     before(node.inKeyword, tokens: .break)
     after(node.inKeyword, tokens: .space)
@@ -897,10 +914,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
     if let calledMemberAccessExpr = node.calledExpression.as(MemberAccessExprSyntax.self) {
       if let base = calledMemberAccessExpr.base, base.is(IdentifierExprSyntax.self) {
-        // When this function call is wrapped by a try-expr, the group applied when visiting the
-        // try-expr is sufficient. Adding another gruop here in that case can result in
-        // unnecessarily breaking after the try keyword.
-        if !(base.firstToken?.previousToken?.parent?.is(TryExprSyntax.self) ?? false) {
+        // When this function call is wrapped by a try-expr or await-expr, the group applied when
+        // visiting that wrapping expression is sufficient. Adding another group here in that case
+        // can result in unnecessarily breaking after the try/await keyword.
+        if !(base.firstToken?.previousToken?.parent?.is(TryExprSyntax.self) ?? false
+          || base.firstToken?.previousToken?.parent?.is(AwaitExprSyntax.self) ?? false) {
           before(base.firstToken, tokens: .open)
           after(calledMemberAccessExpr.name.lastToken, tokens: .close)
         }
@@ -1087,7 +1105,13 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       }
     }
 
+    before(node.asyncKeyword, tokens: .break)
     before(node.throwsTok, tokens: .break)
+    if let asyncKeyword = node.asyncKeyword, let throwsTok = node.throwsTok {
+      before(asyncKeyword, tokens: .open)
+      after(throwsTok, tokens: .close)
+    }
+
     before(node.output?.arrow, tokens: .break)
     after(node.lastToken, tokens: .close)
     before(node.inTok, tokens: .break(.same))
@@ -1461,7 +1485,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
 
     // Check for an anchor token inside of the expression to group with the try keyword.
-    if let anchorToken = findTryExprConnectingToken(inExpr: node.expression) {
+    if let anchorToken = findTryAwaitExprConnectingToken(inExpr: node.expression) {
       before(node.tryKeyword, tokens: .open)
       after(anchorToken, tokens: .close)
     }
@@ -1469,24 +1493,44 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
+  override func visit(_ node: AwaitExprSyntax) -> SyntaxVisitorContinueKind {
+    before(
+      node.expression.firstToken,
+      tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
+
+    // Check for an anchor token inside of the expression to group with the await keyword.
+    if !(node.parent?.is(TryExprSyntax.self) ?? false),
+      let anchorToken = findTryAwaitExprConnectingToken(inExpr: node.expression)
+    {
+      before(node.awaitKeyword, tokens: .open)
+      after(anchorToken, tokens: .close)
+    }
+
+    return .visitChildren
+  }
+
   /// Searches the AST from `expr` to find a token that should be grouped with an enclosing
-  /// try-expr. Returns that token, or nil when no such token is found.
+  /// try-expr or await-expr. Returns that token, or nil when no such token is found.
   ///
-  /// - Parameter expr: An expression that is wrapped by a try-expr.
-  /// - Returns: A token that should be grouped with the try-expr, or nil.
-  func findTryExprConnectingToken(inExpr expr: ExprSyntax) -> TokenSyntax? {
+  /// - Parameter expr: An expression that is wrapped by a try-expr or await-expr.
+  /// - Returns: A token that should be grouped with the try-expr or await-expr, or nil.
+  func findTryAwaitExprConnectingToken(inExpr expr: ExprSyntax) -> TokenSyntax? {
+    if let awaitExpr = expr.as(AwaitExprSyntax.self) {
+      // If we were called from the `try` of a `try await <expr>`, drill into the child expression.
+      return findTryAwaitExprConnectingToken(inExpr: awaitExpr.expression)
+    }
     if let callingExpr = expr.asProtocol(CallingExprSyntaxProtocol.self) {
-      return findTryExprConnectingToken(inExpr: callingExpr.calledExpression)
+      return findTryAwaitExprConnectingToken(inExpr: callingExpr.calledExpression)
     }
     if let memberAccessExpr = expr.as(MemberAccessExprSyntax.self), let base = memberAccessExpr.base
     {
-      // When there's a simple base (i.e. identifier), group the entire `try <base>.<name>`
+      // When there's a simple base (i.e. identifier), group the entire `try/await <base>.<name>`
       // sequence. This check has to happen here so that the `MemberAccessExprSyntax.name` is
       // available.
       if base.is(IdentifierExprSyntax.self) {
         return memberAccessExpr.name.lastToken
       }
-      return findTryExprConnectingToken(inExpr: base)
+      return findTryAwaitExprConnectingToken(inExpr: base)
     }
     if expr.is(IdentifierExprSyntax.self) {
       return expr.lastToken
@@ -1634,13 +1678,28 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: DeclModifierSyntax) -> SyntaxVisitorContinueKind {
-    after(node.lastToken, tokens: .break)
+    // Due to the way we currently use spaces after let/var keywords in variable bindings, we need
+    // this special exception for `async let` statements to avoid breaking prematurely between the
+    // `async` and `let` keywords.
+    let breakOrSpace: Token
+    if node.name.tokenKind == .identifier("async") {
+      breakOrSpace = .space
+    } else {
+      breakOrSpace = .break
+    }
+    after(node.lastToken, tokens: breakOrSpace)
     return .visitChildren
   }
 
   override func visit(_ node: FunctionSignatureSyntax) -> SyntaxVisitorContinueKind {
     before(node.asyncOrReasyncKeyword, tokens: .break)
     before(node.throwsOrRethrowsKeyword, tokens: .break)
+    if let asyncOrReasyncKeyword = node.asyncOrReasyncKeyword,
+      let throwsOrRethrowsKeyword = node.throwsOrRethrowsKeyword
+    {
+      before(asyncOrReasyncKeyword, tokens: .open)
+      after(throwsOrRethrowsKeyword, tokens: .close)
+    }
     before(node.output?.firstToken, tokens: .break)
     return .visitChildren
   }
@@ -3087,10 +3146,12 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   /// Returns whether the given expression consists of multiple subexpressions. Certain expressions
-  /// that are known to wrap an expressions, e.g. try expressions, are handled by checking the
+  /// that are known to wrap an expression, e.g. try expressions, are handled by checking the
   /// expression that they contain.
   private func isCompoundExpression(_ expr: ExprSyntax) -> Bool {
     switch Syntax(expr).as(SyntaxEnum.self) {
+    case .awaitExpr(let awaitExpr):
+      return isCompoundExpression(awaitExpr.expression)
     case .sequenceExpr(let sequenceExpr):
       return sequenceExpr.elements.count > 1
     case .ternaryExpr:
