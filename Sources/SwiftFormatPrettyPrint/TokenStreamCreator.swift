@@ -1068,6 +1068,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   override func visit(_ node: ClosureSignatureSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
 
+    arrangeAttributeList(node.attributes, suppressFinalBreak: node.input == nil)
+
     if let input = node.input {
       // We unconditionally put a break before the `in` keyword below, so we should only put a break
       // after the capture list's right bracket if there are arguments following it or we'll end up
@@ -2531,11 +2533,18 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   // MARK: - Various other helper methods
 
   /// Applies formatting tokens around and between the attributes in an attribute list.
-  private func arrangeAttributeList(_ attributes: AttributeListSyntax?) {
+  private func arrangeAttributeList(
+    _ attributes: AttributeListSyntax?,
+    suppressFinalBreak: Bool = false
+  ) {
     if let attributes = attributes {
       before(attributes.firstToken, tokens: .open)
       insertTokens(.break(.same), betweenElementsOf: attributes)
-      after(attributes.lastToken, tokens: .close, .break(.same))
+      var afterAttributeTokens = [Token.close]
+      if !suppressFinalBreak {
+        afterAttributeTokens.append(.break(.same))
+      }
+      after(attributes.lastToken, tokens: afterAttributeTokens)
     }
   }
 

@@ -484,4 +484,32 @@ final class ClosureExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(
       input: input, expected: expectedKeepingOutputTogether, linelength: 50, configuration: config)
   }
+
+  func testClosureSignatureAttributes() {
+    let input =
+      """
+      let a = { @MainActor in print("hi") }
+      let b = { @MainActor in print("hello world") }
+      let c = { @MainActor param in print("hi") }
+      let d = { @MainActor (a: Int) async -> Int in print("hi") }
+      """
+
+    let expected =
+      """
+      let a = { @MainActor in print("hi") }
+      let b = { @MainActor in
+        print("hello world")
+      }
+      let c = { @MainActor param in
+        print("hi")
+      }
+      let d = {
+        @MainActor (a: Int) async -> Int in
+        print("hi")
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+  }
 }
