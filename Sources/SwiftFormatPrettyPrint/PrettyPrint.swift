@@ -672,7 +672,7 @@ public class PrettyPrinter {
     }
 
     // There may be an extra break token that needs to have its length calculated.
-    assert(delimIndexStack.count < 2, "Too many unresolved delmiter token lengths.")
+    assert(delimIndexStack.count < 2, "Too many unresolved delimiter token lengths.")
     if let index = delimIndexStack.popLast() {
       if case .open = tokens[index] {
         assert(false, "Open tokens must be closed.")
