@@ -329,4 +329,53 @@ final class ForInStmtTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
   }
+
+  func testForAwait() {
+    let input =
+      """
+      for await line in file {
+        print(line)
+      }
+      """
+
+    let expected =
+      """
+      for await line
+        in file
+      {
+        print(line)
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 15)
+  }
+
+  func testForTryAwait() {
+    let input =
+      """
+      for try await line in file {
+        for try await ch in line {
+          print(ch)
+        }
+      }
+      """
+
+    let expected =
+      """
+      for try await
+        line in file
+      {
+        for
+          try await
+          ch in line
+        {
+          print(ch)
+        }
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 14)
+  }
 }

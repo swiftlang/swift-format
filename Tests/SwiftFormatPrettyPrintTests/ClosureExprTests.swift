@@ -379,10 +379,19 @@ final class ClosureExprTests: PrettyPrintTestCase {
       (s1: String, s2: String, s3: String) throws -> AVeryLongReturnTypeThatOverflowsFiftyColumns in return s1 > s2
       })
       funcCall(closure: {
+      (s1: String, s2: String, n: Int) async throws -> AVeryLongReturnTypeThatOverflowsFiftyColumns in return s1 > s2
+      })
+      funcCall(closure: {
+      (s1: String, s2: String, s3: String) async throws -> AVeryLongReturnTypeThatOverflowsFiftyColumns in return s1 > s2
+      })
+      funcCall(closure: {
       () throws -> Bool in return s1 > s2
       })
       funcCall(closure: {
       () throws -> AVeryLongReturnTypeThatOverflowsFiftyColumns in return s1 > s2
+      })
+      funcCall(closure: {
+      () async throws -> AVeryLongReturnTypeThatOverflowsFiftyColumns in return s1 > s2
       })
       """
 
@@ -398,10 +407,26 @@ final class ClosureExprTests: PrettyPrintTestCase {
         in return s1 > s2
       })
       funcCall(closure: {
+        (s1: String, s2: String, n: Int) async throws
+          -> AVeryLongReturnTypeThatOverflowsFiftyColumns
+        in return s1 > s2
+      })
+      funcCall(closure: {
+        (s1: String, s2: String, s3: String)
+          async throws
+          -> AVeryLongReturnTypeThatOverflowsFiftyColumns
+        in return s1 > s2
+      })
+      funcCall(closure: {
         () throws -> Bool in return s1 > s2
       })
       funcCall(closure: {
         () throws
+          -> AVeryLongReturnTypeThatOverflowsFiftyColumns
+        in return s1 > s2
+      })
+      funcCall(closure: {
+        () async throws
           -> AVeryLongReturnTypeThatOverflowsFiftyColumns
         in return s1 > s2
       })
@@ -425,10 +450,29 @@ final class ClosureExprTests: PrettyPrintTestCase {
         in return s1 > s2
       })
       funcCall(closure: {
+        (
+          s1: String, s2: String, n: Int
+        ) async throws
+          -> AVeryLongReturnTypeThatOverflowsFiftyColumns
+        in return s1 > s2
+      })
+      funcCall(closure: {
+        (
+          s1: String, s2: String, s3: String
+        ) async throws
+          -> AVeryLongReturnTypeThatOverflowsFiftyColumns
+        in return s1 > s2
+      })
+      funcCall(closure: {
         () throws -> Bool in return s1 > s2
       })
       funcCall(closure: {
         () throws
+          -> AVeryLongReturnTypeThatOverflowsFiftyColumns
+        in return s1 > s2
+      })
+      funcCall(closure: {
+        () async throws
           -> AVeryLongReturnTypeThatOverflowsFiftyColumns
         in return s1 > s2
       })
@@ -439,5 +483,33 @@ final class ClosureExprTests: PrettyPrintTestCase {
     config.prioritizeKeepingFunctionOutputTogether = true
     assertPrettyPrintEqual(
       input: input, expected: expectedKeepingOutputTogether, linelength: 50, configuration: config)
+  }
+
+  func testClosureSignatureAttributes() {
+    let input =
+      """
+      let a = { @MainActor in print("hi") }
+      let b = { @MainActor in print("hello world") }
+      let c = { @MainActor param in print("hi") }
+      let d = { @MainActor (a: Int) async -> Int in print("hi") }
+      """
+
+    let expected =
+      """
+      let a = { @MainActor in print("hi") }
+      let b = { @MainActor in
+        print("hello world")
+      }
+      let c = { @MainActor param in
+        print("hi")
+      }
+      let d = {
+        @MainActor (a: Int) async -> Int in
+        print("hi")
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
 }

@@ -118,6 +118,34 @@ final class SequenceExprFoldingTests: XCTestCase {
       "{ a ? b : try { c ( ) + { d * e }}}")
   }
 
+  func testAwaitFolding() {
+    assertFoldedExprStructure("await a() + b", "await { a ( ) + b }")
+    assertFoldedExprStructure("await a() + b * c", "await { a ( ) + { b * c }}")
+  }
+
+  func testAwaitTernaryFolding() {
+    assertFoldedExprStructure(
+      "a ? b : await c() + d",
+      "{ a ? b : await { c ( ) + d }}")
+    assertFoldedExprStructure(
+      "a ? b : await c() + d * e",
+      "{ a ? b : await { c ( ) + { d * e }}}")
+  }
+
+  func testTryAwaitFolding() {
+    assertFoldedExprStructure("try await a() + b", "try await { a ( ) + b }")
+    assertFoldedExprStructure("try await a() + b * c", "try await { a ( ) + { b * c }}")
+  }
+
+  func testTryAwaitTernaryFolding() {
+    assertFoldedExprStructure(
+      "a ? b : try await c() + d",
+      "{ a ? b : try await { c ( ) + d }}")
+    assertFoldedExprStructure(
+      "a ? b : try await c() + d * e",
+      "{ a ? b : try await { c ( ) + { d * e }}}")
+  }
+
   func testUnrecognizedOperators() {
     // If we see an operator we don't recognize, we arbitrarily bind them with
     // left associativity. This occurs even if something with high precedence,

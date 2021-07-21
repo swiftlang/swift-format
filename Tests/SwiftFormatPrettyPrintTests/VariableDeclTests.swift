@@ -98,4 +98,28 @@ final class VariableDeclarationTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
+
+  func testAsyncLetBindings() {
+    let input =
+      """
+      async let a = fetch("1.jpg")
+      async let b: Image = fetch("2.jpg")
+      async let secondPhotoToFetch = fetch("3.jpg")
+      async let theVeryLastPhotoWeWant = fetch("4.jpg")
+      """
+
+    let expected =
+      """
+      async let a = fetch("1.jpg")
+      async let b: Image = fetch(
+        "2.jpg")
+      async let secondPhotoToFetch =
+        fetch("3.jpg")
+      async let theVeryLastPhotoWeWant =
+        fetch("4.jpg")
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 29)
+  }
 }

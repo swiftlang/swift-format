@@ -489,4 +489,43 @@ final class ClassDeclTests: PrettyPrintTestCase {
     let input = "class Foo { var bar: Int }"
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 50)
   }
+
+  func testBasicActorDeclarations() {
+    let input =
+      """
+      actor MyActor {
+        let A: Int
+        let B: Bool
+      }
+      public actor MyActor {
+        let A: Int
+        let B: Bool
+      }
+      public actor MyLongerActor {
+        let A: Int
+        let B: Bool
+      }
+      """
+
+    let expected =
+      """
+      actor MyActor {
+        let A: Int
+        let B: Bool
+      }
+      public actor MyActor {
+        let A: Int
+        let B: Bool
+      }
+      public actor
+        MyLongerActor
+      {
+        let A: Int
+        let B: Bool
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 25)
+  }
 }
