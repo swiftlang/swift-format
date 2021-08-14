@@ -324,7 +324,7 @@ fileprivate func generateLines(codeBlockItemList: CodeBlockItemListSyntax, conte
         lines.append(currentLine)
         currentLine = Line()
       }
-      let sortable = context.isRuleEnabled(OrderedImports.ruleName, node: Syntax(block))
+      let sortable = context.isRuleEnabled(OrderedImports.self, node: Syntax(block))
       currentLine.syntaxNode = .importCodeBlock(block, sortable: sortable)
     } else {
       guard let syntaxNode = currentLine.syntaxNode else {
