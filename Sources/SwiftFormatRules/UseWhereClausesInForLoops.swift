@@ -21,6 +21,10 @@ import SwiftSyntax
 ///         statement factored out to a `where` clause.
 public final class UseWhereClausesInForLoops: SyntaxFormatRule {
 
+  /// Identifies this rule as being opt-in. This rule is experimental and not yet stable enough to
+  /// be enabled by default.
+  public override class var isOptIn: Bool { return true }
+
   public override func visit(_ node: ForInStmtSyntax) -> StmtSyntax {
     // Extract IfStmt node if it's the only node in the function's body.
     guard !node.body.statements.isEmpty else { return StmtSyntax(node) }
