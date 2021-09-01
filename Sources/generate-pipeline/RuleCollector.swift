@@ -14,9 +14,6 @@ import Foundation
 import SwiftFormatCore
 import SwiftSyntax
 
-// These rules will not be added to the pipeline.
-let suppressRules = ["UseEarlyExits", "UseWhereClausesInForLoops"]
-
 /// Collects information about rules in the formatter code base.
 final class RuleCollector {
   /// Information about a detected rule.
@@ -99,8 +96,8 @@ final class RuleCollector {
       return nil
     }
 
-    // Make sure the rule isn't suppressed, and it must have an inheritance clause.
-    guard !suppressRules.contains(typeName), let inheritanceClause = maybeInheritanceClause else {
+    // Make sure it has an inheritance clause.
+    guard let inheritanceClause = maybeInheritanceClause else {
       return nil
     }
 
