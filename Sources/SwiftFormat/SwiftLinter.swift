@@ -14,6 +14,7 @@ import Foundation
 import SwiftFormatConfiguration
 import SwiftFormatCore
 import SwiftFormatPrettyPrint
+import SwiftFormatRules
 import SwiftFormatWhitespaceLinter
 import SwiftSyntax
 
@@ -88,7 +89,7 @@ public final class SwiftLinter {
 
     let context = Context(
       configuration: configuration, diagnosticEngine: diagnosticEngine, fileURL: url,
-      sourceFileSyntax: syntax, source: source)
+      sourceFileSyntax: syntax, source: source, ruleNameCache: ruleNameCache)
     let pipeline = LintPipeline(context: context)
     pipeline.walk(Syntax(syntax))
 

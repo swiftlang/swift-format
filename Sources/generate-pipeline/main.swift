@@ -24,6 +24,10 @@ let ruleRegistryFile = sourcesDirectory
   .appendingPathComponent("SwiftFormatConfiguration")
   .appendingPathComponent("RuleRegistry+Generated.swift")
 
+let ruleNameCacheFile = sourcesDirectory
+  .appendingPathComponent("SwiftFormatRules")
+  .appendingPathComponent("RuleNameCache+Generated.swift")
+
 var ruleCollector = RuleCollector()
 try ruleCollector.collect(from: rulesDirectory)
 
@@ -34,3 +38,7 @@ try pipelineGenerator.generateFile(at: pipelineFile)
 // Generate the rule registry dictionary for configuration.
 let registryGenerator = RuleRegistryGenerator(ruleCollector: ruleCollector)
 try registryGenerator.generateFile(at: ruleRegistryFile)
+
+// Generate the rule name cache.
+let ruleNameCacheGenerator = RuleNameCacheGenerator(ruleCollector: ruleCollector)
+try ruleNameCacheGenerator.generateFile(at: ruleNameCacheFile)

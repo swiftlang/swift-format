@@ -1,5 +1,6 @@
 import SwiftFormatConfiguration
 import SwiftFormatCore
+import SwiftFormatRules
 import SwiftSyntax
 import XCTest
 
@@ -39,7 +40,8 @@ open class DiagnosingTestCase: XCTestCase {
       configuration: configuration ?? Configuration(),
       diagnosticEngine: DiagnosticEngine(),
       fileURL: URL(fileURLWithPath: "/tmp/test.swift"),
-      sourceFileSyntax: sourceFileSyntax)
+      sourceFileSyntax: sourceFileSyntax,
+      ruleNameCache: ruleNameCache)
     consumer = DiagnosticTrackingConsumer()
     context.diagnosticEngine?.addConsumer(consumer)
     return context

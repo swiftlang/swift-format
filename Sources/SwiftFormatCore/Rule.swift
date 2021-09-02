@@ -17,7 +17,7 @@ public protocol Rule {
   /// The context in which the rule is executed.
   var context: Context { get }
 
-  /// The human-readable name of the rule. This defaults to the class name.
+  /// The human-readable name of the rule. This defaults to the type name.
   static var ruleName: String { get }
 
   /// Whether this rule is opt-in, meaning it is disabled by default.
@@ -27,27 +27,7 @@ public protocol Rule {
   init(context: Context)
 }
 
-fileprivate var nameCache = [ObjectIdentifier: String]()
-fileprivate var nameCacheQueue = DispatchQueue(
-      label: "com.apple.SwiftFormat.NameCache", attributes: .concurrent)
-
 extension Rule {
   /// By default, the `ruleName` is just the name of the implementing rule class.
-  public static var ruleName: String {
-    let identifier = ObjectIdentifier(self)
-    let cachedName = nameCacheQueue.sync {
-        nameCache[identifier]
-    }
-
-    if let cachedName = cachedName {
-      return cachedName
-    }
-
-    let name = String("\(self)".split(separator: ".").last!)
-    nameCacheQueue.async(flags: .barrier) {
-        nameCache[identifier] = name
-    }
-
-    return name
-  }
+  public static var ruleName: String { String("\(self)".split(separator: ".").last!) }
 }

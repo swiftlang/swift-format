@@ -52,13 +52,17 @@ public class Context {
   /// Contains the rules have been disabled by comments for certain line numbers.
   public let ruleMask: RuleMask
 
+  /// Contains all the available rules' names associated to their types' object identifiers.
+  public let ruleNameCache: [ObjectIdentifier: String]
+
   /// Creates a new Context with the provided configuration, diagnostic engine, and file URL.
   public init(
     configuration: Configuration,
     diagnosticEngine: DiagnosticEngine?,
     fileURL: URL,
     sourceFileSyntax: SourceFileSyntax,
-    source: String? = nil
+    source: String? = nil,
+    ruleNameCache: [ObjectIdentifier: String]
   ) {
     self.configuration = configuration
     self.diagnosticEngine = diagnosticEngine
@@ -71,12 +75,22 @@ public class Context {
       syntaxNode: Syntax(sourceFileSyntax),
       sourceLocationConverter: sourceLocationConverter
     )
+    self.ruleNameCache = ruleNameCache
   }
 
   /// Given a rule's name and the node it is examining, determine if the rule is disabled at this
   /// location or not.
-  public func isRuleEnabled(_ ruleName: String, node: Syntax) -> Bool {
+  public func isRuleEnabled<R: Rule>(_ rule: R.Type, node: Syntax) -> Bool {
     let loc = node.startLocation(converter: self.sourceLocationConverter)
+
+    assert(
+      ruleNameCache[ObjectIdentifier(rule)] != nil,
+      """
+      Missing cached rule name for '\(rule)'! \
+      Ensure `generate-pipelines` has been run and `ruleNameCache` was injected.
+      """)
+
+    let ruleName = ruleNameCache[ObjectIdentifier(rule)] ?? R.ruleName
     switch ruleMask.ruleState(ruleName, at: loc) {
     case .default:
       return configuration.rules[ruleName] ?? false
