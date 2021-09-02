@@ -130,35 +130,31 @@ class Frontend {
       "processPaths(_:) should only be called when paths is non-empty.")
 
     if parallel {
-      let allFilePaths = Array(FileIterator(paths: paths))
-      DispatchQueue.concurrentPerform(iterations: allFilePaths.count) { index in
-        let path = allFilePaths[index]
-        openAndProcess(path)
+      let filesToProcess = FileIterator(paths: paths).compactMap(openAndPrepareFile)
+      DispatchQueue.concurrentPerform(iterations: filesToProcess.count) { index in
+        processFile(filesToProcess[index])
       }
     } else {
-      for path in FileIterator(paths: paths) {
-        openAndProcess(path)
-      }
+      FileIterator(paths: paths).lazy.compactMap(openAndPrepareFile).forEach(processFile)
     }
   }
 
-  /// Read and process the given path, optionally synchronizing diagnostic output.
-  private func openAndProcess(_ path: String) -> Void {
+  /// Read and prepare the file at the given path for processing, optionally synchronizing
+  /// diagnostic output.
+  private func openAndPrepareFile(atPath path: String) -> FileToProcess? {
     guard let sourceFile = FileHandle(forReadingAtPath: path) else {
       diagnosticEngine.diagnose(Diagnostic.Message(.error, "Unable to open \(path)"))
-      return
+      return nil
     }
 
     guard let configuration = configuration(
       atPath: lintFormatOptions.configurationPath, orInferredFromSwiftFileAtPath: path)
     else {
       // Already diagnosed in the called method.
-      return
+      return nil
     }
 
-    let fileToProcess = FileToProcess(
-      fileHandle: sourceFile, path: path, configuration: configuration)
-    processFile(fileToProcess)
+    return FileToProcess(fileHandle: sourceFile, path: path, configuration: configuration)
   }
 
   /// Returns the configuration that applies to the given `.swift` source file, when an explicit

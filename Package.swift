@@ -47,7 +47,11 @@ let package = Package(
     ),
     .target(
       name: "SwiftFormatTestSupport",
-      dependencies: ["SwiftFormatCore", "SwiftFormatConfiguration"]
+      dependencies: [
+        "SwiftFormatCore",
+        "SwiftFormatRules",
+        "SwiftFormatConfiguration",
+      ]
     ),
     .target(
       name: "SwiftFormatWhitespaceLinter",
