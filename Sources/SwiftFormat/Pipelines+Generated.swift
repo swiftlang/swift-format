@@ -63,6 +63,7 @@ class LintPipeline: SyntaxVisitor {
   override func visit(_ node: CodeBlockItemListSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(DoNotUseSemicolons.visit, for: node)
     visitIfEnabled(OneVariableDeclarationPerLine.visit, for: node)
+    visitIfEnabled(UseEarlyExits.visit, for: node)
     return .visitChildren
   }
 
@@ -103,6 +104,11 @@ class LintPipeline: SyntaxVisitor {
     visitIfEnabled(DontRepeatTypeInStaticProperties.visit, for: node)
     visitIfEnabled(NoAccessLevelOnExtensionDeclaration.visit, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
+    return .visitChildren
+  }
+
+  override func visit(_ node: ForInStmtSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(UseWhereClausesInForLoops.visit, for: node)
     return .visitChildren
   }
 
@@ -314,9 +320,11 @@ extension FormatPipeline {
     node = OneVariableDeclarationPerLine(context: context).visit(node)
     node = OrderedImports(context: context).visit(node)
     node = ReturnVoidInsteadOfEmptyTuple(context: context).visit(node)
+    node = UseEarlyExits(context: context).visit(node)
     node = UseShorthandTypeNames(context: context).visit(node)
     node = UseSingleLinePropertyGetter(context: context).visit(node)
     node = UseTripleSlashForDocumentationComments(context: context).visit(node)
+    node = UseWhereClausesInForLoops(context: context).visit(node)
     return node
   }
 }

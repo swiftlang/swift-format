@@ -14,6 +14,7 @@ import Foundation
 import SwiftFormatConfiguration
 import SwiftFormatCore
 import SwiftFormatPrettyPrint
+import SwiftFormatRules
 import SwiftSyntax
 
 /// Formats Swift source code or syntax trees according to the Swift style guidelines.
@@ -108,7 +109,7 @@ public final class SwiftFormatter {
     let assumedURL = url ?? URL(fileURLWithPath: "source")
     let context = Context(
       configuration: configuration, diagnosticEngine: diagnosticEngine, fileURL: assumedURL,
-      sourceFileSyntax: syntax, source: source)
+      sourceFileSyntax: syntax, source: source, ruleNameCache: ruleNameCache)
     let pipeline = FormatPipeline(context: context)
     let transformedSyntax = pipeline.visit(Syntax(syntax))
 

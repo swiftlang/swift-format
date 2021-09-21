@@ -44,6 +44,10 @@ import SwiftSyntax
 ///         equivalent `guard ... else { return/throw/break/continue }` constructs.
 public final class UseEarlyExits: SyntaxFormatRule {
 
+  /// Identifies this rule as being opt-in. This rule is experimental and not yet stable enough to
+  /// be enabled by default.
+  public override class var isOptIn: Bool { return true }
+
   public override func visit(_ node: CodeBlockItemListSyntax) -> Syntax {
     // Continue recursing down the tree first, so that any nested/child nodes get transformed first.
     let nodeAfterTransformingChildren = super.visit(node)

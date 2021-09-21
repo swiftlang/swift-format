@@ -31,7 +31,7 @@ open class SyntaxFormatRule: SyntaxRewriter, Rule {
   open override func visitAny(_ node: Syntax) -> Syntax? {
     // If the rule is not enabled, then return the node unmodified; otherwise, returning nil tells
     // SwiftSyntax to continue with the standard dispatch.
-    guard context.isRuleEnabled(Self.ruleName, node: node) else { return node }
+    guard context.isRuleEnabled(type(of: self), node: node) else { return node }
     return nil
   }
 }

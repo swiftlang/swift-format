@@ -40,11 +40,13 @@ enum RuleRegistry {
     "OnlyOneTrailingClosureArgument": true,
     "OrderedImports": true,
     "ReturnVoidInsteadOfEmptyTuple": true,
+    "UseEarlyExits": false,
     "UseLetInEveryBoundCaseVariable": true,
     "UseShorthandTypeNames": true,
     "UseSingleLinePropertyGetter": true,
     "UseSynthesizedInitializer": true,
     "UseTripleSlashForDocumentationComments": true,
+    "UseWhereClausesInForLoops": false,
     "ValidateDocumentationComments": false,
   ]
 }
