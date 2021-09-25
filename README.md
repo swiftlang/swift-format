@@ -91,6 +91,9 @@ as well as the following command line options:
   files in any directories listed on the command line and their descendants.
   Without this flag, it is an error to list a directory on the command line.
 
+* `-s/--strict`: If specified, exits non-zero code if one or more warning are found.
+  This option only works in lint mode.
+
 ### Configuration
 
 For any source file being checked or formatted, `swift-format` looks for a
