@@ -12,6 +12,7 @@
 
 import SwiftFormatCore
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// Imports must be lexicographically ordered and logically grouped at the top of each source file.
 /// The order of the import groups is 1) regular imports, 2) declaration imports, and 3) @testable

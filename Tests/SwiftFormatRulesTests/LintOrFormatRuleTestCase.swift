@@ -2,6 +2,7 @@ import SwiftFormatConfiguration
 import SwiftFormatCore
 import SwiftFormatTestSupport
 import SwiftSyntax
+import SwiftSyntaxParser
 import XCTest
 
 class LintOrFormatRuleTestCase: DiagnosingTestCase {

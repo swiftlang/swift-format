@@ -12,6 +12,7 @@
 
 import SwiftFormatCore
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// All values should be written in lower camel-case (`lowerCamelCase`).
 /// Underscores (except at the beginning of an identifier) are disallowed.

@@ -13,6 +13,7 @@
 import Foundation
 import SwiftFormatCore
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// Documentation comments must use the `///` form.
 ///

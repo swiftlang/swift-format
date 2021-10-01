@@ -12,6 +12,7 @@
 
 import SwiftFormatCore
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// Cases that contain only the `fallthrough` statement are forbidden.
 ///

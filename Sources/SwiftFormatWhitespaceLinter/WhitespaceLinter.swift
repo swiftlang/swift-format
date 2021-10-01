@@ -13,6 +13,7 @@
 import SwiftFormatConfiguration
 import SwiftFormatCore
 import SwiftSyntax
+import SwiftSyntaxParser
 
 private let utf8Newline = UTF8.CodeUnit(ascii: "\n")
 private let utf8Tab = UTF8.CodeUnit(ascii: "\t")

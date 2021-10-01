@@ -12,6 +12,7 @@
 
 import SwiftFormatCore
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// If all cases of an enum are `indirect`, the entire enum should be marked `indirect`.
 ///

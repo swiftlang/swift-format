@@ -12,6 +12,7 @@
 
 import SwiftFormatCore
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// Every variable bound in a `case` pattern must have its own `let/var`.
 ///

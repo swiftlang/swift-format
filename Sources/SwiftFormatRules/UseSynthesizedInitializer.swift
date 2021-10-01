@@ -13,6 +13,7 @@
 import Foundation
 import SwiftFormatCore
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// When possible, the synthesized `struct` initializer should be used.
 ///

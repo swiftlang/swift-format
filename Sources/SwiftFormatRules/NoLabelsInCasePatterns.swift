@@ -13,6 +13,7 @@
 import Foundation
 import SwiftFormatCore
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// Redundant labels are forbidden in case patterns.
 ///

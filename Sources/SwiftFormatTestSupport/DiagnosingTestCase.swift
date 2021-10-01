@@ -2,6 +2,7 @@ import SwiftFormatConfiguration
 import SwiftFormatCore
 import SwiftFormatRules
 import SwiftSyntax
+import SwiftSyntaxParser
 import XCTest
 
 /// DiagnosingTestCase is an XCTestCase subclass meant to inject diagnostic-specific testing

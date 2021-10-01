@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// Information about a diagnostic tracked by `DiagnosticTrackingConsumer`.
 struct EmittedDiagnostic {

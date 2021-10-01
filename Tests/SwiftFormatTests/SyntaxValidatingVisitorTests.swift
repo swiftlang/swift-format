@@ -1,5 +1,6 @@
 import SwiftFormat
 import SwiftSyntax
+import SwiftSyntaxParser
 import XCTest
 
 final class SyntaxValidatingVisitorTests: XCTestCase {

@@ -12,6 +12,7 @@
 
 import SwiftFormatCore
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// Each variable declaration, with the exception of tuple destructuring, should
 /// declare 1 variable.

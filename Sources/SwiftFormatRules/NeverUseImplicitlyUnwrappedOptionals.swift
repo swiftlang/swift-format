@@ -12,6 +12,7 @@
 
 import SwiftFormatCore
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// Implicitly unwrapped optionals (e.g. `var s: String!`) are forbidden.
 ///

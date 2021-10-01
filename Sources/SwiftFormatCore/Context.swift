@@ -13,6 +13,7 @@
 import Foundation
 import SwiftFormatConfiguration
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// Context contains the bits that each formatter and linter will need access to.
 ///

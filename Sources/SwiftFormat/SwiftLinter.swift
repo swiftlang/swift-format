@@ -17,6 +17,7 @@ import SwiftFormatPrettyPrint
 import SwiftFormatRules
 import SwiftFormatWhitespaceLinter
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// Diagnoses and reports problems in Swift source code or syntax trees according to the Swift style
 /// guidelines.

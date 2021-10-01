@@ -12,6 +12,7 @@
 
 import SwiftFormatCore
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// `for` loops that consist of a single `if` statement must use `where` clauses instead.
 ///

@@ -12,6 +12,7 @@
 
 import SwiftFormatCore
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// Numeric literals should be grouped with `_`s to delimit common separators.
 ///

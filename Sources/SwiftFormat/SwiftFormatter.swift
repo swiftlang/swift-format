@@ -16,6 +16,7 @@ import SwiftFormatCore
 import SwiftFormatPrettyPrint
 import SwiftFormatRules
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// Formats Swift source code or syntax trees according to the Swift style guidelines.
 public final class SwiftFormatter {

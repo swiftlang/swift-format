@@ -12,6 +12,7 @@
 
 import SwiftFormatCore
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// Overloads with only a closure argument should not be disambiguated by parameter labels.
 ///

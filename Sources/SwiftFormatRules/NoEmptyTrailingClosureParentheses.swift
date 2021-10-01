@@ -12,6 +12,7 @@
 
 import SwiftFormatCore
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// Function calls with no arguments and a trailing closure should not have empty parentheses.
 ///

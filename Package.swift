@@ -33,17 +33,18 @@ let package = Package(
         "SwiftFormatRules",
         "SwiftFormatWhitespaceLinter",
         "SwiftSyntax",
+        "SwiftSyntaxParser",
       ]
     ),
     .target(name: "SwiftFormatConfiguration"),
-    .target(name: "SwiftFormatCore", dependencies: ["SwiftFormatConfiguration", "SwiftSyntax"]),
+    .target(name: "SwiftFormatCore", dependencies: ["SwiftFormatConfiguration", "SwiftSyntax", "SwiftSyntaxParser"]),
     .target(
       name: "SwiftFormatRules",
-      dependencies: ["SwiftFormatCore", "SwiftFormatConfiguration"]
+      dependencies: ["SwiftFormatCore", "SwiftFormatConfiguration", "SwiftSyntax", "SwiftSyntaxParser"]
     ),
     .target(
       name: "SwiftFormatPrettyPrint",
-      dependencies: ["SwiftFormatCore", "SwiftFormatConfiguration"]
+      dependencies: ["SwiftFormatCore", "SwiftFormatConfiguration", "SwiftSyntaxParser"]
     ),
     .target(
       name: "SwiftFormatTestSupport",
@@ -51,6 +52,7 @@ let package = Package(
         "SwiftFormatCore",
         "SwiftFormatRules",
         "SwiftFormatConfiguration",
+        "SwiftSyntaxParser",
       ]
     ),
     .target(
@@ -58,6 +60,7 @@ let package = Package(
       dependencies: [
         "SwiftFormatCore",
         "SwiftSyntax",
+        "SwiftSyntaxParser",
       ]
     ),
     .target(
@@ -66,6 +69,7 @@ let package = Package(
         "SwiftFormatCore",
         "SwiftFormatRules",
         "SwiftSyntax",
+        "SwiftSyntaxParser",
       ]
     ),
     .target(
@@ -76,12 +80,14 @@ let package = Package(
         "SwiftFormatConfiguration",
         "SwiftFormatCore",
         "SwiftSyntax",
+        "SwiftSyntaxParser",
       ]
     ),
     .testTarget(
       name: "SwiftFormatTests",
       dependencies: [
         "SwiftFormat",
+        "SwiftSyntaxParser",
       ]
     ),
     .testTarget(
@@ -97,6 +103,7 @@ let package = Package(
         "SwiftFormatRules",
         "SwiftFormatTestSupport",
         "SwiftSyntax",
+        "SwiftSyntaxParser",
       ]
     ),
     .testTarget(
@@ -105,6 +112,7 @@ let package = Package(
         "SwiftFormatConfiguration",
         "SwiftFormatCore",
         "SwiftSyntax",
+        "SwiftSyntaxParser",
       ]
     ),
     .testTarget(
@@ -113,6 +121,7 @@ let package = Package(
         "SwiftFormatTestSupport",
         "SwiftFormatWhitespaceLinter",
         "SwiftSyntax",
+        "SwiftSyntaxParser",
       ]
     ),
     .testTarget(
@@ -124,6 +133,7 @@ let package = Package(
         "SwiftFormatRules",
         "SwiftFormatTestSupport",
         "SwiftSyntax",
+        "SwiftSyntaxParser",
       ]
     ),
     .testTarget(
@@ -134,6 +144,7 @@ let package = Package(
         "SwiftFormatTestSupport",
         "SwiftFormatWhitespaceLinter",
         "SwiftSyntax",
+        "SwiftSyntaxParser",
       ]
     ),
   ]

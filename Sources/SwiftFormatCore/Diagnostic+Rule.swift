@@ -10,7 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SwiftSyntax
+import SwiftSyntaxParser
 
 extension Diagnostic.Message {
   /// Prepends the name of a rule to this diagnostic message.

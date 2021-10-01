@@ -14,6 +14,7 @@ import Foundation
 import SwiftFormat
 import SwiftFormatConfiguration
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// The frontend for formatting operations.
 class FormatFrontend: Frontend {

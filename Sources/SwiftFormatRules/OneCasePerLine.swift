@@ -12,6 +12,7 @@
 
 import SwiftFormatCore
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// Each enum case with associated values or a raw value should appear in its own case declaration.
 ///

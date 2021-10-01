@@ -3,6 +3,7 @@ import SwiftFormatCore
 import SwiftFormatPrettyPrint
 import SwiftFormatTestSupport
 import SwiftSyntax
+import SwiftSyntaxParser
 import XCTest
 
 class PrettyPrintTestCase: DiagnosingTestCase {

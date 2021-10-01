@@ -13,6 +13,7 @@
 import SwiftFormatConfiguration
 import SwiftFormatCore
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// PrettyPrinter takes a Syntax node and outputs a well-formatted, re-indented reproduction of the
 /// code as a String.

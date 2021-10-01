@@ -12,6 +12,7 @@
 
 import Foundation
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// A rule that lints a given file.
 open class SyntaxLintRule: SyntaxVisitor, Rule {
