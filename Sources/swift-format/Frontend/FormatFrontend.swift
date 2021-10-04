@@ -26,6 +26,8 @@ class FormatFrontend: Frontend {
     super.init(lintFormatOptions: lintFormatOptions)
   }
 
+  override var name: String { "format" }
+
   override func processFile(_ fileToProcess: FileToProcess) {
     // Even though `diagnosticEngine` is defined, it's use is reserved for fatal messages. Pass nil
     // to the formatter to suppress other messages since they will be fixed or can't be

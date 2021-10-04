@@ -18,6 +18,8 @@ import SwiftSyntaxParser
 
 /// The frontend for linting operations.
 class LintFrontend: Frontend {
+  override var name: String { "lint" }
+
   override func processFile(_ fileToProcess: FileToProcess) {
     let linter = SwiftLinter(
       configuration: fileToProcess.configuration, diagnosticEngine: diagnosticEngine)

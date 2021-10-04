@@ -55,6 +55,12 @@ struct LintFormatOptions: ParsableArguments {
     help: "Process files in parallel, simultaneously across multiple cores.")
   var parallel: Bool = false
 
+  @Flag(
+    name: .shortAndLong,
+    help: "Use cache to skip process files which are not modified"
+  )
+  var cache: Bool = false
+
   /// The list of paths to Swift source files that should be formatted or linted.
   @Argument(help: "Zero or more input filenames.")
   var paths: [String] = []

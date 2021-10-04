@@ -23,6 +23,7 @@ struct SwiftFormatCommand: ParsableCommand {
       Format.self,
       LegacyMain.self,
       Lint.self,
+      DeleteCache.self,
     ],
     // TODO: Change the default to `Format` when we delete the legacy interface after a short
     // period of time.

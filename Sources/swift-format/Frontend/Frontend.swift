@@ -93,8 +93,16 @@ class Frontend {
     if paths.isEmpty {
       processStandardInput()
     } else {
-      processPaths(paths, parallel: lintFormatOptions.parallel)
+      processPaths(
+        paths,
+        parallel: lintFormatOptions.parallel,
+        useCache: lintFormatOptions.cache
+      )
     }
+  }
+
+  var name: String {
+    fatalError("Must be overridden by subclasses.")
   }
 
   /// Called by the frontend to process a single file.
@@ -125,18 +133,38 @@ class Frontend {
   }
 
   /// Processes source content from a list of files and/or directories provided as paths.
-  private func processPaths(_ paths: [String], parallel: Bool) {
+  private func processPaths(_ paths: [String], parallel: Bool, useCache: Bool) {
     precondition(
       !paths.isEmpty,
       "processPaths(_:) should only be called when paths is non-empty.")
 
+    let fileIterator = FileIterator(paths: paths)
+    let fileManager = FileManager.default
+    if useCache {
+      let cacheProcessor = CacheProcessor(
+        fileIterator: fileIterator,
+        diagnosticEngine: diagnosticEngine,
+        fileManager: fileManager,
+        frontendName: name
+      )
+      cacheProcessor.process({ [weak self] paths in
+        guard let self = self else { return }
+        let filesToProcess = paths.compactMap(self.openAndPrepareFile(atPath:))
+        self._processFiles(filesToProcess: filesToProcess, parallel: parallel)
+      })
+    } else {
+      let filesToProcess = fileIterator.compactMap(self.openAndPrepareFile(atPath:))
+      _processFiles(filesToProcess: filesToProcess, parallel: parallel)
+    }
+  }
+
+  private func _processFiles(filesToProcess: [FileToProcess], parallel: Bool) {
     if parallel {
-      let filesToProcess = FileIterator(paths: paths).compactMap(openAndPrepareFile)
       DispatchQueue.concurrentPerform(iterations: filesToProcess.count) { index in
         processFile(filesToProcess[index])
       }
     } else {
-      FileIterator(paths: paths).lazy.compactMap(openAndPrepareFile).forEach(processFile)
+      filesToProcess.forEach(processFile)
     }
   }
 
