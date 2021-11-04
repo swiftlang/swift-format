@@ -101,9 +101,7 @@ public final class UseEarlyExits: SyntaxFormatRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static let useGuardStatement = Diagnostic.Message(
-    .warning,
+extension Finding.Message {
+  public static let useGuardStatement: Finding.Message =
     "replace the `if/else` block with a `guard` statement containing the early exit"
-  )
 }

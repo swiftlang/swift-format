@@ -497,8 +497,8 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static func useTypeShorthand(type: String) -> Diagnostic.Message {
-    return .init(.warning, "use \(type) type shorthand form")
+extension Finding.Message {
+  public static func useTypeShorthand(type: String) -> Finding.Message {
+    "use \(type) type shorthand form"
   }
 }

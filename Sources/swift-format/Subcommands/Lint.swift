@@ -31,10 +31,8 @@ extension SwiftFormatCommand {
     func run() throws {
       let frontend = LintFrontend(lintFormatOptions: lintOptions)
       frontend.run()
-      if frontend.errorsWereEmitted { throw ExitCode.failure }
-      if strict,
-         frontend.diagnosticEngine.diagnostics
-            .contains(where: { $0.message.severity == .warning }) {
+
+      if frontend.diagnosticsEngine.hasErrors || strict && frontend.diagnosticsEngine.hasWarnings {
         throw ExitCode.failure
       }
     }

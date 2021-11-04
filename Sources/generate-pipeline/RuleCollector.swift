@@ -13,6 +13,7 @@
 import Foundation
 import SwiftFormatCore
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// Collects information about rules in the formatter code base.
 final class RuleCollector {

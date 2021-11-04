@@ -177,8 +177,8 @@ extension TriviaPiece {
   }
 }
 
-extension Diagnostic.Message {
-  public static func collapseCase(name: String) -> Diagnostic.Message {
-    return .init(.warning, "combine fallthrough-only case \(name) with a following case")
+extension Finding.Message {
+  public static func collapseCase(name: String) -> Finding.Message {
+    "combine fallthrough-only case \(name) with a following case"
   }
 }

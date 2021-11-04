@@ -127,9 +127,7 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
     guard case .identifier(let text) = identifier.tokenKind else { return }
     if text.isEmpty { return }
     if (text.dropFirst().contains("_") && !allowUnderscores) || ("A"..."Z").contains(text.first!) {
-      diagnose(.nameMustBeLowerCamelCase(text, description: description), on: identifier) {
-        $0.highlight(identifier.sourceRange(converter: self.context.sourceLocationConverter))
-      }
+      diagnose(.nameMustBeLowerCamelCase(text, description: description), on: identifier)
     }
   }
 }
@@ -166,10 +164,10 @@ extension ReturnClauseSyntax {
   }
 }
 
-extension Diagnostic.Message {
+extension Finding.Message {
   public static func nameMustBeLowerCamelCase(
     _ name: String, description: String
-  ) -> Diagnostic.Message {
-    return .init(.warning, "rename \(description) '\(name)' using lower-camel-case")
+  ) -> Finding.Message {
+    "rename \(description) '\(name)' using lower-camel-case"
   }
 }

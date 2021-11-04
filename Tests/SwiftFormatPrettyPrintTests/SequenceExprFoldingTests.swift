@@ -1,5 +1,6 @@
 import SwiftFormatPrettyPrint
 import SwiftSyntax
+import SwiftSyntaxParser
 import XCTest
 
 final class SequenceExprFoldingTests: XCTestCase {

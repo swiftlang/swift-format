@@ -1,4 +1,5 @@
 import SwiftFormatConfiguration
+import SwiftFormatCore
 import SwiftFormatRules
 import SwiftSyntax
 
@@ -218,7 +219,7 @@ final class FileScopedDeclarationPrivacyTests: LintOrFormatRuleTestCase {
         file: file,
         line: line)
 
-      let message: Diagnostic.Message =
+      let message: Finding.Message =
         testConfig.desired == .private
         ? .replaceFileprivateWithPrivate
         : .replacePrivateWithFileprivate

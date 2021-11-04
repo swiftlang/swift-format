@@ -11,8 +11,8 @@ open class DiagnosingTestCase: XCTestCase {
   /// test is torn down and fail if there were any.
   public var shouldCheckForUnassertedDiagnostics = false
 
-  /// A helper that will keep track of the diagnostics that were emitted.
-  private var consumer = DiagnosticTrackingConsumer()
+  /// A helper that will keep track of the findings that were emitted.
+  private var consumer = TestingFindingConsumer()
 
   override open func setUp() {
     shouldCheckForUnassertedDiagnostics = false
@@ -23,8 +23,8 @@ open class DiagnosingTestCase: XCTestCase {
 
     // This will emit a test failure if a diagnostic is thrown but we don't explicitly call
     // XCTAssertDiagnosed for it.
-    for diag in consumer.emittedDiagnostics {
-      XCTFail("unexpected diagnostic '\(diag)' emitted")
+    for finding in consumer.emittedFindings {
+      XCTFail("unexpected finding '\(finding)' emitted")
     }
   }
 
@@ -36,14 +36,13 @@ open class DiagnosingTestCase: XCTestCase {
   public func makeContext(sourceFileSyntax: SourceFileSyntax, configuration: Configuration? = nil)
     -> Context
   {
+    consumer = TestingFindingConsumer()
     let context = Context(
       configuration: configuration ?? Configuration(),
-      diagnosticEngine: DiagnosticEngine(),
+      findingConsumer: consumer.consume,
       fileURL: URL(fileURLWithPath: "/tmp/test.swift"),
       sourceFileSyntax: sourceFileSyntax,
       ruleNameCache: ruleNameCache)
-    consumer = DiagnosticTrackingConsumer()
-    context.diagnosticEngine?.addConsumer(consumer)
     return context
   }
 
@@ -52,7 +51,7 @@ open class DiagnosingTestCase: XCTestCase {
   /// This used by the pretty-printer tests to suppress any diagnostics that might be emitted during
   /// the second format pass (which checks for idempotence).
   public func stopTrackingDiagnostics() {
-    consumer.stopTrackingDiagnostics()
+    consumer.stopTrackingFindings()
   }
 
   /// Asserts that a specific diagnostic message was emitted.
@@ -64,7 +63,7 @@ open class DiagnosingTestCase: XCTestCase {
   ///   - line: The line number on which failure occurred. Defaults to the line number on which this
   ///     function was called.
   public final func XCTAssertDiagnosed(
-    _ message: Diagnostic.Message,
+    _ message: Finding.Message,
     line diagnosticLine: Int? = nil,
     column diagnosticColumn: Int? = nil,
     file: StaticString = #file,
@@ -72,10 +71,10 @@ open class DiagnosingTestCase: XCTestCase {
   ) {
     let wasEmitted: Bool
     if let diagnosticLine = diagnosticLine, let diagnosticColumn = diagnosticColumn {
-      wasEmitted = consumer.popDiagnostic(
+      wasEmitted = consumer.popFinding(
         containing: message.text, atLine: diagnosticLine, column: diagnosticColumn)
     } else {
-      wasEmitted = consumer.popDiagnostic(containing: message.text)
+      wasEmitted = consumer.popFinding(containing: message.text)
     }
     if !wasEmitted {
       XCTFail("diagnostic '\(message.text)' not emitted", file: file, line: line)
@@ -91,11 +90,11 @@ open class DiagnosingTestCase: XCTestCase {
   ///   - line: The line number on which failure occurred. Defaults to the line number on which this
   ///     function was called.
   public final func XCTAssertNotDiagnosed(
-    _ message: Diagnostic.Message,
+    _ message: Finding.Message,
     file: StaticString = #file,
     line: UInt = #line
   ) {
-    let wasEmitted = consumer.popDiagnostic(containing: message.text)
+    let wasEmitted = consumer.popFinding(containing: message.text)
     XCTAssertFalse(
       wasEmitted,
       "diagnostic '\(message.text)' should not have been emitted",

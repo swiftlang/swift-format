@@ -51,8 +51,8 @@ public final class NoEmptyTrailingClosureParentheses: SyntaxFormatRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static func removeEmptyTrailingParentheses(name: String) -> Diagnostic.Message {
-    return .init(.warning, "remove '()' after \(name)")
+extension Finding.Message {
+  public static func removeEmptyTrailingParentheses(name: String) -> Finding.Message {
+    "remove '()' after \(name)"
   }
 }

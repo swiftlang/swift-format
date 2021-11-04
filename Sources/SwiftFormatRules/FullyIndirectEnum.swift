@@ -108,11 +108,8 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static func moveIndirectKeywordToEnumDecl(name: String) -> Diagnostic.Message {
-    return .init(
-      .warning,
-      "move 'indirect' to \(name) enum declaration when all cases are indirect"
-    )
+extension Finding.Message {
+  public static func moveIndirectKeywordToEnumDecl(name: String) -> Finding.Message {
+    "move 'indirect' to \(name) enum declaration when all cases are indirect"
   }
 }

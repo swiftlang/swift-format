@@ -177,10 +177,9 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static let removeRedundantInitializer = Diagnostic.Message(
-    .warning,
-    "remove initializer and use the synthesized initializer")
+extension Finding.Message {
+  public static let removeRedundantInitializer: Finding.Message =
+    "remove initializer and use the synthesized initializer"
 }
 
 /// Defines the access levels which may be assigned to a synthesized memberwise initializer.

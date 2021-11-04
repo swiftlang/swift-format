@@ -138,7 +138,7 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
   ) -> DeclType {
     let invalidAccess: TokenKind
     let validAccess: TokenKind
-    let diagnostic: Diagnostic.Message
+    let diagnostic: Finding.Message
 
     switch context.configuration.fileScopedDeclarationPrivacy.accessLevel {
     case .private:
@@ -167,10 +167,10 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static let replacePrivateWithFileprivate =
-    Diagnostic.Message(.warning, "replace 'private' with 'fileprivate' on file-scoped declarations")
+extension Finding.Message {
+  public static let replacePrivateWithFileprivate: Finding.Message =
+    "replace 'private' with 'fileprivate' on file-scoped declarations"
 
-  public static let replaceFileprivateWithPrivate =
-    Diagnostic.Message(.warning, "replace 'fileprivate' with 'private' on file-scoped declarations")
+  public static let replaceFileprivateWithPrivate: Finding.Message =
+    "replace 'fileprivate' with 'private' on file-scoped declarations"
 }

@@ -159,47 +159,33 @@ fileprivate func parametersAreEqual(params: [ParseComment.Parameter], funcParam:
   return true
 }
 
-extension Diagnostic.Message {
-  public static func documentReturnValue(funcName: String) -> Diagnostic.Message {
-    return Diagnostic.Message(.warning, "document the return value of \(funcName)")
+extension Finding.Message {
+  public static func documentReturnValue(funcName: String) -> Finding.Message {
+    "document the return value of \(funcName)"
   }
 
-  public static func removeReturnComment(funcName: String) -> Diagnostic.Message {
-    return Diagnostic.Message(
-      .warning,
-      "remove the return comment of \(funcName), it doesn't return a value"
-    )
+  public static func removeReturnComment(funcName: String) -> Finding.Message {
+    "remove the return comment of \(funcName), it doesn't return a value"
   }
 
-  public static func parametersDontMatch(funcName: String) -> Diagnostic.Message {
-    return Diagnostic.Message(
-      .warning,
-      "change the parameters of \(funcName)'s documentation to match its parameters"
-    )
+  public static func parametersDontMatch(funcName: String) -> Finding.Message {
+    "change the parameters of \(funcName)'s documentation to match its parameters"
   }
 
-  public static let useSingularParameter = Diagnostic.Message(
-    .warning,
+  public static let useSingularParameter: Finding.Message =
     "replace the plural form of 'Parameters' with a singular inline form of the 'Parameter' tag"
-  )
 
-  public static let usePluralParameters = Diagnostic.Message(
-    .warning,
-    "replace the singular inline form of 'Parameter' tag with a plural 'Parameters' tag "
-      + "and group each parameter as a nested list"
-  )
+  public static let usePluralParameters: Finding.Message =
+    """
+    replace the singular inline form of 'Parameter' tag with a plural 'Parameters' tag \
+    and group each parameter as a nested list
+    """
 
-  public static func removeThrowsComment(funcName: String) -> Diagnostic.Message {
-    return Diagnostic.Message(
-      .warning,
-      "remove the 'Throws' tag for non-throwing function \(funcName)"
-    )
+  public static func removeThrowsComment(funcName: String) -> Finding.Message {
+    "remove the 'Throws' tag for non-throwing function \(funcName)"
   }
 
-  public static func documentErrorsThrown(funcName: String) -> Diagnostic.Message {
-    return Diagnostic.Message(
-      .warning,
-      "add a 'Throws' tag describing the errors thrown by \(funcName)"
-    )
+  public static func documentErrorsThrown(funcName: String) -> Finding.Message {
+    "add a 'Throws' tag describing the errors thrown by \(funcName)"
   }
 }

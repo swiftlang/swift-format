@@ -125,7 +125,7 @@ public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static let avoidDocBlockComment = Diagnostic.Message(
-    .warning, "replace documentation block comments with documentation line comments")
+extension Finding.Message {
+  public static let avoidDocBlockComment: Finding.Message =
+    "replace documentation block comments with documentation line comments"
 }

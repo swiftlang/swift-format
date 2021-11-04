@@ -100,12 +100,12 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static func removeRedundantAccessKeyword(name: String) -> Diagnostic.Message {
-    return .init(.warning, "remove redundant 'internal' access keyword from \(name)")
+extension Finding.Message {
+  public static func removeRedundantAccessKeyword(name: String) -> Finding.Message {
+    "remove redundant 'internal' access keyword from \(name)"
   }
 
-  public static func moveAccessKeyword(keyword: String) -> Diagnostic.Message {
-    return .init(.warning, "specify \(keyword) access level for each member inside the extension")
+  public static func moveAccessKeyword(keyword: String) -> Finding.Message {
+    "specify \(keyword) access level for each member inside the extension"
   }
 }

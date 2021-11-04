@@ -19,24 +19,24 @@ import SwiftSyntax
 class LintFrontend: Frontend {
   override func processFile(_ fileToProcess: FileToProcess) {
     let linter = SwiftLinter(
-      configuration: fileToProcess.configuration, diagnosticEngine: diagnosticEngine)
+      configuration: fileToProcess.configuration, findingConsumer: diagnosticsEngine.consumeFinding)
     linter.debugOptions = debugOptions
 
     let path = fileToProcess.path
     guard let source = fileToProcess.sourceText else {
-      diagnosticEngine.diagnose(
-        Diagnostic.Message(
-          .error, "Unable to read source for linting from \(path)."))
+      diagnosticsEngine.emitError("Unable to read source for linting from \(path).")
       return
     }
 
     do {
       let assumingFileURL = URL(fileURLWithPath: path)
-      try linter.lint(source: source, assumingFileURL: assumingFileURL)
+      try linter.lint(
+        source: source,
+        assumingFileURL: assumingFileURL,
+        parsingDiagnosticHandler: diagnosticsEngine.consumeParserDiagnostic)
     } catch SwiftFormatError.fileNotReadable {
-      diagnosticEngine.diagnose(
-        Diagnostic.Message(
-          .error, "Unable to lint \(path): file is not readable or does not exist."))
+      diagnosticsEngine.emitError(
+        "Unable to lint \(path): file is not readable or does not exist.")
       return
     } catch SwiftFormatError.fileContainsInvalidSyntax(let position) {
       guard !lintFormatOptions.ignoreUnparsableFiles else {
@@ -44,12 +44,11 @@ class LintFrontend: Frontend {
         return
       }
       let location = SourceLocationConverter(file: path, source: source).location(for: position)
-      diagnosticEngine.diagnose(
-        Diagnostic.Message(.error, "file contains invalid or unrecognized Swift syntax."),
-        location: location)
+      diagnosticsEngine.emitError(
+        "file contains invalid or unrecognized Swift syntax.", location: location)
       return
     } catch {
-      diagnosticEngine.diagnose(Diagnostic.Message(.error, "Unable to lint \(path): \(error)"))
+      diagnosticsEngine.emitError("Unable to lint \(path): \(error)")
       return
     }
   }

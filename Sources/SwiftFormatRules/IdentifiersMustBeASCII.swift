@@ -30,14 +30,13 @@ public final class IdentifiersMustBeASCII: SyntaxLintRule {
   }
 }
 
-extension Diagnostic.Message {
+extension Finding.Message {
   public static func nonASCIICharsNotAllowed(
     _ invalidCharacters: [String], _ identifierName: String
-  ) -> Diagnostic.Message {
-    return .init(
-      .warning,
-      "remove non-ASCII characters from '\(identifierName)': "
-        + "\(invalidCharacters.joined(separator: ", "))"
-    )
+  ) -> Finding.Message {
+    """
+    remove non-ASCII characters from '\(identifierName)': \
+    \(invalidCharacters.joined(separator: ", "))
+    """
   }
 }

@@ -128,8 +128,8 @@ public final class OneCasePerLine: SyntaxFormatRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static func moveAssociatedOrRawValueCase(name: String) -> Diagnostic.Message {
-    return .init(.warning, "move '\(name)' to its own case declaration")
+extension Finding.Message {
+  public static func moveAssociatedOrRawValueCase(name: String) -> Finding.Message {
+    "move '\(name)' to its own case declaration"
   }
 }

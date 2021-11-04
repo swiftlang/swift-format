@@ -36,8 +36,8 @@ public final class NoVoidReturnOnFunctionSignature: SyntaxFormatRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static func removeRedundantReturn(_ type: String) -> Diagnostic.Message {
-    return .init(.warning, "remove explicit '\(type)' return type")
+extension Finding.Message {
+  public static func removeRedundantReturn(_ type: String) -> Finding.Message {
+    "remove explicit '\(type)' return type"
   }
 }

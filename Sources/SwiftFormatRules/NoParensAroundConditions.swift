@@ -36,9 +36,7 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
       return ExprSyntax(tuple)
     }
 
-    diagnose(.removeParensAroundExpression, on: expr) {
-      $0.highlight(expr.sourceRange(converter: self.context.sourceLocationConverter))
-    }
+    diagnose(.removeParensAroundExpression, on: expr)
 
     guard
       let visitedTuple = visit(tuple).as(TupleExprSyntax.self),
@@ -98,7 +96,7 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static let removeParensAroundExpression = Diagnostic.Message(
-    .warning, "remove parentheses around this expression")
+extension Finding.Message {
+  public static let removeParensAroundExpression: Finding.Message =
+    "remove parentheses around this expression"
 }

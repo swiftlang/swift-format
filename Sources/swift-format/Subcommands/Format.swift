@@ -39,7 +39,7 @@ extension SwiftFormatCommand {
     func run() throws {
       let frontend = FormatFrontend(lintFormatOptions: formatOptions, inPlace: inPlace)
       frontend.run()
-      if frontend.errorsWereEmitted { throw ExitCode.failure }
+      if frontend.diagnosticsEngine.hasErrors { throw ExitCode.failure }
     }
   }
 }

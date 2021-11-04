@@ -74,11 +74,9 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static let onlyOneVariableDeclaration = Diagnostic.Message(
-    .warning,
+extension Finding.Message {
+  public static let onlyOneVariableDeclaration: Finding.Message =
     "split this variable declaration to have one variable per declaration"
-  )
 }
 
 /// Splits a variable declaration with multiple bindings into individual

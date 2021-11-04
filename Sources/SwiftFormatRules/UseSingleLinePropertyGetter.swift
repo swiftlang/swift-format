@@ -40,7 +40,7 @@ public final class UseSingleLinePropertyGetter: SyntaxFormatRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static let removeExtraneousGetBlock = Diagnostic.Message(
-    .warning, "remove extraneous 'get {}' block")
+extension Finding.Message {
+  public static let removeExtraneousGetBlock: Finding.Message =
+    "remove extraneous 'get {}' block"
 }

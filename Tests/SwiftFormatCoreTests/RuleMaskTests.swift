@@ -1,5 +1,6 @@
 import SwiftFormatCore
 import SwiftSyntax
+import SwiftSyntaxParser
 import XCTest
 
 final class RuleMaskTests: XCTestCase {
