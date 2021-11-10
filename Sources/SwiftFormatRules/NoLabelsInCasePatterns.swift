@@ -70,8 +70,8 @@ public final class NoLabelsInCasePatterns: SyntaxFormatRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static func removeRedundantLabel(name: String) -> Diagnostic.Message {
-    return .init(.warning, "remove \(name) label from case argument")
+extension Finding.Message {
+  public static func removeRedundantLabel(name: String) -> Finding.Message {
+    "remove \(name) label from case argument"
   }
 }

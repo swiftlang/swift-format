@@ -202,16 +202,16 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
   }
 }
 
-extension Diagnostic.Message {
+extension Finding.Message {
   public static func terminateSentenceWithPeriod<Sentence: StringProtocol>(_ text: Sentence)
-    -> Diagnostic.Message
+    -> Finding.Message
   {
-    return .init(.warning, "terminate this sentence with a period: \"\(text)\"")
+    "terminate this sentence with a period: \"\(text)\""
   }
 
   public static func addBlankLineAfterFirstSentence<Sentence: StringProtocol>(_ text: Sentence)
-    -> Diagnostic.Message
+    -> Finding.Message
   {
-    return .init(.warning, "add a blank comment line after this sentence: \"\(text)\"")
+    "add a blank comment line after this sentence: \"\(text)\""
   }
 }

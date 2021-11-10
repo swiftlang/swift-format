@@ -517,7 +517,7 @@ public class PrettyPrinter {
       write(comment.print(indent: currentIndentation))
       if wasEndOfLine {
         if comment.length > spaceRemaining {
-          diagnose(.moveEndOfLineComment)
+          diagnose(.moveEndOfLineComment, category: .endOfLineComment)
         }
       } else {
         spaceRemaining -= comment.length
@@ -554,9 +554,9 @@ public class PrettyPrinter {
       let shouldHaveTrailingComma =
         startLineNumber != openCloseBreakCompensatingLineNumber && !isSingleElement
       if shouldHaveTrailingComma && !hasTrailingComma {
-        diagnose(.addTrailingComma)
+        diagnose(.addTrailingComma, category: .trailingComma)
       } else if !shouldHaveTrailingComma && hasTrailingComma {
-        diagnose(.removeTrailingComma)
+        diagnose(.removeTrailingComma, category: .trailingComma)
       }
 
       let shouldWriteComma = whitespaceOnly ? hasTrailingComma : shouldHaveTrailingComma
@@ -773,25 +773,24 @@ public class PrettyPrinter {
     }
   }
 
-  /// Diagnoses the given message at the current location in `outputBuffer`.
-  private func diagnose(_ message: Diagnostic.Message) {
+  /// Emits a finding with the given message and category at the current location in `outputBuffer`.
+  private func diagnose(_ message: Finding.Message, category: PrettyPrintFindingCategory) {
     // Add 1 since columns uses 1-based indices.
     let column = maxLineLength - spaceRemaining + 1
-    let offset = outputBuffer.utf8.count
-    let location =
-      SourceLocation(line: lineNumber, column: column, offset: offset, file: context.fileURL.path)
-    context.diagnosticEngine?.diagnose(message, location: location)
+    context.findingEmitter.emit(
+      message,
+      category: category,
+      location: Finding.Location(file: context.fileURL.path, line: lineNumber, column: column))
   }
 }
 
-extension Diagnostic.Message {
+extension Finding.Message {
+  public static let moveEndOfLineComment: Finding.Message =
+    "move end-of-line comment that exceeds the line length"
 
-  public static let moveEndOfLineComment = Diagnostic.Message(
-    .warning, "move end-of-line comment that exceeds the line length")
+  public static let addTrailingComma: Finding.Message =
+    "add trailing comma to the last element in multiline collection literal"
 
-  public static let addTrailingComma = Diagnostic.Message(
-    .warning, "add trailing comma to the last element in multiline collection literal")
-
-  public static let removeTrailingComma = Diagnostic.Message(
-    .warning, "remove trailing comma from the last element in single line collection literal")
+  public static let removeTrailingComma: Finding.Message =
+    "remove trailing comma from the last element in single line collection literal"
 }

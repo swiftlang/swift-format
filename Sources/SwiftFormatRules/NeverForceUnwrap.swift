@@ -46,12 +46,12 @@ public final class NeverForceUnwrap: SyntaxLintRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static func doNotForceUnwrap(name: String) -> Diagnostic.Message {
-    return .init(.warning, "do not force unwrap '\(name)'")
+extension Finding.Message {
+  public static func doNotForceUnwrap(name: String) -> Finding.Message {
+    "do not force unwrap '\(name)'"
   }
 
-  public static func doNotForceCast(name: String) -> Diagnostic.Message {
-    return .init(.warning, "do not force cast to '\(name)'")
+  public static func doNotForceCast(name: String) -> Finding.Message {
+    "do not force cast to '\(name)'"
   }
 }

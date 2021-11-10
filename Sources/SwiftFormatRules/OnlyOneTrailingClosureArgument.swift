@@ -29,8 +29,7 @@ public final class OnlyOneTrailingClosureArgument: SyntaxLintRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static let removeTrailingClosure = Diagnostic.Message(
-    .warning,
-    "revise function call to avoid using both closure arguments and a trailing closure")
+extension Finding.Message {
+  public static let removeTrailingClosure: Finding.Message =
+    "revise function call to avoid using both closure arguments and a trailing closure"
 }

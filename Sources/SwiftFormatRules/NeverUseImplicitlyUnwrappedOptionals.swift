@@ -63,8 +63,8 @@ public final class NeverUseImplicitlyUnwrappedOptionals: SyntaxLintRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static func doNotUseImplicitUnwrapping(identifier: String) -> Diagnostic.Message {
-    return .init(.warning, "use \(identifier) or \(identifier)? instead of \(identifier)!")
+extension Finding.Message {
+  public static func doNotUseImplicitUnwrapping(identifier: String) -> Finding.Message {
+    "use \(identifier) or \(identifier)? instead of \(identifier)!"
   }
 }

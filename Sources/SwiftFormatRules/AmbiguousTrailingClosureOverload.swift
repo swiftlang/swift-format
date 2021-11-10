@@ -22,14 +22,16 @@ public final class AmbiguousTrailingClosureOverload: SyntaxLintRule {
   private func diagnoseBadOverloads(_ overloads: [String: [FunctionDeclSyntax]]) {
     for (_, decls) in overloads where decls.count > 1 {
       let decl = decls[0]
-      diagnose(.ambiguousTrailingClosureOverload(decl.fullDeclName), on: decl.identifier) {
-        for decl in decls.dropFirst() {
-          $0.note(
-            .otherAmbiguousOverloadHere(decl.fullDeclName),
-            location: decl.identifier.startLocation(converter: self.context.sourceLocationConverter)
+      diagnose(
+        .ambiguousTrailingClosureOverload(decl.fullDeclName),
+        on: decl.identifier,
+        notes: decls.dropFirst().map { decl in
+          Finding.Note(
+            message: .otherAmbiguousOverloadHere(decl.fullDeclName),
+            location: Finding.Location(
+              decl.identifier.startLocation(converter: self.context.sourceLocationConverter))
           )
-        }
-      }
+        })
     }
   }
 
@@ -70,12 +72,12 @@ public final class AmbiguousTrailingClosureOverload: SyntaxLintRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static func ambiguousTrailingClosureOverload(_ decl: String) -> Diagnostic.Message {
-    return .init(.warning, "rename '\(decl)' so it is no longer ambiguous with a trailing closure")
+extension Finding.Message {
+  public static func ambiguousTrailingClosureOverload(_ decl: String) -> Finding.Message {
+    "rename '\(decl)' so it is no longer ambiguous with a trailing closure"
   }
 
-  public static func otherAmbiguousOverloadHere(_ decl: String) -> Diagnostic.Message {
-    return .init(.note, "ambiguous overload '\(decl)' is here")
+  public static func otherAmbiguousOverloadHere(_ decl: String) -> Finding.Message {
+    "ambiguous overload '\(decl)' is here"
   }
 }

@@ -575,16 +575,14 @@ extension Line: CustomDebugStringConvertible {
   }
 }
 
-extension Diagnostic.Message {
-  public static let placeAtTopOfFile = Diagnostic.Message(
-    .warning, "place imports at the top of the file")
+extension Finding.Message {
+  public static let placeAtTopOfFile: Finding.Message = "place imports at the top of the file"
 
-  public static func groupImports(before: LineType, after: LineType) -> Diagnostic.Message {
-    return Diagnostic.Message(.warning, "place \(before) imports before \(after) imports")
+  public static func groupImports(before: LineType, after: LineType) -> Finding.Message {
+    "place \(before) imports before \(after) imports"
   }
 
-  public static let removeDuplicateImport = Diagnostic.Message(.warning, "remove duplicate import")
+  public static let removeDuplicateImport: Finding.Message = "remove duplicate import"
 
-  public static let sortImports =
-    Diagnostic.Message(.warning, "sort import statements lexicographically")
+  public static let sortImports: Finding.Message = "sort import statements lexicographically"
 }

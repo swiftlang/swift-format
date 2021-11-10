@@ -129,7 +129,7 @@ public class WhitespaceLinter {
           // If there were excess newlines in the user input, tell the user to remove them. This
           // short-circuits the trailing whitespace check below; we don't bother telling the user
           // about trailing whitespace on a line that we're also telling them to delete.
-          diagnose(.removeLineError, utf8Offset: userIndex)
+          diagnose(.removeLineError, category: .removeLine, utf8Offset: userIndex)
           userIndex += userRun.count + 1
         } else if runIndex != userRuns.count - 1 {
           if let formattedRun = possibleFormattedRun {
@@ -161,7 +161,10 @@ public class WhitespaceLinter {
     // line length limit, tell the user to add the necessary blank lines.
     let excessFormattedLines = formattedRuns.count - userRuns.count
     if excessFormattedLines > 0 && !isLineTooLong {
-      diagnose(.addLinesError(excessFormattedLines), utf8Offset: userWhitespace.startIndex)
+      diagnose(
+        .addLinesError(excessFormattedLines),
+        category: .addLines,
+        utf8Offset: userWhitespace.startIndex)
     }
   }
 
@@ -239,7 +242,7 @@ public class WhitespaceLinter {
     }
 
     isLineTooLong = true
-    diagnose(.lineLengthError, utf8Offset: adjustedUserIndex)
+    diagnose(.lineLengthError, category: .lineLength, utf8Offset: adjustedUserIndex)
   }
 
   /// Compare user and formatted whitespace buffers, and check for indentation errors.
@@ -261,7 +264,10 @@ public class WhitespaceLinter {
 
     let actual = indentation(of: userRun)
     let expected = indentation(of: formattedRun)
-    diagnose(.indentationError(expected: expected, actual: actual), utf8Offset: userIndex)
+    diagnose(
+      .indentationError(expected: expected, actual: actual),
+      category: .indentation,
+      utf8Offset: userIndex)
   }
 
   /// Compare user and formatted whitespace buffers, and check for trailing whitespace.
@@ -274,7 +280,7 @@ public class WhitespaceLinter {
     userIndex: Int, userRun: ArraySlice<UTF8.CodeUnit>, formattedRun: ArraySlice<UTF8.CodeUnit>
   ) {
     if userRun != formattedRun {
-      diagnose(.trailingWhitespaceError, utf8Offset: userIndex)
+      diagnose(.trailingWhitespaceError, category: .trailingWhitespace, utf8Offset: userIndex)
     }
   }
 
@@ -296,10 +302,10 @@ public class WhitespaceLinter {
     // This assumes tabs will always be forbidden for inter-token spacing (but not for leading
     // indentation).
     if userRun.contains(utf8Tab) {
-      diagnose(.spacingCharError, utf8Offset: userIndex)
+      diagnose(.spacingCharError, category: .spacingCharacter, utf8Offset: userIndex)
     } else if formattedRun.count != userRun.count {
       let delta = formattedRun.count - userRun.count
-      diagnose(.spacingError(delta), utf8Offset: userIndex)
+      diagnose(.spacingError(delta), category: .spacing, utf8Offset: userIndex)
     }
   }
 
@@ -334,23 +340,22 @@ public class WhitespaceLinter {
     return index != data.endIndex ? data[index] : nil
   }
 
-  /// Emits the provided diagnostic message to the DiagnosticEngine. The message will correspond to
-  /// a specific location (line and column number) in the input Swift source file (`userText`).
+  /// Emits a finding with the given message and category. The message will correspond to a specific
+  /// location (line and column number) in the input Swift source file (`userText`).
   ///
   /// - Parameters:
-  ///   - message: The Diagnostic.Message object we wish to emit.
+  ///   - message: The message we wish to emit.
+  ///   - category: The category of the finding.
   ///   - utf8Offset: The UTF-8 offset location of the message.
-  ///   - actions: Used for attaching notes, highlights, etc.
   private func diagnose(
-    _ message: Diagnostic.Message,
-    utf8Offset: Int,
-    actions: ((inout Diagnostic.Builder) -> Void)? = nil
+    _ message: Finding.Message,
+    category: WhitespaceFindingCategory,
+    utf8Offset: Int
   ) {
-    guard let diagnosticEngine = context.diagnosticEngine else { return }
-
     let absolutePosition = AbsolutePosition(utf8Offset: utf8Offset)
     let sourceLocation = context.sourceLocationConverter.location(for: absolutePosition)
-    diagnosticEngine.diagnose(message, location: sourceLocation, actions: actions)
+    context.findingEmitter.emit(
+      message, category: category, location: Finding.Location(sourceLocation))
   }
 
   /// Returns the indentation that represents the indentation of the given whitespace, which is the
@@ -427,17 +432,16 @@ extension WhitespaceIndentation {
   }
 }
 
-extension Diagnostic.Message {
-  public static let trailingWhitespaceError =
-    Diagnostic.Message(.warning, "[TrailingWhitespace]: remove trailing whitespace")
+extension Finding.Message {
+  public static let trailingWhitespaceError: Finding.Message = "remove trailing whitespace"
 
   public static func indentationError(
     expected expectedIndentation: WhitespaceIndentation,
     actual actualIndentation: WhitespaceIndentation
-  ) -> Diagnostic.Message {
+  ) -> Finding.Message {
     switch expectedIndentation {
     case .none:
-      return .init(.warning, "[Indentation] remove all leading whitespace")
+      return "remove all leading whitespace"
 
     case .homogeneous, .heterogeneous:
       if case .homogeneous(let expectedIndent) = expectedIndentation,
@@ -448,14 +452,14 @@ extension Diagnostic.Message {
         {
           let delta = expectedCount - actualCount
           let verb = delta > 0 ? "indent" : "unindent"
-          return .init(.warning, "[Indentation] \(verb) by \(abs(delta)) spaces")
+          return "\(verb) by \(abs(delta)) spaces"
         }
         if case .tabs(let expectedCount) = expectedIndent,
           case .tabs(let actualCount) = actualIndent
         {
           let delta = expectedCount - actualCount
           let verb = delta > 0 ? "indent" : "unindent"
-          return .init(.warning, "[Indentation] \(verb) by \(abs(delta)) tabs")
+          return "\(verb) by \(abs(delta)) tabs"
         }
         // Intentionally fallthrough to the heterogeneous indentation diagnostic below.
       }
@@ -463,25 +467,21 @@ extension Diagnostic.Message {
       // to instruct the user to remove the existing whitespace and add the appropriate sequence of
       // indenting characters.
       let expectedDescription = expectedIndentation.diagnosticDescription
-      return .init(.warning, "[Indentation] replace leading whitespace with \(expectedDescription)")
+      return "replace leading whitespace with \(expectedDescription)"
     }
   }
 
-  public static func spacingError(_ spaces: Int) -> Diagnostic.Message {
+  public static func spacingError(_ spaces: Int) -> Finding.Message {
     let verb = spaces > 0 ? "add" : "remove"
     let noun = abs(spaces) == 1 ? "space" : "spaces"
-    return .init(.warning, "[Spacing]: \(verb) \(abs(spaces)) \(noun)")
+    return "\(verb) \(abs(spaces)) \(noun)"
   }
 
-  public static let spacingCharError =
-    Diagnostic.Message(.warning, "[SpacingCharacter]: use spaces for spacing")
+  public static let spacingCharError: Finding.Message = "use spaces for spacing"
 
-  public static let removeLineError =
-    Diagnostic.Message(.warning, "[RemoveLine]: remove line break")
+  public static let removeLineError: Finding.Message = "remove line break"
 
-  public static func addLinesError(_ lines: Int) -> Diagnostic.Message {
-    return .init(.warning, "[AddLines]: add \(lines) line breaks")
-  }
+  public static func addLinesError(_ lines: Int) -> Finding.Message { "add \(lines) line breaks" }
 
-  public static let lineLengthError = Diagnostic.Message(.warning, "[LineLength]: line is too long")
+  public static let lineLengthError: Finding.Message = "line is too long"
 }

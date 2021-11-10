@@ -1,6 +1,7 @@
 import SwiftFormatTestSupport
 import SwiftFormatWhitespaceLinter
 import SwiftSyntax
+import SwiftSyntaxParser
 import XCTest
 
 final class WhitespaceLinterPerformanceTests: DiagnosingTestCase {

@@ -104,9 +104,9 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static let removeSemicolon = Diagnostic.Message(.warning, "remove ';'")
+extension Finding.Message {
+  public static let removeSemicolon: Finding.Message = "remove ';'"
 
-  public static let removeSemicolonAndMove = Diagnostic.Message(
-    .warning, "remove ';' and move the next statement to a new line")
+  public static let removeSemicolonAndMove: Finding.Message =
+    "remove ';' and move the next statement to a new line"
 }

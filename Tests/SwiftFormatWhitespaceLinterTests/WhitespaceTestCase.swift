@@ -3,6 +3,7 @@ import SwiftFormatCore
 import SwiftFormatTestSupport
 import SwiftFormatWhitespaceLinter
 import SwiftSyntax
+import SwiftSyntaxParser
 import XCTest
 
 class WhitespaceTestCase: DiagnosingTestCase {

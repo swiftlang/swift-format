@@ -16,9 +16,9 @@ import SwiftSyntax
 
 /// Context contains the bits that each formatter and linter will need access to.
 ///
-/// Specifically, it is the container for the shared configuration, diagnostic engine, and URL of
+/// Specifically, it is the container for the shared configuration, diagnostic consumer, and URL of
 /// the current file.
-public class Context {
+public final class Context {
 
   /// Tracks whether `XCTest` has been imported so that certain logic can be modified for files that
   /// are known to be tests.
@@ -37,8 +37,8 @@ public class Context {
   /// The configuration for this run of the pipeline, provided by a configuration JSON file.
   public let configuration: Configuration
 
-  /// The engine in which to emit diagnostics, if running in Lint mode.
-  public let diagnosticEngine: DiagnosticEngine?
+  /// Emits findings to the finding consumer.
+  public let findingEmitter: FindingEmitter
 
   /// The URL of the file being linted or formatted.
   public let fileURL: URL
@@ -58,14 +58,14 @@ public class Context {
   /// Creates a new Context with the provided configuration, diagnostic engine, and file URL.
   public init(
     configuration: Configuration,
-    diagnosticEngine: DiagnosticEngine?,
+    findingConsumer: ((Finding) -> Void)?,
     fileURL: URL,
     sourceFileSyntax: SourceFileSyntax,
     source: String? = nil,
     ruleNameCache: [ObjectIdentifier: String]
   ) {
     self.configuration = configuration
-    self.diagnosticEngine = diagnosticEngine
+    self.findingEmitter = FindingEmitter(consumer: findingConsumer)
     self.fileURL = fileURL
     self.importsXCTest = .notDetermined
     self.sourceLocationConverter =

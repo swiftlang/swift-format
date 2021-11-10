@@ -28,7 +28,7 @@ public final class NoBlockComments: SyntaxLintRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static let avoidBlockComment = Diagnostic.Message(
-    .warning, "replace block comment with line comments")
+extension Finding.Message {
+  public static let avoidBlockComment: Finding.Message =
+    "replace block comment with line comments"
 }

@@ -104,6 +104,6 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static let returnVoid = Diagnostic.Message(.warning, "replace '()' with 'Void'")
+extension Finding.Message {
+  public static let returnVoid: Finding.Message = "replace '()' with 'Void'"
 }

@@ -43,6 +43,6 @@ public final class NeverUseForceTry: SyntaxLintRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static let doNotForceTry = Diagnostic.Message(.warning, "do not use force try")
+extension Finding.Message {
+  public static let doNotForceTry: Finding.Message = "do not use force try"
 }

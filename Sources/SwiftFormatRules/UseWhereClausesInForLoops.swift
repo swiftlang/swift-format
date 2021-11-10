@@ -100,14 +100,10 @@ fileprivate func updateWithWhereCondition(
   return node.withWhereClause(whereClause).withBody(newBody)
 }
 
-extension Diagnostic.Message {
-  public static let useWhereInsteadOfIf = Diagnostic.Message(
-    .warning,
+extension Finding.Message {
+  public static let useWhereInsteadOfIf: Finding.Message =
     "replace this 'if' statement with a 'where' clause"
-  )
 
-  public static let useWhereInsteadOfGuard = Diagnostic.Message(
-    .warning,
+  public static let useWhereInsteadOfGuard: Finding.Message =
     "replace this 'guard' statement with a 'where' clause"
-  )
 }

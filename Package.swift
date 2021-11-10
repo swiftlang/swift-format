@@ -33,6 +33,7 @@ let package = Package(
         "SwiftFormatRules",
         "SwiftFormatWhitespaceLinter",
         "SwiftSyntax",
+        "SwiftSyntaxParser",
       ]
     ),
     .target(name: "SwiftFormatConfiguration"),
@@ -66,6 +67,7 @@ let package = Package(
         "SwiftFormatCore",
         "SwiftFormatRules",
         "SwiftSyntax",
+        "SwiftSyntaxParser",
       ]
     ),
     .target(
@@ -76,12 +78,15 @@ let package = Package(
         "SwiftFormatConfiguration",
         "SwiftFormatCore",
         "SwiftSyntax",
+        "TSCBasic",
       ]
     ),
     .testTarget(
       name: "SwiftFormatTests",
       dependencies: [
         "SwiftFormat",
+        "SwiftSyntax",
+        "SwiftSyntaxParser",
       ]
     ),
     .testTarget(
@@ -89,22 +94,12 @@ let package = Package(
       dependencies: ["SwiftFormatConfiguration"]
     ),
     .testTarget(
-      name: "SwiftFormatRulesTests",
-      dependencies: [
-        "SwiftFormatConfiguration",
-        "SwiftFormatCore",
-        "SwiftFormatPrettyPrint",
-        "SwiftFormatRules",
-        "SwiftFormatTestSupport",
-        "SwiftSyntax",
-      ]
-    ),
-    .testTarget(
       name: "SwiftFormatCoreTests",
       dependencies: [
         "SwiftFormatConfiguration",
         "SwiftFormatCore",
         "SwiftSyntax",
+        "SwiftSyntaxParser",
       ]
     ),
     .testTarget(
@@ -113,6 +108,7 @@ let package = Package(
         "SwiftFormatTestSupport",
         "SwiftFormatWhitespaceLinter",
         "SwiftSyntax",
+        "SwiftSyntaxParser",
       ]
     ),
     .testTarget(
@@ -124,6 +120,19 @@ let package = Package(
         "SwiftFormatRules",
         "SwiftFormatTestSupport",
         "SwiftSyntax",
+        "SwiftSyntaxParser",
+      ]
+    ),
+    .testTarget(
+      name: "SwiftFormatRulesTests",
+      dependencies: [
+        "SwiftFormatConfiguration",
+        "SwiftFormatCore",
+        "SwiftFormatPrettyPrint",
+        "SwiftFormatRules",
+        "SwiftFormatTestSupport",
+        "SwiftSyntax",
+        "SwiftSyntaxParser",
       ]
     ),
     .testTarget(
@@ -134,6 +143,7 @@ let package = Package(
         "SwiftFormatTestSupport",
         "SwiftFormatWhitespaceLinter",
         "SwiftSyntax",
+        "SwiftSyntaxParser",
       ]
     ),
   ]
@@ -143,12 +153,14 @@ let package = Package(
 if ProcessInfo.processInfo.environment["SWIFTCI_USE_LOCAL_DEPS"] == nil {
   // Building standalone.
   package.dependencies += [
-    .package(url: "https://github.com/apple/swift-syntax", .branch("main")),
     .package(url: "https://github.com/apple/swift-argument-parser.git", .branch("main")),
+    .package(url: "https://github.com/apple/swift-syntax", .branch("main")),
+    .package(url: "https://github.com/apple/swift-tools-support-core.git", .branch("main")),
   ]
 } else {
   package.dependencies += [
-    .package(path: "../swift-syntax"),
     .package(path: "../swift-argument-parser"),
+    .package(path: "../swift-syntax"),
+    .package(path: "../swift-tools-support-core"),
   ]
 }

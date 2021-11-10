@@ -102,8 +102,8 @@ public final class DontRepeatTypeInStaticProperties: SyntaxLintRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static func removeTypeFromName(name: String, type: Substring) -> Diagnostic.Message {
-    return .init(.warning, "remove '\(type)' from '\(name)'")
+extension Finding.Message {
+  public static func removeTypeFromName(name: String, type: Substring) -> Finding.Message {
+    "remove '\(type)' from '\(name)'"
   }
 }

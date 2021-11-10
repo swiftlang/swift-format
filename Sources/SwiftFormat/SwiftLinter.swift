@@ -17,6 +17,7 @@ import SwiftFormatPrettyPrint
 import SwiftFormatRules
 import SwiftFormatWhitespaceLinter
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// Diagnoses and reports problems in Swift source code or syntax trees according to the Swift style
 /// guidelines.
@@ -25,8 +26,8 @@ public final class SwiftLinter {
   /// The configuration settings that control the linter's behavior.
   public let configuration: Configuration
 
-  /// A diagnostic engine to which lint findings will be reported.
-  public let diagnosticEngine: DiagnosticEngine
+  /// A callback that will be notified with any findings encountered during linting.
+  public let findingConsumer: (Finding) -> Void
 
   /// Advanced options that are useful when debugging the linter's behavior but are not meant for
   /// general use.
@@ -36,17 +37,24 @@ public final class SwiftLinter {
   ///
   /// - Parameters:
   ///   - configuration: The configuration settings that control the linter's behavior.
-  ///   - diagnosticEngine: The diagnostic engine to which lint findings will be reported.
-  public init(configuration: Configuration, diagnosticEngine: DiagnosticEngine) {
+  ///   - findingConsumer: A callback that will be notified with any findings encountered during
+  ///     linting.
+  public init(configuration: Configuration, findingConsumer: @escaping (Finding) -> Void) {
     self.configuration = configuration
-    self.diagnosticEngine = diagnosticEngine
+    self.findingConsumer = findingConsumer
   }
 
   /// Lints the Swift code at the given file URL.
   ///
-  /// - Parameters url: The URL of the file containing the code to format.
+  /// - Parameters:
+  ///   - url: The URL of the file containing the code to format.
+  ///   - parsingDiagnosticHandler: An optional callback that will be notified if there are any
+  ///     errors when parsing the source code.
   /// - Throws: If an unrecoverable error occurs when formatting the code.
-  public func lint(contentsOf url: URL) throws {
+  public func lint(
+    contentsOf url: URL,
+    parsingDiagnosticHandler: ((Diagnostic) -> Void)? = nil
+  ) throws {
     guard FileManager.default.isReadableFile(atPath: url.path) else {
       throw SwiftFormatError.fileNotReadable
     }
@@ -54,7 +62,7 @@ public final class SwiftLinter {
     if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir), isDir.boolValue {
       throw SwiftFormatError.isDirectory
     }
-    let sourceFile = try SyntaxParser.parse(url)
+    let sourceFile = try SyntaxParser.parse(url, diagnosticHandler: parsingDiagnosticHandler)
     let source = try String(contentsOf: url, encoding: .utf8)
     try lint(syntax: sourceFile, assumingFileURL: url, source: source)
   }
@@ -64,9 +72,16 @@ public final class SwiftLinter {
   /// - Parameters:
   ///   - source: The Swift source code to be linted.
   ///   - url: A file URL denoting the filename/path that should be assumed for this source code.
+  ///   - parsingDiagnosticHandler: An optional callback that will be notified if there are any
+  ///     errors when parsing the source code.
   /// - Throws: If an unrecoverable error occurs when formatting the code.
-  public func lint(source: String, assumingFileURL url: URL) throws {
-    let sourceFile = try SyntaxParser.parse(source: source)
+  public func lint(
+    source: String,
+    assumingFileURL url: URL,
+    parsingDiagnosticHandler: ((Diagnostic) -> Void)? = nil
+  ) throws {
+    let sourceFile =
+      try SyntaxParser.parse(source: source, diagnosticHandler: parsingDiagnosticHandler)
     try lint(syntax: sourceFile, assumingFileURL: url, source: source)
   }
 
@@ -88,7 +103,7 @@ public final class SwiftLinter {
     }
 
     let context = Context(
-      configuration: configuration, diagnosticEngine: diagnosticEngine, fileURL: url,
+      configuration: configuration, findingConsumer: findingConsumer, fileURL: url,
       sourceFileSyntax: syntax, source: source, ruleNameCache: ruleNameCache)
     let pipeline = LintPipeline(context: context)
     pipeline.walk(Syntax(syntax))

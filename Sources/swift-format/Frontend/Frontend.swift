@@ -14,6 +14,7 @@ import Foundation
 import SwiftFormat
 import SwiftFormatConfiguration
 import SwiftSyntax
+import SwiftSyntaxParser
 
 class Frontend {
   /// Represents a file to be processed by the frontend and any file-specific options associated
@@ -53,12 +54,8 @@ class Frontend {
   }
 
   /// The diagnostic engine to which warnings and errors will be emitted.
-  final let diagnosticEngine: DiagnosticEngine = {
-    let engine = DiagnosticEngine()
-    let consumer = PrintingDiagnosticConsumer()
-    engine.addConsumer(consumer)
-    return engine
-  }()
+  final let diagnosticsEngine =
+    UnifiedDiagnosticsEngine(diagnosticsHandlers: [printDiagnosticToStderr])
 
   /// Options that apply during formatting or linting.
   final let lintFormatOptions: LintFormatOptions
@@ -74,9 +71,6 @@ class Frontend {
       lintFormatOptions.debugDumpTokenStream ? .dumpTokenStream : [],
     ]
   }
-
-  /// Indicates whether any errors were emitted during execution.
-  final var errorsWereEmitted: Bool { diagnosticEngine.hasErrors }
 
   /// Creates a new frontend with the given options.
   ///
@@ -143,7 +137,7 @@ class Frontend {
   /// diagnostic output.
   private func openAndPrepareFile(atPath path: String) -> FileToProcess? {
     guard let sourceFile = FileHandle(forReadingAtPath: path) else {
-      diagnosticEngine.diagnose(Diagnostic.Message(.error, "Unable to open \(path)"))
+      diagnosticsEngine.emitError("Unable to open \(path)")
       return nil
     }
 
@@ -179,8 +173,7 @@ class Frontend {
       do {
         return try configurationLoader.configuration(atPath: configurationFilePath)
       } catch {
-        diagnosticEngine.diagnose(
-          Diagnostic.Message(.error, "Unable to read configuration: \(error.localizedDescription)"))
+        diagnosticsEngine.emitError("Unable to read configuration: \(error.localizedDescription)")
         return nil
       }
     }
@@ -196,9 +189,8 @@ class Frontend {
         }
         // Fall through to the default return at the end of the function.
       } catch {
-        diagnosticEngine.diagnose(
-          Diagnostic.Message(.error, "Unable to read configuration for \(swiftFilePath): "
-            + "\(error.localizedDescription)"))
+        diagnosticsEngine.emitError(
+          "Unable to read configuration for \(swiftFilePath): \(error.localizedDescription)")
         return nil
       }
     }

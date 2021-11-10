@@ -87,8 +87,8 @@ public final class AllPublicDeclarationsHaveDocumentation: SyntaxLintRule {
   }
 }
 
-extension Diagnostic.Message {
-  public static func declRequiresComment(_ name: String) -> Diagnostic.Message {
-    return .init(.warning, "add a documentation comment for '\(name)'")
+extension Finding.Message {
+  public static func declRequiresComment(_ name: String) -> Finding.Message {
+    "add a documentation comment for '\(name)'"
   }
 }

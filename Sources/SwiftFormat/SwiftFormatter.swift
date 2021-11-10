@@ -16,6 +16,7 @@ import SwiftFormatCore
 import SwiftFormatPrettyPrint
 import SwiftFormatRules
 import SwiftSyntax
+import SwiftSyntaxParser
 
 /// Formats Swift source code or syntax trees according to the Swift style guidelines.
 public final class SwiftFormatter {
@@ -23,8 +24,8 @@ public final class SwiftFormatter {
   /// The configuration settings that control the formatter's behavior.
   public let configuration: Configuration
 
-  /// A diagnostic engine to which non-fatal errors will be reported.
-  public let diagnosticEngine: DiagnosticEngine?
+  /// An optional callback that will be notified with any findings encountered during formatting.
+  public let findingConsumer: ((Finding) -> Void)?
 
   /// Advanced options that are useful when debugging the formatter's behavior but are not meant for
   /// general use.
@@ -34,11 +35,12 @@ public final class SwiftFormatter {
   ///
   /// - Parameters:
   ///   - configuration: The configuration settings that control the formatter's behavior.
-  ///   - diagnosticEngine: The diagnostic engine to which non-fatal errors will be reported.
-  ///     Defaults to nil.
-  public init(configuration: Configuration, diagnosticEngine: DiagnosticEngine? = nil) {
+  ///   - findingConsumer: An optional callback that will be notified with any findings encountered
+  ///     during formatting. Unlike the `Linter` API, this defaults to nil for formatting because
+  ///     findings are typically less useful than the final formatted output.
+  public init(configuration: Configuration, findingConsumer: ((Finding) -> Void)? = nil) {
     self.configuration = configuration
-    self.diagnosticEngine = diagnosticEngine
+    self.findingConsumer = findingConsumer
   }
 
   /// Formats the Swift code at the given file URL and writes the result to an output stream.
@@ -47,9 +49,13 @@ public final class SwiftFormatter {
   ///   - url: The URL of the file containing the code to format.
   ///   - outputStream: A value conforming to `TextOutputStream` to which the formatted output will
   ///     be written.
+  ///   - parsingDiagnosticHandler: An optional callback that will be notified if there are any
+  ///     errors when parsing the source code.
   /// - Throws: If an unrecoverable error occurs when formatting the code.
   public func format<Output: TextOutputStream>(
-    contentsOf url: URL, to outputStream: inout Output
+    contentsOf url: URL,
+    to outputStream: inout Output,
+    parsingDiagnosticHandler: ((Diagnostic) -> Void)? = nil
   ) throws {
     guard FileManager.default.isReadableFile(atPath: url.path) else {
       throw SwiftFormatError.fileNotReadable
@@ -58,7 +64,7 @@ public final class SwiftFormatter {
     if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir), isDir.boolValue {
       throw SwiftFormatError.isDirectory
     }
-    let sourceFile = try SyntaxParser.parse(url)
+    let sourceFile = try SyntaxParser.parse(url, diagnosticHandler: parsingDiagnosticHandler)
     let source = try String(contentsOf: url, encoding: .utf8)
     try format(syntax: sourceFile, assumingFileURL: url, source: source, to: &outputStream)
   }
@@ -72,11 +78,17 @@ public final class SwiftFormatter {
   ///     dummy value will be used.
   ///   - outputStream: A value conforming to `TextOutputStream` to which the formatted output will
   ///     be written.
+  ///   - parsingDiagnosticHandler: An optional callback that will be notified if there are any
+  ///     errors when parsing the source code.
   /// - Throws: If an unrecoverable error occurs when formatting the code.
   public func format<Output: TextOutputStream>(
-    source: String, assumingFileURL url: URL?, to outputStream: inout Output
+    source: String,
+    assumingFileURL url: URL?,
+    to outputStream: inout Output,
+    parsingDiagnosticHandler: ((Diagnostic) -> Void)? = nil
   ) throws {
-    let sourceFile = try SyntaxParser.parse(source: source)
+    let sourceFile =
+      try SyntaxParser.parse(source: source, diagnosticHandler: parsingDiagnosticHandler)
     try format(syntax: sourceFile, assumingFileURL: url, source: source, to: &outputStream)
   }
 
@@ -108,7 +120,7 @@ public final class SwiftFormatter {
 
     let assumedURL = url ?? URL(fileURLWithPath: "source")
     let context = Context(
-      configuration: configuration, diagnosticEngine: diagnosticEngine, fileURL: assumedURL,
+      configuration: configuration, findingConsumer: findingConsumer, fileURL: assumedURL,
       sourceFileSyntax: syntax, source: source, ruleNameCache: ruleNameCache)
     let pipeline = FormatPipeline(context: context)
     let transformedSyntax = pipeline.visit(Syntax(syntax))
