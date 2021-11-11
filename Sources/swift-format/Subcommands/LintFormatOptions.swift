@@ -55,6 +55,19 @@ struct LintFormatOptions: ParsableArguments {
     help: "Process files in parallel, simultaneously across multiple cores.")
   var parallel: Bool = false
 
+  /// Whether colors should be used in diagnostics printed to standard error.
+  ///
+  /// If nil, color usage will be automatically detected based on whether standard error is
+  /// connected to a terminal or not.
+  @Flag(
+    inversion: .prefixedNo,
+    help: """
+      Enables or disables color diagnostics when printing to standard error. The default behavior \
+      if this flag is omitted is to use colors if standard error is connected to a terminal, and \
+      to not use colors otherwise.
+      """)
+  var colorDiagnostics: Bool?
+
   /// The list of paths to Swift source files that should be formatted or linted.
   @Argument(help: "Zero or more input filenames.")
   var paths: [String] = []

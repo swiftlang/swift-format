@@ -15,6 +15,30 @@ import SwiftSyntax
 import SwiftSyntaxParser
 import TSCBasic
 
+/// Diagnostic data that retains the separation of a finding category (if present) from the rest of
+/// the message, allowing diagnostic printers that want to print those values separately to do so.
+struct UnifiedDiagnosticData: DiagnosticData {
+  /// The category of the diagnostic, if any.
+  var category: String?
+
+  /// The message text associated with the diagnostic.
+  var message: String
+
+  var description: String {
+    if let category = category {
+      return "[\(category)] \(message)"
+    } else {
+      return message
+    }
+  }
+
+  /// Creates a new unified diagnostic with the given optional category and message.
+  init(category: String? = nil, message: String) {
+    self.category = category
+    self.message = message
+  }
+}
+
 /// Unifies the handling of findings from the linter, parsing errors from the syntax parser, and
 /// generic errors from the frontend so that they are treated uniformly by the underlying
 /// diagnostics engine from the `swift-tools-support-core` package.
@@ -67,7 +91,9 @@ final class UnifiedDiagnosticsEngine {
   ///   - location: The location in the source code associated with the error, or nil if there is no
   ///     location associated with the error.
   func emitError(_ message: String, location: SourceLocation? = nil) {
-    diagnosticsEngine.emit(.error(message), location: location.map(UnifiedLocation.parserLocation))
+    diagnosticsEngine.emit(
+      .error(UnifiedDiagnosticData(message: message)),
+      location: location.map(UnifiedLocation.parserLocation))
   }
 
   /// Emits a finding from the linter and any of its associated notes as diagnostics.
@@ -80,7 +106,7 @@ final class UnifiedDiagnosticsEngine {
 
     for note in finding.notes {
       diagnosticsEngine.emit(
-        .note("\(note.message)"),
+        .note(UnifiedDiagnosticData(message: "\(note.message)")),
         location: note.location.map(UnifiedLocation.findingLocation))
     }
   }
@@ -95,7 +121,7 @@ final class UnifiedDiagnosticsEngine {
 
     for note in diagnostic.notes {
       diagnosticsEngine.emit(
-        .note(note.message.text),
+        .note(UnifiedDiagnosticData(message: note.message.text)),
         location: note.location.map(UnifiedLocation.parserLocation))
     }
   }
@@ -105,21 +131,24 @@ final class UnifiedDiagnosticsEngine {
   private func diagnosticMessage(for message: SwiftSyntaxParser.Diagnostic.Message)
     -> TSCBasic.Diagnostic.Message
   {
+    let data = UnifiedDiagnosticData(category: nil, message: message.text)
+
     switch message.severity {
-    case .error: return .error(message.text)
-    case .warning: return .warning(message.text)
-    case .note: return .note(message.text)
+    case .error: return .error(data)
+    case .warning: return .warning(data)
+    case .note: return .note(data)
     }
   }
 
   /// Converts a lint finding into a diagnostic message that can be used by the `TSCBasic`
   /// diagnostics engine and returns it.
   private func diagnosticMessage(for finding: Finding) -> TSCBasic.Diagnostic.Message {
-    let message = "[\(finding.category)] \(finding.message.text)"
+    let data =
+      UnifiedDiagnosticData(category: "\(finding.category)", message: "\(finding.message.text)")
 
     switch finding.severity {
-    case .error: return .error(message)
-    case .warning: return .warning(message)
+    case .error: return .error(data)
+    case .warning: return .warning(data)
     }
   }
 }
