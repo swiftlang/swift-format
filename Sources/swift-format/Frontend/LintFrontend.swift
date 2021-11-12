@@ -22,33 +22,33 @@ class LintFrontend: Frontend {
       configuration: fileToProcess.configuration, findingConsumer: diagnosticsEngine.consumeFinding)
     linter.debugOptions = debugOptions
 
-    let path = fileToProcess.path
+    let url = fileToProcess.url
     guard let source = fileToProcess.sourceText else {
-      diagnosticsEngine.emitError("Unable to read source for linting from \(path).")
+      diagnosticsEngine.emitError(
+        "Unable to lint \(url.relativePath): file is not readable or does not exist.")
       return
     }
 
     do {
-      let assumingFileURL = URL(fileURLWithPath: path)
       try linter.lint(
         source: source,
-        assumingFileURL: assumingFileURL,
+        assumingFileURL: url,
         parsingDiagnosticHandler: diagnosticsEngine.consumeParserDiagnostic)
     } catch SwiftFormatError.fileNotReadable {
       diagnosticsEngine.emitError(
-        "Unable to lint \(path): file is not readable or does not exist.")
+        "Unable to lint \(url.relativePath): file is not readable or does not exist.")
       return
     } catch SwiftFormatError.fileContainsInvalidSyntax(let position) {
       guard !lintFormatOptions.ignoreUnparsableFiles else {
         // The caller wants to silently ignore this error.
         return
       }
-      let location = SourceLocationConverter(file: path, source: source).location(for: position)
+      let location = SourceLocationConverter(file: url.path, source: source).location(for: position)
       diagnosticsEngine.emitError(
         "file contains invalid or unrecognized Swift syntax.", location: location)
       return
     } catch {
-      diagnosticsEngine.emitError("Unable to lint \(path): \(error)")
+      diagnosticsEngine.emitError("Unable to lint \(url.relativePath): \(error)")
       return
     }
   }

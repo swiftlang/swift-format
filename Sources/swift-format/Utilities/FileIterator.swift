@@ -16,76 +16,94 @@ import Foundation
 /// traversed recursively, and we check for files with a ".swift" extension.
 struct FileIterator: Sequence, IteratorProtocol {
 
-  /// List of file and directory paths to iterate over.
-  let paths: [String]
+  /// List of file and directory URLs to iterate over.
+  let urls: [URL]
 
-  /// Iterator for "paths" list.
-  var pathIterator: Array<String>.Iterator
+  /// Iterator for the list of URLs.
+  var urlIterator: Array<URL>.Iterator
 
   /// Iterator for recursing through directories.
   var dirIterator: FileManager.DirectoryEnumerator? = nil
 
+  /// The current working directory of the process, which is used to relativize URLs of files found
+  /// during iteration.
+  let workingDirectory = URL(fileURLWithPath: ".")
+
   /// Keep track of the current directory we're recursing through.
   var currentDirectory = URL(fileURLWithPath: "")
 
-  /// Keep track of paths we have visited to prevent duplicates.
+  /// Keep track of files we have visited to prevent duplicates.
   var visited: Set<String> = []
 
   /// The file extension to check for when recursing through directories.
   let fileSuffix = ".swift"
 
-  /// The input is a list of paths as Strings. Some will be file paths, and others directories.
-  init(paths: [String]) {
-    self.paths = paths
-    self.pathIterator = self.paths.makeIterator()
+  /// Create a new file iterator over the given list of file URLs.
+  ///
+  /// The given URLs may be files or directories. If they are directories, the iterator will recurse
+  /// into them.
+  init(urls: [URL]) {
+    self.urls = urls
+    self.urlIterator = self.urls.makeIterator()
   }
 
   /// Iterate through the "paths" list, and emit the file paths in it. If we encounter a directory,
   /// recurse through it and emit .swift file paths.
-  mutating func next() -> String? {
-    var output: String? = nil
+  mutating func next() -> URL? {
+    var output: URL? = nil
     while output == nil {
-      // Check if we're recursing through a directory
+      // Check if we're recursing through a directory.
       if dirIterator != nil {
         output = nextInDirectory()
       } else {
-        guard let next = pathIterator.next() else { return nil }
+        guard let next = urlIterator.next() else { return nil }
         var isDir: ObjCBool = false
-        if FileManager.default.fileExists(atPath: next, isDirectory: &isDir) {
-          if isDir.boolValue {
-            dirIterator = FileManager.default.enumerator(atPath: next)
-            currentDirectory = URL(fileURLWithPath: next, isDirectory: true)
-          } else { output = next }
+        if FileManager.default.fileExists(atPath: next.path, isDirectory: &isDir), isDir.boolValue {
+          dirIterator = FileManager.default.enumerator(at: next, includingPropertiesForKeys: nil)
+          currentDirectory = next
         } else {
-          // If a path doesn't exist, allow it pass down into the SwiftFormat API so it can throw
-          // the appropriate exception. We don't want to kill the entire process if this happens.
+          // We'll get here if the path is a file, or if it doesn't exist. In the latter case,
+          // return the path anyway; we'll turn the error we get when we try to open the file into
+          // an appropriate diagnostic instead of trying to handle it here.
           output = next
         }
       }
-      if let out = output, visited.contains(out) { output = nil }
+      if let out = output, visited.contains(out.absoluteURL.standardized.path) {
+        output = nil
+      }
     }
-    if let out = output { visited.insert(out) }
+    if let out = output {
+      visited.insert(out.absoluteURL.standardized.path)
+    }
     return output
   }
 
   /// Use the FileManager API to recurse through directories and emit .swift file paths.
-  private mutating func nextInDirectory() -> String? {
-    var output: String? = nil
+  private mutating func nextInDirectory() -> URL? {
+    var output: URL? = nil
     while output == nil {
-      var isDir: ObjCBool = false
-      if let item = dirIterator?.nextObject() as? String {
-        if item.hasSuffix(fileSuffix) {
-          let absoluteItemPath = currentDirectory.appendingPathComponent(item).path
-          if FileManager.default.fileExists(atPath: absoluteItemPath, isDirectory: &isDir)
+      if let item = dirIterator?.nextObject() as? URL {
+        if item.lastPathComponent.hasSuffix(fileSuffix) {
+          var isDir: ObjCBool = false
+          if FileManager.default.fileExists(atPath: item.path, isDirectory: &isDir)
             && !isDir.boolValue
           {
-            output = absoluteItemPath
+            // We can't use the `.producesRelativePathURLs` enumeration option because it isn't
+            // supported yet on Linux, so we need to relativize the URL ourselves.
+            let relativePath =
+              item.path.hasPrefix(workingDirectory.path)
+              ? String(item.path.dropFirst(workingDirectory.path.count + 1))
+              : item.path
+            output =
+              URL(fileURLWithPath: relativePath, isDirectory: false, relativeTo: workingDirectory)
           }
         }
       } else { break }
     }
     // If we've exhausted the files in the directory recursion, unset the directory iterator.
-    if output == nil { dirIterator = nil }
+    if output == nil {
+      dirIterator = nil
+    }
     return output
   }
 }
