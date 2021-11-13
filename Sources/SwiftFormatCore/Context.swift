@@ -69,8 +69,8 @@ public final class Context {
     self.fileURL = fileURL
     self.importsXCTest = .notDetermined
     self.sourceLocationConverter =
-      source.map { SourceLocationConverter(file: fileURL.path, source: $0) }
-      ?? SourceLocationConverter(file: fileURL.path, tree: sourceFileSyntax)
+      source.map { SourceLocationConverter(file: fileURL.relativePath, source: $0) }
+      ?? SourceLocationConverter(file: fileURL.relativePath, tree: sourceFileSyntax)
     self.ruleMask = RuleMask(
       syntaxNode: Syntax(sourceFileSyntax),
       sourceLocationConverter: sourceLocationConverter

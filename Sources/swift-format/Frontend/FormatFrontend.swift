@@ -32,35 +32,35 @@ class FormatFrontend: Frontend {
     let formatter = SwiftFormatter(configuration: fileToProcess.configuration, findingConsumer: nil)
     formatter.debugOptions = debugOptions
 
-    let path = fileToProcess.path
+    let url = fileToProcess.url
     guard let source = fileToProcess.sourceText else {
-      diagnosticsEngine.emitError("Unable to read source for formatting from \(path).")
+      diagnosticsEngine.emitError(
+        "Unable to format \(url.relativePath): file is not readable or does not exist.")
       return
     }
 
     var stdoutStream = FileHandle.standardOutput
     do {
-      let assumingFileURL = URL(fileURLWithPath: path)
       if inPlace {
         var buffer = ""
         try formatter.format(
           source: source,
-          assumingFileURL: assumingFileURL,
+          assumingFileURL: url,
           to: &buffer,
           parsingDiagnosticHandler: diagnosticsEngine.consumeParserDiagnostic)
 
         let bufferData = buffer.data(using: .utf8)!  // Conversion to UTF-8 cannot fail
-        try bufferData.write(to: assumingFileURL, options: .atomic)
+        try bufferData.write(to: url, options: .atomic)
       } else {
         try formatter.format(
           source: source,
-          assumingFileURL: assumingFileURL,
+          assumingFileURL: url,
           to: &stdoutStream,
           parsingDiagnosticHandler: diagnosticsEngine.consumeParserDiagnostic)
       }
     } catch SwiftFormatError.fileNotReadable {
       diagnosticsEngine.emitError(
-        "Unable to format \(path): file is not readable or does not exist.")
+        "Unable to format \(url.relativePath): file is not readable or does not exist.")
       return
     } catch SwiftFormatError.fileContainsInvalidSyntax(let position) {
       guard !lintFormatOptions.ignoreUnparsableFiles else {
@@ -71,12 +71,12 @@ class FormatFrontend: Frontend {
         stdoutStream.write(source)
         return
       }
-      let location = SourceLocationConverter(file: path, source: source).location(for: position)
+      let location = SourceLocationConverter(file: url.path, source: source).location(for: position)
       diagnosticsEngine.emitError(
         "file contains invalid or unrecognized Swift syntax.", location: location)
       return
     } catch {
-      diagnosticsEngine.emitError("Unable to format \(path): \(error)")
+      diagnosticsEngine.emitError("Unable to format \(url.relativePath): \(error)")
     }
   }
 }

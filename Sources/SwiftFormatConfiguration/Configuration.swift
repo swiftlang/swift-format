@@ -233,21 +233,25 @@ public struct Configuration: Codable, Equatable {
 
   /// Returns the URL of the configuration file that applies to the given file or directory.
   public static func url(forConfigurationFileApplyingTo url: URL) -> URL? {
-    var path = url.absoluteURL
-    let configFilename = ".swift-format"
+    // Despite the variable's name, this value might start out first as a file path (the path to a
+    // source file being formatted). However, it will immediately have its basename removed in the
+    // loop below, and from then on serve as a directory path only.
+    var candidateDirectory = url.absoluteURL.standardized
     var isDirectory: ObjCBool = false
-    if FileManager.default.fileExists(atPath: path.path, isDirectory: &isDirectory), 
-      isDirectory.boolValue {
-      // will be deleted in a loop
-      path.appendPathComponent("placeholder")
+    if FileManager.default.fileExists(atPath: candidateDirectory.path, isDirectory: &isDirectory),
+      isDirectory.boolValue
+    {
+      // If the path actually was a directory, append a fake basename so that the trimming code
+      // below doesn't have to deal with the first-time special case.
+      candidateDirectory.appendPathComponent("placeholder")
     }
     repeat {
-      path.deleteLastPathComponent()
-      let candidateFile = path.appendingPathComponent(configFilename)
+      candidateDirectory.deleteLastPathComponent()
+      let candidateFile = candidateDirectory.appendingPathComponent(".swift-format")
       if FileManager.default.isReadableFile(atPath: candidateFile.path) {
         return candidateFile
       }
-    } while path.path != "/"
+    } while candidateDirectory.path != "/"
 
     return nil
   }

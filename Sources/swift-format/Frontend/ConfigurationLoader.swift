@@ -16,15 +16,8 @@ import SwiftFormatConfiguration
 /// Loads formatter configurations, caching them in memory so that multiple operations in the same
 /// directory do not repeatedly hit the file system.
 struct ConfigurationLoader {
-  /// A mapping from configuration file URLs to the loaded configuration data.
-  private var cache = [URL: Configuration]()
-
-  /// Returns the configuration associated with the configuration file at the given path.
-  ///
-  /// - Throws: If an error occurred loading the configuration.
-  mutating func configuration(atPath path: String) throws -> Configuration {
-    return try configuration(at: URL(fileURLWithPath: path))
-  }
+  /// The cache of previously loaded configurations.
+  private var cache = [String: Configuration]()
 
   /// Returns the configuration found by searching in the directory (and ancestor directories)
   /// containing the given `.swift` source file.
@@ -32,9 +25,8 @@ struct ConfigurationLoader {
   /// If no configuration file was found during the search, this method returns nil.
   ///
   /// - Throws: If a configuration file was found but an error occurred loading it.
-  mutating func configuration(forSwiftFileAtPath path: String) throws -> Configuration? {
-    let swiftFileURL = URL(fileURLWithPath: path)
-    guard let configurationFileURL = Configuration.url(forConfigurationFileApplyingTo: swiftFileURL)
+  mutating func configuration(forSwiftFileAt url: URL) throws -> Configuration? {
+    guard let configurationFileURL = Configuration.url(forConfigurationFileApplyingTo: url)
     else {
       return nil
     }
@@ -44,13 +36,14 @@ struct ConfigurationLoader {
   /// Returns the configuration associated with the configuration file at the given URL.
   ///
   /// - Throws: If an error occurred loading the configuration.
-  private mutating func configuration(at url: URL) throws -> Configuration {
-    if let cachedConfiguration = cache[url] {
+  mutating func configuration(at url: URL) throws -> Configuration {
+    let cacheKey = url.absoluteURL.standardized.path
+    if let cachedConfiguration = cache[cacheKey] {
       return cachedConfiguration
     }
 
     let configuration = try Configuration(contentsOf: url)
-    cache[url] = configuration
+    cache[cacheKey] = configuration
     return configuration
   }
 }
