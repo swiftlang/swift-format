@@ -21,12 +21,9 @@ struct SwiftFormatCommand: ParsableCommand {
     subcommands: [
       DumpConfiguration.self,
       Format.self,
-      LegacyMain.self,
       Lint.self,
     ],
-    // TODO: Change the default to `Format` when we delete the legacy interface after a short
-    // period of time.
-    defaultSubcommand: LegacyMain.self
+    defaultSubcommand: Format.self
   )
 
   @OptionGroup()
