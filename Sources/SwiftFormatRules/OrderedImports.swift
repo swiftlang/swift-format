@@ -13,6 +13,12 @@
 import SwiftFormatCore
 import SwiftSyntax
 
+fileprivate extension String {
+  func lexicographicallyPrecedesCaseInsensitive(_ other: String) -> Bool {
+    return self.lowercased().lexicographicallyPrecedes(other.lowercased())
+  }
+}
+
 /// Imports must be lexicographically ordered and logically grouped at the top of each source file.
 /// The order of the import groups is 1) regular imports, 2) declaration imports, and 3) @testable
 /// imports. These groups are separated by a single blank line. Blank lines in between the import
@@ -224,7 +230,7 @@ public final class OrderedImports: SyntaxFormatRule {
           // them. Leave this duplicate import.
         }
         if let previousImport = previousImport,
-          line.importName.lexicographicallyPrecedes(previousImport.importName) && !diagnosed
+          line.importName.lexicographicallyPrecedesCaseInsensitive(previousImport.importName) && !diagnosed
             // Only warn to sort imports that shouldn't be removed.
             && visitedImports[fullyQualifiedImport] == nil
         {
@@ -243,7 +249,7 @@ public final class OrderedImports: SyntaxFormatRule {
       }
     }
 
-    linesWithLeadingComments.sort { $0.0.importName.lexicographicallyPrecedes($1.0.importName) }
+    linesWithLeadingComments.sort { $0.0.importName.lexicographicallyPrecedesCaseInsensitive($1.0.importName) }
 
     // Unpack the tuples back into a list of Lines.
     var output: [Line] = []

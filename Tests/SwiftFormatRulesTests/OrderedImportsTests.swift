@@ -412,9 +412,9 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       import
         Alpha
       import Beta
-      import Zeta
       import
         zeta
+      import Zeta
       """
 
     XCTAssertFormatting(OrderedImports.self, input: input, expected: expected)
@@ -450,13 +450,13 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       import AppKit
       // CoreLocation is necessary to get location stuff.
       import CoreLocation  // This import must stay.
+      import foo
       // UIKit does UI Stuff?
       import UIKit
       // This is the second CoreLocation import.
       import CoreLocation  // The 2nd CL import has a comment here too.
       // Comment about ZeeFramework.
       import ZeeFramework
-      import foo
       // Second comment about ZeeFramework.
       import ZeeFramework  // This one has a trailing comment too.
       foo()
@@ -469,12 +469,12 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       import CoreLocation  // This import must stay.
       // This is the second CoreLocation import.
       import CoreLocation  // The 2nd CL import has a comment here too.
+      import foo
       // UIKit does UI Stuff?
       import UIKit
       // Comment about ZeeFramework.
       // Second comment about ZeeFramework.
       import ZeeFramework  // This one has a trailing comment too.
-      import foo
 
       foo()
       """
@@ -484,7 +484,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
 
     // Even though this import is technically also not sorted, that won't matter if the import is
     // removed so there should only be a warning to remove it.
-    XCTAssertDiagnosed(.removeDuplicateImport, line: 7, column: 1)
+    XCTAssertDiagnosed(.removeDuplicateImport, line: 8, column: 1)
     XCTAssertDiagnosed(.removeDuplicateImport, line: 12, column: 1)
   }
 
@@ -637,6 +637,24 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       foo()
       bar()
       baz()
+      """
+
+    XCTAssertFormatting(OrderedImports.self, input: input, expected: expected)
+  }
+
+  func testSortCaseInsensitive() {
+    let input =
+      """
+      import RadarFoundation
+      import RDARFramework
+      import UIKit
+      """
+
+    let expected =
+      """
+      import RadarFoundation
+      import RDARFramework
+      import UIKit
       """
 
     XCTAssertFormatting(OrderedImports.self, input: input, expected: expected)
