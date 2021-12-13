@@ -295,4 +295,161 @@ final class AccessorTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected20, linelength: 20)
   }
+
+  func testPropertyEffectsWithBodyAfter() {
+    let input =
+      """
+      var x: T {
+        get async {
+          foo()
+          bar()
+        }
+      }
+      var x: T {
+        get throws {
+          foo()
+          bar()
+        }
+      }
+      var x: T {
+        get async throws {
+          foo()
+          bar()
+        }
+      }
+      """
+
+    assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 80)
+
+    let expected16 =
+      """
+      var x: T {
+        get async {
+          foo()
+          bar()
+        }
+      }
+      var x: T {
+        get throws {
+          foo()
+          bar()
+        }
+      }
+      var x: T {
+        get
+          async throws
+        {
+          foo()
+          bar()
+        }
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected16, linelength: 16)
+
+    let expected10 =
+      """
+      var x: T {
+        get
+          async
+        {
+          foo()
+          bar()
+        }
+      }
+      var x: T {
+        get
+          throws
+        {
+          foo()
+          bar()
+        }
+      }
+      var x: T {
+        get
+          async
+          throws
+        {
+          foo()
+          bar()
+        }
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected10, linelength: 10)
+  }
+
+  func testPropertyEffectsWithNoBodyAfter() {
+    let input =
+      """
+      protocol P {
+        var x: T { get async }
+        var x: T { get throws }
+        var x: T { get async throws }
+      }
+      """
+
+    assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 80)
+
+    let expected20 =
+      """
+      protocol P {
+        var x: T {
+          get async
+        }
+        var x: T {
+          get throws
+        }
+        var x: T {
+          get async throws
+        }
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected20, linelength: 20)
+
+    let expected18 =
+      """
+      protocol P {
+        var x: T {
+          get async
+        }
+        var x: T {
+          get throws
+        }
+        var x: T {
+          get
+            async throws
+        }
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected18, linelength: 18)
+
+    let expected12 =
+      """
+      protocol P {
+        var x: T {
+          get
+            async
+        }
+        var x: T {
+          get
+            throws
+        }
+        var x: T {
+          get
+            async
+            throws
+        }
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected12, linelength: 12)
+  }
 }
