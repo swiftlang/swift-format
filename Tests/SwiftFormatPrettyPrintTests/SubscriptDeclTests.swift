@@ -497,4 +497,115 @@ final class SubscriptDeclTests: PrettyPrintTestCase {
       """
     assertPrettyPrintEqual(input: input, expected: wrapped, linelength: 28)
   }
+
+  func testAccessorEffectsWithBodyAfter() {
+    let input =
+      """
+      struct X {
+        subscript(i: Int) -> T {
+          get async throws {
+            foo()
+            bar()
+          }
+        }
+      }
+      """
+
+    assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 80)
+
+    let expected18 =
+      """
+      struct X {
+        subscript(
+          i: Int
+        ) -> T {
+          get
+            async throws
+          {
+            foo()
+            bar()
+          }
+        }
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected18, linelength: 18)
+
+    let expected12 =
+      """
+      struct X {
+        subscript(
+          i: Int
+        ) -> T {
+          get
+            async
+            throws
+          {
+            foo()
+            bar()
+          }
+        }
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected12, linelength: 12)
+  }
+
+  func testAccessorEffectsWithNoBodyAfter() {
+    let input =
+      """
+      protocol P {
+        subscript(i: Int) -> T { get async throws }
+      }
+      """
+
+    assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 80)
+
+    let expected20 =
+      """
+      protocol P {
+        subscript(i: Int)
+          -> T
+        {
+          get async throws
+        }
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected20, linelength: 20)
+
+    let expected18 =
+      """
+      protocol P {
+        subscript(
+          i: Int
+        ) -> T {
+          get
+            async throws
+        }
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected18, linelength: 18)
+
+    let expected16 =
+      """
+      protocol P {
+        subscript(
+          i: Int
+        ) -> T {
+          get
+            async
+            throws
+        }
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected16, linelength: 16)
+  }
 }

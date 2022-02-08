@@ -441,6 +441,22 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: AccessorDeclSyntax) -> SyntaxVisitorContinueKind {
     arrangeAttributeList(node.attributes)
+
+    if let asyncKeyword = node.asyncKeyword {
+      if node.throwsKeyword != nil {
+        before(asyncKeyword, tokens: .break, .open)
+      } else {
+        before(asyncKeyword, tokens: .break)
+      }
+    }
+
+    if let throwsKeyword = node.throwsKeyword {
+      before(node.throwsKeyword, tokens: .break)
+      if node.asyncKeyword != nil {
+        after(throwsKeyword, tokens: .close)
+      }
+    }
+
     arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
     return .visitChildren
   }
