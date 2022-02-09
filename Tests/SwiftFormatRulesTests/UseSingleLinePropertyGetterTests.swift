@@ -18,6 +18,21 @@ final class UseSingleLinePropertyGetterTests: LintOrFormatRuleTestCase {
              var j: Int {
                mutating get { return 0 }
              }
+             var k: Int {
+               get async {
+                 return 4
+               }
+             }
+             var l: Int {
+               get throws {
+                 return 4
+               }
+             }
+             var m: Int {
+               get async throws {
+                 return 4
+               }
+             }
              """,
       expected: """
                 var g: Int { return 4 }
@@ -30,6 +45,21 @@ final class UseSingleLinePropertyGetterTests: LintOrFormatRuleTestCase {
                 }
                 var j: Int {
                   mutating get { return 0 }
+                }
+                var k: Int {
+                  get async {
+                    return 4
+                  }
+                }
+                var l: Int {
+                  get throws {
+                    return 4
+                  }
+                }
+                var m: Int {
+                  get async throws {
+                    return 4
+                  }
                 }
                 """)
   }
