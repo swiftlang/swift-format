@@ -28,14 +28,15 @@ Swift toolchain that is installed and used to build and run the formatter:
 | Xcode Release   | Swift Version          | `swift-format` Branch / Tags     |
 |:----------------|:-----------------------|:---------------------------------|
 | –               | Swift at `main`        | `main`                           |
+| Xcode 13.3      | Swift 5.6              | `release/5.6` / `0.50600.x`      |
 | Xcode 13.0–13.2 | Swift 5.5              | `swift-5.5-branch` / `0.50500.x` |
 | Xcode 12.5      | Swift 5.4              | `swift-5.4-branch` / `0.50400.x` |
 | Xcode 12.0–12.4 | Swift 5.3              | `swift-5.3-branch` / `0.50300.x` |
 | Xcode 11.4–11.7 | Swift 5.2              | `swift-5.2-branch` / `0.50200.x` |
 | Xcode 11.0–11.3 | Swift 5.1              | `swift-5.1-branch`               |
 
-For example, if you are using Xcode 13.1 (Swift 5.5), you will need
-`swift-format` 0.50500.0.
+For example, if you are using Xcode 13.3 (Swift 5.6), you will need
+`swift-format` 0.50600.0.
 
 ## Getting swift-format
 
@@ -44,7 +45,7 @@ then once you have identified the version you need, you can check out the
 source and build it using the following commands:
 
 ```sh
-VERSION=0.50500.0  # replace this with the version you need
+VERSION=0.50600.0  # replace this with the version you need
 git clone https://github.com/apple/swift-format.git
 cd swift-format
 git checkout "tags/$VERSION"
