@@ -12,7 +12,12 @@
 
 import Foundation
 
+#if !os(Windows)
 extension FileHandle: TextOutputStream {
+}
+#endif
+
+extension FileHandle {
   public func write(_ string: String) {
     self.write(string.data(using: .utf8)!)  // Conversion to UTF-8 cannot fail
   }
