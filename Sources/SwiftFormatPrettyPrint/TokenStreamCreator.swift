@@ -2011,8 +2011,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: SomeTypeSyntax) -> SyntaxVisitorContinueKind {
-    after(node.someSpecifier, tokens: .space)
+  override func visit(_ node: ConstrainedSugarTypeSyntax) -> SyntaxVisitorContinueKind {
+    after(node.someOrAnySpecifier, tokens: .space)
     return .visitChildren
   }
 
