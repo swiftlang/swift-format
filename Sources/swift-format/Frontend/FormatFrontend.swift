@@ -39,7 +39,7 @@ class FormatFrontend: Frontend {
       return
     }
 
-    var stdoutStream = FileHandle.standardOutput
+    var stdoutStream = FileHandleTextOutputStream(FileHandle.standardOutput)
     do {
       if inPlace {
         var buffer = ""
