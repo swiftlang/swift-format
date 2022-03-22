@@ -64,7 +64,7 @@ final class StderrDiagnosticPrinter {
   /// Prints a diagnostic to standard error.
   func printDiagnostic(_ diagnostic: TSCBasic.Diagnostic) {
     printQueue.sync {
-      let stderr = FileHandle.standardError
+      let stderr = FileHandleTextOutputStream(FileHandle.standardError)
 
       stderr.write("\(ansiSGR(.boldWhite))\(diagnostic.location): ")
 
