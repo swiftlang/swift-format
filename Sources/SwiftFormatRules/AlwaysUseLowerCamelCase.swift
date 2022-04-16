@@ -51,6 +51,13 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
   }
 
   public override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
+    // Don't diagnose any issues when the variable is overriding, because this declaration can't
+    // rename the variable. If the user analyzes the code where the variable is really declared,
+    // then the diagnostic can be raised for just that location.
+    if let modifiers = node.modifiers, modifiers.has(modifier: "override") {
+      return .visitChildren
+    }
+
     for binding in node.bindings {
       guard let pat = binding.pattern.as(IdentifierPatternSyntax.self) else {
         continue
@@ -94,6 +101,13 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
   }
 
   public override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
+    // Don't diagnose any issues when the function is overriding, because this declaration can't
+    // rename the function. If the user analyzes the code where the function is really declared,
+    // then the diagnostic can be raised for just that location.
+    if let modifiers = node.modifiers, modifiers.has(modifier: "override") {
+      return .visitChildren
+    }
+
     // We allow underscores in test names, because there's an existing convention of using
     // underscores to separate phrases in very detailed test names.
     let allowUnderscores = testCaseFuncs.contains(node)
