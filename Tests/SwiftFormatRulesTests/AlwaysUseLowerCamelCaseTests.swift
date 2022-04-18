@@ -123,4 +123,25 @@ final class AlwaysUseLowerCamelCaseTests: LintOrFormatRuleTestCase {
     XCTAssertNotDiagnosed(
       .nameMustBeLowerCamelCase("test_HappyPath_Through_GoodCode_Throws", description: "function"))
   }
+
+  func testIgnoresFunctionOverrides() {
+    let input =
+      """
+      class ParentClass {
+        var poorly_named_variable: Int = 5
+        func poorly_named_method() {}
+      }
+
+      class ChildClass: ParentClass {
+        override var poorly_named_variable: Int = 5
+        override func poorly_named_method() {}
+      }
+      """
+
+    performLint(AlwaysUseLowerCamelCase.self, input: input)
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("poorly_named_variable", description: "variable"), line: 2, column: 7)
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("poorly_named_method", description: "function"), line: 3, column: 8)
+  }
 }
