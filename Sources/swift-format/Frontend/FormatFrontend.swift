@@ -49,8 +49,10 @@ class FormatFrontend: Frontend {
           to: &buffer,
           parsingDiagnosticHandler: diagnosticsEngine.consumeParserDiagnostic)
 
-        let bufferData = buffer.data(using: .utf8)!  // Conversion to UTF-8 cannot fail
-        try bufferData.write(to: url, options: .atomic)
+        if buffer != source {
+          let bufferData = buffer.data(using: .utf8)!  // Conversion to UTF-8 cannot fail
+          try bufferData.write(to: url, options: .atomic)
+        }
       } else {
         try formatter.format(
           source: source,
