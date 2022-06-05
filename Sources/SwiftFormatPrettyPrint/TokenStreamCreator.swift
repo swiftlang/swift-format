@@ -1700,7 +1700,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // this special exception for `async let` statements to avoid breaking prematurely between the
     // `async` and `let` keywords.
     let breakOrSpace: Token
-    if node.name.tokenKind == .identifier("async") {
+    if node.name.tokenKind == .contextualKeyword("async") {
       breakOrSpace = .space
     } else {
       breakOrSpace = .break
