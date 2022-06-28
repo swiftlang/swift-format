@@ -41,7 +41,8 @@ public final class UseWhereClausesInForLoops: SyntaxFormatRule {
     //    with a single condition whose body is just `continue`.
     switch stmt.item.as(SyntaxEnum.self) {
     case .ifStmt(let ifStmt)
-    where ifStmt.conditions.count == 1 && node.body.statements.count == 1:
+    where ifStmt.conditions.count == 1 && ifStmt.elseKeyword == nil
+      && node.body.statements.count == 1:
       // Extract the condition of the IfStmt.
       let conditionElement = ifStmt.conditions.first!
       guard let condition = conditionElement.condition.as(ExprSyntax.self) else {

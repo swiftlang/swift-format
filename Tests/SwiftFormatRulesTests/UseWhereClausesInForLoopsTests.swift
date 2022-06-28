@@ -14,6 +14,22 @@ final class UseWhereClausesInForLoopsTests: LintOrFormatRuleTestCase {
              for i in [0, 1, 2, 3] {
                if i > 30 {
                  print(i)
+               } else {
+                 print(i)
+               }
+             }
+
+             for i in [0, 1, 2, 3] {
+               if i > 30 {
+                 print(i)
+               } else if i > 40 {
+                 print(i)
+               }
+             }
+
+             for i in [0, 1, 2, 3] {
+               if i > 30 {
+                 print(i)
                }
                print(i)
              }
@@ -34,6 +50,22 @@ final class UseWhereClausesInForLoopsTests: LintOrFormatRuleTestCase {
       expected: """
                 for i in [0, 1, 2, 3] where i > 30 {
                     print(i)
+                }
+
+                for i in [0, 1, 2, 3] {
+                  if i > 30 {
+                    print(i)
+                  } else {
+                    print(i)
+                  }
+                }
+
+                for i in [0, 1, 2, 3] {
+                  if i > 30 {
+                    print(i)
+                  } else if i > 40 {
+                    print(i)
+                  }
                 }
 
                 for i in [0, 1, 2, 3] {
