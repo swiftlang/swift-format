@@ -82,7 +82,7 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
   private func hasNonWhitespaceLeadingTrivia(_ token: TokenSyntax) -> Bool {
     for piece in token.leadingTrivia {
       switch piece {
-      case .blockComment, .docBlockComment, .docLineComment, .garbageText, .lineComment:
+      case .blockComment, .docBlockComment, .docLineComment, .garbageText, .lineComment, .shebang:
         return true
       default:
         break

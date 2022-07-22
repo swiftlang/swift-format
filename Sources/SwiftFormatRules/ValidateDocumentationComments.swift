@@ -29,20 +29,19 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
 
   public override func visit(_ node: InitializerDeclSyntax) -> SyntaxVisitorContinueKind {
     return checkFunctionLikeDocumentation(
-      DeclSyntax(node), name: "init", parameters: node.parameters.parameterList, throwsOrRethrowsKeyword: node.throwsOrRethrowsKeyword)
+      DeclSyntax(node), name: "init", signature: node.signature)
   }
 
   public override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
     return checkFunctionLikeDocumentation(
-      DeclSyntax(node), name: node.identifier.text, parameters: node.signature.input.parameterList, throwsOrRethrowsKeyword: node.signature.throwsOrRethrowsKeyword,
+      DeclSyntax(node), name: node.identifier.text, signature: node.signature,
       returnClause: node.signature.output)
   }
 
   private func checkFunctionLikeDocumentation(
     _ node: DeclSyntax,
     name: String,
-    parameters: FunctionParameterListSyntax,
-    throwsOrRethrowsKeyword: TokenSyntax?,
+    signature: FunctionSignatureSyntax,
     returnClause: ReturnClauseSyntax? = nil
   ) -> SyntaxVisitorContinueKind {
     guard let declComment = node.docComment else { return .skipChildren }
@@ -64,10 +63,10 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
     }
 
     validateThrows(
-      throwsOrRethrowsKeyword, name: name, throwsDesc: commentInfo.throwsDescription, node: node)
+      signature.throwsOrRethrowsKeyword, name: name, throwsDesc: commentInfo.throwsDescription, node: node)
     validateReturn(
       returnClause, name: name, returnDesc: commentInfo.returnsDescription, node: node)
-    let funcParameters = funcParametersIdentifiers(in: parameters)
+    let funcParameters = funcParametersIdentifiers(in: signature.input.parameterList)
 
     // If the documentation of the parameters is wrong 'docCommentInfo' won't
     // parse the parameters correctly. First the documentation has to be fix
