@@ -40,7 +40,7 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
         // Collect any possible redundant initializers into a list
       } else if let initDecl = member.as(InitializerDeclSyntax.self) {
         guard initDecl.optionalMark == nil else { continue }
-        guard initDecl.throwsOrRethrowsKeyword == nil else { continue }
+        guard initDecl.signature.throwsOrRethrowsKeyword == nil else { continue }
         initializers.append(initDecl)
       }
     }
@@ -51,7 +51,7 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
     for initializer in initializers {
       guard
         matchesPropertyList(
-          parameters: initializer.parameters.parameterList,
+          parameters: initializer.signature.input.parameterList,
           properties: storedProperties)
       else { continue }
       guard

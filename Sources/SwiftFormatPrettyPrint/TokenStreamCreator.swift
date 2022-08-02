@@ -155,7 +155,21 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       Syntax(node),
       attributes: node.attributes,
       modifiers: node.modifiers,
-      typeKeyword: node.classOrActorKeyword,
+      typeKeyword: node.classKeyword,
+      identifier: node.identifier,
+      genericParameterClause: node.genericParameterClause,
+      inheritanceClause: node.inheritanceClause,
+      genericWhereClause: node.genericWhereClause,
+      members: node.members)
+    return .visitChildren
+  }
+
+  override func visit(_ node: ActorDeclSyntax) -> SyntaxVisitorContinueKind {
+    arrangeTypeDeclBlock(
+      Syntax(node),
+      attributes: node.attributes,
+      modifiers: node.modifiers,
+      typeKeyword: node.actorKeyword,
       identifier: node.identifier,
       genericParameterClause: node.genericParameterClause,
       inheritanceClause: node.inheritanceClause,
@@ -305,21 +319,26 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: InitializerDeclSyntax) -> SyntaxVisitorContinueKind {
-    let hasArguments = !node.parameters.parameterList.isEmpty
+    let hasArguments = !node.signature.input.parameterList.isEmpty
 
-    arrangeParameterClause(node.parameters, forcesBreakBeforeRightParen: node.body != nil)
+    // Prioritize keeping ") throws" together. We can only do this if the function
+    // has arguments.
+    if hasArguments && config.prioritizeKeepingFunctionOutputTogether {
+      // Due to visitation order, the matching .open break is added in ParameterClauseSyntax.
+      after(node.signature.lastToken, tokens: .close)
+    }
+    
+    arrangeParameterClause(node.signature.input, forcesBreakBeforeRightParen: node.body != nil)
 
     // Prioritize keeping "<modifiers> init<punctuation>" together.
     let firstTokenAfterAttributes = node.modifiers?.firstToken ?? node.initKeyword
     before(firstTokenAfterAttributes, tokens: .open)
 
     if hasArguments || node.genericParameterClause != nil {
-      after(node.parameters.leftParen, tokens: .close)
+      after(node.signature.input.leftParen, tokens: .close)
     } else {
-      after(node.parameters.rightParen, tokens: .close)
+      after(node.signature.input.rightParen, tokens: .close)
     }
-
-    before(node.throwsOrRethrowsKeyword, tokens: .break)
 
     arrangeFunctionLikeDecl(
       Syntax(node),
@@ -2486,7 +2505,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     var verbatimText = ""
     for piece in trailingTrivia[...lastGarbageIndex] {
       switch piece {
-      case .garbageText, .spaces, .tabs, .formfeeds, .verticalTabs:
+      case .shebang, .garbageText, .spaces, .tabs, .formfeeds, .verticalTabs:
         piece.write(to: &verbatimText)
       default:
         // The implementation of the lexer today ensures that newlines, carriage returns, and
@@ -2937,7 +2956,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
           }
         }
 
-      case .garbageText(let text):
+      case .shebang(let text), .garbageText(let text):
         // Garbage text in leading trivia might be something meaningful that would be disruptive to
         // throw away when formatting the file, like a hashbang line or Unicode byte-order marker at
         // the beginning of a file, or source control conflict markers. Keep it as verbatim text so
