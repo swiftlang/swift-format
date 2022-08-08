@@ -17,7 +17,7 @@ import Foundation
 let package = Package(
   name: "swift-format",
   platforms: [
-    .macOS(.v10_11)
+    .macOS(.v10_13)
   ],
   products: [
     .executable(name: "swift-format", targets: ["swift-format"]),
