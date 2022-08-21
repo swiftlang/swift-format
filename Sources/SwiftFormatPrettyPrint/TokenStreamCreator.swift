@@ -62,6 +62,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     self.config = configuration
     self.operatorContext = operatorContext
     self.maxlinelength = config.lineLength
+    super.init(viewMode: .sourceAccurate)
   }
 
   func makeStream(from node: Syntax) -> [Token] {
@@ -486,6 +487,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   // MARK: - Control flow statement nodes
 
+  override func visit(_ node: LabeledStmtSyntax) -> SyntaxVisitorContinueKind {
+    after(node.labelColon, tokens: .space)
+    return .visitChildren
+  }
+
   override func visit(_ node: IfStmtSyntax) -> SyntaxVisitorContinueKind {
     // There may be a consistent breaking group around this node, see `CodeBlockItemSyntax`. This
     // group is necessary so that breaks around and inside of the conditions aren't forced to break
@@ -493,7 +499,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     before(node.conditions.firstToken, tokens: .open)
     after(node.conditions.lastToken, tokens: .close)
 
-    after(node.labelColon, tokens: .space)
     after(node.ifKeyword, tokens: .space)
 
     // Add break groups, using open continuation breaks, around any conditions after the first so
@@ -553,8 +558,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: ForInStmtSyntax) -> SyntaxVisitorContinueKind {
-    after(node.labelColon, tokens: .space)
-
     // If we have a `(try) await` clause, allow breaking after the `for` so that the `(try) await`
     // can fall onto the next line if needed, and if both `try await` are present, keep them
     // together. Otherwise, keep `for` glued to the token after it so that we break somewhere later
@@ -589,7 +592,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: WhileStmtSyntax) -> SyntaxVisitorContinueKind {
-    after(node.labelColon, tokens: .space)
     after(node.whileKeyword, tokens: .space)
 
     // Add break groups, using open continuation breaks, around any conditions after the first so
@@ -611,7 +613,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: RepeatWhileStmtSyntax) -> SyntaxVisitorContinueKind {
-    after(node.labelColon, tokens: .space)
     arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
 
     if config.lineBreakBeforeControlFlowKeywords {
@@ -631,7 +632,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: DoStmtSyntax) -> SyntaxVisitorContinueKind {
-    after(node.labelColon, tokens: .space)
     arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
     return .visitChildren
   }
@@ -686,7 +686,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: SwitchStmtSyntax) -> SyntaxVisitorContinueKind {
-    after(node.labelColon, tokens: .space)
     before(node.switchKeyword, tokens: .open)
     after(node.switchKeyword, tokens: .space)
     before(node.leftBrace, tokens: .break(.reset))
@@ -2498,14 +2497,14 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   /// same place but still let surrounding formatting occur somewhat as expected.
   private func appendTrailingTrivia(_ token: TokenSyntax) {
     let trailingTrivia = Array(token.trailingTrivia)
-    guard let lastGarbageIndex = trailingTrivia.lastIndex(where: { $0.isGarbageText }) else {
+    guard let lastUnexpectedIndex = trailingTrivia.lastIndex(where: { $0.isUnexpectedText }) else {
       return
     }
 
     var verbatimText = ""
-    for piece in trailingTrivia[...lastGarbageIndex] {
+    for piece in trailingTrivia[...lastUnexpectedIndex] {
       switch piece {
-      case .shebang, .garbageText, .spaces, .tabs, .formfeeds, .verticalTabs:
+      case .shebang, .unexpectedText, .spaces, .tabs, .formfeeds, .verticalTabs:
         piece.write(to: &verbatimText)
       default:
         // The implementation of the lexer today ensures that newlines, carriage returns, and
@@ -2956,7 +2955,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
           }
         }
 
-      case .shebang(let text), .garbageText(let text):
+      case .shebang(let text), .unexpectedText(let text):
         // Garbage text in leading trivia might be something meaningful that would be disruptive to
         // throw away when formatting the file, like a hashbang line or Unicode byte-order marker at
         // the beginning of a file, or source control conflict markers. Keep it as verbatim text so
@@ -3610,10 +3609,10 @@ class CommentMovingRewriter: SyntaxRewriter {
 }
 
 extension TriviaPiece {
-  /// True if the trivia piece is garbage text.
-  fileprivate var isGarbageText: Bool {
+  /// True if the trivia piece is unexpected text.
+  fileprivate var isUnexpectedText: Bool {
     switch self {
-    case .garbageText: return true
+    case .unexpectedText: return true
     default: return false
     }
   }

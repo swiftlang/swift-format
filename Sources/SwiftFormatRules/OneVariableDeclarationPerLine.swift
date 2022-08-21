@@ -49,7 +49,7 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
       // itself.
       let visitedDecl = super.visit(varDecl).as(VariableDeclSyntax.self)!
       var splitter = VariableDeclSplitter {
-        SyntaxFactory.makeCodeBlockItem(
+        CodeBlockItemSyntax(
           item: Syntax($0),
           semicolon: nil,
           errorTokens: nil)
@@ -57,7 +57,7 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
       newItems.append(contentsOf: splitter.nodes(bySplitting: visitedDecl))
     }
 
-    return Syntax(SyntaxFactory.makeCodeBlockItemList(newItems))
+    return Syntax(CodeBlockItemListSyntax(newItems))
   }
 
   /// Returns true if the given `CodeBlockItemSyntax` contains a `let` or `var`
@@ -173,7 +173,7 @@ private struct VariableDeclSplitter<Node: SyntaxProtocol> {
     guard !bindingQueue.isEmpty else { return }
 
     let newDecl =
-      varDecl.withBindings(SyntaxFactory.makePatternBindingList(bindingQueue))
+      varDecl.withBindings(PatternBindingListSyntax(bindingQueue))
     nodes.append(generator(newDecl))
 
     fixOriginalVarDeclTrivia()
@@ -194,7 +194,7 @@ private struct VariableDeclSplitter<Node: SyntaxProtocol> {
       let newBinding =
         binding.withTrailingComma(nil).withTypeAnnotation(typeAnnotation)
       let newDecl =
-        varDecl.withBindings(SyntaxFactory.makePatternBindingList([newBinding]))
+        varDecl.withBindings(PatternBindingListSyntax([newBinding]))
       nodes.append(generator(newDecl))
 
       fixOriginalVarDeclTrivia()

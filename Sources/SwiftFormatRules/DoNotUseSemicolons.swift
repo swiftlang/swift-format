@@ -70,13 +70,16 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
       // If there's a semicolon, diagnose and remove it.
       if let semicolon = item.semicolon {
 
-        // Exception: do not remove the semicolon if it is separating a 'do' statement from a 'while' statement.
-        if Syntax(item).as(CodeBlockItemSyntax.self)?.children.first?.is(DoStmtSyntax.self) == true,
+        // Exception: do not remove the semicolon if it is separating a 'do' statement from a
+        // 'while' statement.
+        if Syntax(item).as(CodeBlockItemSyntax.self)?
+          .children(viewMode: .sourceAccurate).first?.is(DoStmtSyntax.self) == true,
           idx < node.count - 1
         {
-          let nextItem = node.children[node.children.index(after: item.index)]
+          let children = node.children(viewMode: .sourceAccurate)
+          let nextItem = children[children.index(after: item.index)]
           if Syntax(nextItem).as(CodeBlockItemSyntax.self)?
-            .children.first?.is(WhileStmtSyntax.self) == true
+            .children(viewMode: .sourceAccurate).first?.is(WhileStmtSyntax.self) == true
           {
             continue
           }
@@ -96,11 +99,11 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
   }
 
   public override func visit(_ node: CodeBlockItemListSyntax) -> Syntax {
-    return Syntax(nodeByRemovingSemicolons(from: node, nodeCreator: SyntaxFactory.makeCodeBlockItemList))
+    return Syntax(nodeByRemovingSemicolons(from: node, nodeCreator: CodeBlockItemListSyntax.init))
   }
 
   public override func visit(_ node: MemberDeclListSyntax) -> Syntax {
-    return Syntax(nodeByRemovingSemicolons(from: node, nodeCreator: SyntaxFactory.makeMemberDeclList))
+    return Syntax(nodeByRemovingSemicolons(from: node, nodeCreator: MemberDeclListSyntax.init))
   }
 }
 

@@ -59,13 +59,13 @@ public final class NoLabelsInCasePatterns: SyntaxFormatRule {
         newArgs.append(argument.withLabel(nil).withColon(nil))
       }
 
-      let newArgList = SyntaxFactory.makeTupleExprElementList(newArgs)
+      let newArgList = TupleExprElementListSyntax(newArgs)
       let newFuncCall = funcCall.withArgumentList(newArgList)
       let newExpPat = expPat.withExpression(ExprSyntax(newFuncCall))
       let newItem = item.withPattern(PatternSyntax(newExpPat))
       newCaseItems.append(newItem)
     }
-    let newCaseItemList = SyntaxFactory.makeCaseItemList(newCaseItems)
+    let newCaseItemList = CaseItemListSyntax(newCaseItems)
     return Syntax(node.withCaseItems(newCaseItemList))
   }
 }

@@ -59,6 +59,7 @@ final class PipelineGenerator: FileGenerator {
         /// Creates a new lint pipeline.
         init(context: Context) {
           self.context = context
+          super.init(viewMode: .sourceAccurate)
         }
 
       """

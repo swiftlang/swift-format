@@ -112,8 +112,8 @@ extension Trivia {
         prev = .carriageReturnLineFeeds(l + r)
       case (.verticalTabs(let l), .verticalTabs(let r)):
         prev = .verticalTabs(l + r)
-      case (.garbageText(let l), .garbageText(let r)):
-        prev = .garbageText(l + r)
+      case (.unexpectedText(let l), .unexpectedText(let r)):
+        prev = .unexpectedText(l + r)
       case (.formfeeds(let l), .formfeeds(let r)):
         prev = .formfeeds(l + r)
       default:

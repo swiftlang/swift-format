@@ -97,7 +97,7 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
         return codeBlockItem
       }
     }
-    return SyntaxFactory.makeCodeBlockItemList(newCodeBlockItems)
+    return CodeBlockItemListSyntax(newCodeBlockItems)
   }
 
   /// Returns a new `IfConfigDeclSyntax` equivalent to the given node, but where any file-scoped
@@ -116,7 +116,7 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
         return clause
       }
     }
-    return ifConfigDecl.withClauses(SyntaxFactory.makeIfConfigClauseList(newClauses))
+    return ifConfigDecl.withClauses(IfConfigClauseListSyntax(newClauses))
   }
 
   /// Returns a rewritten version of the given declaration if its modifier list contains `private`
@@ -163,7 +163,7 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
       }
       return modifier
     }
-    return factory(SyntaxFactory.makeModifierList(newModifiers))
+    return factory(ModifierListSyntax(newModifiers))
   }
 }
 

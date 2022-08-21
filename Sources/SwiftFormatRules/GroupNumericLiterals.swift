@@ -60,7 +60,7 @@ public final class GroupNumericLiterals: SyntaxFormatRule {
 
     newDigits = isNegative ? "-" + newDigits : newDigits
     let result = node.withDigits(
-      SyntaxFactory.makeIntegerLiteral(
+      TokenSyntax.integerLiteral(
         newDigits,
         leadingTrivia: node.digits.leadingTrivia,
         trailingTrivia: node.digits.trailingTrivia))

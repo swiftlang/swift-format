@@ -27,5 +27,6 @@ open class SyntaxLintRule: SyntaxVisitor, Rule {
   /// Creates a new rule in a given context.
   public required init(context: Context) {
     self.context = context
+    super.init(viewMode: .sourceAccurate)
   }
 }

@@ -82,7 +82,8 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
   private func hasNonWhitespaceLeadingTrivia(_ token: TokenSyntax) -> Bool {
     for piece in token.leadingTrivia {
       switch piece {
-      case .blockComment, .docBlockComment, .docLineComment, .garbageText, .lineComment, .shebang:
+      case .blockComment, .docBlockComment, .docLineComment, .unexpectedText, .lineComment,
+        .shebang:
         return true
       default:
         break
@@ -95,8 +96,8 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
   /// been copied from the tuple type syntax node it is replacing.
   private func makeVoidIdentifierType(toReplace node: TupleTypeSyntax) -> SimpleTypeIdentifierSyntax
   {
-    return SyntaxFactory.makeSimpleTypeIdentifier(
-      name: SyntaxFactory.makeIdentifier(
+    return SimpleTypeIdentifierSyntax(
+      name: TokenSyntax.identifier(
         "Void",
         leadingTrivia: node.firstToken?.leadingTrivia ?? [],
         trailingTrivia: node.lastToken?.trailingTrivia ?? []),
