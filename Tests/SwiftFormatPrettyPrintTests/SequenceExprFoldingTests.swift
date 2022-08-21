@@ -67,13 +67,6 @@ final class SequenceExprFoldingTests: XCTestCase {
   }
 
   func testNestedTernary() {
-    // When parsing ternary expressions, SwiftSyntax sometimes wraps them in a
-    // SequenceExpr containing a single element, and also wraps the first choice
-    // in a SequenceExpr containing a single element. Our folding will remove
-    // the outer sequence but will not touch or recurse into the sequence
-    // wrapping the first choice, which is why we have the "double wrapping"
-    // ("{{ ... }}") of first choices for nested ternaries below.
-
     assertFoldedExprStructure(
       "a ? b : c ? d : e",
       "{ a ? b : { c ? d : e }}")
