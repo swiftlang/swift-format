@@ -66,11 +66,11 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
       newEnumDecl = node
     }
 
-    let newModifier = SyntaxFactory.makeDeclModifier(
-      name: SyntaxFactory.makeIdentifier(
+    let newModifier = DeclModifierSyntax(
+      name: TokenSyntax.identifier(
         "indirect", leadingTrivia: leadingTrivia, trailingTrivia: .spaces(1)), detail: nil)
 
-    let newMemberBlock = node.members.withMembers(SyntaxFactory.makeMemberDeclList(newMembers))
+    let newMemberBlock = node.members.withMembers(MemberDeclListSyntax(newMembers))
     return DeclSyntax(newEnumDecl.addModifier(newModifier).withMembers(newMemberBlock))
   }
 

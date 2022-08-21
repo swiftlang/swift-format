@@ -130,6 +130,7 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
     ignoreFileRegex = try! NSRegularExpression(pattern: ignoreFilePattern, options: [])
 
     self.sourceLocationConverter = sourceLocationConverter
+    super.init(viewMode: .sourceAccurate)
   }
 
   // MARK: - Syntax Visitation Methods

@@ -55,7 +55,7 @@ public final class UseEarlyExits: SyntaxFormatRule {
       return nodeAfterTransformingChildren
     }
 
-    let result = SyntaxFactory.makeCodeBlockItemList(
+    let result = CodeBlockItemListSyntax(
       codeBlockItems.flatMap { (codeBlockItem: CodeBlockItemSyntax) -> [CodeBlockItemSyntax] in
         // The `elseBody` of an `IfStmtSyntax` will be a `CodeBlockSyntax` if it's an `else` block,
         // or another `IfStmtSyntax` if it's an `else if` block. We only want to handle the former.
@@ -70,18 +70,18 @@ public final class UseEarlyExits: SyntaxFormatRule {
 
         let trueBlock = ifStatement.body.withLeftBrace(nil).withRightBrace(nil)
 
-        let guardKeyword = SyntaxFactory.makeGuardKeyword(
+        let guardKeyword = TokenSyntax.guardKeyword(
           leadingTrivia: ifStatement.ifKeyword.leadingTrivia,
           trailingTrivia: .spaces(1))
-        let guardStatement = SyntaxFactory.makeGuardStmt(
+        let guardStatement = GuardStmtSyntax(
           guardKeyword: guardKeyword,
           conditions: ifStatement.conditions,
-          elseKeyword: SyntaxFactory.makeElseKeyword(trailingTrivia: .spaces(1)),
+          elseKeyword: TokenSyntax.elseKeyword(trailingTrivia: .spaces(1)),
           body: elseBody)
 
         return [
-          SyntaxFactory.makeCodeBlockItem(item: Syntax(guardStatement), semicolon: nil, errorTokens: nil),
-          SyntaxFactory.makeCodeBlockItem(item: Syntax(trueBlock), semicolon: nil, errorTokens: nil),
+          CodeBlockItemSyntax(item: Syntax(guardStatement), semicolon: nil, errorTokens: nil),
+          CodeBlockItemSyntax(item: Syntax(trueBlock), semicolon: nil, errorTokens: nil),
         ]
       })
     return Syntax(result)

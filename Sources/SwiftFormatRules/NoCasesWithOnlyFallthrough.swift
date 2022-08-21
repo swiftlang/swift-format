@@ -91,7 +91,7 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
     // anything.
     flushViolations()
 
-    return Syntax(SyntaxFactory.makeSwitchCaseList(newChildren))
+    return Syntax(SwitchCaseListSyntax(newChildren))
   }
 
   /// Returns whether the given `SwitchCaseSyntax` contains only a fallthrough statement.
@@ -143,14 +143,14 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
       newCaseItems.append(contentsOf: caseItems.dropLast())
       newCaseItems.append(
         caseItems.last!.withTrailingComma(
-          SyntaxFactory.makeCommaToken(trailingTrivia: .spaces(1))))
+          TokenSyntax.commaToken(trailingTrivia: .spaces(1))))
     }
 
     let validCaseLabel = validCase.label.as(SwitchCaseLabelSyntax.self)!
     newCaseItems.append(contentsOf: validCaseLabel.caseItems)
 
     let label = validCaseLabel.withCaseItems(
-      SyntaxFactory.makeCaseItemList(newCaseItems))
+      CaseItemListSyntax(newCaseItems))
     return validCase.withLabel(Syntax(label))
   }
 }

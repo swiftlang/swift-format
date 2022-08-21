@@ -132,7 +132,7 @@ public final class OrderedImports: SyntaxFormatRule {
     }
 
     let newNode = node.withStatements(
-      SyntaxFactory.makeCodeBlockItemList(convertToCodeBlockItems(lines: formattedLines))
+      CodeBlockItemListSyntax(convertToCodeBlockItems(lines: formattedLines))
     )
     return Syntax(newNode)
   }

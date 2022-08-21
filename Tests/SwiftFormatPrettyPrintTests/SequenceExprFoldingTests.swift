@@ -79,13 +79,13 @@ final class SequenceExprFoldingTests: XCTestCase {
       "{ a ? b : { c ? d : e }}")
     assertFoldedExprStructure(
       "a ? b ? c : d : e",
-      "{ a ? {{ b ? c : d }} : e }")
+      "{ a ? { b ? c : d } : e }")
     assertFoldedExprStructure(
       "a ? b : c ? d : e ? f : g",
       "{ a ? b : { c ? d : { e ? f : g }}}")
     assertFoldedExprStructure(
       "a ? b ? c ? d : e : f : g",
-      "{ a ? {{ b ? {{ c ? d : e }} : f }} : g }")
+      "{ a ? { b ? { c ? d : e } : f } : g }")
   }
 
   func testSimpleCastExpressions() {
@@ -270,6 +270,10 @@ fileprivate class SequenceExprStructureWriter: SyntaxVisitor {
 
   /// The string containing the concatenated output.
   private(set) var result = ""
+
+  init() {
+    super.init(viewMode: .sourceAccurate)
+  }
 
   override func visit(_ node: SequenceExprSyntax) -> SyntaxVisitorContinueKind {
     open()

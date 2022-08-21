@@ -19,6 +19,7 @@ fileprivate class ImportsXCTestVisitor: SyntaxVisitor {
 
   init(context: Context) {
     self.context = context
+    super.init(viewMode: .sourceAccurate)
   }
 
   override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {

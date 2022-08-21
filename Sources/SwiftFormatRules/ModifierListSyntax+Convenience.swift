@@ -48,9 +48,8 @@ extension ModifierListSyntax {
 
   /// Returns a foramatted declaration modifier token with the given name.
   func createModifierToken(name: String) -> DeclModifierSyntax {
-    let id = SyntaxFactory.makeIdentifier(name, trailingTrivia: .spaces(1))
-    let newModifier = SyntaxFactory.makeDeclModifier(
-      name: id, detail: nil)
+    let id = TokenSyntax.identifier(name, trailingTrivia: .spaces(1))
+    let newModifier = DeclModifierSyntax(name: id, detail: nil)
     return newModifier
   }
 
@@ -86,7 +85,7 @@ extension ModifierListSyntax {
         leadingTrivia: [],
         trailingTrivia: .spaces(1))
       newModifiers.insert(formattedMod, at: 0)
-      return SyntaxFactory.makeModifierList(newModifiers)
+      return ModifierListSyntax(newModifiers)
     } else {
       return inserting(modifier, at: index)
     }

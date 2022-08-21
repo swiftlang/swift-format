@@ -69,7 +69,7 @@ fileprivate class SyntaxValidatingVisitor: SyntaxVisitor {
 ///
 /// - Parameter syntax: The root of a tree of syntax nodes to check for compatibility.
 public func _firstInvalidSyntaxPosition(in syntax: Syntax) -> AbsolutePosition? {
-  let visitor = SyntaxValidatingVisitor()
+  let visitor = SyntaxValidatingVisitor(viewMode: .sourceAccurate)
   visitor.walk(syntax)
   return visitor.invalidSyntaxStartPosition
 }

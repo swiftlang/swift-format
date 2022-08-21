@@ -82,7 +82,7 @@ extension SequenceExprSyntax {
     case 1:
       // A sequence with one element will not be changed by folding unless that
       // element is a ternary expression.
-      return elements.first!.is(TernaryExprSyntax.self)
+      return elements.first!.is(UnresolvedTernaryExprSyntax.self)
 
     case 2:
       // A sequence with two elements might be changed by folding if the first
@@ -91,7 +91,7 @@ extension SequenceExprSyntax {
       var elementsIterator = elements.makeIterator()
       let first = elementsIterator.next()!
       let second = elementsIterator.next()!
-      return first.is(TernaryExprSyntax.self)
+      return first.is(UnresolvedTernaryExprSyntax.self)
         || !(second.is(AsExprSyntax.self) || second.is(IsExprSyntax.self))
 
     case 3:
@@ -100,7 +100,8 @@ extension SequenceExprSyntax {
       // be more inclusive than it needs to be.)
       return elements.contains {
         $0.is(AsExprSyntax.self) || $0.is(IsExprSyntax.self)
-          || $0.is(TernaryExprSyntax.self) || $0.is(AwaitExprSyntax.self)
+          || $0.is(UnresolvedTernaryExprSyntax.self)
+          || $0.is(AwaitExprSyntax.self)
           || $0.is(TryExprSyntax.self)
       }
 
@@ -283,19 +284,6 @@ extension SequenceExprSyntax {
       // (or begins with) an operator.
       elements.append(expr)
       elements.append(expr)
-    } else if let ternaryExpr = expr.as(TernaryExprSyntax.self) {
-      // In the compiler implementation, ternary expressions have their
-      // condition and false choice appear in the main sequence, with the true
-      // choice nested inside an `if-expr` with null values for the other two
-      // parts. In order to match that behavior, we extract the condition and
-      // false choice from the ternary and put them directly in the sequence.
-      // We can't null out those properties of a `TernaryExprSyntax` because
-      // they are non-optional, so instead we simply insert the original
-      // ternary in that slot and the rest of the algorithm will ignore
-      // everything except for the true choice.
-      normalizeExpression(ternaryExpr.conditionExpression, into: &elements)
-      elements.append(ExprSyntax(ternaryExpr))
-      normalizeExpression(ternaryExpr.secondChoice, into: &elements)
     } else {
       elements.append(expr)
     }
@@ -317,7 +305,7 @@ extension SequenceExprSyntax {
     case .binaryOperatorExpr(let binOpExpr):
       let infixOpName = binOpExpr.operatorToken.text
       return context.infixOperator(named: infixOpName)?.precedenceGroup
-    case .ternaryExpr:
+    case .unresolvedTernaryExpr:
       return context.precedenceGroup(named: .ternary)
     default:
       // This branch will cover any potential new nodes that might arise in the
@@ -378,26 +366,26 @@ extension SequenceExprSyntax {
     }
 
     switch Syntax(op).as(SyntaxEnum.self) {
-    case .ternaryExpr(let ternaryExpr):
+    case .unresolvedTernaryExpr(let unresolvedTernaryExpr):
       // Resolve the ternary expression by pulling the LHS and RHS that we
       // actually want into it.
-
-      let result = ternaryExpr
-        .withConditionExpression(lhs)
-        .withSecondChoice(rhs)
+      let result = TernaryExprSyntax(
+        conditionExpression: lhs,
+        questionMark: unresolvedTernaryExpr.questionMark,
+        firstChoice: unresolvedTernaryExpr.firstChoice,
+        colonMark: unresolvedTernaryExpr.colonMark,
+        secondChoice: rhs)
       return makeResultExpression(ExprSyntax(result))
     case .asExpr, .isExpr:
       // A normalized cast expression will have a regular LHS, then `as/is Type`
       // as the operator *and* the RHS. We resolve it by returning a new
       // sequence expression that discards the extra RHS.
-      let result = SyntaxFactory.makeSequenceExpr(
-        elements: SyntaxFactory.makeExprList([lhs, op]))
+      let result = SequenceExprSyntax(elements: ExprListSyntax([lhs, op]))
       return makeResultExpression(ExprSyntax(result))
     default:
       // For any other binary operator, we simply return a sequence that has the
       // three elements.
-      let result = SyntaxFactory.makeSequenceExpr(
-        elements: SyntaxFactory.makeExprList([lhs, op, rhs]))
+      let result = SequenceExprSyntax(elements: ExprListSyntax([lhs, op, rhs]))
       return makeResultExpression(ExprSyntax(result))
     }
   }

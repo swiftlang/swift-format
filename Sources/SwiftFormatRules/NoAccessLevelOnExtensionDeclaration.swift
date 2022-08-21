@@ -44,7 +44,7 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
         accessKeywordToAdd = accessKeyword
       }
 
-      let newMembers = SyntaxFactory.makeMemberDeclBlock(
+      let newMembers = MemberDeclBlockSyntax(
         leftBrace: node.members.leftBrace,
         members: addMemberAccessKeywords(memDeclBlock: node.members, keyword: accessKeywordToAdd),
         rightBrace: node.members.rightBrace)
@@ -96,7 +96,7 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
       else { continue }
       newMembers.append(memberItem.withDecl(newDecl))
     }
-    return SyntaxFactory.makeMemberDeclList(newMembers)
+    return MemberDeclListSyntax(newMembers)
   }
 }
 

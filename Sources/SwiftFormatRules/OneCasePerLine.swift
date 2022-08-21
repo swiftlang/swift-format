@@ -70,7 +70,7 @@ public final class OneCasePerLine: SyntaxFormatRule {
     /// Creates and returns a new `EnumCaseDeclSyntax` with the given elements, based on the current
     /// basis declaration, and updates the comment preserving state if needed.
     mutating func makeCaseDeclFromBasis(elements: [EnumCaseElementSyntax]) -> EnumCaseDeclSyntax {
-      let caseDecl = basis.withElements(SyntaxFactory.makeEnumCaseElementList(elements))
+      let caseDecl = basis.withElements(EnumCaseElementListSyntax(elements))
 
       if shouldKeepLeadingTrivia {
         shouldKeepLeadingTrivia = false
@@ -123,7 +123,7 @@ public final class OneCasePerLine: SyntaxFormatRule {
       }
     }
 
-    let newMemberBlock = node.members.withMembers(SyntaxFactory.makeMemberDeclList(newMembers))
+    let newMemberBlock = node.members.withMembers(MemberDeclListSyntax(newMembers))
     return DeclSyntax(node.withMembers(newMemberBlock))
   }
 }
