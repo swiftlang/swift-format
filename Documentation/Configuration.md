@@ -79,6 +79,8 @@ top-level keys and values:
    true, a line break is forced before the "." of the component and after the component's
    closing delimiter (i.e. right paren, right bracket, right brace, etc.).
 
+For information on rules, check the [Rules](Rules.md) documentation.
+
 > TODO: Add support for enabling/disabling specific syntax transformations in
 > the pipeline.
 
