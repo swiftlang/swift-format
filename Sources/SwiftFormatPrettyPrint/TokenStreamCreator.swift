@@ -62,7 +62,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     self.config = configuration
     self.operatorContext = operatorContext
     self.maxlinelength = config.lineLength
-    super.init(viewMode: .sourceAccurate)
+    super.init(viewMode: .all)
   }
 
   func makeStream(from node: Syntax) -> [Token] {
@@ -328,7 +328,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       // Due to visitation order, the matching .open break is added in ParameterClauseSyntax.
       after(node.signature.lastToken, tokens: .close)
     }
-    
+
     arrangeParameterClause(node.signature.input, forcesBreakBeforeRightParen: node.body != nil)
 
     // Prioritize keeping "<modifiers> init<punctuation>" together.
@@ -525,7 +525,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
       // Breaks are only allowed after `else` when there's a comment; otherwise there shouldn't be
       // any newlines between `else` and the open brace or a following `if`.
-      if let tokenAfterElse = elseKeyword.nextToken, tokenAfterElse.leadingTrivia.hasLineComment {
+      if let tokenAfterElse = elseKeyword.nextToken(viewMode: .all), tokenAfterElse.leadingTrivia.hasLineComment {
         after(node.elseKeyword, tokens: .break(.same, size: 1))
       } else if let elseBody = node.elseBody, elseBody.is(IfStmtSyntax.self) {
         after(node.elseKeyword, tokens: .space)
@@ -793,7 +793,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       // to exist at the EOL with the left paren or on its own line. The contents are always
       // indented on the following lines, since parens always create a scope. An open/close break
       // pair isn't used here to avoid forcing the closing paren down onto a new line.
-      if node.leftParen.nextToken?.leadingTrivia.hasLineComment ?? false {
+      if node.leftParen.nextToken(viewMode: .all)?.leadingTrivia.hasLineComment ?? false {
         after(node.leftParen, tokens: .break(.continue, size: 0))
       }
     } else if elementCount > 1 {
@@ -951,8 +951,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         // When this function call is wrapped by a try-expr or await-expr, the group applied when
         // visiting that wrapping expression is sufficient. Adding another group here in that case
         // can result in unnecessarily breaking after the try/await keyword.
-        if !(base.firstToken?.previousToken?.parent?.is(TryExprSyntax.self) ?? false
-          || base.firstToken?.previousToken?.parent?.is(AwaitExprSyntax.self) ?? false) {
+        if !(base.firstToken?.previousToken(viewMode: .all)?.parent?.is(TryExprSyntax.self) ?? false
+          || base.firstToken?.previousToken(viewMode: .all)?.parent?.is(AwaitExprSyntax.self) ?? false) {
           before(base.firstToken, tokens: .open)
           after(calledMemberAccessExpr.name.lastToken, tokens: .close)
         }
@@ -1304,7 +1304,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     if let lastElemTok = node.elements.lastToken {
       after(lastElemTok, tokens: .break(breakKindClose, newlines: .soft), .close)
     } else {
-      before(tokenToOpenWith.nextToken, tokens: .break(breakKindClose, newlines: .soft), .close)
+      before(tokenToOpenWith.nextToken(viewMode: .all), tokens: .break(breakKindClose, newlines: .soft), .close)
     }
 
     if isNestedInPostfixIfConfig(node: Syntax(node)) {
@@ -1915,7 +1915,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     var closesNeeded: Int = 0
     var closeAfterToken: TokenSyntax? = nil
 
-    if let typeAnnotation = node.typeAnnotation {
+    if let typeAnnotation = node.typeAnnotation, !typeAnnotation.type.is(MissingTypeSyntax.self) {
       after(
         typeAnnotation.colon,
         tokens: .break(.open(kind: .continuation), newlines: .elective(ignoresDiscretionary: true)))
@@ -2190,6 +2190,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: GenericWhereClauseSyntax) -> SyntaxVisitorContinueKind {
+    guard node.whereKeyword != node.lastToken else {
+      verbatimToken(Syntax(node))
+      return .skipChildren
+    }
+
     after(node.whereKeyword, tokens: .break(.open))
     after(node.lastToken, tokens: .break(.close, size: 0))
 
@@ -2378,6 +2383,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   // MARK: - Nodes representing unknown or malformed syntax
 
+  override func visit(_ node: UnexpectedNodesSyntax) -> SyntaxVisitorContinueKind {
+    verbatimToken(Syntax(node))
+    return .skipChildren
+  }
+
   override func visit(_ node: UnknownDeclSyntax) -> SyntaxVisitorContinueKind {
     verbatimToken(Syntax(node))
     return .skipChildren
@@ -2429,7 +2439,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       appendMultilineStringSegments(at: pendingSegmentIndex)
     } else if !ignoredTokens.contains(token) {
       // Otherwise, it's just a regular token, so add the text as-is.
-      appendToken(.syntax(token.text))
+      appendToken(.syntax(token.presence == .present ? token.text : ""))
     }
 
     appendTrailingTrivia(token)
@@ -2883,7 +2893,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   private func extractLeadingTrivia(_ token: TokenSyntax) {
-    var isStartOfFile = token.previousToken == nil
+    var isStartOfFile = token.previousToken(viewMode: .all) == nil
     let trivia = token.leadingTrivia
 
     // If we're at the end of the file, determine at which index to stop checking trivia pieces to
@@ -3260,12 +3270,12 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   /// alongside the last token of the given node. Any tokens between `node.lastToken` and the
   /// returned node's `lastToken` are delimiter tokens that shouldn't be preceded by a break.
   private func outermostEnclosingNode(from node: Syntax) -> Syntax? {
-    guard let afterToken = node.lastToken?.nextToken, closingDelimiterTokens.contains(afterToken)
+    guard let afterToken = node.lastToken?.nextToken(viewMode: .all), closingDelimiterTokens.contains(afterToken)
     else {
       return nil
     }
     var parenthesizedExpr = afterToken.parent
-    while let nextToken = parenthesizedExpr?.lastToken?.nextToken,
+    while let nextToken = parenthesizedExpr?.lastToken?.nextToken(viewMode: .all),
       closingDelimiterTokens.contains(nextToken),
       let nextExpr = nextToken.parent
     {
@@ -3355,9 +3365,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         // followed by a dot (for example, in an implicit member reference)---removing the spaces in
         // those situations would cause the parser to greedily treat the combined sequence of
         // operator characters as a single operator.
-        if case .postfixOperator? = token.previousToken?.tokenKind { return true }
+        if case .postfixOperator? = token.previousToken(viewMode: .all)?.tokenKind { return true }
 
-        switch token.nextToken?.tokenKind {
+        switch token.nextToken(viewMode: .all)?.tokenKind {
         case .prefixOperator?, .prefixPeriod?: return true
         default: return false
         }
@@ -3389,7 +3399,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // The leading trivia of the next token, after the ignored node, may contain content that
     // belongs with the ignored node. The trivia extraction that is performed for `lastToken` later
     // excludes that content so it needs to be extracted and added to the token stream here.
-    if let next = node.lastToken?.nextToken, let trivia = next.leadingTrivia.first {
+    if let next = node.lastToken?.nextToken(viewMode: .all), let trivia = next.leadingTrivia.first {
       switch trivia {
       case .lineComment, .blockComment:
         trivia.write(to: &nodeText)
@@ -3581,7 +3591,7 @@ class CommentMovingRewriter: SyntaxRewriter {
   override func visit(_ node: SequenceExprSyntax) -> ExprSyntax {
     for element in node.elements {
       if let binaryOperatorExpr = element.as(BinaryOperatorExprSyntax.self),
-        let followingToken = binaryOperatorExpr.operatorToken.nextToken,
+        let followingToken = binaryOperatorExpr.operatorToken.nextToken(viewMode: .all),
         followingToken.leadingTrivia.hasLineComment
       {
         // Rewrite the trivia so that the comment is in the operator token's leading trivia.
