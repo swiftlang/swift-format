@@ -17,7 +17,7 @@ import SwiftFormatPrettyPrint
 import SwiftFormatRules
 import SwiftFormatWhitespaceLinter
 import SwiftSyntax
-import SwiftSyntaxParser
+import SwiftParser
 
 /// Diagnoses and reports problems in Swift source code or syntax trees according to the Swift style
 /// guidelines.
@@ -62,8 +62,8 @@ public final class SwiftLinter {
     if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir), isDir.boolValue {
       throw SwiftFormatError.isDirectory
     }
-    let sourceFile = try SyntaxParser.parse(url, diagnosticHandler: parsingDiagnosticHandler)
     let source = try String(contentsOf: url, encoding: .utf8)
+    let sourceFile = try Parser.parse(source: source)
     try lint(syntax: sourceFile, assumingFileURL: url, source: source)
   }
 
@@ -80,8 +80,7 @@ public final class SwiftLinter {
     assumingFileURL url: URL,
     parsingDiagnosticHandler: ((Diagnostic) -> Void)? = nil
   ) throws {
-    let sourceFile =
-      try SyntaxParser.parse(source: source, diagnosticHandler: parsingDiagnosticHandler)
+    let sourceFile = try Parser.parse(source: source)
     try lint(syntax: sourceFile, assumingFileURL: url, source: source)
   }
 

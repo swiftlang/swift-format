@@ -12,7 +12,6 @@
 
 import SwiftFormatCore
 import SwiftSyntax
-import SwiftSyntaxParser
 import TSCBasic
 
 /// Diagnostic data that retains the separation of a finding category (if present) from the rest of
@@ -46,7 +45,7 @@ final class UnifiedDiagnosticsEngine {
   /// Represents a location from either the linter or the syntax parser and supports converting it
   /// to a string representation for printing.
   private enum UnifiedLocation: DiagnosticLocation {
-    /// A location received from the syntax parser.
+    /// A location received from the swift parser.
     case parserLocation(SourceLocation)
 
     /// A location received from the linter.

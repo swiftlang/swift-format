@@ -1,6 +1,6 @@
 import SwiftFormatPrettyPrint
 import SwiftSyntax
-import SwiftSyntaxParser
+import SwiftParser
 import XCTest
 
 final class SequenceExprFoldingTests: XCTestCase {
@@ -248,7 +248,7 @@ final class SequenceExprFoldingTests: XCTestCase {
   /// - Precondition: The first code block of `source` is a statement containing
   ///   a `SequenceExprSyntax`. All subsequent code blocks are ignored.
   private func sequenceExpr(_ source: String) -> SequenceExprSyntax {
-    let sourceFileSyntax = try! SyntaxParser.parse(source: source)
+    let sourceFileSyntax = try! Parser.parse(source: source)
     return sourceFileSyntax.statements.first!.item.as(SequenceExprSyntax.self)!
   }
 }

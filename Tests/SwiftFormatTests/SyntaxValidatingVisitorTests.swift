@@ -1,6 +1,6 @@
 import SwiftFormat
 import SwiftSyntax
-import SwiftSyntaxParser
+import SwiftParser
 import XCTest
 
 final class SyntaxValidatingVisitorTests: XCTestCase {
@@ -41,7 +41,6 @@ final class SyntaxValidatingVisitorTests: XCTestCase {
 
   /// Parses the given source into a syntax tree.
   private func createSyntax(from source: String) -> Syntax {
-    return Syntax(try! SyntaxParser.parse(source: source))
   }
 
   /// Asserts that `SyntaxValidatingVisitor` finds invalid syntax in the given source code at the
@@ -56,5 +55,6 @@ final class SyntaxValidatingVisitorTests: XCTestCase {
     let location = SourceLocationConverter(file: "", source: source).location(for: position)
     XCTAssertEqual(location.line, atLine, file: file, line: line)
     XCTAssertEqual(location.column, column, file: file, line: line)
+    return Syntax(try! Parser.parse(source: source))
   }
 }
