@@ -17,6 +17,7 @@ import SwiftFormatPrettyPrint
 import SwiftFormatRules
 import SwiftSyntax
 import SwiftParser
+import SwiftDiagnostics
 
 /// Formats Swift source code or syntax trees according to the Swift style guidelines.
 public final class SwiftFormatter {
@@ -55,7 +56,7 @@ public final class SwiftFormatter {
   public func format<Output: TextOutputStream>(
     contentsOf url: URL,
     to outputStream: inout Output,
-    parsingDiagnosticHandler: ((Diagnostic) -> Void)? = nil
+    parsingDiagnosticHandler: ((Diagnostic, SourceLocation) -> Void)? = nil
   ) throws {
     guard FileManager.default.isReadableFile(atPath: url.path) else {
       throw SwiftFormatError.fileNotReadable
@@ -66,6 +67,14 @@ public final class SwiftFormatter {
     }
     let source = try String(contentsOf: url, encoding: .utf8)
     let sourceFile = try Parser.parse(source: source)
+    if let parsingDiagnosticHandler = parsingDiagnosticHandler {
+      let expectedConverter = SourceLocationConverter(file: url.path, tree: sourceFile)
+      let diagnostics = ParseDiagnosticsGenerator.diagnostics(for: sourceFile)
+      for diagnostic in diagnostics {
+        let location = diagnostic.location(converter: expectedConverter)
+        parsingDiagnosticHandler(diagnostic, location)
+      }
+    }
     try format(syntax: sourceFile, assumingFileURL: url, source: source, to: &outputStream)
   }
 
@@ -85,9 +94,17 @@ public final class SwiftFormatter {
     source: String,
     assumingFileURL url: URL?,
     to outputStream: inout Output,
-    parsingDiagnosticHandler: ((Diagnostic) -> Void)? = nil
+    parsingDiagnosticHandler: ((Diagnostic, SourceLocation) -> Void)? = nil
   ) throws {
     let sourceFile = try Parser.parse(source: source)
+    if let parsingDiagnosticHandler = parsingDiagnosticHandler {
+      let expectedConverter = SourceLocationConverter(file: url?.path ?? "<unknown>", tree: sourceFile)
+      let diagnostics = ParseDiagnosticsGenerator.diagnostics(for: sourceFile)
+      for diagnostic in diagnostics {
+        let location = diagnostic.location(converter: expectedConverter)
+        parsingDiagnosticHandler(diagnostic, location)
+      }
+    }
     try format(syntax: sourceFile, assumingFileURL: url, source: source, to: &outputStream)
   }
 
