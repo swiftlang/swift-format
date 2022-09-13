@@ -17,7 +17,8 @@ import SwiftFormatPrettyPrint
 import SwiftFormatRules
 import SwiftFormatWhitespaceLinter
 import SwiftSyntax
-import SwiftSyntaxParser
+import SwiftParser
+import SwiftDiagnostics
 
 /// Diagnoses and reports problems in Swift source code or syntax trees according to the Swift style
 /// guidelines.
@@ -53,7 +54,7 @@ public final class SwiftLinter {
   /// - Throws: If an unrecoverable error occurs when formatting the code.
   public func lint(
     contentsOf url: URL,
-    parsingDiagnosticHandler: ((Diagnostic) -> Void)? = nil
+    parsingDiagnosticHandler: ((Diagnostic, SourceLocation) -> Void)? = nil
   ) throws {
     guard FileManager.default.isReadableFile(atPath: url.path) else {
       throw SwiftFormatError.fileNotReadable
@@ -62,9 +63,10 @@ public final class SwiftLinter {
     if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir), isDir.boolValue {
       throw SwiftFormatError.isDirectory
     }
-    let sourceFile = try SyntaxParser.parse(url, diagnosticHandler: parsingDiagnosticHandler)
     let source = try String(contentsOf: url, encoding: .utf8)
-    try lint(syntax: sourceFile, assumingFileURL: url, source: source)
+    let sourceFile = try Parser.parse(source: source)
+    try lint(syntax: sourceFile, assumingFileURL: url,
+             source: source, parsingDiagnosticHandler: parsingDiagnosticHandler)
   }
 
   /// Lints the given Swift source code.
@@ -78,11 +80,11 @@ public final class SwiftLinter {
   public func lint(
     source: String,
     assumingFileURL url: URL,
-    parsingDiagnosticHandler: ((Diagnostic) -> Void)? = nil
+    parsingDiagnosticHandler: ((Diagnostic, SourceLocation) -> Void)? = nil
   ) throws {
-    let sourceFile =
-      try SyntaxParser.parse(source: source, diagnosticHandler: parsingDiagnosticHandler)
-    try lint(syntax: sourceFile, assumingFileURL: url, source: source)
+    let sourceFile = try Parser.parse(source: source)
+    try lint(syntax: sourceFile, assumingFileURL: url,
+             source: source, parsingDiagnosticHandler: parsingDiagnosticHandler)
   }
 
   /// Lints the given Swift syntax tree.
@@ -94,12 +96,27 @@ public final class SwiftLinter {
   ///   - url: A file URL denoting the filename/path that should be assumed for this syntax tree.
   /// - Throws: If an unrecoverable error occurs when formatting the code.
   public func lint(syntax: SourceFileSyntax, assumingFileURL url: URL) throws {
-    try lint(syntax: syntax, assumingFileURL: url, source: nil)
+    try lint(syntax: syntax, assumingFileURL: url,
+             source: nil, parsingDiagnosticHandler: nil)
   }
 
-  private func lint(syntax: SourceFileSyntax, assumingFileURL url: URL, source: String?) throws {
+  private func lint(
+    syntax: SourceFileSyntax,
+    assumingFileURL url: URL,
+    source: String?,
+    parsingDiagnosticHandler: ((Diagnostic, SourceLocation) -> Void)?
+  ) throws {
     if let position = _firstInvalidSyntaxPosition(in: Syntax(syntax)) {
       throw SwiftFormatError.fileContainsInvalidSyntax(position: position)
+    }
+
+    if let parsingDiagnosticHandler = parsingDiagnosticHandler {
+      let expectedConverter = SourceLocationConverter(file: url.path, tree: syntax)
+      let diagnostics = ParseDiagnosticsGenerator.diagnostics(for: syntax)
+      for diagnostic in diagnostics {
+        let location = diagnostic.location(converter: expectedConverter)
+        parsingDiagnosticHandler(diagnostic, location)
+      }
     }
 
     let context = Context(

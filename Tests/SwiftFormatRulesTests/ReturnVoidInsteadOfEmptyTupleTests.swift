@@ -153,6 +153,7 @@ final class ReturnVoidInsteadOfEmptyTupleTests: LintOrFormatRuleTestCase {
     XCTAssertDiagnosed(.returnVoid, line: 6, column: 21)
     XCTAssertDiagnosed(.returnVoid, line: 7, column: 21)
     XCTAssertDiagnosed(.returnVoid, line: 10, column: 21)
+    XCTAssertDiagnosed(.returnVoid, line: 13, column: 21)
     XCTAssertDiagnosed(.returnVoid, line: 15, column: 22)
     XCTAssertDiagnosed(.returnVoid, line: 15, column: 29)
     XCTAssertDiagnosed(.returnVoid, line: 16, column: 44)

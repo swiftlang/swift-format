@@ -1,7 +1,11 @@
+import XCTest
+
 /// Tests for unknown/malformed nodes that ensure that they are handled as verbatim text so that
 /// their internal tokens do not get squashed together.
 final class UnknownNodeTests: PrettyPrintTestCase {
-  func testUnknownDecl() {
+  func testUnknownDecl() throws {
+    throw XCTSkip("This is no longer an unknown declaration")
+
     let input =
       """
       struct MyStruct where {
@@ -12,7 +16,9 @@ final class UnknownNodeTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 45)
   }
 
-  func testUnknownExpr() {
+  func testUnknownExpr() throws {
+    throw XCTSkip("This is no longer an unknown expression")
+
     let input =
       """
       (foo where bar)
@@ -21,9 +27,7 @@ final class UnknownNodeTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 45)
   }
 
-  func testUnknownPattern() {
-    // This one loses the space after the word `case` because the break would normally be
-    // inserted before the first token in the pattern.
+  func testUnknownPattern() throws {
     let input =
       """
       if case * ! = x {
@@ -33,7 +37,9 @@ final class UnknownNodeTests: PrettyPrintTestCase {
 
     let expected =
       """
-      if case* ! = x {
+      if case
+        * ! = x
+      {
         bar()
       }
 
@@ -42,18 +48,19 @@ final class UnknownNodeTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
 
-  func testUnknownStmt() {
+  func testUnknownStmt() throws {
+    throw XCTSkip("This is no longer an unknown statement")
+
     let input =
       """
       if foo where {
-        bar()
       }
       """
 
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 45)
   }
 
-  func testUnknownType() {
+  func testUnknownType() throws {    
     // This one loses the space after the colon because the break would normally be inserted before
     // the first token in the type name.
     let input =
@@ -70,7 +77,12 @@ final class UnknownNodeTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
 
-  func testNonEmptyTokenList() {
+  func testNonEmptyTokenList() throws {
+    // The C++ parse modeled as a non-empty list of unparsed tokens. The Swift
+    // parser sees through this and treats it as an attribute with a missing
+    // name and some unexpected text after `foo!` in the arguments.
+    throw XCTSkip("This is no longer a non-empty token list")
+
     let input =
       """
       @(foo ! @ # bar)

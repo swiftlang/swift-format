@@ -1,6 +1,6 @@
 import SwiftFormatCore
 import SwiftSyntax
-import SwiftSyntaxParser
+import SwiftParser
 import XCTest
 
 final class RuleMaskTests: XCTestCase {
@@ -12,7 +12,7 @@ final class RuleMaskTests: XCTestCase {
   private func createMask(sourceText: String) -> RuleMask {
     let fileURL = URL(fileURLWithPath: "/tmp/test.swift")
     converter = SourceLocationConverter(file: fileURL.path, source: sourceText)
-    let syntax = try! SyntaxParser.parse(source: sourceText)
+    let syntax = try! Parser.parse(source: sourceText)
     return RuleMask(syntaxNode: Syntax(syntax), sourceLocationConverter: converter)
   }
 

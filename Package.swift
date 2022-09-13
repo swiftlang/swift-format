@@ -46,7 +46,7 @@ let package = Package(
         "SwiftFormatRules",
         "SwiftFormatWhitespaceLinter",
         .product(name: "SwiftSyntax", package: "swift-syntax"),
-        .product(name: "SwiftSyntaxParser", package: "swift-syntax"),
+        .product(name: "SwiftParser", package: "swift-syntax"),
       ]
     ),
     .target(
@@ -89,7 +89,7 @@ let package = Package(
         "SwiftFormatCore",
         "SwiftFormatRules",
         .product(name: "SwiftSyntax", package: "swift-syntax"),
-        .product(name: "SwiftSyntaxParser", package: "swift-syntax"),
+        .product(name: "SwiftParser", package: "swift-syntax"),
       ]
     ),
     .executableTarget(
@@ -100,6 +100,7 @@ let package = Package(
         "SwiftFormatCore",
         .product(name: "ArgumentParser", package: "swift-argument-parser"),
         .product(name: "SwiftSyntax", package: "swift-syntax"),
+        .product(name: "SwiftParser", package: "swift-syntax"),
         .product(name: "TSCBasic", package: "swift-tools-support-core"),
       ]
     ),
@@ -109,7 +110,7 @@ let package = Package(
       dependencies: [
         "SwiftFormat",
         .product(name: "SwiftSyntax", package: "swift-syntax"),
-        .product(name: "SwiftSyntaxParser", package: "swift-syntax"),
+        .product(name: "SwiftParser", package: "swift-syntax"),
       ]
     ),
     .testTarget(
@@ -122,7 +123,7 @@ let package = Package(
         "SwiftFormatConfiguration",
         "SwiftFormatCore",
         .product(name: "SwiftSyntax", package: "swift-syntax"),
-        .product(name: "SwiftSyntaxParser", package: "swift-syntax"),
+        .product(name: "SwiftParser", package: "swift-syntax"),
       ]
     ),
     .testTarget(
@@ -131,7 +132,7 @@ let package = Package(
         "SwiftFormatTestSupport",
         "SwiftFormatWhitespaceLinter",
         .product(name: "SwiftSyntax", package: "swift-syntax"),
-        .product(name: "SwiftSyntaxParser", package: "swift-syntax"),
+        .product(name: "SwiftParser", package: "swift-syntax"),
       ]
     ),
     .testTarget(
@@ -143,7 +144,7 @@ let package = Package(
         "SwiftFormatRules",
         "SwiftFormatTestSupport",
         .product(name: "SwiftSyntax", package: "swift-syntax"),
-        .product(name: "SwiftSyntaxParser", package: "swift-syntax"),
+        .product(name: "SwiftParser", package: "swift-syntax"),
       ]
     ),
     .testTarget(
@@ -155,7 +156,7 @@ let package = Package(
         "SwiftFormatRules",
         "SwiftFormatTestSupport",
         .product(name: "SwiftSyntax", package: "swift-syntax"),
-        .product(name: "SwiftSyntaxParser", package: "swift-syntax"),
+        .product(name: "SwiftParser", package: "swift-syntax"),
       ]
     ),
     .testTarget(
@@ -166,7 +167,7 @@ let package = Package(
         "SwiftFormatTestSupport",
         "SwiftFormatWhitespaceLinter",
         .product(name: "SwiftSyntax", package: "swift-syntax"),
-        .product(name: "SwiftSyntaxParser", package: "swift-syntax"),
+        .product(name: "SwiftParser", package: "swift-syntax"),
       ]
     ),
   ]
@@ -182,7 +183,7 @@ if ProcessInfo.processInfo.environment["SWIFTCI_USE_LOCAL_DEPS"] == nil {
       branch: "main"
     ),
     .package(
-      url: "https://github.com/apple/swift-syntax",
+      url: "https://github.com/apple/swift-syntax.git",
       branch: "main"
     ),
     .package(
