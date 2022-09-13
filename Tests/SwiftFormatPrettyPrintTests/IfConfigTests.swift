@@ -230,4 +230,164 @@ final class IfConfigTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
+
+  func testPostfixPoundIfAfterParentheses() {
+    let input =
+      """
+      VStack {
+        Text("something")
+        #if os(iOS)
+        .iOSSpecificModifier()
+        #endif
+        .commonModifier()
+      }
+      """
+
+    let expected =
+      """
+      VStack {
+        Text("something")
+        #if os(iOS)
+          .iOSSpecificModifier()
+        #endif
+        .commonModifier()
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
+  }
+
+  func testPostfixPoundIfAfterParenthesesMultipleMembers() {
+    let input =
+      """
+      VStack {
+        Text("something")
+        #if os(iOS)
+        .iOSSpecificModifier()
+        .anotherModifier()
+        .anotherAnotherModifier()
+        #endif
+        .commonModifier()
+        .anotherCommonModifier()
+      }
+      """
+
+    let expected =
+      """
+      VStack {
+        Text("something")
+        #if os(iOS)
+          .iOSSpecificModifier()
+          .anotherModifier()
+          .anotherAnotherModifier()
+        #endif
+        .commonModifier()
+        .anotherCommonModifier()
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
+  }
+
+  func testPostfixPoundIfNested() {
+    let input =
+      """
+      VStack {
+        Text("something")
+        #if os(iOS) || os(watchOS)
+          #if os(iOS)
+          .iOSModifier()
+          #else
+          .watchOSModifier()
+          #endif
+        .iOSAndWatchOSModifier()
+        #endif
+      }
+      """
+
+    let expected =
+      """
+      VStack {
+        Text("something")
+        #if os(iOS) || os(watchOS)
+          #if os(iOS)
+            .iOSModifier()
+          #else
+            .watchOSModifier()
+          #endif
+          .iOSAndWatchOSModifier()
+        #endif
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
+  }
+
+
+  func testPostfixPoundIfAfterVariables() {
+    let input =
+      """
+      VStack {
+        textView
+        #if os(iOS)
+        .iOSSpecificModifier()
+        #endif
+        .commonModifier()
+      }
+      """
+
+    let expected =
+      """
+      VStack {
+        textView
+        #if os(iOS)
+          .iOSSpecificModifier()
+        #endif
+        .commonModifier()
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
+  }
+
+  func testPostfixPoundIfAfterClosingBrace() {
+    let input =
+      """
+      HStack {
+          Toggle(isOn: binding) {
+              Text("Some text")
+          }
+          #if !os(tvOS)
+          .toggleStyle(SwitchToggleStyle(tint: Color.blue))
+          #endif
+          .accessibilityValue(
+              binding.wrappedValue == true ? "On" : "Off"
+          )
+      }
+      """
+
+    let expected =
+      """
+      HStack {
+        Toggle(isOn: binding) {
+          Text("Some text")
+        }
+        #if !os(tvOS)
+          .toggleStyle(
+            SwitchToggleStyle(tint: Color.blue))
+        #endif
+        .accessibilityValue(
+          binding.wrappedValue == true
+            ? "On" : "Off"
+        )
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
+  }
 }

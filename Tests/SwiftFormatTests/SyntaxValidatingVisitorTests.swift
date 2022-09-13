@@ -28,7 +28,7 @@ final class SyntaxValidatingVisitorTests: XCTestCase {
         var bar = 0
       }
       """
-    assertInvalidSyntax(in: input, atLine: 1, column: 1)
+    assertInvalidSyntax(in: input, atLine: 1, column: 7)
 
     input =
       """

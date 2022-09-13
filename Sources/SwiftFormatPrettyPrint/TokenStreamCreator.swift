@@ -1289,7 +1289,15 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       before(tokenToOpenWith.nextToken, tokens: .break(breakKindClose, newlines: .soft), .close)
     }
 
-    if let condition = node.condition {
+    if isNestedInPostfixIfConfig(node: Syntax(node)) {
+      before(
+        node.firstToken,
+        tokens: [
+          .printerControl(kind: .enableBreaking),
+          .break(.reset),
+        ]
+      )
+    } else if let condition = node.condition {
       before(condition.firstToken, tokens: .printerControl(kind: .disableBreaking))
       after(
         condition.lastToken,
@@ -3441,7 +3449,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
       if let calledMemberAccessExpr = calledExpression.as(MemberAccessExprSyntax.self) {
         if calledMemberAccessExpr.base != nil {
-          before(calledMemberAccessExpr.dot, tokens: [.break(.contextual, size: 0)])
+          if isNestedInPostfixIfConfig(node: Syntax(calledMemberAccessExpr)) {
+            before(calledMemberAccessExpr.dot, tokens: [.break(.same, size: 0)])
+          } else {
+            before(calledMemberAccessExpr.dot, tokens: [.break(.contextual, size: 0)])
+          }
         }
         before(calledMemberAccessExpr.dot, tokens: beforeTokens)
         after(expr.lastToken, tokens: afterTokens)
@@ -3464,6 +3476,20 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     let hasCompoundExpression = !expr.is(IdentifierExprSyntax.self)
     return (hasCompoundExpression, false)
   }
+}
+
+private func isNestedInPostfixIfConfig(node: Syntax) -> Bool {
+    var this: Syntax? = node
+
+    while this?.parent != nil {
+      if this?.parent?.is(PostfixIfConfigExprSyntax.self) == true {
+        return true
+      }
+
+      this = this?.parent
+    }
+
+    return false
 }
 
 extension Syntax {
