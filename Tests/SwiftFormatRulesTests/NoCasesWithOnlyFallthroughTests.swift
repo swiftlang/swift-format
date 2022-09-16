@@ -64,7 +64,6 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
     XCTAssertDiagnosed(.collapseCase(name: "\"f\""), line: 15, column: 1)
     XCTAssertDiagnosed(.collapseCase(name: ".rightBrace"), line: 21, column: 1)
     XCTAssertDiagnosed(.collapseCase(name: ".leftBrace"), line: 22, column: 1)
-    XCTAssertDiagnosed(.collapseCase(name: ".empty"), line: 25, column: 1)
   }
 
   func testFallthroughCasesWithCommentsAreNotCombined() {
@@ -102,7 +101,11 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         // This case has a descriptive comment.
         case 6, 7: print("got here")
         }
-        """)
+        """,
+      checkForUnassertedDiagnostics: true)
+
+    XCTAssertDiagnosed(.collapseCase(name: "2"), line: 4, column: 1)
+    XCTAssertDiagnosed(.collapseCase(name: "6"), line: 12, column: 1)
   }
 
   func testCommentsAroundCombinedCasesStayInPlace() {
@@ -131,7 +134,11 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         // This case has an extra leading newline for emphasis.
         case 8, 9: print("8 to 9")
         }
-        """)
+        """,
+      checkForUnassertedDiagnostics: true)
+
+    XCTAssertDiagnosed(.collapseCase(name: "6"), line: 4, column: 1)
+    XCTAssertDiagnosed(.collapseCase(name: "8"), line: 7, column: 1)
   }
 
   func testNestedSwitches() {
@@ -164,7 +171,14 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
           case 1, 2: print(2)
           }
         }
-        """)
+        """,
+      checkForUnassertedDiagnostics: true)
+
+    XCTAssertDiagnosed(.collapseCase(name: "1"), line: 2, column: 1)
+    XCTAssertDiagnosed(.collapseCase(name: "2"), line: 3, column: 1)
+    // TODO: Column 9 seems wrong here; it should be 3. Look into this.
+    XCTAssertDiagnosed(.collapseCase(name: "1"), line: 6, column: 9)
+    XCTAssertDiagnosed(.collapseCase(name: "1"), line: 11, column: 3)
   }
 
   func testCasesInsideConditionalCompilationBlock() {
@@ -207,7 +221,11 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         #endif
         case 10: print(10)
         }
-        """)
+        """,
+      checkForUnassertedDiagnostics: true)
+
+    XCTAssertDiagnosed(.collapseCase(name: "2"), line: 4, column: 1)
+    XCTAssertDiagnosed(.collapseCase(name: "5"), line: 8, column: 1)
   }
 
   func testCasesWithWhereClauses() {
@@ -237,6 +255,95 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         case 5, 6, 7, 8, 9, 10 where y == 0: print(10)
         default: print("?")
         }
-        """)
+        """,
+      checkForUnassertedDiagnostics: true)
+
+    XCTAssertDiagnosed(.collapseCase(name: "1 where y < 0"), line: 2, column: 1)
+    XCTAssertDiagnosed(.collapseCase(name: "2 where y == 0"), line: 3, column: 1)
+    XCTAssertDiagnosed(.collapseCase(name: "3 where y < 0"), line: 4, column: 1)
+    XCTAssertDiagnosed(.collapseCase(name: "5"), line: 6, column: 1)
+    XCTAssertDiagnosed(.collapseCase(name: "6"), line: 7, column: 1)
+    XCTAssertDiagnosed(.collapseCase(name: "7"), line: 8, column: 1)
+    XCTAssertDiagnosed(.collapseCase(name: "8"), line: 9, column: 1)
+    XCTAssertDiagnosed(.collapseCase(name: "9"), line: 10, column: 1)
+  }
+
+  func testCasesWithValueBindingsAreNotMerged() {
+    XCTAssertFormatting(
+      NoCasesWithOnlyFallthrough.self,
+      input: """
+        switch x {
+        case .a: fallthrough
+        case .b: fallthrough
+        case .c(let x): fallthrough
+        case .d(let y): fallthrough
+        case .e: fallthrough
+        case .f: fallthrough
+        case (let g, let h): fallthrough
+        case .i: fallthrough
+        case .j?: fallthrough
+        case let k as K: fallthrough
+        case .l: break
+        }
+        """,
+      expected: """
+        switch x {
+        case .a, .b: fallthrough
+        case .c(let x): fallthrough
+        case .d(let y): fallthrough
+        case .e, .f: fallthrough
+        case (let g, let h): fallthrough
+        case .i, .j?: fallthrough
+        case let k as K: fallthrough
+        case .l: break
+        }
+        """,
+      checkForUnassertedDiagnostics: true)
+
+    XCTAssertDiagnosed(.collapseCase(name: ".a"), line: 2, column: 1)
+    XCTAssertDiagnosed(.collapseCase(name: ".e"), line: 6, column: 1)
+    XCTAssertDiagnosed(.collapseCase(name: ".i"), line: 9, column: 1)
+  }
+
+  func testFallthroughOnlyCasesAreNotMergedWithDefault() {
+    XCTAssertFormatting(
+      NoCasesWithOnlyFallthrough.self,
+      input: """
+        switch x {
+        case .a: fallthrough
+        case .b: fallthrough
+        default: print("got here")
+        }
+        """,
+      expected: """
+        switch x {
+        case .a, .b: fallthrough
+        default: print("got here")
+        }
+        """,
+      checkForUnassertedDiagnostics: true)
+
+    XCTAssertDiagnosed(.collapseCase(name: ".a"), line: 2, column: 1)
+  }
+
+  func testFallthroughOnlyCasesAreNotMergedWithUnknownDefault() {
+    XCTAssertFormatting(
+      NoCasesWithOnlyFallthrough.self,
+      input: """
+        switch x {
+        case .a: fallthrough
+        case .b: fallthrough
+        @unknown default: print("got here")
+        }
+        """,
+      expected: """
+        switch x {
+        case .a, .b: fallthrough
+        @unknown default: print("got here")
+        }
+        """,
+      checkForUnassertedDiagnostics: true)
+
+    XCTAssertDiagnosed(.collapseCase(name: ".a"), line: 2, column: 1)
   }
 }

@@ -43,10 +43,8 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
         continue
       }
 
-      if isFallthroughOnly(switchCase), let label = switchCase.label.as(SwitchCaseLabelSyntax.self) {
-        // If the case is fallthrough-only, store it as a violation that we will merge later.
-        diagnose(
-          .collapseCase(name: label.caseItems.withoutTrivia().description), on: switchCase)
+      if isMergeableFallthroughOnly(switchCase) {
+        // Keep track of `fallthrough`-only cases so we can merge and diagnose them later.
         fallthroughOnlyCases.append(switchCase)
       } else {
         guard !fallthroughOnlyCases.isEmpty else {
@@ -56,33 +54,27 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
           continue
         }
 
-        // If the case is not a `case ...`, then it must be a `default`. Under *most* circumstances,
-        // we could simply remove the immediately preceding `fallthrough`-only cases because they
-        // would end up falling through to the `default`, which would match them anyway. However,
-        // if any of the patterns in those cases have side effects, removing those cases would
-        // change the program's behavior. Nobody should ever write code like this, but we don't want
-        // to risk changing behavior just by reformatting.
-        guard switchCase.label.is(SwitchCaseLabelSyntax.self) else {
-          flushViolations()
+        if canMergeWithPreviousCases(switchCase) {
+          // If the current case can be merged with the ones before it, merge them all, leaving no
+          // `fallthrough`-only cases behind.
+          newChildren.append(visit(mergedCases(fallthroughOnlyCases + [switchCase])))
+        } else {
+          // If the current case can't be merged with the ones before it, merge the previous ones
+          // into a single `fallthrough`-only case and then append the current one. This could
+          // happen in one of two situations:
+          //
+          // 1.  The current case has a value binding pattern.
+          // 2.  The current case is the `default`. Under most circumstances, we could simply remove
+          //     the immediately preceding `fallthrough`-only cases because they would end up
+          //     falling through to the `default` which would match them anyway. However, if any of
+          //     the patterns in those cases have side effects, removing those cases would change
+          //     the program's behavior.
+          // 3.  The current case is `@unknown default`, which can't be merged notwithstanding the
+          //     side-effect issues discussed above.
+          newChildren.append(visit(mergedCases(fallthroughOnlyCases)))
           newChildren.append(visit(switchCase))
-          continue
         }
 
-        // We have a case that's not fallthrough-only, and a list of fallthrough-only cases before
-        // it. Merge them and add the result to the new list.
-        var newCase = mergedCase(violations: fallthroughOnlyCases, validCase: switchCase)
-
-        // Only the first violation case can have displaced trivia, because any non-whitespace
-        // trivia in the other violation cases would've prevented collapsing.
-        if let displacedLeadingTrivia =
-          fallthroughOnlyCases.first?.leadingTrivia?.withoutLastLine()
-        {
-          let existingLeadingTrivia = newCase.leadingTrivia ?? []
-          let mergedLeadingTrivia = displacedLeadingTrivia + existingLeadingTrivia
-          newCase = newCase.withLeadingTrivia(mergedLeadingTrivia)
-        }
-
-        newChildren.append(visit(newCase))
         fallthroughOnlyCases.removeAll()
       }
     }
@@ -94,14 +86,45 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
     return Syntax(SwitchCaseListSyntax(newChildren))
   }
 
-  /// Returns whether the given `SwitchCaseSyntax` contains only a fallthrough statement.
+  /// Returns true if this case can definitely be merged with any that come before it.
+  private func canMergeWithPreviousCases(_ node: SwitchCaseSyntax) -> Bool {
+    return node.label.is(SwitchCaseLabelSyntax.self) && !containsValueBindingPattern(node.label)
+  }
+
+  /// Returns true if this node or one of its descendents is a `ValueBindingPatternSyntax`.
+  private func containsValueBindingPattern(_ node: Syntax) -> Bool {
+    if node.is(ValueBindingPatternSyntax.self) {
+      return true
+    }
+    for child in node.children(viewMode: .sourceAccurate) {
+      if containsValueBindingPattern(child) {
+        return true
+      }
+    }
+    return false
+  }
+
+  /// Returns whether the given `SwitchCaseSyntax` contains only a fallthrough statement and is
+  /// able to be merged with other cases.
   ///
   /// - Parameter switchCase: A syntax node describing a case in a switch statement.
-  private func isFallthroughOnly(_ switchCase: SwitchCaseSyntax) -> Bool {
+  private func isMergeableFallthroughOnly(_ switchCase: SwitchCaseSyntax) -> Bool {
+    // Ignore anything that isn't a `SwitchCaseLabelSyntax`, like a `default`.
+    guard switchCase.label.is(SwitchCaseLabelSyntax.self) else {
+      return false
+    }
+
     // When there are any additional or non-fallthrough statements, it isn't only a fallthrough.
     guard let onlyStatement = switchCase.statements.firstAndOnly,
       onlyStatement.item.is(FallthroughStmtSyntax.self)
     else {
+      return false
+    }
+
+    // We cannot merge cases that contain a value pattern binding, even if the body is `fallthrough`
+    // only. For example, `case .foo(let x)` cannot be combined with other cases unless they all
+    // bind the same variables and types.
+    if containsValueBindingPattern(switchCase.label) {
       return false
     }
 
@@ -127,31 +150,46 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
     return true
   }
 
-  /// Returns a copy of the given valid case (and its statements) but with the case items from the
-  /// violations merged with its own case items.
-  private func mergedCase(violations: [SwitchCaseSyntax], validCase: SwitchCaseSyntax)
-    -> SwitchCaseSyntax
-  {
+  /// Returns a merged case whose body is derived from the last case in the array, and the labels
+  /// of all the cases are merged into a single comma-delimited list.
+  private func mergedCases(_ cases: [SwitchCaseSyntax]) -> SwitchCaseSyntax {
+    precondition(!cases.isEmpty, "Must have at least one case to merge")
+
+    // If there's only one case, just return it.
+    if cases.count == 1 {
+      return cases.first!
+    }
+
     var newCaseItems: [CaseItemSyntax] = []
-
-    for label in violations.lazy.compactMap({ $0.label.as(SwitchCaseLabelSyntax.self) }) {
-      let caseItems = Array(label.caseItems)
-
+    let labels = cases.lazy.compactMap({ $0.label.as(SwitchCaseLabelSyntax.self) })
+    for label in labels.dropLast() {
       // We can blindly append all but the last case item because they must already have a trailing
       // comma. Then, we need to add a trailing comma to the last one, since it will be followed by
       // more items.
-      newCaseItems.append(contentsOf: caseItems.dropLast())
+      newCaseItems.append(contentsOf: label.caseItems.dropLast())
       newCaseItems.append(
-        caseItems.last!.withTrailingComma(
+        label.caseItems.last!.withTrailingComma(
           TokenSyntax.commaToken(trailingTrivia: .spaces(1))))
+
+      // Diagnose the cases being collapsed. We do this for all but the last one in the array; the
+      // last one isn't diagnosed because it will contain the body that applies to all the previous
+      // cases.
+      diagnose(.collapseCase(name: label.caseItems.withoutTrivia().description), on: label)
     }
+    newCaseItems.append(contentsOf: labels.last!.caseItems)
 
-    let validCaseLabel = validCase.label.as(SwitchCaseLabelSyntax.self)!
-    newCaseItems.append(contentsOf: validCaseLabel.caseItems)
+    let newCase = cases.last!.withLabel(
+      Syntax(labels.last!.withCaseItems(CaseItemListSyntax(newCaseItems))))
 
-    let label = validCaseLabel.withCaseItems(
-      CaseItemListSyntax(newCaseItems))
-    return validCase.withLabel(Syntax(label))
+    // Only the first violation case can have displaced trivia, because any non-whitespace
+    // trivia in the other violation cases would've prevented collapsing.
+    if let displacedLeadingTrivia = cases.first!.leadingTrivia?.withoutLastLine() {
+      let existingLeadingTrivia = newCase.leadingTrivia ?? []
+      let mergedLeadingTrivia = displacedLeadingTrivia + existingLeadingTrivia
+      return newCase.withLeadingTrivia(mergedLeadingTrivia)
+    } else {
+      return newCase
+    }
   }
 }
 
