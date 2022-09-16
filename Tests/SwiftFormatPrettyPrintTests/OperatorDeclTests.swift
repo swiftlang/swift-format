@@ -15,7 +15,7 @@ final class OperatorDeclTests: PrettyPrintTestCase {
       prefix operator ^*^
       postfix operator !**!
       infix operator *%*
-      infix operator *%*:
+      infix operator *%* :
         PrecedenceGroup
 
       """
@@ -35,7 +35,7 @@ final class OperatorDeclTests: PrettyPrintTestCase {
         *%*
       infix
         operator
-        *%*:
+        *%* :
           PrecedenceGroup
 
       """
@@ -78,6 +78,37 @@ final class OperatorDeclTests: PrettyPrintTestCase {
         assignment:
           false
       }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expectedShorter, linelength: 10)
+  }
+
+  func testDesignatedTypes() {
+    let input =
+      """
+      infix operator *%*: PrecedenceGroup, Bool, Int, String
+      """
+
+    let expected =
+      """
+      infix operator *%* :
+        PrecedenceGroup, Bool,
+        Int, String
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 25)
+
+    let expectedShorter =
+      """
+      infix
+        operator
+        *%* :
+          PrecedenceGroup,
+          Bool,
+          Int,
+          String
 
       """
 
