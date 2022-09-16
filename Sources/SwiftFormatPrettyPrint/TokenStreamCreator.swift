@@ -1375,10 +1375,14 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: OperatorPrecedenceAndTypesSyntax) -> SyntaxVisitorContinueKind {
-    // Despite being an `IdentifierListSyntax`, the language grammar currently only allows a single
-    // precedence group here, so we don't worry about breaks at any interior commas.
-    after(node.colon, tokens: .break(.open))
-    after(node.lastToken, tokens: .break(.close, size: 0))
+    before(node.colon, tokens: .space)
+    after(node.colon, tokens: .break(.open), .open)
+    after(node.designatedTypes.lastToken ?? node.lastToken, tokens: .break(.close, size: 0), .close)
+    return .visitChildren
+  }
+
+  override func visit(_ node: DesignatedTypeElementSyntax) -> SyntaxVisitorContinueKind {
+    after(node.leadingComma, tokens: .break(.same))
     return .visitChildren
   }
 
