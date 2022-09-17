@@ -1307,7 +1307,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       before(tokenToOpenWith.nextToken(viewMode: .all), tokens: .break(breakKindClose, newlines: .soft), .close)
     }
 
-    if isNestedInPostfixIfConfig(node: Syntax(node)) {
+    if node.parent?.parent?.parent?.is(PostfixIfConfigExprSyntax.self) == true {
       before(
         node.firstToken,
         tokens: [
@@ -3481,7 +3481,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
       if let calledMemberAccessExpr = calledExpression.as(MemberAccessExprSyntax.self) {
         if calledMemberAccessExpr.base != nil {
-          if isNestedInPostfixIfConfig(node: Syntax(calledMemberAccessExpr)) {
+          if isNestedInPostfixIfConfig(node: calledMemberAccessExpr) {
             before(calledMemberAccessExpr.dot, tokens: [.break(.same, size: 0)])
           } else {
             before(calledMemberAccessExpr.dot, tokens: [.break(.contextual, size: 0)])
@@ -3510,18 +3510,40 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 }
 
-private func isNestedInPostfixIfConfig(node: Syntax) -> Bool {
-    var this: Syntax? = node
+private func isNestedInPostfixIfConfig(node: MemberAccessExprSyntax) -> Bool {
+  func containsDescendent(ancestor: Syntax, node: MemberAccessExprSyntax) -> Bool {
+    if ancestor.children(viewMode: .sourceAccurate).contains(Syntax(node)) {
+      return true
+    }
 
-    while this?.parent != nil {
-      if this?.parent?.is(PostfixIfConfigExprSyntax.self) == true {
+    for child in ancestor.children(viewMode: .sourceAccurate) {
+      if containsDescendent(ancestor: child, node: node) {
         return true
       }
-
-      this = this?.parent
     }
 
     return false
+  }
+
+  var this: Syntax? = Syntax(node)
+
+  while this?.parent != nil {
+    if this?.is(TupleExprElementSyntax.self) == true {
+      return false
+    }
+
+    if let postfixIfConfig = this?.as(PostfixIfConfigExprSyntax.self) {
+      if let ifConfigListSyntax = postfixIfConfig.config.children(viewMode: .sourceAccurate).first?.as(IfConfigClauseListSyntax.self) {
+        if containsDescendent(ancestor: Syntax(ifConfigListSyntax), node: node) {
+          return true
+        }
+      }
+    }
+
+    this = this?.parent
+  }
+
+  return false
 }
 
 extension Syntax {

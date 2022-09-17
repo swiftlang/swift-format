@@ -390,4 +390,68 @@ final class IfConfigTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
+
+  func testPostfixPoundIfBetweenOtherModifiers() {
+    let input =
+      """
+      EmptyView()
+        .padding([.vertical])
+      #if os(iOS)
+        .iOSSpecificModifier()
+      #endif
+        .commonModifier()
+      """
+
+    let expected =
+      """
+      EmptyView()
+        .padding([.vertical])
+      #if os(iOS)
+        .iOSSpecificModifier()
+      #endif
+        .commonModifier()
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
+  }
+
+  func testPostfixPoundIfWithTypeInModifier() {
+    let input =
+      """
+      EmptyView()
+        .padding([.vertical])
+      #if os(iOS)
+        .iOSSpecificModifier(
+          SpecificType()
+            .onChanged { _ in
+              // do things
+            }
+            .onEnded { _ in
+              // do things
+            }
+        )
+      #endif
+      """
+
+    let expected =
+      """
+      EmptyView()
+        .padding([.vertical])
+      #if os(iOS)
+        .iOSSpecificModifier(
+          SpecificType()
+            .onChanged { _ in
+              // do things
+            }
+            .onEnded { _ in
+              // do things
+            }
+        )
+      #endif
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
+  }
 }
