@@ -164,20 +164,15 @@ public class PrettyPrinter {
   ///
   /// - Parameters:
   ///   - context: The formatter context.
-  ///   - operatorContext: The operator context that defines the infix operators and precedence
-  ///     groups that should be used to make operator-sensitive formatting decisions.
   ///   - node: The node to be pretty printed.
   ///   - printTokenStream: Indicates whether debug information about the token stream should be
   ///     printed to standard output.
   ///   - whitespaceOnly: Whether only whitespace changes should be made.
-  public init(
-    context: Context, operatorContext: OperatorContext, node: Syntax, printTokenStream: Bool,
-    whitespaceOnly: Bool
-  ) {
+  public init(context: Context, node: Syntax, printTokenStream: Bool, whitespaceOnly: Bool) {
     self.context = context
     let configuration = context.configuration
-    self.tokens =
-      node.makeTokenStream(configuration: configuration, operatorContext: operatorContext)
+    self.tokens = node.makeTokenStream(
+      configuration: configuration, operatorTable: context.operatorTable)
     self.maxLineLength = configuration.lineLength
     self.spaceRemaining = self.maxLineLength
     self.printTokenStream = printTokenStream

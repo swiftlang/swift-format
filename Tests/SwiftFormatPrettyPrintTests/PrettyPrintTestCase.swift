@@ -2,6 +2,7 @@ import SwiftFormatConfiguration
 import SwiftFormatCore
 import SwiftFormatPrettyPrint
 import SwiftFormatTestSupport
+import SwiftOperators
 import SwiftSyntax
 import SwiftParser
 import XCTest
@@ -66,7 +67,11 @@ class PrettyPrintTestCase: DiagnosingTestCase {
   ) -> String? {
     let sourceFileSyntax: SourceFileSyntax
     do {
-      sourceFileSyntax = try Parser.parse(source: source)
+      // Ignore folding errors for unrecognized operators so that we fallback to a reasonable
+      // default instead of throwing an error.
+      sourceFileSyntax =
+        try OperatorTable.standardOperators.foldAll(Parser.parse(source: source)) { _ in }
+          .as(SourceFileSyntax.self)!
     } catch {
       XCTFail("Parsing failed with error: \(error)")
       return nil
@@ -75,7 +80,6 @@ class PrettyPrintTestCase: DiagnosingTestCase {
     let context = makeContext(sourceFileSyntax: sourceFileSyntax, configuration: configuration)
     let printer = PrettyPrinter(
       context: context,
-      operatorContext: OperatorContext.makeBuiltinOperatorContext(),
       node: Syntax(sourceFileSyntax),
       printTokenStream: false,
       whitespaceOnly: whitespaceOnly)
