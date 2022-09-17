@@ -3511,20 +3511,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 }
 
 private func isNestedInPostfixIfConfig(node: MemberAccessExprSyntax) -> Bool {
-  func containsDescendent(ancestor: Syntax, node: MemberAccessExprSyntax) -> Bool {
-    if ancestor.children(viewMode: .sourceAccurate).contains(Syntax(node)) {
-      return true
-    }
-
-    for child in ancestor.children(viewMode: .sourceAccurate) {
-      if containsDescendent(ancestor: child, node: node) {
-        return true
-      }
-    }
-
-    return false
-  }
-
   var this: Syntax? = Syntax(node)
 
   while this?.parent != nil {
@@ -3532,12 +3518,9 @@ private func isNestedInPostfixIfConfig(node: MemberAccessExprSyntax) -> Bool {
       return false
     }
 
-    if let postfixIfConfig = this?.as(PostfixIfConfigExprSyntax.self) {
-      if let ifConfigListSyntax = postfixIfConfig.config.children(viewMode: .sourceAccurate).first?.as(IfConfigClauseListSyntax.self) {
-        if containsDescendent(ancestor: Syntax(ifConfigListSyntax), node: node) {
-          return true
-        }
-      }
+    if this?.is(IfConfigDeclSyntax.self) == true &&
+        this?.parent?.is(PostfixIfConfigExprSyntax.self) == true {
+      return true
     }
 
     this = this?.parent
