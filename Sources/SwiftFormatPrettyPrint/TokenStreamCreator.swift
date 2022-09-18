@@ -13,6 +13,7 @@
 import Foundation
 import SwiftFormatConfiguration
 import SwiftFormatCore
+import SwiftOperators
 import SwiftSyntax
 
 /// Visits the nodes of a syntax tree and constructs a linear stream of formatting tokens that
@@ -22,7 +23,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   private var beforeMap = [TokenSyntax: [Token]]()
   private var afterMap = [TokenSyntax: [[Token]]]()
   private let config: Configuration
-  private let operatorContext: OperatorContext
+  private let operatorTable: OperatorTable
   private let maxlinelength: Int
 
   /// The index of the most recently appended break, or nil when no break has been appended.
@@ -58,9 +59,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   /// in a function call containing multiple trailing closures).
   private var forcedBreakingClosures = Set<SyntaxIdentifier>()
 
-  init(configuration: Configuration, operatorContext: OperatorContext) {
+  init(configuration: Configuration, operatorTable: OperatorTable) {
     self.config = configuration
-    self.operatorContext = operatorContext
+    self.operatorTable = operatorTable
     self.maxlinelength = config.lineLength
     super.init(viewMode: .all)
   }
@@ -1760,122 +1761,113 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: SequenceExprSyntax) -> SyntaxVisitorContinueKind {
-    let elementCount = node.elements.count
-    assert(elementCount > 0 && elementCount <= 3, "SequenceExpr should have already been folded.")
+  override func visit(_ node: InfixOperatorExprSyntax) -> SyntaxVisitorContinueKind {
+    let binOp = node.operatorOperand
+    let rhs = node.rightOperand
+    maybeGroupAroundSubexpression(rhs, combiningOperator: binOp)
 
-    var iterator = node.elements.makeIterator()
-    let lhs = iterator.next()!
-    maybeGroupAroundSubexpression(lhs)
+    let wrapsBeforeOperator = !isAssigningOperator(binOp)
 
-    if elementCount == 2 {
-      // Cast expressions are 2-element sequence expressions, containing the left-hand side followed
-      // by a single `AsExpr` or `IsExpr` node that holds both the keyword and the right-hand type
-      // expression.
-      let castOp = iterator.next()!
+    if shouldRequireWhitespace(around: binOp) {
+      if isAssigningOperator(binOp) {
+        var beforeTokens: [Token]
 
-      before(castOp.firstToken, tokens: .break(.continue), .open)
-      after(castOp.lastToken, tokens: .close)
-    } else if elementCount == 3 {
-      // Binary operators (and other syntax that isn't considered strictly a "binary" operator, like
-      // assignment expressions) are covered by 3-element sequence expressions.
-      let binOp = iterator.next()!
-      let rhs = iterator.next()!
-      maybeGroupAroundSubexpression(rhs, combiningOperator: binOp)
-
-      let wrapsBeforeOperator = !isAssigningOperator(binOp)
-
-      if shouldRequireWhitespace(around: binOp) {
-        if isAssigningOperator(binOp) {
-          var beforeTokens: [Token]
-
-          // If the rhs starts with a parenthesized expression, stack indentation around it.
-          // Otherwise, use regular continuation breaks.
-          if let (unindentingNode, _) = stackedIndentationBehavior(after: binOp, rhs: rhs) {
-            beforeTokens = [.break(.open(kind: .continuation))]
-            after(unindentingNode.lastToken, tokens: [.break(.close(mustBreak: false), size: 0)])
-          } else {
-            beforeTokens = [.break(.continue)]
-          }
-
-          // When the RHS is a simple expression, even if is requires multiple lines, we don't add a
-          // group so that as much of the expression as possible can stay on the same line as the
-          // operator token.
-          if isCompoundExpression(rhs) {
-            beforeTokens.append(.open)
-            after(rhs.lastToken, tokens: .close)
-          }
-
-          after(binOp.lastToken, tokens: beforeTokens)
-        } else if let (unindentingNode, shouldReset) =
-          stackedIndentationBehavior(after: binOp, rhs: rhs)
-        {
-          // For parenthesized expressions and for unparenthesized usages of `&&` and `||`, we don't
-          // want to treat all continue breaks the same. If we did, then all operators would line up
-          // at the same alignment regardless of whether they were, for example, `&&` or something
-          // between a pair of `&&`. To make long expressions/conditionals format more cleanly, we
-          // use open-continuation/close pairs around such operators and their right-hand sides so
-          // that the continuation breaks inside those scopes "stack", instead of receiving the
-          // usual single-level "continuation line or not" behavior.
-          let openBreakTokens: [Token] = [.break(.open(kind: .continuation)), .open]
-          if wrapsBeforeOperator {
-            before(binOp.firstToken, tokens: openBreakTokens)
-          } else {
-            after(binOp.lastToken, tokens: openBreakTokens)
-          }
-
-          let closeBreakTokens: [Token] =
-            (shouldReset ? [.break(.reset, size: 0)] : [])
-            + [.break(.close(mustBreak: false), size: 0), .close]
-          after(unindentingNode.lastToken, tokens: closeBreakTokens)
+        // If the rhs starts with a parenthesized expression, stack indentation around it.
+        // Otherwise, use regular continuation breaks.
+        if let (unindentingNode, _) = stackedIndentationBehavior(after: binOp, rhs: rhs) {
+          beforeTokens = [.break(.open(kind: .continuation))]
+          after(unindentingNode.lastToken, tokens: [.break(.close(mustBreak: false), size: 0)])
         } else {
-          if wrapsBeforeOperator {
-            before(binOp.firstToken, tokens: .break(.continue))
-          } else {
-            after(binOp.lastToken, tokens: .break(.continue))
-          }
+          beforeTokens = [.break(.continue)]
         }
 
+        // When the RHS is a simple expression, even if is requires multiple lines, we don't add a
+        // group so that as much of the expression as possible can stay on the same line as the
+        // operator token.
+        if isCompoundExpression(rhs) {
+          beforeTokens.append(.open)
+          after(rhs.lastToken, tokens: .close)
+        }
+
+        after(binOp.lastToken, tokens: beforeTokens)
+      } else if let (unindentingNode, shouldReset) =
+        stackedIndentationBehavior(after: binOp, rhs: rhs)
+      {
+        // For parenthesized expressions and for unparenthesized usages of `&&` and `||`, we don't
+        // want to treat all continue breaks the same. If we did, then all operators would line up
+        // at the same alignment regardless of whether they were, for example, `&&` or something
+        // between a pair of `&&`. To make long expressions/conditionals format more cleanly, we
+        // use open-continuation/close pairs around such operators and their right-hand sides so
+        // that the continuation breaks inside those scopes "stack", instead of receiving the
+        // usual single-level "continuation line or not" behavior.
+        let openBreakTokens: [Token] = [.break(.open(kind: .continuation)), .open]
         if wrapsBeforeOperator {
-          after(binOp.lastToken, tokens: .space)
+          before(binOp.firstToken, tokens: openBreakTokens)
         } else {
-          before(binOp.firstToken, tokens: .space)
+          after(binOp.lastToken, tokens: openBreakTokens)
         }
+
+        let closeBreakTokens: [Token] =
+          (shouldReset ? [.break(.reset, size: 0)] : [])
+          + [.break(.close(mustBreak: false), size: 0), .close]
+        after(unindentingNode.lastToken, tokens: closeBreakTokens)
+      } else {
+        if wrapsBeforeOperator {
+          before(binOp.firstToken, tokens: .break(.continue))
+        } else {
+          after(binOp.lastToken, tokens: .break(.continue))
+        }
+      }
+
+      if wrapsBeforeOperator {
+        after(binOp.lastToken, tokens: .space)
+      } else {
+        before(binOp.firstToken, tokens: .space)
       }
     }
 
     return .visitChildren
   }
 
-  override func visit(_ node: AssignmentExprSyntax) -> SyntaxVisitorContinueKind {
-    // Breaks and spaces are inserted at the `SequenceExpr` level.
+  override func visit(_ node: PrefixOperatorExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
-  override func visit(_ node: BinaryOperatorExprSyntax) -> SyntaxVisitorContinueKind {
-    // Breaks and spaces are inserted at the `SequenceExpr` level.
+  override func visit(_ node: PostfixUnaryExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
   override func visit(_ node: AsExprSyntax) -> SyntaxVisitorContinueKind {
-    // The break before the `as` keyword is inserted at the `SequenceExpr` level so that it is
-    // placed in the correct relative position to the group surrounding the cast operator and type
-    // expression.
+    before(node.asTok, tokens: .break(.continue), .open)
     before(node.typeName.firstToken, tokens: .space)
+    after(node.lastToken, tokens: .close)
     return .visitChildren
   }
 
   override func visit(_ node: IsExprSyntax) -> SyntaxVisitorContinueKind {
-    // The break before the `is` keyword is inserted at the `SequenceExpr` level so that it is
-    // placed in the correct relative position to the group surrounding the cast operator and type
-    // expression.
+    before(node.isTok, tokens: .break(.continue), .open)
     before(node.typeName.firstToken, tokens: .space)
+    after(node.lastToken, tokens: .close)
+    return .visitChildren
+  }
+
+  override func visit(_ node: SequenceExprSyntax) -> SyntaxVisitorContinueKind {
+    preconditionFailure("SequenceExpr should have already been folded.")
+  }
+
+  override func visit(_ node: AssignmentExprSyntax) -> SyntaxVisitorContinueKind {
+    // Breaks and spaces are inserted at the `InfixOperatorExpr` level.
+    return .visitChildren
+  }
+
+  override func visit(_ node: BinaryOperatorExprSyntax) -> SyntaxVisitorContinueKind {
+    // Breaks and spaces are inserted at the `InfixOperatorExpr` level.
     return .visitChildren
   }
 
   override func visit(_ node: ArrowExprSyntax) -> SyntaxVisitorContinueKind {
-    // The break before the `throws` keyword is inserted at the `SequenceExpr` level so that it is
-    // placed in the correct relative position to the group surrounding the "operator".
+    // The break before the `throws` keyword is inserted at the `InfixOperatorExpr` level so that it
+    // is placed in the correct relative position to the group surrounding the "operator".
     after(node.throwsToken, tokens: .break)
     return .visitChildren
   }
@@ -2107,10 +2099,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: PostfixUnaryExprSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
   override func visit(_ node: PoundWarningDeclSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
@@ -2213,10 +2201,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: PoundDsohandleExprSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
-  override func visit(_ node: PrefixOperatorExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
@@ -3181,7 +3165,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     }
   }
 
-  /// Adds a grouping around certain subexpressions during `SequenceExpr` visitation.
+  /// Adds a grouping around certain subexpressions during `InfixOperatorExpr` visitation.
   ///
   /// Adding groups around these expressions allows them to prefer breaking onto a newline before
   /// the expression, keeping the entire expression together when possible, before breaking inside
@@ -3217,9 +3201,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     switch Syntax(expr).as(SyntaxEnum.self) {
     case .awaitExpr(let awaitExpr):
       return isCompoundExpression(awaitExpr.expression)
-    case .sequenceExpr(let sequenceExpr):
-      return sequenceExpr.elements.count > 1
-    case .ternaryExpr:
+    case .infixOperatorExpr, .ternaryExpr, .isExpr, .asExpr:
       return true
     case .tryExpr(let tryExpr):
       return isCompoundExpression(tryExpr.expression)
@@ -3231,7 +3213,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   /// Returns whether the given operator behaves as an assignment, to assign a right-hand-side to a
-  /// left-hand-side in a SequenceExpr.
+  /// left-hand-side in a `InfixOperatorExpr`.
   ///
   /// Assignment is defined as either being an assignment operator (i.e. `=`) or any operator that
   /// uses "assignment" precedence.
@@ -3239,10 +3221,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     if operatorExpr.is(AssignmentExprSyntax.self) {
       return true
     }
-    if let binaryOperator = operatorExpr.as(BinaryOperatorExprSyntax.self) {
-      let operatorText = binaryOperator.operatorToken.text
-      if let precedence = operatorContext.infixOperator(named: operatorText)?.precedenceGroup,
-        precedence === operatorContext.precedenceGroup(named: .assignment)
+    if let binOpExpr = operatorExpr.as(BinaryOperatorExprSyntax.self) {
+      if let binOp = operatorTable.infixOperator(named: binOpExpr.operatorToken.text),
+        let precedenceGroup = binOp.precedenceGroup, precedenceGroup == "AssignmentPrecedence"
       {
         return true
       }
@@ -3261,8 +3242,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     switch Syntax(expr).as(SyntaxEnum.self) {
     case .tupleExpr(let tupleExpr) where tupleExpr.elementList.count == 1:
       return tupleExpr
-    case .sequenceExpr(let sequenceExpr):
-      return parenthesizedLeftmostExpr(of: sequenceExpr.elements.first!)
+    case .infixOperatorExpr(let infixOperatorExpr):
+      return parenthesizedLeftmostExpr(of: infixOperatorExpr.leftOperand)
     case .ternaryExpr(let ternaryExpr):
       return parenthesizedLeftmostExpr(of: ternaryExpr.conditionExpression)
     default:
@@ -3308,11 +3289,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     //
     // We also want to reset after undoing the stacked indentation so that we have a visual
     // indication that the subexpression has ended.
-    if let binaryOperator = operatorExpr?.as(BinaryOperatorExprSyntax.self) {
-      let operatorText = binaryOperator.operatorToken.text
-      if let precedence = operatorContext.infixOperator(named: operatorText)?.precedenceGroup,
-        precedence === operatorContext.precedenceGroup(named: .logicalConjunction)
-          || precedence === operatorContext.precedenceGroup(named: .logicalDisjunction)
+    if let binOpExpr = operatorExpr?.as(BinaryOperatorExprSyntax.self) {
+      if let binOp = operatorTable.infixOperator(named: binOpExpr.operatorToken.text),
+        let precedenceGroup = binOp.precedenceGroup,
+        precedenceGroup == "LogicalConjunctionPrecedence"
+          || precedenceGroup == "LogicalDisjunctionPrecedence"
       {
         // When `rhs` side is the last sequence in an enclosing parenthesized expression, absorb the
         // paren into the right hand side by unindenting after the final closing paren. This glues
@@ -3361,8 +3342,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // to ignore that and apply our own rules.
     if let binaryOperator = operatorExpr.as(BinaryOperatorExprSyntax.self) {
       let token = binaryOperator.operatorToken
-      if let precedence = operatorContext.infixOperator(named: token.text)?.precedenceGroup,
-        precedence === operatorContext.precedenceGroup(named: .rangeFormation)
+      if let binOp = operatorTable.infixOperator(named: token.text),
+        let precedenceGroup = binOp.precedenceGroup, precedenceGroup == "RangeFormationPrecedence"
       {
         // We want to omit whitespace around range formation operators if possible. We can't do this
         // if the token is either preceded by a postfix operator, followed by a prefix operator, or
@@ -3526,32 +3507,10 @@ private func isNestedInPostfixIfConfig(node: Syntax) -> Bool {
 
 extension Syntax {
   /// Creates a pretty-printable token stream for the provided Syntax node.
-  func makeTokenStream(configuration: Configuration, operatorContext: OperatorContext) -> [Token] {
-    // First, fold the sequence expressions in the tree before passing it along to the token stream,
-    // because we don't want to modify the tree during token stream creation.
-    let folded = SequenceExprFoldingRewriter(operatorContext: operatorContext).visit(self)
-    let commentsMoved = CommentMovingRewriter().visit(folded)
-    return TokenStreamCreator(
-      configuration: configuration, operatorContext: operatorContext)
+  func makeTokenStream(configuration: Configuration, operatorTable: OperatorTable) -> [Token] {
+    let commentsMoved = CommentMovingRewriter().visit(self)
+    return TokenStreamCreator(configuration: configuration, operatorTable: operatorTable)
       .makeStream(from: commentsMoved)
-  }
-}
-
-/// Rewrites a syntax tree by folding any sequence expressions contained in it.
-class SequenceExprFoldingRewriter: SyntaxRewriter {
-  private let operatorContext: OperatorContext
-
-  init(operatorContext: OperatorContext) {
-    self.operatorContext = operatorContext
-  }
-
-  override func visit(_ node: SequenceExprSyntax) -> ExprSyntax {
-    let rewrittenBySuper = super.visit(node)
-    if let sequence = rewrittenBySuper.as(SequenceExprSyntax.self) {
-      return sequence.folded(context: operatorContext)
-    } else {
-      return rewrittenBySuper
-    }
   }
 }
 
@@ -3592,18 +3551,16 @@ class CommentMovingRewriter: SyntaxRewriter {
     return Syntax(token)
   }
 
-  override func visit(_ node: SequenceExprSyntax) -> ExprSyntax {
-    for element in node.elements {
-      if let binaryOperatorExpr = element.as(BinaryOperatorExprSyntax.self),
-        let followingToken = binaryOperatorExpr.operatorToken.nextToken(viewMode: .all),
-        followingToken.leadingTrivia.hasLineComment
-      {
-        // Rewrite the trivia so that the comment is in the operator token's leading trivia.
-        let (remainingTrivia, extractedTrivia) = extractLineCommentTrivia(from: followingToken)
-        let combinedTrivia = binaryOperatorExpr.operatorToken.leadingTrivia + extractedTrivia
-        rewriteTokenTriviaMap[binaryOperatorExpr.operatorToken] = combinedTrivia
-        rewriteTokenTriviaMap[followingToken] = remainingTrivia
-      }
+  override func visit(_ node: InfixOperatorExprSyntax) -> ExprSyntax {
+    if let binaryOperatorExpr = node.operatorOperand.as(BinaryOperatorExprSyntax.self),
+      let followingToken = binaryOperatorExpr.operatorToken.nextToken(viewMode: .all),
+      followingToken.leadingTrivia.hasLineComment
+    {
+      // Rewrite the trivia so that the comment is in the operator token's leading trivia.
+      let (remainingTrivia, extractedTrivia) = extractLineCommentTrivia(from: followingToken)
+      let combinedTrivia = binaryOperatorExpr.operatorToken.leadingTrivia + extractedTrivia
+      rewriteTokenTriviaMap[binaryOperatorExpr.operatorToken] = combinedTrivia
+      rewriteTokenTriviaMap[followingToken] = remainingTrivia
     }
     return super.visit(node)
   }

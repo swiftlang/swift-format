@@ -39,6 +39,7 @@ open class DiagnosingTestCase: XCTestCase {
     consumer = TestingFindingConsumer()
     let context = Context(
       configuration: configuration ?? Configuration(),
+      operatorTable: .standardOperators,
       findingConsumer: consumer.consume,
       fileURL: URL(fileURLWithPath: "/tmp/test.swift"),
       sourceFileSyntax: sourceFileSyntax,

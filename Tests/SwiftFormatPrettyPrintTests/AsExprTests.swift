@@ -2,8 +2,6 @@ import XCTest
 
 final class AsExprTests: PrettyPrintTestCase {
   func testWithoutPunctuation() throws {
-    throw XCTSkip("As expression grouping does not account for new sequence expression structure.")
-
     let input =
       """
       func foo() {
@@ -31,8 +29,6 @@ final class AsExprTests: PrettyPrintTestCase {
   }
 
   func testWithPunctuation() throws {
-    throw XCTSkip("As expression grouping does not account for new sequence expression structure.")
-
     let input =
       """
       func foo() {
