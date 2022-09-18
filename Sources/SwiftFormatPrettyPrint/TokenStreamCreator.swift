@@ -1307,7 +1307,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       before(tokenToOpenWith.nextToken(viewMode: .all), tokens: .break(breakKindClose, newlines: .soft), .close)
     }
 
-    if node.parent?.parent?.parent?.is(PostfixIfConfigExprSyntax.self) == true {
+    if isNestedInPostfixIfConfig(node: Syntax(node)) {
       before(
         node.firstToken,
         tokens: [
@@ -3481,7 +3481,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
       if let calledMemberAccessExpr = calledExpression.as(MemberAccessExprSyntax.self) {
         if calledMemberAccessExpr.base != nil {
-          if isNestedInPostfixIfConfig(node: calledMemberAccessExpr) {
+          if isNestedInPostfixIfConfig(node: Syntax(calledMemberAccessExpr)) {
             before(calledMemberAccessExpr.dot, tokens: [.break(.same, size: 0)])
           } else {
             before(calledMemberAccessExpr.dot, tokens: [.break(.contextual, size: 0)])
@@ -3510,8 +3510,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 }
 
-private func isNestedInPostfixIfConfig(node: MemberAccessExprSyntax) -> Bool {
-  var this: Syntax? = Syntax(node)
+private func isNestedInPostfixIfConfig(node: Syntax) -> Bool {
+  var this: Syntax? = node
 
   while this?.parent != nil {
     if this?.is(TupleExprElementSyntax.self) == true {
