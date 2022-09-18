@@ -68,6 +68,10 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         trailingTrivia: trailingTrivia)
 
     case "Optional":
+      guard !isTypeOfUninitializedStoredVar(node) else {
+        newNode = nil
+        break
+      }
       guard let typeArgument = genericArgumentList.firstAndOnly else {
         newNode = nil
         break
@@ -495,6 +499,72 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       leadingTrivia: node.firstToken?.leadingTrivia ?? [],
       trailingTrivia: node.lastToken?.trailingTrivia ?? []
     )
+  }
+
+  /// Returns true if the given pattern binding represents a stored property/variable (as opposed to
+  /// a computed property/variable).
+  private func isStoredProperty(_ node: PatternBindingSyntax) -> Bool {
+    guard let accessor = node.accessor else {
+      // If it has no accessors at all, it is definitely a stored property.
+      return true
+    }
+
+    guard let accessorBlock = accessor.as(AccessorBlockSyntax.self) else {
+      // If the accessor isn't an `AccessorBlockSyntax`, then it is a `CodeBlockSyntax`; i.e., the
+      // accessor an implicit `get`. So, it is definitely not a stored property.
+      assert(accessor.is(CodeBlockSyntax.self))
+      return false
+    }
+
+    for accessorDecl in accessorBlock.accessors {
+      // Look for accessors that indicate that this is a computed property. If none are found, then
+      // it is a stored property (e.g., having only observers like `willSet/didSet`).
+      switch accessorDecl.accessorKind.tokenKind {
+      case .contextualKeyword("get"),
+        .contextualKeyword("set"),
+        .contextualKeyword("unsafeAddress"),
+        .contextualKeyword("unsafeMutableAddress"),
+        .contextualKeyword("_read"),
+        .contextualKeyword("_modify"):
+        return false
+      default:
+        return true
+      }
+    }
+
+    // This should be unreachable.
+    assertionFailure("Should not have an AccessorBlock with no AccessorDecls")
+    return false
+  }
+
+  /// Returns true if the given type identifier node represents the type of a mutable variable or
+  /// stored property that does not have an initializer clause.
+  private func isTypeOfUninitializedStoredVar(_ node: SimpleTypeIdentifierSyntax) -> Bool {
+    if let typeAnnotation = node.parent?.as(TypeAnnotationSyntax.self),
+      let patternBinding = nearestAncestor(of: typeAnnotation, type: PatternBindingSyntax.self),
+      isStoredProperty(patternBinding),
+      patternBinding.initializer == nil,
+      let variableDecl = nearestAncestor(of: patternBinding, type: VariableDeclSyntax.self),
+      variableDecl.letOrVarKeyword.tokenKind == .varKeyword
+    {
+      return true
+    }
+    return false
+  }
+
+  /// Returns the node's nearest ancestor of the given type, if found; otherwise, returns nil.
+  private func nearestAncestor<NodeType: SyntaxProtocol, AncestorType: SyntaxProtocol>(
+    of node: NodeType,
+    type: AncestorType.Type = AncestorType.self
+  ) -> AncestorType? {
+    var parent: Syntax? = Syntax(node)
+    while let existingParent = parent {
+      if existingParent.is(type) {
+        return existingParent.as(type)
+      }
+      parent = existingParent.parent
+    }
+    return nil
   }
 }
 
