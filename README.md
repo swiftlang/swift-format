@@ -28,6 +28,7 @@ Swift toolchain that is installed and used to build and run the formatter:
 | Xcode Release   | Swift Version          | `swift-format` Branch / Tags     |
 |:----------------|:-----------------------|:---------------------------------|
 | –               | Swift at `main`        | `main`                           |
+| Xcode 14.0      | Swift 5.7              | `release/5.7` / `0.50700.x`      |
 | Xcode 13.3      | Swift 5.6              | `release/5.6` / `0.50600.x`      |
 | Xcode 13.0–13.2 | Swift 5.5              | `swift-5.5-branch` / `0.50500.x` |
 | Xcode 12.5      | Swift 5.4              | `swift-5.4-branch` / `0.50400.x` |
