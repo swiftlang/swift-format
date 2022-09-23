@@ -1103,7 +1103,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   override func visit(_ node: ClosureSignatureSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
 
-    arrangeAttributeList(node.attributes, suppressFinalBreak: node.input == nil)
+    arrangeAttributeList(
+      node.attributes, suppressFinalBreak: node.input == nil && node.capture == nil)
 
     if let input = node.input {
       // We unconditionally put a break before the `in` keyword below, so we should only put a break

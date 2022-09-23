@@ -492,6 +492,7 @@ final class ClosureExprTests: PrettyPrintTestCase {
       let b = { @MainActor in print("hello world") }
       let c = { @MainActor param in print("hi") }
       let d = { @MainActor (a: Int) async -> Int in print("hi") }
+      let e = { @MainActor [weak self] in print("hi") }
       """
 
     let expected =
@@ -505,6 +506,9 @@ final class ClosureExprTests: PrettyPrintTestCase {
       }
       let d = {
         @MainActor (a: Int) async -> Int in
+        print("hi")
+      }
+      let e = { @MainActor [weak self] in
         print("hi")
       }
 
