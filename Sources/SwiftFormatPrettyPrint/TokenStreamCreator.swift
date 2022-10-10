@@ -764,7 +764,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: YieldStmtSyntax) -> SyntaxVisitorContinueKind {
-    after(node.yieldKeyword, tokens: .break)
+    // As of https://github.com/apple/swift-syntax/pull/895, the token following a `yield` keyword
+    // *must* be on the same line, so we cannot break here.
+    after(node.yieldKeyword, tokens: .space)
     return .visitChildren
   }
 
