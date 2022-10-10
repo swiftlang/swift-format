@@ -1,3 +1,5 @@
+import SwiftFormatConfiguration
+
 final class ProtocolDeclTests: PrettyPrintTestCase {
   func testBasicProtocolDeclarations() {
     let input =
@@ -255,5 +257,90 @@ final class ProtocolDeclTests: PrettyPrintTestCase {
   func testOneMemberProtocol() {
     let input = "protocol Foo { var bar: Int { get } }"
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 50)
+  }
+
+  func testPrimaryAssociatedTypes_noPackArguments() {
+    let input =
+      """
+      protocol MyProtocol<T> {
+        var a: Int { get }
+        var b: Bool { get }
+      }
+      protocol MyProtocol<T, S> {
+        var a: Int { get }
+        var b: Bool { get }
+      }
+      protocol MyProtocol<One, Two, Three, Four> {
+        var a: Int { get }
+        var b: Bool { get }
+      }
+      """
+
+    let expected =
+      """
+      protocol MyProtocol<T> {
+        var a: Int { get }
+        var b: Bool { get }
+      }
+      protocol MyProtocol<T, S> {
+        var a: Int { get }
+        var b: Bool { get }
+      }
+      protocol MyProtocol<
+        One,
+        Two,
+        Three,
+        Four
+      > {
+        var a: Int { get }
+        var b: Bool { get }
+      }
+
+      """
+
+    var config = Configuration()
+    config.lineBreakBeforeEachArgument = true
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 30, configuration: config)
+  }
+
+  func testPrimaryAssociatedTypes_packArguments() {
+    let input =
+      """
+      protocol MyProtocol<T> {
+        var a: Int { get }
+        var b: Bool { get }
+      }
+      protocol MyProtocol<T, S> {
+        var a: Int { get }
+        var b: Bool { get }
+      }
+      protocol MyProtocol<One, Two, Three, Four> {
+        var a: Int { get }
+        var b: Bool { get }
+      }
+      """
+
+    let expected =
+      """
+      protocol MyProtocol<T> {
+        var a: Int { get }
+        var b: Bool { get }
+      }
+      protocol MyProtocol<T, S> {
+        var a: Int { get }
+        var b: Bool { get }
+      }
+      protocol MyProtocol<
+        One, Two, Three, Four
+      > {
+        var a: Int { get }
+        var b: Bool { get }
+      }
+
+      """
+
+    var config = Configuration()
+    config.lineBreakBeforeEachArgument = false
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 30, configuration: config)
   }
 }
