@@ -764,7 +764,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: YieldStmtSyntax) -> SyntaxVisitorContinueKind {
-    after(node.yieldKeyword, tokens: .break)
+    // As of https://github.com/apple/swift-syntax/pull/895, the token following a `yield` keyword
+    // *must* be on the same line, so we cannot break here.
+    after(node.yieldKeyword, tokens: .space)
     return .visitChildren
   }
 
@@ -1641,10 +1643,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: ElseBlockSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
   override func visit(_ node: ConditionElementSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
     if let comma = node.trailingComma {
@@ -2175,10 +2173,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: BooleanLiteralExprSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
-  override func visit(_ node: ElseIfContinuationSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
