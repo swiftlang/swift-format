@@ -159,7 +159,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       modifiers: node.modifiers,
       typeKeyword: node.classKeyword,
       identifier: node.identifier,
-      genericParameterClause: node.genericParameterClause,
+      genericParameterOrPrimaryAssociatedTypeClause: node.genericParameterClause.map(Syntax.init),
       inheritanceClause: node.inheritanceClause,
       genericWhereClause: node.genericWhereClause,
       members: node.members)
@@ -173,7 +173,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       modifiers: node.modifiers,
       typeKeyword: node.actorKeyword,
       identifier: node.identifier,
-      genericParameterClause: node.genericParameterClause,
+      genericParameterOrPrimaryAssociatedTypeClause: node.genericParameterClause.map(Syntax.init),
       inheritanceClause: node.inheritanceClause,
       genericWhereClause: node.genericWhereClause,
       members: node.members)
@@ -187,7 +187,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       modifiers: node.modifiers,
       typeKeyword: node.structKeyword,
       identifier: node.identifier,
-      genericParameterClause: node.genericParameterClause,
+      genericParameterOrPrimaryAssociatedTypeClause: node.genericParameterClause.map(Syntax.init),
       inheritanceClause: node.inheritanceClause,
       genericWhereClause: node.genericWhereClause,
       members: node.members)
@@ -201,7 +201,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       modifiers: node.modifiers,
       typeKeyword: node.enumKeyword,
       identifier: node.identifier,
-      genericParameterClause: node.genericParameters,
+      genericParameterOrPrimaryAssociatedTypeClause: node.genericParameters.map(Syntax.init),
       inheritanceClause: node.inheritanceClause,
       genericWhereClause: node.genericWhereClause,
       members: node.members)
@@ -215,7 +215,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       modifiers: node.modifiers,
       typeKeyword: node.protocolKeyword,
       identifier: node.identifier,
-      genericParameterClause: nil,
+      genericParameterOrPrimaryAssociatedTypeClause:
+        node.primaryAssociatedTypeClause.map(Syntax.init),
       inheritanceClause: node.inheritanceClause,
       genericWhereClause: node.genericWhereClause,
       members: node.members)
@@ -232,7 +233,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       modifiers: node.modifiers,
       typeKeyword: node.extensionKeyword,
       identifier: lastTokenOfExtendedType,
-      genericParameterClause: nil,
+      genericParameterOrPrimaryAssociatedTypeClause: nil,
       inheritanceClause: node.inheritanceClause,
       genericWhereClause: node.genericWhereClause,
       members: node.members)
@@ -247,7 +248,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     modifiers: ModifierListSyntax?,
     typeKeyword: TokenSyntax,
     identifier: TokenSyntax,
-    genericParameterClause: GenericParameterClauseSyntax?,
+    genericParameterOrPrimaryAssociatedTypeClause: Syntax?,
     inheritanceClause: TypeInheritanceClauseSyntax?,
     genericWhereClause: GenericWhereClauseSyntax?,
     members: MemberDeclBlockSyntax
@@ -269,7 +270,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       after(members.leftBrace, tokens: .close)
     }
 
-    let lastTokenBeforeBrace = inheritanceClause?.colon ?? genericParameterClause?.rightAngleBracket
+    let lastTokenBeforeBrace = inheritanceClause?.colon
+      ?? genericParameterOrPrimaryAssociatedTypeClause?.lastToken
       ?? identifier
     after(lastTokenBeforeBrace, tokens: .close)
 
@@ -1484,6 +1486,12 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
+  override func visit(_ node: PrimaryAssociatedTypeClauseSyntax) -> SyntaxVisitorContinueKind {
+    after(node.leftAngleBracket, tokens: .break(.open, size: 0), .open(argumentListConsistency()))
+    before(node.rightAngleBracket, tokens: .break(.close, size: 0), .close)
+    return .visitChildren
+  }
+
   override func visit(_ node: ArrayTypeSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
@@ -2090,6 +2098,16 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   override func visit(_ node: GenericParameterSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
     after(node.colon, tokens: .break)
+    if let trailingComma = node.trailingComma {
+      after(trailingComma, tokens: .close, .break(.same))
+    } else {
+      after(node.lastToken, tokens: .close)
+    }
+    return .visitChildren
+  }
+
+  override func visit(_ node: PrimaryAssociatedTypeSyntax) -> SyntaxVisitorContinueKind {
+    before(node.firstToken, tokens: .open)
     if let trailingComma = node.trailingComma {
       after(trailingComma, tokens: .close, .break(.same))
     } else {
