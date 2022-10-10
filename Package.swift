@@ -48,10 +48,12 @@ let package = Package(
         .product(name: "SwiftSyntax", package: "swift-syntax"),
         .product(name: "SwiftOperators", package: "swift-syntax"),
         .product(name: "SwiftParser", package: "swift-syntax"),
-      ]
+      ],
+      plugins: ["generate-pipeline-plugin"]
     ),
     .target(
-      name: "SwiftFormatConfiguration"
+      name: "SwiftFormatConfiguration",
+      plugins: ["generate-pipeline-plugin"]
     ),
     .target(
       name: "SwiftFormatCore",
@@ -63,7 +65,8 @@ let package = Package(
     ),
     .target(
       name: "SwiftFormatRules",
-      dependencies: ["SwiftFormatCore", "SwiftFormatConfiguration"]
+      dependencies: ["SwiftFormatCore", "SwiftFormatConfiguration"],
+      plugins: ["generate-pipeline-plugin"]
     ),
     .target(
       name: "SwiftFormatPrettyPrint",
@@ -90,15 +93,22 @@ let package = Package(
       ]
     ),
 
+    .plugin(
+      name: "generate-pipeline-plugin",
+      capability: .buildTool(),
+      dependencies: [
+        "generate-pipeline"
+      ]
+    ),
     .executableTarget(
       name: "generate-pipeline",
       dependencies: [
-        "SwiftFormatCore",
-        "SwiftFormatRules",
+        .product(name: "ArgumentParser", package: "swift-argument-parser"),
         .product(name: "SwiftSyntax", package: "swift-syntax"),
         .product(name: "SwiftParser", package: "swift-syntax"),
       ]
     ),
+
     .executableTarget(
       name: "swift-format",
       dependencies: [
