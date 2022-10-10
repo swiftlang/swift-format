@@ -183,7 +183,7 @@ if ProcessInfo.processInfo.environment["SWIFTCI_USE_LOCAL_DEPS"] == nil {
     ),
     .package(
       url: "https://github.com/apple/swift-syntax",
-      .upToNextMinor(from: "0.50700.0")
+      .upToNextMinor(from: "0.50700.1")
     ),
     .package(
       url: "https://github.com/apple/swift-tools-support-core.git",

@@ -20,7 +20,7 @@ struct VersionOptions: ParsableArguments {
   func validate() throws {
     if version {
       // TODO: Automate updates to this somehow.
-      print("0.50700.0")
+      print("0.50700.1")
       throw ExitCode.success
     }
   }
