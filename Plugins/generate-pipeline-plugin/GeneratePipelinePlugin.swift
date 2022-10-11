@@ -49,6 +49,10 @@ struct GeneratePipelinePlugin: BuildToolPlugin {
       .appending("GeneratedSources")
       .appending(generatedSourceName)
 
+    let rulesSources =
+      (try context.package.targets(named: ["SwiftFormatRules"]).first as? SwiftSourceModuleTarget)?
+      .sourceFiles.map(\.path) ?? []
+
     return [
       .buildCommand(
         displayName: "Generating \(generatedSourceName) for \(target.name)",
@@ -61,6 +65,7 @@ struct GeneratePipelinePlugin: BuildToolPlugin {
           "--target",
           target.name,
         ],
+        inputFiles: rulesSources,
         outputFiles: [outputFile]
       )
     ]
