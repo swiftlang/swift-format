@@ -172,6 +172,72 @@ final class AlwaysUseLowerCamelCaseTests: LintOrFormatRuleTestCase {
       .nameMustBeLowerCamelCase("test_HappyPath_Through_GoodCode_Throws", description: "function"))
   }
 
+  func testIgnoresUnderscoresInConditionalTestNames() {
+    let input =
+      """
+      import XCTest
+
+      let Test = 1
+      class UnitTests: XCTestCase {
+        #if SOME_FEATURE_FLAG
+          static let My_Constant_Value = 0
+          func test_HappyPath_Through_GoodCode() {}
+          private func FooFunc() {}
+          private func helperFunc_For_HappyPath_Setup() {}
+          private func testLikeMethod_With_Underscores(_ arg1: ParamType) {}
+          private func testLikeMethod_With_Underscores2() -> ReturnType {}
+          func test_HappyPath_Through_GoodCode_ReturnsVoid() -> Void {}
+          func test_HappyPath_Through_GoodCode_ReturnsShortVoid() -> () {}
+          func test_HappyPath_Through_GoodCode_Throws() throws {}
+        #else
+          func testBadMethod_HasNonVoidReturn() -> ReturnType {}
+          func testGoodMethod_HasVoidReturn() {}
+          #if SOME_OTHER_FEATURE_FLAG
+            func testBadMethod_HasNonVoidReturn2() -> ReturnType {}
+            func testGoodMethod_HasVoidReturn2() {}
+          #endif
+        #endif
+      }
+      #endif
+      """
+    performLint(AlwaysUseLowerCamelCase.self, input: input)
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("Test", description: "constant"), line: 3, column: 5)
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("My_Constant_Value", description: "constant"), line: 6, column: 16)
+    XCTAssertNotDiagnosed(
+      .nameMustBeLowerCamelCase("test_HappyPath_Through_GoodCode", description: "function"))
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("FooFunc", description: "function"), line: 8, column: 18)
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("helperFunc_For_HappyPath_Setup", description: "function"),
+      line: 9, column: 18)
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("testLikeMethod_With_Underscores", description: "function"),
+      line: 10, column: 18)
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("testLikeMethod_With_Underscores2", description: "function"),
+      line: 11, column: 18)
+    XCTAssertNotDiagnosed(
+      .nameMustBeLowerCamelCase(
+        "test_HappyPath_Through_GoodCode_ReturnsVoid", description: "function"))
+    XCTAssertNotDiagnosed(
+      .nameMustBeLowerCamelCase(
+        "test_HappyPath_Through_GoodCode_ReturnsShortVoid", description: "function"))
+    XCTAssertNotDiagnosed(
+      .nameMustBeLowerCamelCase("test_HappyPath_Through_GoodCode_Throws", description: "function"))
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("testBadMethod_HasNonVoidReturn", description: "function"),
+      line: 16, column: 10)
+    XCTAssertNotDiagnosed(
+      .nameMustBeLowerCamelCase("testGoodMethod_HasVoidReturn", description: "function"))
+    XCTAssertDiagnosed(
+      .nameMustBeLowerCamelCase("testBadMethod_HasNonVoidReturn2", description: "function"),
+      line: 19, column: 12)
+    XCTAssertNotDiagnosed(
+      .nameMustBeLowerCamelCase("testGoodMethod_HasVoidReturn2", description: "function"))
+  }
+
   func testIgnoresFunctionOverrides() {
     let input =
       """
