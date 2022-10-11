@@ -13,8 +13,8 @@
 import SwiftFormatCore
 import SwiftSyntax
 
-/// Visitor that determines if the target source file imports XCTest
-fileprivate class ImportsXCTestVisitor: SyntaxVisitor {
+/// A visitor that determines if the target source file imports `XCTest`.
+private class ImportsXCTestVisitor: SyntaxVisitor {
   private let context: Context
 
   init(context: Context) {
@@ -22,30 +22,38 @@ fileprivate class ImportsXCTestVisitor: SyntaxVisitor {
     super.init(viewMode: .sourceAccurate)
   }
 
-  override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
-    for statement in node.statements {
-      guard let importDecl = statement.item.as(ImportDeclSyntax.self) else { continue }
-      for component in importDecl.path {
-        guard component.name.text == "XCTest" else { continue }
-        context.importsXCTest = .importsXCTest
-        return .skipChildren
-      }
+  override func visit(_ node: ImportDeclSyntax) -> SyntaxVisitorContinueKind {
+    // If we already know whether or not `XCTest` is imported, don't bother doing anything else.
+    guard context.importsXCTest == .notDetermined else { return .skipChildren }
+
+    // If the first import path component is the `XCTest` module, record that fact. Checking in this
+    // way lets us catch `import XCTest` but also specific decl imports like
+    // `import class XCTest.XCTestCase`, if someone wants to do that.
+    if node.path.first!.name.tokenKind == .identifier("XCTest") {
+      context.importsXCTest = .importsXCTest
     }
-    context.importsXCTest = .doesNotImportXCTest
+
     return .skipChildren
+  }
+
+  override func visitPost(_ node: SourceFileSyntax) {
+    // If we visited the entire source file and didn't find an `XCTest` import, record that fact.
+    if context.importsXCTest == .notDetermined {
+      context.importsXCTest = .doesNotImportXCTest
+    }
   }
 }
 
-/// Sets the appropriate value of the importsXCTest field in the Context class, which
-/// indicates whether the file contains test code or not.
+/// Sets the appropriate value of the `importsXCTest` field in the context, which approximates
+/// whether the file contains test code or not.
 ///
 /// This setter will only run the visitor if another rule hasn't already called this function to
-/// determine if the source file imports XCTest.
+/// determine if the source file imports `XCTest`.
 ///
 /// - Parameters:
 ///   - context: The context information of the target source file.
 ///   - sourceFile: The file to be visited.
-func setImportsXCTest(context: Context, sourceFile: SourceFileSyntax) {
+public func setImportsXCTest(context: Context, sourceFile: SourceFileSyntax) {
   guard context.importsXCTest == .notDetermined else { return }
   let visitor = ImportsXCTestVisitor(context: context)
   visitor.walk(sourceFile)
