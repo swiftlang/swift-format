@@ -135,12 +135,12 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     }
   }
 
-  private func verbatimToken(_ node: Syntax) {
+  private func verbatimToken(_ node: Syntax, indentingBehavior: IndentingBehavior = .allLines) {
     if let firstToken = node.firstToken {
       appendBeforeTokens(firstToken)
     }
 
-    appendToken(.verbatim(Verbatim(text: node.description, indentingBehavior: .allLines)))
+    appendToken(.verbatim(Verbatim(text: node.description, indentingBehavior: indentingBehavior)))
 
     if let lastToken = node.lastToken {
       // Extract any comments that trail the verbatim block since they belong to the next syntax
@@ -1769,6 +1769,24 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: InfixOperatorExprSyntax) -> SyntaxVisitorContinueKind {
+    // FIXME: This is a workaround/hack for https://github.com/apple/swift-syntax/issues/928. For
+    // keypaths like `\.?.foo`, they get represented (after folding) as an infix operator expression
+    // with an empty keypath, followed by the "binary operator" `.?.`, followed by other
+    // expressions. We can detect this and treat the whole thing as a verbatim node, which mimics
+    // what we do today for keypaths (i.e., nothing).
+    if let keyPathExpr = node.leftOperand.as(KeyPathExprSyntax.self),
+      keyPathExpr.components.isEmpty
+    {
+      // If there were spaces in the trailing trivia of the previous token, they would have been
+      // ignored (since this expression would be expected to insert its own preceding breaks).
+      // Preserve that whitespace verbatim for now.
+      if let previousToken = node.firstToken?.previousToken {
+        appendTrailingTrivia(previousToken, forced: true)
+      }
+      verbatimToken(Syntax(node), indentingBehavior: .none)
+      return .skipChildren
+    }
+
     let binOp = node.operatorOperand
     let rhs = node.rightOperand
     maybeGroupAroundSubexpression(rhs, combiningOperator: binOp)
@@ -2514,14 +2532,22 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   /// trivia represents a malformed input (as opposed to garbage text in leading trivia, which has
   /// some legitimate uses), this is a reasonable compromise to keep the garbage text roughly in the
   /// same place but still let surrounding formatting occur somewhat as expected.
-  private func appendTrailingTrivia(_ token: TokenSyntax) {
+  private func appendTrailingTrivia(_ token: TokenSyntax, forced: Bool = false) {
     let trailingTrivia = Array(token.trailingTrivia)
-    guard let lastUnexpectedIndex = trailingTrivia.lastIndex(where: { $0.isUnexpectedText }) else {
-      return
+    let lastIndex: Array<TriviaPiece>.Index
+    if forced {
+      lastIndex = trailingTrivia.index(before: trailingTrivia.endIndex)
+    } else {
+      guard
+        let lastUnexpectedIndex = trailingTrivia.lastIndex(where: { $0.isUnexpectedText })
+      else {
+        return
+      }
+      lastIndex = lastUnexpectedIndex
     }
 
     var verbatimText = ""
-    for piece in trailingTrivia[...lastUnexpectedIndex] {
+    for piece in trailingTrivia[...lastIndex] {
       switch piece {
       case .shebang, .unexpectedText, .spaces, .tabs, .formfeeds, .verticalTabs:
         piece.write(to: &verbatimText)
