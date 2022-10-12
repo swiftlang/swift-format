@@ -22,5 +22,5 @@ public enum SwiftFormatError: Error {
   case isDirectory
 
   /// The file contains invalid or unrecognized Swift syntax and cannot be handled safely.
-  case fileContainsInvalidSyntax(position: AbsolutePosition)
+  case fileContainsInvalidSyntax
 }

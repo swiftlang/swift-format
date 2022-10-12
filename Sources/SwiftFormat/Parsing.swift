@@ -40,14 +40,18 @@ func parseAndEmitDiagnostics(
   let sourceFile =
     try operatorTable.foldAll(Parser.parse(source: source)) { _ in }.as(SourceFileSyntax.self)!
 
+  let diagnostics = ParseDiagnosticsGenerator.diagnostics(for: sourceFile)
   if let parsingDiagnosticHandler = parsingDiagnosticHandler {
     let expectedConverter =
       SourceLocationConverter(file: url?.path ?? "<unknown>", tree: sourceFile)
-    let diagnostics = ParseDiagnosticsGenerator.diagnostics(for: sourceFile)
     for diagnostic in diagnostics {
       let location = diagnostic.location(converter: expectedConverter)
       parsingDiagnosticHandler(diagnostic, location)
     }
+  }
+
+  guard diagnostics.isEmpty else {
+    throw SwiftFormatError.fileContainsInvalidSyntax
   }
 
   return sourceFile
