@@ -14,6 +14,22 @@
 import Foundation
 import PackageDescription
 
+// FIXME: The `generate-pipeline-plugin` doesn't appear to be executing correctly during the build
+// on Windows. To work around this for the time being, we check in the generated files and don't
+// run the plugin there, but continue to run the plugin on other platforms and exclue the generated
+// files from the build.
+#if os(Windows)
+  let swiftFormatExclusions: [String] = []
+  let swiftFormatConfigurationExclusions: [String] = []
+  let swiftFormatRulesExclusions: [String] = []
+  let pluginsToRun: [Target.PluginUsage] = []
+#else
+  let swiftFormatExclusions: [String] = ["Pipelines+Generated.swift"]
+  let swiftFormatConfigurationExclusions: [String] = ["RuleRegistry+Generated.swift"]
+  let swiftFormatRulesExclusions: [String] = ["RuleNameCache+Generated.swift"]
+  let pluginsToRun: [Target.PluginUsage] = ["generate-pipeline-plugin"]
+#endif
+
 let package = Package(
   name: "swift-format",
   platforms: [
@@ -49,11 +65,13 @@ let package = Package(
         .product(name: "SwiftOperators", package: "swift-syntax"),
         .product(name: "SwiftParser", package: "swift-syntax"),
       ],
-      plugins: ["generate-pipeline-plugin"]
+      exclude: swiftFormatExclusions,
+      plugins: pluginsToRun
     ),
     .target(
       name: "SwiftFormatConfiguration",
-      plugins: ["generate-pipeline-plugin"]
+      exclude: swiftFormatConfigurationExclusions,
+      plugins: pluginsToRun
     ),
     .target(
       name: "SwiftFormatCore",
@@ -66,7 +84,8 @@ let package = Package(
     .target(
       name: "SwiftFormatRules",
       dependencies: ["SwiftFormatCore", "SwiftFormatConfiguration"],
-      plugins: ["generate-pipeline-plugin"]
+      exclude: swiftFormatRulesExclusions,
+      plugins: pluginsToRun
     ),
     .target(
       name: "SwiftFormatPrettyPrint",
