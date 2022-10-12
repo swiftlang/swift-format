@@ -65,18 +65,10 @@ class PrettyPrintTestCase: DiagnosingTestCase {
   private func prettyPrintedSource(
     _ source: String, configuration: Configuration, whitespaceOnly: Bool
   ) -> String? {
-    let sourceFileSyntax: SourceFileSyntax
-    do {
-      // Ignore folding errors for unrecognized operators so that we fallback to a reasonable
-      // default instead of throwing an error.
-      sourceFileSyntax =
-        try OperatorTable.standardOperators.foldAll(Parser.parse(source: source)) { _ in }
-          .as(SourceFileSyntax.self)!
-    } catch {
-      XCTFail("Parsing failed with error: \(error)")
-      return nil
-    }
-
+    // Ignore folding errors for unrecognized operators so that we fallback to a reasonable default.
+    let sourceFileSyntax =
+      OperatorTable.standardOperators.foldAll(Parser.parse(source: source)) { _ in }
+        .as(SourceFileSyntax.self)!
     let context = makeContext(sourceFileSyntax: sourceFileSyntax, configuration: configuration)
     let printer = PrettyPrinter(
       context: context,

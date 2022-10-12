@@ -19,13 +19,7 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
     file: StaticString = #file,
     line: UInt = #line
   ) {
-    let sourceFileSyntax: SourceFileSyntax
-    do {
-      sourceFileSyntax = try Parser.parse(source: input)
-    } catch {
-      XCTFail("\(error)", file: file, line: line)
-      return
-    }
+    let sourceFileSyntax = Parser.parse(source: input)
 
     // Force the rule to be enabled while we test it.
     var configuration = Configuration()
@@ -62,13 +56,7 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
     file: StaticString = #file,
     line: UInt = #line
   ) {
-    let sourceFileSyntax: SourceFileSyntax
-    do {
-      sourceFileSyntax = try Parser.parse(source: input)
-    } catch {
-      XCTFail("\(error)", file: file, line: line)
-      return
-    }
+    let sourceFileSyntax = Parser.parse(source: input)
 
     // Force the rule to be enabled while we test it.
     var configuration = configuration ?? Configuration()

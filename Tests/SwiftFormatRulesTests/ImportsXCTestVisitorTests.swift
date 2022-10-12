@@ -49,7 +49,7 @@ class ImportsXCTestVisitorTests: DiagnosingTestCase {
   /// Parses the given source, makes a new `Context`, then populates and returns its `XCTest`
   /// import state.
   private func makeContextAndSetImportsXCTest(source: String) throws -> Context.XCTestImportState {
-    let sourceFile = try Parser.parse(source: source)
+    let sourceFile = Parser.parse(source: source)
     let context = makeContext(sourceFileSyntax: sourceFile)
     setImportsXCTest(context: context, sourceFile: sourceFile)
     return context.importsXCTest
