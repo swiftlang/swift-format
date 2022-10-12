@@ -146,10 +146,6 @@ public final class SwiftFormatter {
     syntax: SourceFileSyntax, operatorTable: OperatorTable,
     assumingFileURL url: URL?, source: String?, to outputStream: inout Output
   ) throws {
-    if let position = _firstInvalidSyntaxPosition(in: Syntax(syntax)) {
-      throw SwiftFormatError.fileContainsInvalidSyntax(position: position)
-    }
-
     let assumedURL = url ?? URL(fileURLWithPath: "source")
     let context = Context(
       configuration: configuration, operatorTable: operatorTable, findingConsumer: findingConsumer,

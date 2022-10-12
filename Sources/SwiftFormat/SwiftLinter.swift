@@ -134,10 +134,6 @@ public final class SwiftLinter {
     assumingFileURL url: URL,
     source: String?
   ) throws {
-    if let position = _firstInvalidSyntaxPosition(in: Syntax(syntax)) {
-      throw SwiftFormatError.fileContainsInvalidSyntax(position: position)
-    }
-
     let context = Context(
       configuration: configuration, operatorTable: operatorTable, findingConsumer: findingConsumer,
       fileURL: url, sourceFileSyntax: syntax, source: source, ruleNameCache: ruleNameCache)

@@ -123,14 +123,6 @@ let package = Package(
     ),
 
     .testTarget(
-      name: "SwiftFormatTests",
-      dependencies: [
-        "SwiftFormat",
-        .product(name: "SwiftSyntax", package: "swift-syntax"),
-        .product(name: "SwiftParser", package: "swift-syntax"),
-      ]
-    ),
-    .testTarget(
       name: "SwiftFormatConfigurationTests",
       dependencies: ["SwiftFormatConfiguration"]
     ),

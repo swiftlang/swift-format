@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import SwiftDiagnostics
 import SwiftFormat
 import SwiftFormatConfiguration
 import SwiftSyntax
@@ -32,20 +33,24 @@ class LintFrontend: Frontend {
     do {
       try linter.lint(
         source: source,
-        assumingFileURL: url,
-        parsingDiagnosticHandler: diagnosticsEngine.consumeParserDiagnostic)
+        assumingFileURL: url) { (diagnostic, location) in
+          guard !self.lintFormatOptions.ignoreUnparsableFiles else {
+            // No diagnostics should be emitted in this mode.
+            return
+          }
+          self.diagnosticsEngine.consumeParserDiagnostic(diagnostic, location)
+      }
+
     } catch SwiftFormatError.fileNotReadable {
       diagnosticsEngine.emitError(
         "Unable to lint \(url.relativePath): file is not readable or does not exist.")
       return
-    } catch SwiftFormatError.fileContainsInvalidSyntax(let position) {
+    } catch SwiftFormatError.fileContainsInvalidSyntax {
       guard !lintFormatOptions.ignoreUnparsableFiles else {
         // The caller wants to silently ignore this error.
         return
       }
-      let location = SourceLocationConverter(file: url.path, source: source).location(for: position)
-      diagnosticsEngine.emitError(
-        "file contains invalid or unrecognized Swift syntax.", location: location)
+      // Otherwise, relevant diagnostics about the problematic nodes have been emitted.
       return
     } catch {
       diagnosticsEngine.emitError("Unable to lint \(url.relativePath): \(error)")
