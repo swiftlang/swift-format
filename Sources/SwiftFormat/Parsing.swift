@@ -38,7 +38,7 @@ func parseAndEmitDiagnostics(
   parsingDiagnosticHandler: ((Diagnostic, SourceLocation) -> Void)? = nil
 ) throws -> SourceFileSyntax {
   let sourceFile =
-    try operatorTable.foldAll(Parser.parse(source: source)) { _ in }.as(SourceFileSyntax.self)!
+    operatorTable.foldAll(Parser.parse(source: source)) { _ in }.as(SourceFileSyntax.self)!
 
   let diagnostics = ParseDiagnosticsGenerator.diagnostics(for: sourceFile)
   if let parsingDiagnosticHandler = parsingDiagnosticHandler {
