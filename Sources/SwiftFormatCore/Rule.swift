@@ -22,13 +22,6 @@ public protocol Rule {
   static var ruleName: String { get }
 
   /// Whether this rule is opt-in, meaning it is disabled by default.
-  ///
-  /// This property is scanned when swift-format is built in order to determine the correct default
-  /// values to generate for the `Configuration` object. As such, there are restrictions on its
-  /// form when overridden by rule classes. A rule class that overrides this implement this property
-  /// as a computed property whose getter returns exactly `true` or `false`, with no other logic.
-  /// The `return` statement may be explicitly provided or the property can use a single-statement
-  /// implicit return.
   static var isOptIn: Bool { get }
 
   /// Creates a new Rule in a given context.
@@ -65,9 +58,9 @@ extension Rule {
     }
 
     context.findingEmitter.emit(
-      message,
-      category: RuleBasedFindingCategory(ruleType: type(of: self)),
-      location: syntaxLocation.flatMap(Finding.Location.init),
-      notes: notes)
+        message,
+        category: RuleBasedFindingCategory(ruleType: type(of: self)),
+        location: syntaxLocation.flatMap(Finding.Location.init),
+        notes: notes)
   }
 }
