@@ -22,7 +22,12 @@ protocol FileGenerator {
 extension FileGenerator {
   /// Generates a file at the given URL, overwriting it if it already exists.
   func generateFile(at url: URL) throws {
-    FileManager.default.createFile(atPath: url.path, contents: nil, attributes: nil)
+    let fm = FileManager.default
+    if fm.fileExists(atPath: url.path) {
+      try fm.removeItem(at: url)
+    }
+
+    fm.createFile(atPath: url.path, contents: nil, attributes: nil)
     let handle = try FileHandle(forWritingTo: url)
     defer { handle.closeFile() }
 
