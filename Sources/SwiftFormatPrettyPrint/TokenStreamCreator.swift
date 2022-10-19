@@ -1229,8 +1229,20 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: ObjectLiteralExprSyntax) -> SyntaxVisitorContinueKind {
+    // TODO: Remove this; it has been subsumed by `MacroExpansionDeclSyntax`. But that feature is
+    // still in flux and this node type is still present in the API, even though nothing in the
+    // parser currently creates it.
     arrangeFunctionCallArgumentList(
       node.arguments,
+      leftDelimiter: node.leftParen,
+      rightDelimiter: node.rightParen,
+      forcesBreakBeforeRightDelimiter: false)
+    return .visitChildren
+  }
+
+  override func visit(_ node: MacroExpansionDeclSyntax) -> SyntaxVisitorContinueKind {
+    arrangeFunctionCallArgumentList(
+      node.argumentList,
       leftDelimiter: node.leftParen,
       rightDelimiter: node.rightParen,
       forcesBreakBeforeRightDelimiter: false)
@@ -1307,7 +1319,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // Unlike other code blocks, where we may want a single statement to be laid out on the same
     // line as a parent construct, the content of an `#if` block must always be on its own line;
     // the newline token inserted at the end enforces this.
-    if let lastElemTok = node.elements.lastToken {
+    if let lastElemTok = node.elements?.lastToken {
       after(lastElemTok, tokens: .break(breakKindClose, newlines: .soft), .close)
     } else {
       before(tokenToOpenWith.nextToken(viewMode: .all), tokens: .break(breakKindClose, newlines: .soft), .close)

@@ -109,8 +109,8 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
   /// - Returns: A new `IfConfigDeclSyntax` that has possibly been rewritten.
   private func rewrittenIfConfigDecl(_ ifConfigDecl: IfConfigDeclSyntax) -> IfConfigDeclSyntax {
     let newClauses = ifConfigDecl.clauses.map { clause -> IfConfigClauseSyntax in
-      switch clause.elements.as(SyntaxEnum.self) {
-      case .codeBlockItemList(let codeBlockItemList):
+      switch clause.elements?.as(SyntaxEnum.self) {
+      case .codeBlockItemList(let codeBlockItemList)?:
         return clause.withElements(Syntax(rewrittenCodeBlockItems(codeBlockItemList)))
       default:
         return clause
