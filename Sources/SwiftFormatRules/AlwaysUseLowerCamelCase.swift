@@ -134,7 +134,7 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
       if let ifConfigDecl = member.decl.as(IfConfigDeclSyntax.self) {
         // Recurse into any conditional member lists and collect their test methods as well.
         for clause in ifConfigDecl.clauses {
-          if let clauseMembers = clause.elements.as(MemberDeclListSyntax.self) {
+          if let clauseMembers = clause.elements?.as(MemberDeclListSyntax.self) {
             collectTestMethods(from: clauseMembers, into: &set)
           }
         }
