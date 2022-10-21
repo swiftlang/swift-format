@@ -19,7 +19,7 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
     file: StaticString = #file,
     line: UInt = #line
   ) {
-    let sourceFileSyntax = Parser.parse(source: input)
+    let sourceFileSyntax = restoringLegacyTriviaBehavior(Parser.parse(source: input))
 
     // Force the rule to be enabled while we test it.
     var configuration = Configuration()
@@ -56,7 +56,7 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
     file: StaticString = #file,
     line: UInt = #line
   ) {
-    let sourceFileSyntax = Parser.parse(source: input)
+    let sourceFileSyntax = restoringLegacyTriviaBehavior(Parser.parse(source: input))
 
     // Force the rule to be enabled while we test it.
     var configuration = configuration ?? Configuration()
