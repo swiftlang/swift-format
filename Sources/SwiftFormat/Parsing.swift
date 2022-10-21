@@ -12,6 +12,7 @@
 
 import Foundation
 import SwiftDiagnostics
+import SwiftFormatCore
 import SwiftOperators
 import SwiftParser
 import SwiftSyntax
@@ -54,5 +55,5 @@ func parseAndEmitDiagnostics(
     throw SwiftFormatError.fileContainsInvalidSyntax
   }
 
-  return sourceFile
+  return restoringLegacyTriviaBehavior(sourceFile)
 }

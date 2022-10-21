@@ -67,8 +67,9 @@ class PrettyPrintTestCase: DiagnosingTestCase {
   ) -> String? {
     // Ignore folding errors for unrecognized operators so that we fallback to a reasonable default.
     let sourceFileSyntax =
-      OperatorTable.standardOperators.foldAll(Parser.parse(source: source)) { _ in }
-        .as(SourceFileSyntax.self)!
+      restoringLegacyTriviaBehavior(
+        OperatorTable.standardOperators.foldAll(Parser.parse(source: source)) { _ in }
+          .as(SourceFileSyntax.self)!)
     let context = makeContext(sourceFileSyntax: sourceFileSyntax, configuration: configuration)
     let printer = PrettyPrinter(
       context: context,

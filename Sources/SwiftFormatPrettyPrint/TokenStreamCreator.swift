@@ -1249,6 +1249,15 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
+  override func visit(_ node: MacroExpansionExprSyntax) -> SyntaxVisitorContinueKind {
+    arrangeFunctionCallArgumentList(
+      node.argumentList,
+      leftDelimiter: node.leftParen,
+      rightDelimiter: node.rightParen,
+      forcesBreakBeforeRightDelimiter: false)
+    return .visitChildren
+  }
+
   override func visit(_ node: ParameterClauseSyntax) -> SyntaxVisitorContinueKind {
     // Prioritize keeping ") throws -> <return_type>" together. We can only do this if the function
     // has arguments.
@@ -3595,11 +3604,11 @@ class CommentMovingRewriter: SyntaxRewriter {
     return super.visit(node)
   }
 
-  override func visit(_ token: TokenSyntax) -> Syntax {
+  override func visit(_ token: TokenSyntax) -> TokenSyntax {
     if let rewrittenTrivia = rewriteTokenTriviaMap[token] {
-      return Syntax(token.withLeadingTrivia(rewrittenTrivia))
+      return token.withLeadingTrivia(rewrittenTrivia)
     }
-    return Syntax(token)
+    return token
   }
 
   override func visit(_ node: InfixOperatorExprSyntax) -> ExprSyntax {
