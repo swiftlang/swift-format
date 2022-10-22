@@ -41,12 +41,12 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
 
     // Make sure that function types nested in the argument list are also rewritten (for example,
     // `(Int -> ()) -> ()` should become `(Int -> Void) -> Void`).
-    let arguments = visit(node.arguments).as(TupleTypeElementListSyntax.self)!
+    let arguments = visit(node.arguments)
     let voidKeyword = makeVoidIdentifierType(toReplace: returnType)
     return TypeSyntax(node.withArguments(arguments).withReturnType(TypeSyntax(voidKeyword)))
   }
 
-  public override func visit(_ node: ClosureSignatureSyntax) -> Syntax {
+  public override func visit(_ node: ClosureSignatureSyntax) -> ClosureSignatureSyntax {
     guard let output = node.output,
       let returnType = output.returnType.as(TupleTypeSyntax.self),
       returnType.elements.count == 0
@@ -69,14 +69,14 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
       // If the closure input is a complete parameter clause (variables and types), make sure that
       // nested function types are also rewritten (for example, `label: (Int -> ()) -> ()` should
       // become `label: (Int -> Void) -> Void`).
-      input = visit(parameterClause)
+      input = Syntax(visit(parameterClause))
     } else {
       // Otherwise, it's a simple signature (just variable names, no types), so there is nothing to
       // rewrite.
       input = node.input
     }
     let voidKeyword = makeVoidIdentifierType(toReplace: returnType)
-    return Syntax(node.withInput(input).withOutput(output.withReturnType(TypeSyntax(voidKeyword))))
+    return node.withInput(input).withOutput(output.withReturnType(TypeSyntax(voidKeyword)))
   }
 
   /// Returns a value indicating whether the leading trivia of the given token contained any

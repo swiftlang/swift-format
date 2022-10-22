@@ -23,7 +23,7 @@ import SwiftSyntax
 ///
 /// Format: Redundant labels in case patterns are removed.
 public final class NoLabelsInCasePatterns: SyntaxFormatRule {
-  public override func visit(_ node: SwitchCaseLabelSyntax) -> Syntax {
+  public override func visit(_ node: SwitchCaseLabelSyntax) -> SwitchCaseLabelSyntax {
     var newCaseItems: [CaseItemSyntax] = []
     for item in node.caseItems {
       guard let expPat = item.pattern.as(ExpressionPatternSyntax.self) else {
@@ -66,7 +66,7 @@ public final class NoLabelsInCasePatterns: SyntaxFormatRule {
       newCaseItems.append(newItem)
     }
     let newCaseItemList = CaseItemListSyntax(newCaseItems)
-    return Syntax(node.withCaseItems(newCaseItemList))
+    return node.withCaseItems(newCaseItemList)
   }
 }
 

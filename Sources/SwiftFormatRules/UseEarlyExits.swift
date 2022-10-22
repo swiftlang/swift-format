@@ -48,13 +48,10 @@ public final class UseEarlyExits: SyntaxFormatRule {
   /// be enabled by default.
   public override class var isOptIn: Bool { return true }
 
-  public override func visit(_ node: CodeBlockItemListSyntax) -> Syntax {
+  public override func visit(_ node: CodeBlockItemListSyntax) -> CodeBlockItemListSyntax {
     // Continue recursing down the tree first, so that any nested/child nodes get transformed first.
-    let nodeAfterTransformingChildren = super.visit(node)
-    guard let codeBlockItems = nodeAfterTransformingChildren.as(CodeBlockItemListSyntax.self) else {
-      return nodeAfterTransformingChildren
-    }
-
+    let codeBlockItems = super.visit(node)
+    
     let result = CodeBlockItemListSyntax(
       codeBlockItems.flatMap { (codeBlockItem: CodeBlockItemSyntax) -> [CodeBlockItemSyntax] in
         // The `elseBody` of an `IfStmtSyntax` will be a `CodeBlockSyntax` if it's an `else` block,
@@ -84,7 +81,7 @@ public final class UseEarlyExits: SyntaxFormatRule {
           CodeBlockItemSyntax(item: Syntax(trueBlock), semicolon: nil, errorTokens: nil),
         ]
       })
-    return Syntax(result)
+    return result
   }
 
   /// Returns true if the last statement in the given code block is one that will cause an early

@@ -3583,23 +3583,23 @@ class CommentMovingRewriter: SyntaxRewriter {
   /// Map of tokens to alternate trivia to use as the token's leading trivia.
   var rewriteTokenTriviaMap: [TokenSyntax: Trivia] = [:]
 
-  override func visit(_ node: SourceFileSyntax) -> Syntax {
+  override func visit(_ node: SourceFileSyntax) -> SourceFileSyntax {
     if shouldFormatterIgnore(file: node) {
-      return Syntax(node)
+      return node
     }
     return super.visit(node)
   }
 
-  override func visit(_ node: CodeBlockItemSyntax) -> Syntax {
+  override func visit(_ node: CodeBlockItemSyntax) -> CodeBlockItemSyntax {
     if shouldFormatterIgnore(node: Syntax(node)) {
-      return Syntax(node)
+      return node
     }
     return super.visit(node)
   }
 
-  override func visit(_ node: MemberDeclListItemSyntax) -> Syntax {
+  override func visit(_ node: MemberDeclListItemSyntax) -> MemberDeclListItemSyntax {
     if shouldFormatterIgnore(node: Syntax(node)) {
-      return Syntax(node)
+      return node
     }
     return super.visit(node)
   }

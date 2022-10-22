@@ -25,7 +25,7 @@ import SwiftSyntax
 /// Format: Imports will be reordered and grouped at the top of the file.
 public final class OrderedImports: SyntaxFormatRule {
 
-  public override func visit(_ node: SourceFileSyntax) -> Syntax {
+  public override func visit(_ node: SourceFileSyntax) -> SourceFileSyntax {
     let lines = generateLines(codeBlockItemList: node.statements, context: context)
 
     // Stores the formatted and sorted lines that will be used to reconstruct the list of code block
@@ -134,7 +134,7 @@ public final class OrderedImports: SyntaxFormatRule {
     let newNode = node.withStatements(
       CodeBlockItemListSyntax(convertToCodeBlockItems(lines: formattedLines))
     )
-    return Syntax(newNode)
+    return newNode
   }
 
   /// Raise lint errors if the different import types appear in the wrong order, and if import

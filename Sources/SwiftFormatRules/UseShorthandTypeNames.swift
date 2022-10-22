@@ -40,7 +40,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 
     // Ensure that all arguments in the clause are shortened and in the expected format by visiting
     // the argument list, first.
-    let genericArgumentList = visit(genericArgumentClause.arguments).as(GenericArgumentListSyntax.self)!
+    let genericArgumentList = visit(genericArgumentClause.arguments)
 
     let (leadingTrivia, trailingTrivia) = boundaryTrivia(around: Syntax(node))
     let newNode: TypeSyntax?
@@ -125,7 +125,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     // Ensure that all arguments in the clause are shortened and in the expected format by visiting
     // the argument list, first.
     let genericArgumentList =
-      visit(node.genericArgumentClause.arguments).as(GenericArgumentListSyntax.self)!
+      visit(node.genericArgumentClause.arguments)
 
     let (leadingTrivia, trailingTrivia) = boundaryTrivia(around: Syntax(node))
     let newNode: ExprSyntax?
@@ -371,7 +371,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       // the identifier and the generic arguments. Otherwise, we can return just the
       // `IdentifierExpr` itself.
       if let genericArgumentClause = simpleTypeIdentifier.genericArgumentClause {
-        let newGenericArgumentClause = visit(genericArgumentClause).as(GenericArgumentClauseSyntax.self)!
+        let newGenericArgumentClause = visit(genericArgumentClause)
         let result = SpecializeExprSyntax(
           expression: ExprSyntax(identifierExpr),
           genericArgumentClause: newGenericArgumentClause)

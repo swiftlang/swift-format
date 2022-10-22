@@ -20,7 +20,7 @@ import SwiftSyntax
 /// Format: Explicit `get` blocks are rendered implicit by removing the `get`.
 public final class UseSingleLinePropertyGetter: SyntaxFormatRule {
 
-  public override func visit(_ node: PatternBindingSyntax) -> Syntax {
+  public override func visit(_ node: PatternBindingSyntax) -> PatternBindingSyntax {
     guard
       let accessorBlock = node.accessor?.as(AccessorBlockSyntax.self),
       let acc = accessorBlock.accessors.first,
@@ -31,14 +31,14 @@ public final class UseSingleLinePropertyGetter: SyntaxFormatRule {
       acc.modifier == nil,
       acc.asyncKeyword == nil,
       acc.throwsKeyword == nil
-    else { return Syntax(node) }
+    else { return node }
 
     diagnose(.removeExtraneousGetBlock, on: acc)
 
     let newBlock = CodeBlockSyntax(
       leftBrace: accessorBlock.leftBrace, statements: body.statements,
       rightBrace: accessorBlock.rightBrace)
-    return Syntax(node.withAccessor(Syntax(newBlock)))
+    return node.withAccessor(Syntax(newBlock))
   }
 }
 

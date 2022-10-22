@@ -53,23 +53,23 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
   }
 
   public override func visit(_ node: IfStmtSyntax) -> StmtSyntax {
-    let conditions = visit(node.conditions).as(ConditionElementListSyntax.self)!
+    let conditions = visit(node.conditions)
     var result = node.withIfKeyword(node.ifKeyword.withOneTrailingSpace())
       .withConditions(conditions)
-      .withBody(CodeBlockSyntax(visit(node.body)))
+      .withBody(visit(node.body))
     if let elseBody = node.elseBody {
       result = result.withElseBody(visit(elseBody))
     }
     return StmtSyntax(result)
   }
 
-  public override func visit(_ node: ConditionElementSyntax) -> Syntax {
+  public override func visit(_ node: ConditionElementSyntax) -> ConditionElementSyntax {
     guard let tup = node.condition.as(TupleExprSyntax.self),
       tup.elementList.firstAndOnly != nil
     else {
       return super.visit(node)
     }
-    return Syntax(node.withCondition(Syntax(extractExpr(tup))))
+    return node.withCondition(Syntax(extractExpr(tup)))
   }
 
   /// FIXME(hbh): Parsing for SwitchStmtSyntax is not implemented.
@@ -80,7 +80,7 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
       return super.visit(node)
     }
     return StmtSyntax(
-      node.withExpression(extractExpr(tup)).withCases(SwitchCaseListSyntax(visit(node.cases))))
+      node.withExpression(extractExpr(tup)).withCases(visit(node.cases)))
   }
 
   public override func visit(_ node: RepeatWhileStmtSyntax) -> StmtSyntax {
@@ -91,7 +91,7 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
     }
     let newNode = node.withCondition(extractExpr(tup))
       .withWhileKeyword(node.whileKeyword.withOneTrailingSpace())
-      .withBody(CodeBlockSyntax(visit(node.body)))
+      .withBody(visit(node.body))
     return StmtSyntax(newNode)
   }
 }

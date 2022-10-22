@@ -23,7 +23,7 @@ import SwiftSyntax
 /// split into multiple declarations, each declaring one of the variables, as
 /// long as the result would still be syntactically valid.
 public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
-  public override func visit(_ node: CodeBlockItemListSyntax) -> Syntax {
+  public override func visit(_ node: CodeBlockItemListSyntax) -> CodeBlockItemListSyntax {
     guard node.contains(where: codeBlockItemHasMultipleVariableBindings) else {
       return super.visit(node)
     }
@@ -36,7 +36,7 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
         // It's not a variable declaration with multiple bindings, so visit it
         // recursively (in case it's something that contains bindings that need
         // to be split) but otherwise do nothing.
-        let newItem = super.visit(codeBlockItem).as(CodeBlockItemSyntax.self)!
+        let newItem = super.visit(codeBlockItem)
         newItems.append(newItem)
         continue
       }
@@ -57,7 +57,7 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
       newItems.append(contentsOf: splitter.nodes(bySplitting: visitedDecl))
     }
 
-    return Syntax(CodeBlockItemListSyntax(newItems))
+    return CodeBlockItemListSyntax(newItems)
   }
 
   /// Returns true if the given `CodeBlockItemSyntax` contains a `let` or `var`

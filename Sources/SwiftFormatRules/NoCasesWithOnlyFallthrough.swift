@@ -21,14 +21,14 @@ import SwiftSyntax
 ///         `default`; in that case, the fallthrough `case` is deleted.
 public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
 
-  public override func visit(_ node: SwitchCaseListSyntax) -> Syntax {
+  public override func visit(_ node: SwitchCaseListSyntax) -> SwitchCaseListSyntax {
     var newChildren: [Syntax] = []
     var fallthroughOnlyCases: [SwitchCaseSyntax] = []
 
     /// Flushes any un-collapsed violations to the new cases list.
     func flushViolations() {
       fallthroughOnlyCases.forEach {
-        newChildren.append(super.visit($0))
+        newChildren.append(Syntax(super.visit($0)))
       }
       fallthroughOnlyCases.removeAll()
     }
@@ -50,14 +50,14 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
         guard !fallthroughOnlyCases.isEmpty else {
           // If there are no violations recorded, just append the case. There's nothing we can try
           // to merge into it.
-          newChildren.append(visit(switchCase))
+          newChildren.append(Syntax(visit(switchCase)))
           continue
         }
 
         if canMergeWithPreviousCases(switchCase) {
           // If the current case can be merged with the ones before it, merge them all, leaving no
           // `fallthrough`-only cases behind.
-          newChildren.append(visit(mergedCases(fallthroughOnlyCases + [switchCase])))
+          newChildren.append(Syntax(visit(mergedCases(fallthroughOnlyCases + [switchCase]))))
         } else {
           // If the current case can't be merged with the ones before it, merge the previous ones
           // into a single `fallthrough`-only case and then append the current one. This could
@@ -71,8 +71,8 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
           //     the program's behavior.
           // 3.  The current case is `@unknown default`, which can't be merged notwithstanding the
           //     side-effect issues discussed above.
-          newChildren.append(visit(mergedCases(fallthroughOnlyCases)))
-          newChildren.append(visit(switchCase))
+          newChildren.append(Syntax(visit(mergedCases(fallthroughOnlyCases))))
+          newChildren.append(Syntax(visit(switchCase)))
         }
 
         fallthroughOnlyCases.removeAll()
@@ -83,7 +83,7 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
     // anything.
     flushViolations()
 
-    return Syntax(SwitchCaseListSyntax(newChildren))
+    return SwitchCaseListSyntax(newChildren)
   }
 
   /// Returns true if this case can definitely be merged with any that come before it.
