@@ -22,9 +22,9 @@ import SwiftSyntax
 /// Format: File-scoped declarations that have formal access opposite to the desired access level in
 ///         the formatter's configuration will have their access level changed.
 public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
-  public override func visit(_ node: SourceFileSyntax) -> Syntax {
+  public override func visit(_ node: SourceFileSyntax) -> SourceFileSyntax {
     let newStatements = rewrittenCodeBlockItems(node.statements)
-    return Syntax(node.withStatements(newStatements))
+    return node.withStatements(newStatements)
   }
 
   /// Returns a list of code block items equivalent to the given list, but where any file-scoped
