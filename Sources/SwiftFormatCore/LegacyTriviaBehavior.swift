@@ -6,7 +6,7 @@ import SwiftSyntax
 /// Eventually we should get rid of this and update the core formatting code to adjust to the new
 /// behavior, but this workaround lets us keep the current implementation without larger changes.
 public func restoringLegacyTriviaBehavior(_ sourceFile: SourceFileSyntax) -> SourceFileSyntax {
-  return LegacyTriviaBehaviorRewriter().visit(sourceFile).as(SourceFileSyntax.self)!
+  return LegacyTriviaBehaviorRewriter().visit(sourceFile)
 }
 
 private final class LegacyTriviaBehaviorRewriter: SyntaxRewriter {
