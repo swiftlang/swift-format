@@ -15,6 +15,7 @@ import SwiftDiagnostics
 import SwiftFormatCore
 import SwiftOperators
 import SwiftParser
+import SwiftParserDiagnostics
 import SwiftSyntax
 
 /// Parses the given source code and returns a valid `SourceFileSyntax` node.
