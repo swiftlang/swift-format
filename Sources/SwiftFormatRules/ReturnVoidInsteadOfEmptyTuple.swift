@@ -64,13 +64,14 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
       return super.visit(node)
     }
 
-    let input: Syntax?
-    if let parameterClause = node.input?.as(ParameterClauseSyntax.self) {
+    let input: ClosureSignatureSyntax.Input?
+    switch node.input {
+    case .input(let parameterClause)?:
       // If the closure input is a complete parameter clause (variables and types), make sure that
       // nested function types are also rewritten (for example, `label: (Int -> ()) -> ()` should
       // become `label: (Int -> Void) -> Void`).
-      input = Syntax(visit(parameterClause))
-    } else {
+      input = .input(visit(parameterClause))
+    default:
       // Otherwise, it's a simple signature (just variable names, no types), so there is nothing to
       // rewrite.
       input = node.input

@@ -76,10 +76,12 @@ public final class UseEarlyExits: SyntaxFormatRule {
           elseKeyword: TokenSyntax.elseKeyword(trailingTrivia: .spaces(1)),
           body: elseBody)
 
-        return [
-          CodeBlockItemSyntax(item: Syntax(guardStatement), semicolon: nil, errorTokens: nil),
-          CodeBlockItemSyntax(item: Syntax(trueBlock), semicolon: nil, errorTokens: nil),
+        var items = [
+          CodeBlockItemSyntax(
+            item: .stmt(StmtSyntax(guardStatement)), semicolon: nil, errorTokens: nil),
         ]
+        items.append(contentsOf: trueBlock.statements)
+        return items
       })
     return result
   }
@@ -89,9 +91,14 @@ public final class UseEarlyExits: SyntaxFormatRule {
   private func codeBlockEndsWithEarlyExit(_ codeBlock: CodeBlockSyntax) -> Bool {
     guard let lastStatement = codeBlock.statements.last else { return false }
 
-    switch lastStatement.item.as(SyntaxEnum.self) {
-    case .returnStmt, .throwStmt, .breakStmt, .continueStmt:
-      return true
+    switch lastStatement.item {
+    case .stmt(let stmt):
+      switch Syntax(stmt).as(SyntaxEnum.self) {
+      case .returnStmt, .throwStmt, .breakStmt, .continueStmt:
+        return true
+      default:
+        return false
+      }
     default:
       return false
     }

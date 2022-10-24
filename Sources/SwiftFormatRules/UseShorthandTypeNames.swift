@@ -311,7 +311,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     ])
     return DictionaryExprSyntax(
       leftSquare: leftSquareBracket,
-      content: Syntax(dictElementList),
+      content: .elements(dictElementList),
       rightSquare: rightSquareBracket)
   }
 

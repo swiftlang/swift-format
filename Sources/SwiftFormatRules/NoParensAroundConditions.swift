@@ -69,7 +69,7 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
     else {
       return super.visit(node)
     }
-    return node.withCondition(Syntax(extractExpr(tup)))
+    return node.withCondition(.expression(extractExpr(tup)))
   }
 
   /// FIXME(hbh): Parsing for SwitchStmtSyntax is not implemented.

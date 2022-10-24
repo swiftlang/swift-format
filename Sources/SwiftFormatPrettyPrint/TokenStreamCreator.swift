@@ -397,7 +397,12 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     before(node.result.firstToken, tokens: .break)
 
     if let accessorOrCodeBlock = node.accessor {
-      arrangeAccessorOrCodeBlock(accessorOrCodeBlock)
+      switch accessorOrCodeBlock {
+      case .accessors(let accessorBlock):
+        arrangeBracesAndContents(of: accessorBlock)
+      case .getter(let codeBlock):
+        arrangeBracesAndContents(of: codeBlock, contentsKeyPath: \.statements)
+      }
     }
 
     after(node.lastToken, tokens: .close)
@@ -405,26 +410,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     arrangeParameterClause(node.indices, forcesBreakBeforeRightParen: true)
 
     return .visitChildren
-  }
-
-  /// Applies formatting tokens to the given syntax node, assuming that it is either an
-  /// `AccessorBlockSyntax` or a `CodeBlockSyntax`.
-  ///
-  /// - Parameter node: The syntax node to arrange.
-  private func arrangeAccessorOrCodeBlock(_ node: Syntax) {
-    switch node.as(SyntaxEnum.self) {
-    case .accessorBlock(let accessorBlock):
-      arrangeBracesAndContents(of: accessorBlock)
-    case .codeBlock(let codeBlock):
-      arrangeBracesAndContents(of: codeBlock, contentsKeyPath: \.statements)
-    default:
-      preconditionFailure(
-        """
-        This should be unreachable; we expected an AccessorBlockSyntax or a CodeBlockSyntax, but \
-        found: \(type(of: node))
-        """
-      )
-    }
   }
 
   /// Applies formatting tokens to the tokens in the given function or function-like declaration
@@ -1985,7 +1970,12 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     }
 
     if let accessorOrCodeBlock = node.accessor {
-      arrangeAccessorOrCodeBlock(accessorOrCodeBlock)
+      switch accessorOrCodeBlock {
+      case .accessors(let accessorBlock):
+        arrangeBracesAndContents(of: accessorBlock)
+      case .getter(let codeBlock):
+        arrangeBracesAndContents(of: codeBlock, contentsKeyPath: \.statements)
+      }
     } else if let trailingComma = node.trailingComma {
       // If this is one of multiple comma-delimited bindings, move any pending close breaks to
       // follow the comma so that it doesn't get separated from the tokens before it.

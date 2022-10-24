@@ -50,7 +50,7 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
       let visitedDecl = super.visit(varDecl).as(VariableDeclSyntax.self)!
       var splitter = VariableDeclSplitter {
         CodeBlockItemSyntax(
-          item: Syntax($0),
+          item: .decl(DeclSyntax($0)),
           semicolon: nil,
           errorTokens: nil)
       }
