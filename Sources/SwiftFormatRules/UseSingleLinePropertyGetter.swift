@@ -38,7 +38,7 @@ public final class UseSingleLinePropertyGetter: SyntaxFormatRule {
     let newBlock = CodeBlockSyntax(
       leftBrace: accessorBlock.leftBrace, statements: body.statements,
       rightBrace: accessorBlock.rightBrace)
-    return node.withAccessor(Syntax(newBlock))
+    return node.withAccessor(.getter(newBlock))
   }
 }
 

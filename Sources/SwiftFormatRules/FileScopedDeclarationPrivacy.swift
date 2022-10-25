@@ -38,66 +38,68 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
     -> CodeBlockItemListSyntax
   {
     let newCodeBlockItems = codeBlockItems.map { codeBlockItem -> CodeBlockItemSyntax in
-      switch codeBlockItem.item.as(SyntaxEnum.self) {
-      case .ifConfigDecl(let ifConfigDecl):
-        // We need to look through `#if/#elseif/#else` blocks because the decls directly inside
-        // them are still considered file-scope for our purposes.
-        return codeBlockItem.withItem(Syntax(rewrittenIfConfigDecl(ifConfigDecl)))
-
-      case .functionDecl(let functionDecl):
-        return codeBlockItem.withItem(
-          Syntax(rewrittenDecl(
-            functionDecl,
-            modifiers: functionDecl.modifiers,
-            factory: functionDecl.withModifiers)))
-
-      case .variableDecl(let variableDecl):
-        return codeBlockItem.withItem(
-          Syntax(rewrittenDecl(
-            variableDecl,
-            modifiers: variableDecl.modifiers,
-            factory: variableDecl.withModifiers)))
-
-      case .classDecl(let classDecl):
-        return codeBlockItem.withItem(
-          Syntax(rewrittenDecl(
-            classDecl,
-            modifiers: classDecl.modifiers,
-            factory: classDecl.withModifiers)))
-
-      case .structDecl(let structDecl):
-        return codeBlockItem.withItem(
-          Syntax(rewrittenDecl(
-            structDecl,
-            modifiers: structDecl.modifiers,
-            factory: structDecl.withModifiers)))
-
-      case .enumDecl(let enumDecl):
-        return codeBlockItem.withItem(
-          Syntax(rewrittenDecl(
-            enumDecl,
-            modifiers: enumDecl.modifiers,
-            factory: enumDecl.withModifiers)))
-
-      case .protocolDecl(let protocolDecl):
-        return codeBlockItem.withItem(
-          Syntax(rewrittenDecl(
-            protocolDecl,
-            modifiers: protocolDecl.modifiers,
-            factory: protocolDecl.withModifiers)))
-
-      case .typealiasDecl(let typealiasDecl):
-        return codeBlockItem.withItem(
-          Syntax(rewrittenDecl(
-            typealiasDecl,
-            modifiers: typealiasDecl.modifiers,
-            factory: typealiasDecl.withModifiers)))
-
+      switch codeBlockItem.item {
+      case .decl(let decl):
+        return codeBlockItem.withItem(.decl(rewrittenDecl(decl)))
       default:
         return codeBlockItem
       }
     }
     return CodeBlockItemListSyntax(newCodeBlockItems)
+  }
+
+  private func rewrittenDecl(_ decl: DeclSyntax) -> DeclSyntax {
+    switch Syntax(decl).as(SyntaxEnum.self) {
+    case .ifConfigDecl(let ifConfigDecl):
+      // We need to look through `#if/#elseif/#else` blocks because the decls directly inside
+      // them are still considered file-scope for our purposes.
+      return DeclSyntax(rewrittenIfConfigDecl(ifConfigDecl))
+
+    case .functionDecl(let functionDecl):
+      return DeclSyntax(rewrittenDecl(
+          functionDecl,
+          modifiers: functionDecl.modifiers,
+          factory: functionDecl.withModifiers))
+
+    case .variableDecl(let variableDecl):
+      return DeclSyntax(rewrittenDecl(
+          variableDecl,
+          modifiers: variableDecl.modifiers,
+          factory: variableDecl.withModifiers))
+
+    case .classDecl(let classDecl):
+      return DeclSyntax(rewrittenDecl(
+          classDecl,
+          modifiers: classDecl.modifiers,
+          factory: classDecl.withModifiers))
+
+    case .structDecl(let structDecl):
+      return DeclSyntax(rewrittenDecl(
+          structDecl,
+          modifiers: structDecl.modifiers,
+          factory: structDecl.withModifiers))
+
+    case .enumDecl(let enumDecl):
+      return DeclSyntax(rewrittenDecl(
+          enumDecl,
+          modifiers: enumDecl.modifiers,
+          factory: enumDecl.withModifiers))
+
+    case .protocolDecl(let protocolDecl):
+      return DeclSyntax(rewrittenDecl(
+          protocolDecl,
+          modifiers: protocolDecl.modifiers,
+          factory: protocolDecl.withModifiers))
+
+    case .typealiasDecl(let typealiasDecl):
+      return DeclSyntax(rewrittenDecl(
+          typealiasDecl,
+          modifiers: typealiasDecl.modifiers,
+          factory: typealiasDecl.withModifiers))
+
+    default:
+      return decl
+    }
   }
 
   /// Returns a new `IfConfigDeclSyntax` equivalent to the given node, but where any file-scoped
@@ -109,9 +111,9 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
   /// - Returns: A new `IfConfigDeclSyntax` that has possibly been rewritten.
   private func rewrittenIfConfigDecl(_ ifConfigDecl: IfConfigDeclSyntax) -> IfConfigDeclSyntax {
     let newClauses = ifConfigDecl.clauses.map { clause -> IfConfigClauseSyntax in
-      switch clause.elements?.as(SyntaxEnum.self) {
-      case .codeBlockItemList(let codeBlockItemList)?:
-        return clause.withElements(Syntax(rewrittenCodeBlockItems(codeBlockItemList)))
+      switch clause.elements {
+      case .statements(let codeBlockItemList)?:
+        return clause.withElements(.statements(rewrittenCodeBlockItems(codeBlockItemList)))
       default:
         return clause
       }

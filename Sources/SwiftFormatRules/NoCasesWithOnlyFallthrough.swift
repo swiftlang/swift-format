@@ -22,13 +22,13 @@ import SwiftSyntax
 public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
 
   public override func visit(_ node: SwitchCaseListSyntax) -> SwitchCaseListSyntax {
-    var newChildren: [Syntax] = []
+    var newChildren: [SwitchCaseListSyntax.Element] = []
     var fallthroughOnlyCases: [SwitchCaseSyntax] = []
 
     /// Flushes any un-collapsed violations to the new cases list.
     func flushViolations() {
       fallthroughOnlyCases.forEach {
-        newChildren.append(Syntax(super.visit($0)))
+        newChildren.append(.switchCase(super.visit($0)))
       }
       fallthroughOnlyCases.removeAll()
     }
@@ -50,14 +50,14 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
         guard !fallthroughOnlyCases.isEmpty else {
           // If there are no violations recorded, just append the case. There's nothing we can try
           // to merge into it.
-          newChildren.append(Syntax(visit(switchCase)))
+          newChildren.append(.switchCase(visit(switchCase)))
           continue
         }
 
         if canMergeWithPreviousCases(switchCase) {
           // If the current case can be merged with the ones before it, merge them all, leaving no
           // `fallthrough`-only cases behind.
-          newChildren.append(Syntax(visit(mergedCases(fallthroughOnlyCases + [switchCase]))))
+          newChildren.append(.switchCase(visit(mergedCases(fallthroughOnlyCases + [switchCase]))))
         } else {
           // If the current case can't be merged with the ones before it, merge the previous ones
           // into a single `fallthrough`-only case and then append the current one. This could
@@ -71,8 +71,8 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
           //     the program's behavior.
           // 3.  The current case is `@unknown default`, which can't be merged notwithstanding the
           //     side-effect issues discussed above.
-          newChildren.append(Syntax(visit(mergedCases(fallthroughOnlyCases))))
-          newChildren.append(Syntax(visit(switchCase)))
+          newChildren.append(.switchCase(visit(mergedCases(fallthroughOnlyCases))))
+          newChildren.append(.switchCase(visit(switchCase)))
         }
 
         fallthroughOnlyCases.removeAll()
@@ -89,6 +89,16 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
   /// Returns true if this case can definitely be merged with any that come before it.
   private func canMergeWithPreviousCases(_ node: SwitchCaseSyntax) -> Bool {
     return node.label.is(SwitchCaseLabelSyntax.self) && !containsValueBindingPattern(node.label)
+  }
+
+  /// Returns true if this node or one of its descendents is a `ValueBindingPatternSyntax`.
+  private func containsValueBindingPattern(_ node: SwitchCaseSyntax.Label) -> Bool {
+    switch node {
+    case .case(let label):
+      return containsValueBindingPattern(Syntax(label))
+    case .default:
+      return false
+    }
   }
 
   /// Returns true if this node or one of its descendents is a `ValueBindingPatternSyntax`.
@@ -178,8 +188,8 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
     }
     newCaseItems.append(contentsOf: labels.last!.caseItems)
 
-    let newCase = cases.last!.withLabel(
-      Syntax(labels.last!.withCaseItems(CaseItemListSyntax(newCaseItems))))
+    let newCase = cases.last!.withLabel(.case(
+      labels.last!.withCaseItems(CaseItemListSyntax(newCaseItems))))
 
     // Only the first violation case can have displaced trivia, because any non-whitespace
     // trivia in the other violation cases would've prevented collapsing.
