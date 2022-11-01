@@ -142,27 +142,35 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
 
     var statements: [String] = []
     for statement in initBody.statements {
-      guard let exp = statement.item.as(SequenceExprSyntax.self) else { return false }
+      guard
+        let expr = statement.item.as(InfixOperatorExprSyntax.self),
+        expr.operatorOperand.is(AssignmentExprSyntax.self)
+      else {
+        return false
+      }
+
       var leftName = ""
       var rightName = ""
 
-      for element in exp.elements {
-        switch Syntax(element).as(SyntaxEnum.self) {
-        case .memberAccessExpr(let element):
-          guard let base = element.base,
-            base.description.trimmingCharacters(in: .whitespacesAndNewlines) == "self"
-          else {
-            return false
-          }
-          leftName = element.name.text
-        case .assignmentExpr(let element):
-          guard element.assignToken.tokenKind == .equal else { return false }
-        case .identifierExpr(let element):
-          rightName = element.identifier.text
-        default:
+      if let memberAccessExpr = expr.leftOperand.as(MemberAccessExprSyntax.self) {
+        guard
+          let base = memberAccessExpr.base,
+          base.description.trimmingCharacters(in: .whitespacesAndNewlines) == "self"
+        else {
           return false
         }
+
+        leftName = memberAccessExpr.name.text
+      } else {
+        return false
       }
+
+      if let identifierExpr = expr.rightOperand.as(IdentifierExprSyntax.self) {
+        rightName = identifierExpr.identifier.text
+      } else {
+        return false
+      }
+
       guard leftName == rightName else { return false }
       statements.append(leftName)
     }
