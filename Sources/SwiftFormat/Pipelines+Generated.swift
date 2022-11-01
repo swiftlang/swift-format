@@ -63,6 +63,7 @@ class LintPipeline: SyntaxVisitor {
 
   override func visit(_ node: CodeBlockItemListSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(DoNotUseSemicolons.visit, for: node)
+    visitIfEnabled(NoAssignmentInExpressions.visit, for: node)
     visitIfEnabled(OneVariableDeclarationPerLine.visit, for: node)
     visitIfEnabled(UseEarlyExits.visit, for: node)
     return .visitChildren
@@ -162,6 +163,11 @@ class LintPipeline: SyntaxVisitor {
 
   override func visit(_ node: IfStmtSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(NoParensAroundConditions.visit, for: node)
+    return .visitChildren
+  }
+
+  override func visit(_ node: InfixOperatorExprSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(NoAssignmentInExpressions.visit, for: node)
     return .visitChildren
   }
 
@@ -312,6 +318,7 @@ extension FormatPipeline {
     node = FullyIndirectEnum(context: context).visit(node)
     node = GroupNumericLiterals(context: context).visit(node)
     node = NoAccessLevelOnExtensionDeclaration(context: context).visit(node)
+    node = NoAssignmentInExpressions(context: context).visit(node)
     node = NoCasesWithOnlyFallthrough(context: context).visit(node)
     node = NoEmptyTrailingClosureParentheses(context: context).visit(node)
     node = NoLabelsInCasePatterns(context: context).visit(node)

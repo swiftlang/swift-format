@@ -44,6 +44,16 @@ extension Trivia {
       })
   }
 
+  /// Returns this set of trivia, without any leading spaces.
+  public func withoutLeadingSpaces() -> Trivia {
+    return Trivia(
+      pieces: Array(drop {
+        if case .spaces = $0 { return false }
+        if case .tabs = $0 { return false }
+        return true
+      }))
+  }
+
   /// Returns this set of trivia, without any newlines.
   public func withoutNewlines() -> Trivia {
     return Trivia(
