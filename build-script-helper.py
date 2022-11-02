@@ -148,7 +148,7 @@ def should_run_action(action_name, selected_actions):
     return False
 
 def update_swiftpm_dependencies(package_path, swift_exec, build_path, env, verbose):
-  args = [swift_exec, 'package', '--package-path', package_path, '--build-path', build_path, 'update']
+  args = [swift_exec, 'package', '--package-path', package_path, '--scratch-path', build_path, 'update']
   check_call(args, env=env, verbose=verbose)
 
 def invoke_swift(package_path, swift_exec, action, products, build_path, multiroot_data_file, configuration, env, verbose):
