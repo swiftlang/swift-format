@@ -17,6 +17,7 @@ import PackageDescription
 let package = Package(
   name: "swift-format",
   platforms: [
+    .iOS("13.0"),
     .macOS("10.15")
   ],
   products: [
