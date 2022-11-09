@@ -33,6 +33,14 @@ let package = Package(
       name: "SwiftFormatConfiguration",
       targets: ["SwiftFormatConfiguration"]
     ),
+    .plugin(
+      name: "FormatPlugin",
+      targets: ["Format Source Code"]
+    ),
+    .plugin(
+      name: "LintPlugin",
+      targets: ["Lint Source Code"]
+    ),
   ],
   dependencies: [
     // See the "Dependencies" section below.
@@ -91,7 +99,32 @@ let package = Package(
         .product(name: "SwiftSyntax", package: "swift-syntax"),
       ]
     ),
-
+    .plugin(
+      name: "Format Source Code",
+      capability: .command(
+        intent: .sourceCodeFormatting(),
+        permissions: [
+          .writeToPackageDirectory(reason: "This command formats the Swift source files")
+        ]
+      ),
+      dependencies: [
+        .target(name: "swift-format")
+      ],
+      path: "Plugins/FormatPlugin"
+    ),
+    .plugin(
+      name: "Lint Source Code",
+      capability: .command(
+        intent: .custom(
+          verb: "lint-source-code",
+          description: "Lint source code for a specified target."
+        )
+      ),
+      dependencies: [
+        .target(name: "swift-format")
+      ],
+      path: "Plugins/LintPlugin"
+    ),
     .executableTarget(
       name: "generate-pipeline",
       dependencies: [
