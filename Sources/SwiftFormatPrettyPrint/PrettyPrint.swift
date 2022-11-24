@@ -186,7 +186,7 @@ public class PrettyPrinter {
     outputBuffer.append(String(str))
   }
 
-  /// Writes newlines into the output stream, taking into account any pre-existing consecutive
+  /// Writes newlines into the output stream, taking into account any preexisting consecutive
   /// newlines and the maximum allowed number of blank lines.
   ///
   /// This function does some implicit collapsing of consecutive newlines to ensure that the
