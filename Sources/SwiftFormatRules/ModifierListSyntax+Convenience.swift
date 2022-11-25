@@ -46,7 +46,7 @@ extension ModifierListSyntax {
     return self
   }
 
-  /// Returns a foramatted declaration modifier token with the given name.
+  /// Returns a formatted declaration modifier token with the given name.
   func createModifierToken(name: String) -> DeclModifierSyntax {
     let id = TokenSyntax.identifier(name, trailingTrivia: .spaces(1))
     let newModifier = DeclModifierSyntax(name: id, detail: nil)
