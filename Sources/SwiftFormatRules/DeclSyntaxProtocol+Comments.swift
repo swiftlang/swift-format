@@ -114,7 +114,7 @@ extension DeclSyntaxProtocol {
       } else {
         switch currentSection {
         case .parameters:
-          // After the paramters tag is found the following lines should be the parameters
+          // After the parameters tag is found the following lines should be the parameters
           // description.
           guard let index = trimmedLine.firstIndex(of: ":") else { continue }
           let name = trimmedLine[..<index].trimmingCharacters(in: .init(charactersIn: " -:"))

@@ -132,7 +132,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
 }
 
 /// Iterates through every parameter of paramList and returns a list of the
-/// paramters identifiers.
+/// parameters identifiers.
 fileprivate func funcParametersIdentifiers(in paramList: FunctionParameterListSyntax) -> [String] {
   var funcParameters = [String]()
   for parameter in paramList {
