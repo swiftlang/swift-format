@@ -569,7 +569,7 @@ public class PrettyPrinter {
   ///
   /// - Returns: A String containing the formatted source code.
   public func prettyPrint() -> String {
-    // Keep track of the indicies of the .open and .break token locations.
+    // Keep track of the indices of the .open and .break token locations.
     var delimIndexStack = [Int]()
     // Keep a running total of the token lengths.
     var total = 0
