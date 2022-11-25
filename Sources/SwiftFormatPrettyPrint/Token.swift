@@ -108,7 +108,7 @@ enum BreakKind: Equatable {
   case reset
 
   /// A `contextual` break acts as either a `continue` break or maintains the existing level of
-  /// indentation when it fires. The contextual breaking beahvior of a given contextual breaking
+  /// indentation when it fires. The contextual breaking behavior of a given contextual breaking
   /// scope (i.e. inside a `contextualBreakingStart`/`contextualBreakingEnd` region) is set by the
   /// first child `contextualBreakingStart`/`contextualBreakingEnd` pair. When the first child is
   /// multiline the contextual breaks maintain indentation and they are continuations otherwise.
