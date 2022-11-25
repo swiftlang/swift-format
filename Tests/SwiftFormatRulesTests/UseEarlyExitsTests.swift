@@ -89,7 +89,7 @@ final class UseEarlyExitsTests: LintOrFormatRuleTestCase {
               // Comment 4
               var result = 0
               for value in values {
-                result += invertedCombobulatoryFactor(of: value)
+                result += invertedCombobulatorFactor(of: value)
               }
               return result
             } else {
@@ -121,7 +121,7 @@ final class UseEarlyExitsTests: LintOrFormatRuleTestCase {
               // Comment 4
               var result = 0
               for value in values {
-                result += invertedCombobulatoryFactor(of: value)
+                result += invertedCombobulatorFactor(of: value)
               }
               return result
         }
