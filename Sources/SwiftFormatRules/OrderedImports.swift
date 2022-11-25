@@ -280,7 +280,7 @@ fileprivate func joinLines(_ inputLineLists: [Line]...) -> [Line] {
 }
 
 /// This function transforms the statements in a CodeBlockItemListSyntax object into a list of Line
-/// obejcts. Blank lines and standalone comments are represented by their own Line object. Code with
+/// objects. Blank lines and standalone comments are represented by their own Line object. Code with
 /// a trailing comment are represented together in the same Line.
 fileprivate func generateLines(codeBlockItemList: CodeBlockItemListSyntax, context: Context)
   -> [Line]
