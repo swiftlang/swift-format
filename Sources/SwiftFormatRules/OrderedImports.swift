@@ -188,7 +188,7 @@ public final class OrderedImports: SyntaxFormatRule {
   }
 
   /// Sort the list of import lines lexicographically by the import path name. Any comments above an
-  /// import lines should be assocaited with it, and move with the line during sorting. We also emit
+  /// import lines should be associated with it, and move with the line during sorting. We also emit
   /// a linter error if an import line is discovered to be out of order.
   private func formatImports(_ imports: [Line]) -> [Line] {
     var linesWithLeadingComments: [(import: Line, comments: [Line])] = []
