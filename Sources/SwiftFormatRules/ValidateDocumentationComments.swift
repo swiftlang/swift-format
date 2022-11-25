@@ -49,7 +49,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
     guard let params = commentInfo.parameters else { return .skipChildren }
 
     // If a single sentence summary is the only documentation, parameter(s) and
-    // returns tags may be ommitted.
+    // returns tags may be omitted.
     if commentInfo.oneSentenceSummary != nil && commentInfo.commentParagraphs!.isEmpty && params
       .isEmpty && commentInfo.returnsDescription == nil
     {
