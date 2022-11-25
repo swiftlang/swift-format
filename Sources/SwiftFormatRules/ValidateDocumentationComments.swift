@@ -79,7 +79,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
       return .skipChildren
     }
 
-    // Ensures that the parameters of the documantation and the function signature
+    // Ensures that the parameters of the documentation and the function signature
     // are the same.
     if (params.count != funcParameters.count) || !parametersAreEqual(
       params: params, funcParam: funcParameters)
