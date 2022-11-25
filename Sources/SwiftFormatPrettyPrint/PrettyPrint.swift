@@ -248,7 +248,7 @@ public class PrettyPrinter {
   /// Print out the provided token, and apply line-wrapping and indentation as needed.
   ///
   /// This method takes a Token and it's length, and it keeps track of how much space is left on the
-  /// current line it is printing on. If a token exceeds the remaning space, we break to a new line,
+  /// current line it is printing on. If a token exceeds the remaining space, we break to a new line,
   /// and apply the appropriate level of indentation.
   ///
   /// - Parameters:
