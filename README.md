@@ -68,7 +68,7 @@ want to do.
 Once the build has finished, the `swift-format` executable will be located at
 `.build/release/swift-format`.
 
-To test that the formatter was built succesfully and is compatible with your
+To test that the formatter was built successfully and is compatible with your
 Swift toolchain, you can also run the following command:
 
 ```sh
