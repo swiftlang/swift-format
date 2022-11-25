@@ -584,7 +584,7 @@ public class PrettyPrinter {
         lengths.append(0)
 
       // Open tokens have lengths equal to the total of the contents of its group. The value is
-      // calcualted when close tokens are encountered.
+      // calculated when close tokens are encountered.
       case .open:
         lengths.append(-total)
         delimIndexStack.append(i)
