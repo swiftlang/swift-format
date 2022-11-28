@@ -20,7 +20,7 @@ struct LintPlugin {
     process.waitUntilExit()
     
     if process.terminationReason == .exit && process.terminationStatus == 0 {
-      print("Lintted the source code.")
+      print("Linted the source code.")
     }
     else {
       let problem = "\(process.terminationReason):\(process.terminationStatus)"

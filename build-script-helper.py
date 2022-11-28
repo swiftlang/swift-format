@@ -133,7 +133,7 @@ def run(args):
       verbose=args.verbose
     )
     cmd = [args.swift_exec, 'build', '--show-bin-path'] + swiftpm_args
-    bin_path = check_output(cmd, env=env, caputre_stderr=False, verbose=args.verbose).strip()
+    bin_path = check_output(cmd, env=env, capture_stderr=False, verbose=args.verbose).strip()
     
     for prefix in args.install_prefixes:
         cmd = ['rsync', '-a', os.path.join(bin_path, 'swift-format'), os.path.join(prefix, 'bin')]
@@ -206,10 +206,10 @@ def check_call(cmd, verbose, env=os.environ, **kwargs):
     print(' '.join([escape_cmd_arg(arg) for arg in cmd]))
   return subprocess.check_call(cmd, env=env, stderr=subprocess.STDOUT, **kwargs)
 
-def check_output(cmd, verbose, env=os.environ, caputre_stderr=True, **kwargs):
+def check_output(cmd, verbose, env=os.environ, capture_stderr=True, **kwargs):
   if verbose:
     print(' '.join([escape_cmd_arg(arg) for arg in cmd]))
-  if caputre_stderr:
+  if capture_stderr:
     stderr = subprocess.STDOUT
   else:
     stderr = subprocess.DEVNULL

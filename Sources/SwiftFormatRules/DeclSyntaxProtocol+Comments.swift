@@ -87,8 +87,8 @@ extension DeclSyntaxProtocol {
     var returnsDescription: String?
     var throwsDescription: String?
     // Takes the first sentence of the comment, and counts the number of lines it uses.
-    let oneSenteceSummary = docComment.components(separatedBy: ".").first
-    let numOfOneSentenceLines = oneSenteceSummary!.components(separatedBy: .newlines).count
+    let oneSentenceSummary = docComment.components(separatedBy: ".").first
+    let numOfOneSentenceLines = oneSentenceSummary!.components(separatedBy: .newlines).count
 
     // Iterates to all the comments after the one sentence summary to find the parameter(s)
     // return tags and get their description.
@@ -114,7 +114,7 @@ extension DeclSyntaxProtocol {
       } else {
         switch currentSection {
         case .parameters:
-          // After the paramters tag is found the following lines should be the parameters
+          // After the parameters tag is found the following lines should be the parameters
           // description.
           guard let index = trimmedLine.firstIndex(of: ":") else { continue }
           let name = trimmedLine[..<index].trimmingCharacters(in: .init(charactersIn: " -:"))
@@ -138,7 +138,7 @@ extension DeclSyntaxProtocol {
     }
 
     return ParseComment(
-      oneSentenceSummary: oneSenteceSummary,
+      oneSentenceSummary: oneSentenceSummary,
       commentParagraphs: commentParagraphs,
       parameters: params,
       throwsDescription: throwsDescription,

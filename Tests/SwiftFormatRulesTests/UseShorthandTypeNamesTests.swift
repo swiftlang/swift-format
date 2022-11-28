@@ -397,7 +397,7 @@ final class UseShorthandTypeNamesTests: LintOrFormatRuleTestCase {
         """)
   }
 
-  func testOptionalsNestedInOtherTypseInStoredVarsAreStillChanged() {
+  func testOptionalsNestedInOtherTypesInStoredVarsAreStillChanged() {
     XCTAssertFormatting(
       UseShorthandTypeNames.self,
       input:

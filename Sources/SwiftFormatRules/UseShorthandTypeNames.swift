@@ -197,7 +197,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     return (first, second)
   }
 
-  /// Retuns a `TypeSyntax` representing a shorthand array type (e.g., `[Foo]`) with the given
+  /// Returns a `TypeSyntax` representing a shorthand array type (e.g., `[Foo]`) with the given
   /// element type and trivia.
   private func shorthandArrayType(
     element: TypeSyntax,

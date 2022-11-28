@@ -201,7 +201,7 @@ fileprivate enum AccessLevel {
 /// a struct that contains the given properties.
 ///
 /// The rules for default memberwise initializer access levels are defined in The Swift
-/// Programming Languge:
+/// Programming Language:
 /// https://docs.swift.org/swift-book/LanguageGuide/AccessControl.html#ID21
 ///
 /// - Parameter properties: The properties contained within the struct.

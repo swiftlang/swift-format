@@ -49,7 +49,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
     guard let params = commentInfo.parameters else { return .skipChildren }
 
     // If a single sentence summary is the only documentation, parameter(s) and
-    // returns tags may be ommitted.
+    // returns tags may be omitted.
     if commentInfo.oneSentenceSummary != nil && commentInfo.commentParagraphs!.isEmpty && params
       .isEmpty && commentInfo.returnsDescription == nil
     {
@@ -79,7 +79,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
       return .skipChildren
     }
 
-    // Ensures that the parameters of the documantation and the function signature
+    // Ensures that the parameters of the documentation and the function signature
     // are the same.
     if (params.count != funcParameters.count) || !parametersAreEqual(
       params: params, funcParam: funcParameters)
@@ -132,7 +132,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
 }
 
 /// Iterates through every parameter of paramList and returns a list of the
-/// paramters identifiers.
+/// parameters identifiers.
 fileprivate func funcParametersIdentifiers(in paramList: FunctionParameterListSyntax) -> [String] {
   var funcParameters = [String]()
   for parameter in paramList {
