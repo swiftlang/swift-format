@@ -1209,18 +1209,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .skipChildren
   }
 
-  override func visit(_ node: ObjectLiteralExprSyntax) -> SyntaxVisitorContinueKind {
-    // TODO: Remove this; it has been subsumed by `MacroExpansionDeclSyntax`. But that feature is
-    // still in flux and this node type is still present in the API, even though nothing in the
-    // parser currently creates it.
-    arrangeFunctionCallArgumentList(
-      node.arguments,
-      leftDelimiter: node.leftParen,
-      rightDelimiter: node.rightParen,
-      forcesBreakBeforeRightDelimiter: false)
-    return .visitChildren
-  }
-
   override func visit(_ node: MacroExpansionDeclSyntax) -> SyntaxVisitorContinueKind {
     arrangeFunctionCallArgumentList(
       node.argumentList,
