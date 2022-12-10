@@ -1995,14 +1995,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: PoundFileExprSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
-  override func visit(_ node: PoundLineExprSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
   override func visit(_ node: TypealiasDeclSyntax) -> SyntaxVisitorContinueKind {
     arrangeAttributeList(node.attributes)
 
@@ -2038,10 +2030,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: NilLiteralExprSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
-  override func visit(_ node: PoundErrorDeclSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
@@ -2094,10 +2082,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: PoundColumnExprSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
   override func visit(_ node: WildcardPatternSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
@@ -2131,10 +2115,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: PoundWarningDeclSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
   override func visit(_ node: ExpressionPatternSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
@@ -2156,10 +2136,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     if node.parent == nil || !node.parent!.is(PatternBindingSyntax.self) {
       after(node.equal, tokens: .break)
     }
-    return .visitChildren
-  }
-
-  override func visit(_ node: PoundFunctionExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
@@ -2225,10 +2201,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: IntegerLiteralExprSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
-  override func visit(_ node: PoundDsohandleExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
