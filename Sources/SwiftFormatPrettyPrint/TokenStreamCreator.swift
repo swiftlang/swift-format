@@ -1209,10 +1209,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .skipChildren
   }
 
-  override func visit(_ node: ObjcKeyPathExprSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
   override func visit(_ node: ObjectLiteralExprSyntax) -> SyntaxVisitorContinueKind {
     // TODO: Remove this; it has been subsumed by `MacroExpansionDeclSyntax`. But that feature is
     // still in flux and this node type is still present in the API, even though nothing in the
@@ -1405,12 +1401,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       arrangeParameterClause(associatedValue, forcesBreakBeforeRightParen: false)
     }
 
-    return .visitChildren
-  }
-
-  override func visit(_ node: ObjcSelectorExprSyntax) -> SyntaxVisitorContinueKind {
-    after(node.leftParen, tokens: .break(.open, size: 0), .open)
-    before(node.rightParen, tokens: .break(.close(mustBreak: false), size: 0), .close)
     return .visitChildren
   }
 
@@ -2002,10 +1992,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: IsTypePatternSyntax) -> SyntaxVisitorContinueKind {
     after(node.isKeyword, tokens: .space)
-    return .visitChildren
-  }
-
-  override func visit(_ node: ObjcNamePieceSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
