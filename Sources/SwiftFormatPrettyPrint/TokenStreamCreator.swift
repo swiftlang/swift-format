@@ -1209,22 +1209,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .skipChildren
   }
 
-  override func visit(_ node: ObjcKeyPathExprSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
-  override func visit(_ node: ObjectLiteralExprSyntax) -> SyntaxVisitorContinueKind {
-    // TODO: Remove this; it has been subsumed by `MacroExpansionDeclSyntax`. But that feature is
-    // still in flux and this node type is still present in the API, even though nothing in the
-    // parser currently creates it.
-    arrangeFunctionCallArgumentList(
-      node.arguments,
-      leftDelimiter: node.leftParen,
-      rightDelimiter: node.rightParen,
-      forcesBreakBeforeRightDelimiter: false)
-    return .visitChildren
-  }
-
   override func visit(_ node: MacroExpansionDeclSyntax) -> SyntaxVisitorContinueKind {
     arrangeFunctionCallArgumentList(
       node.argumentList,
@@ -1405,12 +1389,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       arrangeParameterClause(associatedValue, forcesBreakBeforeRightParen: false)
     }
 
-    return .visitChildren
-  }
-
-  override func visit(_ node: ObjcSelectorExprSyntax) -> SyntaxVisitorContinueKind {
-    after(node.leftParen, tokens: .break(.open, size: 0), .open)
-    before(node.rightParen, tokens: .break(.close(mustBreak: false), size: 0), .close)
     return .visitChildren
   }
 
@@ -2005,18 +1983,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: ObjcNamePieceSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
-  override func visit(_ node: PoundFileExprSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
-  override func visit(_ node: PoundLineExprSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
   override func visit(_ node: TypealiasDeclSyntax) -> SyntaxVisitorContinueKind {
     arrangeAttributeList(node.attributes)
 
@@ -2052,10 +2018,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: NilLiteralExprSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
-  override func visit(_ node: PoundErrorDeclSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
@@ -2108,10 +2070,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: PoundColumnExprSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
   override func visit(_ node: WildcardPatternSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
@@ -2145,10 +2103,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: PoundWarningDeclSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
   override func visit(_ node: ExpressionPatternSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
@@ -2170,10 +2124,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     if node.parent == nil || !node.parent!.is(PatternBindingSyntax.self) {
       after(node.equal, tokens: .break)
     }
-    return .visitChildren
-  }
-
-  override func visit(_ node: PoundFunctionExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
@@ -2239,10 +2189,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: IntegerLiteralExprSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
-  override func visit(_ node: PoundDsohandleExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
