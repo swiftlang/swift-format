@@ -2411,39 +2411,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  // MARK: - Nodes representing unknown or malformed syntax
+  // MARK: - Nodes representing unexpected or malformed syntax
 
   override func visit(_ node: UnexpectedNodesSyntax) -> SyntaxVisitorContinueKind {
-    verbatimToken(Syntax(node))
-    return .skipChildren
-  }
-
-  override func visit(_ node: UnknownDeclSyntax) -> SyntaxVisitorContinueKind {
-    verbatimToken(Syntax(node))
-    return .skipChildren
-  }
-
-  override func visit(_ node: UnknownExprSyntax) -> SyntaxVisitorContinueKind {
-    verbatimToken(Syntax(node))
-    return .skipChildren
-  }
-
-  override func visit(_ node: UnknownPatternSyntax) -> SyntaxVisitorContinueKind {
-    verbatimToken(Syntax(node))
-    return .skipChildren
-  }
-
-  override func visit(_ node: UnknownStmtSyntax) -> SyntaxVisitorContinueKind {
-    verbatimToken(Syntax(node))
-    return .skipChildren
-  }
-
-  override func visit(_ node: UnknownSyntax) -> SyntaxVisitorContinueKind {
-    verbatimToken(Syntax(node))
-    return .skipChildren
-  }
-
-  override func visit(_ node: UnknownTypeSyntax) -> SyntaxVisitorContinueKind {
     verbatimToken(Syntax(node))
     return .skipChildren
   }
