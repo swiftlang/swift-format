@@ -215,7 +215,7 @@ if ProcessInfo.processInfo.environment["SWIFTCI_USE_LOCAL_DEPS"] == nil {
   package.dependencies += [
     .package(
       url: "https://github.com/apple/swift-argument-parser.git",
-      .upToNextMinor(from: "1.1.4")
+      branch: "main"
     ),
     .package(
       url: "https://github.com/apple/swift-syntax.git",
