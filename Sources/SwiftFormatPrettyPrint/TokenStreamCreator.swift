@@ -1777,7 +1777,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
     let wrapsBeforeOperator = !isAssigningOperator(binOp)
 
-    if shouldRequireWhitespace(around: binOp) {
+    if shouldRequireWhitespace(around: binOp, configuration: config) {
       if isAssigningOperator(binOp) {
         var beforeTokens: [Token]
 
