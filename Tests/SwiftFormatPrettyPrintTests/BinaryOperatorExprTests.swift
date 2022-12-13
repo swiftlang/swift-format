@@ -1,3 +1,5 @@
+import SwiftFormatConfiguration
+
 final class BinaryOperatorExprTests: PrettyPrintTestCase {
   func testNonRangeFormationOperatorsAreSurroundedByBreaks() {
     let input =
@@ -26,7 +28,7 @@ final class BinaryOperatorExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected10, linelength: 10)
   }
 
-  func testRangeFormationOperatorsAreCompactedWhenPossible() {
+  func testRangeFormationOperatorCompaction_noSpacesAroundRangeFormation() {
     let input =
       """
       x = 1...100
@@ -48,7 +50,38 @@ final class BinaryOperatorExprTests: PrettyPrintTestCase {
 
       """
 
-    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
+    var configuration = Configuration()
+    configuration.spacesAroundRangeFormationOperators = false
+    assertPrettyPrintEqual(
+      input: input, expected: expected, linelength: 80, configuration: configuration)
+  }
+
+  func testRangeFormationOperatorCompaction_spacesAroundRangeFormation() {
+    let input =
+      """
+      x = 1...100
+      x = 1..<100
+      x = (1++)...(-100)
+      x = 1 ... 100
+      x = 1 ..< 100
+      x = (1++) ... (-100)
+      """
+
+    let expected =
+      """
+      x = 1 ... 100
+      x = 1 ..< 100
+      x = (1++) ... (-100)
+      x = 1 ... 100
+      x = 1 ..< 100
+      x = (1++) ... (-100)
+
+      """
+
+    var configuration = Configuration()
+    configuration.spacesAroundRangeFormationOperators = true
+    assertPrettyPrintEqual(
+      input: input, expected: expected, linelength: 80, configuration: configuration)
   }
 
   func testRangeFormationOperatorsAreNotCompactedWhenFollowingAPostfixOperator() {

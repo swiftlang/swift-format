@@ -3296,20 +3296,24 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return nil
   }
 
-  /// Returns a value indicating whether whitespace should be required around the given operator.
+  /// Returns a value indicating whether whitespace should be required around the given operator,
+  /// for the given configuration.
   ///
   /// If spaces are not required (for example, range operators), then the formatter will also forbid
   /// breaks around the operator. This is to prevent situations where a break could occur before an
   /// unspaced operator (e.g., turning `0...10` into `0<newline>...10`), which would be a breaking
   /// change because it would treat it as a prefix operator `...10` instead of an infix operator.
-  private func shouldRequireWhitespace(around operatorExpr: ExprSyntax) -> Bool {
+  private func shouldRequireWhitespace(
+    around operatorExpr: ExprSyntax, configuration: Configuration) -> Bool
+  {
     // Note that we look at the operator itself to make this determination, not the token kind.
     // The token kind (spaced or unspaced operator) represents how the *user* wrote it, and we want
     // to ignore that and apply our own rules.
     if let binaryOperator = operatorExpr.as(BinaryOperatorExprSyntax.self) {
       let token = binaryOperator.operatorToken
-      if let binOp = operatorTable.infixOperator(named: token.text),
-        let precedenceGroup = binOp.precedenceGroup, precedenceGroup == "RangeFormationPrecedence"
+      if !config.spacesAroundRangeFormationOperators,
+         let binOp = operatorTable.infixOperator(named: token.text),
+         let precedenceGroup = binOp.precedenceGroup, precedenceGroup == "RangeFormationPrecedence"
       {
         // We want to omit whitespace around range formation operators if possible. We can't do this
         // if the token is either preceded by a postfix operator, followed by a prefix operator, or
