@@ -35,6 +35,7 @@ public struct Configuration: Codable, Equatable {
     case fileScopedDeclarationPrivacy
     case indentSwitchCaseLabels
     case rules
+    case spacesAroundRangeFormationOperators
   }
 
   /// The version of this configuration.
@@ -142,6 +143,10 @@ public struct Configuration: Codable, Equatable {
   ///```
   public var indentSwitchCaseLabels = false
 
+  /// Determines whether whitespace should be forced before and after the range formation operators
+  /// `...` and `..<`.
+  public var spacesAroundRangeFormationOperators = false
+
   /// Constructs a Configuration with all default values.
   public init() {
     self.version = highestSupportedConfigurationVersion
@@ -194,6 +199,9 @@ public struct Configuration: Codable, Equatable {
     self.lineBreakAroundMultilineExpressionChainComponents =
       try container.decodeIfPresent(
         Bool.self, forKey: .lineBreakAroundMultilineExpressionChainComponents) ?? false
+    self.spacesAroundRangeFormationOperators =
+      try container.decodeIfPresent(
+        Bool.self, forKey: .spacesAroundRangeFormationOperators) ?? false
     self.fileScopedDeclarationPrivacy =
       try container.decodeIfPresent(
         FileScopedDeclarationPrivacyConfiguration.self, forKey: .fileScopedDeclarationPrivacy)
@@ -226,6 +234,8 @@ public struct Configuration: Codable, Equatable {
     try container.encode(
       lineBreakAroundMultilineExpressionChainComponents,
       forKey: .lineBreakAroundMultilineExpressionChainComponents)
+    try container.encode(
+      spacesAroundRangeFormationOperators, forKey: .spacesAroundRangeFormationOperators)
     try container.encode(fileScopedDeclarationPrivacy, forKey: .fileScopedDeclarationPrivacy)
     try container.encode(indentSwitchCaseLabels, forKey: .indentSwitchCaseLabels)
     try container.encode(rules, forKey: .rules)

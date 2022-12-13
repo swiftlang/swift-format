@@ -3296,7 +3296,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return nil
   }
 
-  /// Returns a value indicating whether whitespace should be required around the given operator.
+  /// Returns a value indicating whether whitespace should be required around the given operator,
+  /// for the given configuration.
   ///
   /// If spaces are not required (for example, range operators), then the formatter will also forbid
   /// breaks around the operator. This is to prevent situations where a break could occur before an
@@ -3308,8 +3309,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // to ignore that and apply our own rules.
     if let binaryOperator = operatorExpr.as(BinaryOperatorExprSyntax.self) {
       let token = binaryOperator.operatorToken
-      if let binOp = operatorTable.infixOperator(named: token.text),
-        let precedenceGroup = binOp.precedenceGroup, precedenceGroup == "RangeFormationPrecedence"
+      if !config.spacesAroundRangeFormationOperators,
+         let binOp = operatorTable.infixOperator(named: token.text),
+         let precedenceGroup = binOp.precedenceGroup, precedenceGroup == "RangeFormationPrecedence"
       {
         // We want to omit whitespace around range formation operators if possible. We can't do this
         // if the token is either preceded by a postfix operator, followed by a prefix operator, or
