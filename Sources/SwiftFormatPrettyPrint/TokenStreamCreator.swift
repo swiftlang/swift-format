@@ -1777,7 +1777,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
     let wrapsBeforeOperator = !isAssigningOperator(binOp)
 
-    if shouldRequireWhitespace(around: binOp, configuration: config) {
+    if shouldRequireWhitespace(around: binOp) {
       if isAssigningOperator(binOp) {
         var beforeTokens: [Token]
 
@@ -3303,9 +3303,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   /// breaks around the operator. This is to prevent situations where a break could occur before an
   /// unspaced operator (e.g., turning `0...10` into `0<newline>...10`), which would be a breaking
   /// change because it would treat it as a prefix operator `...10` instead of an infix operator.
-  private func shouldRequireWhitespace(
-    around operatorExpr: ExprSyntax, configuration: Configuration) -> Bool
-  {
+  private func shouldRequireWhitespace(around operatorExpr: ExprSyntax) -> Bool {
     // Note that we look at the operator itself to make this determination, not the token kind.
     // The token kind (spaced or unspaced operator) represents how the *user* wrote it, and we want
     // to ignore that and apply our own rules.
