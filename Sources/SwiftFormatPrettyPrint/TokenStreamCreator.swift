@@ -3290,7 +3290,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         if case .postfixOperator? = token.previousToken(viewMode: .all)?.tokenKind { return true }
 
         switch token.nextToken(viewMode: .all)?.tokenKind {
-        case .prefixOperator?, .prefixPeriod?: return true
+        case .prefixOperator?, .period?: return true
         default: return false
         }
       }
