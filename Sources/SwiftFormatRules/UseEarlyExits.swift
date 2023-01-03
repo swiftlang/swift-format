@@ -65,7 +65,7 @@ public final class UseEarlyExits: SyntaxFormatRule {
 
         diagnose(.useGuardStatement, on: ifStatement.elseKeyword)
 
-        let trueBlock = ifStatement.body.withLeftBrace(nil).withRightBrace(nil)
+        let trueBlock = ifStatement.body
 
         let guardKeyword = TokenSyntax.guardKeyword(
           leadingTrivia: ifStatement.ifKeyword.leadingTrivia,
