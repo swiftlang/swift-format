@@ -520,12 +520,12 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       // Look for accessors that indicate that this is a computed property. If none are found, then
       // it is a stored property (e.g., having only observers like `willSet/didSet`).
       switch accessorDecl.accessorKind.tokenKind {
-      case .contextualKeyword("get"),
-        .contextualKeyword("set"),
-        .contextualKeyword("unsafeAddress"),
-        .contextualKeyword("unsafeMutableAddress"),
-        .contextualKeyword("_read"),
-        .contextualKeyword("_modify"):
+      case .contextualKeyword(.get),
+        .contextualKeyword(.set),
+        .contextualKeyword(.unsafeAddress),
+        .contextualKeyword(.unsafeMutableAddress),
+        .contextualKeyword(._read),
+        .contextualKeyword(._modify):
         return false
       default:
         return true
