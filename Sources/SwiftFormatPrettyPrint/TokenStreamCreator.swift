@@ -1428,10 +1428,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: AccessLevelModifierSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
   override func visit(_ node: CodeBlockSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
@@ -1969,10 +1965,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: AsTypePatternSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
   override func visit(_ node: InheritedTypeSyntax) -> SyntaxVisitorContinueKind {
     after(node.trailingComma, tokens: .break(.same))
     return .visitChildren
@@ -2009,10 +2001,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: ExpressionStmtSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
   override func visit(_ node: IdentifierExprSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
@@ -2040,14 +2028,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: DeclarationStmtSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
-  override func visit(_ node: EnumCasePatternSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
   override func visit(_ node: FallthroughStmtSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
@@ -2063,10 +2043,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     } else {
       after(node.lastToken, tokens: .close)
     }
-    return .visitChildren
-  }
-
-  override func visit(_ node: OptionalPatternSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
@@ -2249,10 +2225,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: SymbolicReferenceExprSyntax) -> SyntaxVisitorContinueKind {
-    return .visitChildren
-  }
-
   override func visit(_ node: TypeInheritanceClauseSyntax) -> SyntaxVisitorContinueKind {
     // Normally, the open-break is placed before the open token. In this case, it's intentionally
     // ordered differently so that the inheritance list can start on the current line and only
@@ -2360,11 +2332,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   // MARK: - Nodes representing unexpected or malformed syntax
 
   override func visit(_ node: UnexpectedNodesSyntax) -> SyntaxVisitorContinueKind {
-    verbatimToken(Syntax(node))
-    return .skipChildren
-  }
-
-  override func visit(_ node: NonEmptyTokenListSyntax) -> SyntaxVisitorContinueKind {
     verbatimToken(Syntax(node))
     return .skipChildren
   }
