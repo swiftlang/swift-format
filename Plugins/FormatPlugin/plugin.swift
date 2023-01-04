@@ -6,17 +6,14 @@ struct FormatPlugin {
   private func format(tool: PluginContext.Tool, targetDirectories: [String], configurationFilePath: String?) throws {
     let swiftFormatExec = URL(fileURLWithPath: tool.path.string)
     
-    var arguments: [String] = ["format"]
-    
-    arguments.append(contentsOf: targetDirectories)
-    
-    arguments.append(contentsOf: ["--recursive", "--parallel", "--in-place"])
-    
+    var swiftFormatArgs = ["format"]
+    swiftFormatArgs.append(contentsOf: targetDirectories)
+    swiftFormatArgs.append(contentsOf: ["--recursive", "--parallel", "--in-place"])
     if let configurationFilePath {
-      arguments.append(contentsOf: ["--configuration", configurationFilePath])
+      swiftFormatArgs.append(contentsOf: ["--configuration", configurationFilePath])
     }
     
-    let process = try Process.run(swiftFormatExec, arguments: arguments)
+    let process = try Process.run(swiftFormatExec, arguments: swiftFormatArgs)
     process.waitUntilExit()
     
     if process.terminationReason == .exit && process.terminationStatus == 0 {

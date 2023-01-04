@@ -6,17 +6,14 @@ struct LintPlugin {
   private func lint(tool: PluginContext.Tool, targetDirectories: [String], configurationFilePath: String?) throws {
     let swiftFormatExec = URL(fileURLWithPath: tool.path.string)
     
-    var arguments: [String] = ["lint"]
-    
-    arguments.append(contentsOf: targetDirectories)
-    
-    arguments.append(contentsOf: ["--recursive", "--parallel", "--strict"])
-    
+    var swiftFormatArgs = ["lint"]
+    swiftFormatArgs.append(contentsOf: targetDirectories)
+    swiftFormatArgs.append(contentsOf: ["--recursive", "--parallel", "--strict"])
     if let configurationFilePath {
-      arguments.append(contentsOf: ["--configuration", configurationFilePath])
+      swiftFormatArgs.append(contentsOf: ["--configuration", configurationFilePath])
     }
     
-    let process = try Process.run(swiftFormatExec, arguments: arguments)
+    let process = try Process.run(swiftFormatExec, arguments: swiftFormatArgs)
     process.waitUntilExit()
     
     if process.terminationReason == .exit && process.terminationStatus == 0 {
