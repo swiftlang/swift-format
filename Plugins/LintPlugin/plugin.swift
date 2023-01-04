@@ -37,10 +37,9 @@ extension LintPlugin: CommandPlugin {
     var argExtractor = ArgumentExtractor(arguments)
     let targetNames = argExtractor.extractOption(named: "target")
     let targetsToFormat = try context.package.targets(named: targetNames)
+    let sourceCodeTargets = targetsToFormat.compactMap { $0 as? SourceModuleTarget }
     
     let configurationFilePath = argExtractor.extractOption(named: "configuration").first
-    
-    let sourceCodeTargets = targetsToFormat.compactMap { $0 as? SourceModuleTarget }
     
     try lint(
       tool: swiftFormatTool,
