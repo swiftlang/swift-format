@@ -219,7 +219,7 @@ if ProcessInfo.processInfo.environment["SWIFTCI_USE_LOCAL_DEPS"] == nil {
     ),
     .package(
       url: "https://github.com/apple/swift-syntax.git",
-      branch: "main"
+      branch: "0.50800.0-SNAPSHOT-2022-12-20-a"
     ),
     .package(
       url: "https://github.com/apple/swift-tools-support-core.git",
