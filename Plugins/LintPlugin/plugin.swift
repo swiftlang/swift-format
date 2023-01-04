@@ -3,7 +3,7 @@ import Foundation
 
 @main
 struct LintPlugin {
-  func lint(tool: PluginContext.Tool, targetDirectories: [String], configurationFilePath: String?) throws {
+  private func lint(tool: PluginContext.Tool, targetDirectories: [String], configurationFilePath: String?) throws {
     let swiftFormatExec = URL(fileURLWithPath: tool.path.string)
     
     var arguments: [String] = ["lint"]

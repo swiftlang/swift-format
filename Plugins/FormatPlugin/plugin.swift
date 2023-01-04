@@ -3,7 +3,7 @@ import Foundation
 
 @main
 struct FormatPlugin {
-  func format(tool: PluginContext.Tool, targetDirectories: [String], configurationFilePath: String?) throws {
+  private func format(tool: PluginContext.Tool, targetDirectories: [String], configurationFilePath: String?) throws {
     let swiftFormatExec = URL(fileURLWithPath: tool.path.string)
     
     var arguments: [String] = ["format"]
