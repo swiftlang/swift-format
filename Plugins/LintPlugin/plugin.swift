@@ -12,7 +12,7 @@ struct LintPlugin {
     
     arguments.append(contentsOf: ["--recursive", "--parallel", "--strict"])
     
-    if let configurationFilePath = configurationFilePath {
+    if let configurationFilePath {
       arguments.append(contentsOf: ["--configuration", configurationFilePath])
     }
     
