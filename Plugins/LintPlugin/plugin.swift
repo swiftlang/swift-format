@@ -36,14 +36,15 @@ extension LintPlugin: CommandPlugin {
     // Extract the arguments that specify what targets to format.
     var argExtractor = ArgumentExtractor(arguments)
     let targetNames = argExtractor.extractOption(named: "target")
-    let targetsToFormat = try context.package.targets(named: targetNames)
-    let sourceCodeTargets = targetsToFormat.compactMap { $0 as? SourceModuleTarget }
+    let targetDirectories = try context.package.targets(named: targetNames)
+      .compactMap { $0 as? SourceModuleTarget }
+      .map(\.directory.string)
     
     let configurationFilePath = argExtractor.extractOption(named: "configuration").first
     
     try lint(
       tool: swiftFormatTool,
-      targetDirectories: sourceCodeTargets.map(\.directory.string),
+      targetDirectories: targetDirectories,
       configurationFilePath: configurationFilePath
     )
   }
