@@ -42,7 +42,7 @@ public final class NeverUseImplicitlyUnwrappedOptionals: SyntaxLintRule {
     // Ignores IBOutlet variables
     if let attributes = node.attributes {
       for attribute in attributes {
-        if (attribute.as(AttributeSyntax.self))?.attributeName.text == "IBOutlet" {
+        if (attribute.as(AttributeSyntax.self))?.attributeName.as(SimpleTypeIdentifierSyntax.self)?.name.text == "IBOutlet" {
           return .skipChildren
         }
       }
