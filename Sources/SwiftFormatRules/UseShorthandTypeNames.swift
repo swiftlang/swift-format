@@ -520,12 +520,12 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       // Look for accessors that indicate that this is a computed property. If none are found, then
       // it is a stored property (e.g., having only observers like `willSet/didSet`).
       switch accessorDecl.accessorKind.tokenKind {
-      case .contextualKeyword(.get),
-        .contextualKeyword(.set),
-        .contextualKeyword(.unsafeAddress),
-        .contextualKeyword(.unsafeMutableAddress),
-        .contextualKeyword(._read),
-        .contextualKeyword(._modify):
+      case .keyword(.get),
+        .keyword(.set),
+        .keyword(.unsafeAddress),
+        .keyword(.unsafeMutableAddress),
+        .keyword(._read),
+        .keyword(._modify):
         return false
       default:
         return true
@@ -545,7 +545,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       isStoredProperty(patternBinding),
       patternBinding.initializer == nil,
       let variableDecl = nearestAncestor(of: patternBinding, type: VariableDeclSyntax.self),
-      variableDecl.letOrVarKeyword.tokenKind == .varKeyword
+      variableDecl.letOrVarKeyword.tokenKind == .keyword(.var)
     {
       return true
     }

@@ -67,13 +67,13 @@ public final class UseEarlyExits: SyntaxFormatRule {
 
         let trueBlock = ifStatement.body
 
-        let guardKeyword = TokenSyntax.guardKeyword(
+        let guardKeyword = TokenSyntax.keyword(.guard,
           leadingTrivia: ifStatement.ifKeyword.leadingTrivia,
           trailingTrivia: .spaces(1))
         let guardStatement = GuardStmtSyntax(
           guardKeyword: guardKeyword,
           conditions: ifStatement.conditions,
-          elseKeyword: TokenSyntax.elseKeyword(trailingTrivia: .spaces(1)),
+          elseKeyword: TokenSyntax.keyword(.else, trailingTrivia: .spaces(1)),
           body: elseBody)
 
         var items = [
