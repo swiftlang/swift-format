@@ -57,7 +57,7 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
     let leadingTrivia: Trivia
     let newEnumDecl: EnumDeclSyntax
 
-    if firstTok.tokenKind == .enumKeyword {
+    if firstTok.tokenKind == .keyword(.enum) {
       leadingTrivia = firstTok.leadingTrivia
       newEnumDecl = replaceTrivia(
         on: node, token: node.firstToken, leadingTrivia: [])

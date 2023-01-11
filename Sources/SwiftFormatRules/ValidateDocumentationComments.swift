@@ -121,7 +121,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
     // If a function is marked as `rethrows`, it doesn't have any errors of its
     // own that should be documented. So only require documentation for
     // functions marked `throws`.
-    let needsThrowsDesc = throwsOrRethrowsKeyword?.tokenKind == .throwsKeyword
+    let needsThrowsDesc = throwsOrRethrowsKeyword?.tokenKind == .keyword(.throws)
 
     if !needsThrowsDesc && throwsDesc != nil {
       diagnose(.removeThrowsComment(funcName: name), on: throwsOrRethrowsKeyword ?? node.firstToken)

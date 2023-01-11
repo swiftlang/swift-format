@@ -101,7 +101,7 @@ fileprivate func updateWithWhereCondition(
   if lastToken?.trailingTrivia.containsSpaces == false {
     whereLeadingTrivia = .spaces(1)
   }
-  let whereKeyword = TokenSyntax.whereKeyword(
+  let whereKeyword = TokenSyntax.keyword(.where,
     leadingTrivia: whereLeadingTrivia,
     trailingTrivia: .spaces(1)
   )
