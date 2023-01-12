@@ -1584,29 +1584,24 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: AttributeSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken, tokens: .open)
-    if node.argument != nil {
+    switch node.argument {
+    case .argumentList(let argumentList)?:
+      if let leftParen = node.leftParen, let rightParen = node.rightParen {
+        arrangeFunctionCallArgumentList(
+          argumentList,
+          leftDelimiter: leftParen,
+          rightDelimiter: rightParen,
+          forcesBreakBeforeRightDelimiter: false)
+      }
+    case .some:
       // Wrap the attribute's arguments in their own group, so arguments stay together with a higher
       // affinity than the overall attribute (e.g. allows a break after the opening "(" and then
       // having the entire argument list on 1 line). Necessary spaces and breaks are added inside of
       // the argument, using type specific visitor methods.
       after(node.leftParen, tokens: .break(.open, size: 0), .open(argumentListConsistency()))
       before(node.rightParen, tokens: .break(.close, size: 0), .close)
-    }
-    after(node.lastToken, tokens: .close)
-    return .visitChildren
-  }
-
-  override func visit(_ node: CustomAttributeSyntax) -> SyntaxVisitorContinueKind {
-    // "Custom attributes" are better known to users as "property wrappers".
-    before(node.firstToken, tokens: .open)
-    if let argumentList = node.argumentList,
-      let leftParen = node.leftParen, let rightParen = node.rightParen
-    {
-      arrangeFunctionCallArgumentList(
-        argumentList,
-        leftDelimiter: leftParen,
-        rightDelimiter: rightParen,
-        forcesBreakBeforeRightDelimiter: false)
+    case nil:
+      break
     }
     after(node.lastToken, tokens: .close)
     return .visitChildren
