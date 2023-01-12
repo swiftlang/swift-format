@@ -31,15 +31,15 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
     let keywordKind = accessKeyword.name.tokenKind
     switch keywordKind {
     // Public, private, or fileprivate keywords need to be moved to members
-    case .publicKeyword, .privateKeyword, .fileprivateKeyword:
+    case .keyword(.public), .keyword(.private), .keyword(.fileprivate):
       diagnose(.moveAccessKeyword(keyword: accessKeyword.name.text), on: accessKeyword)
 
       // The effective access level of the members of a `private` extension is `fileprivate`, so
       // we have to update the keyword to ensure that the result is correct.
       let accessKeywordToAdd: DeclModifierSyntax
-      if keywordKind == .privateKeyword {
+      if keywordKind == .keyword(.private) {
         accessKeywordToAdd
-          = accessKeyword.withName(accessKeyword.name.withKind(.fileprivateKeyword))
+          = accessKeyword.withName(accessKeyword.name.withKind(.keyword(.fileprivate)))
       } else {
         accessKeywordToAdd = accessKeyword
       }
@@ -58,7 +58,7 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
       return DeclSyntax(result)
 
     // Internal keyword redundant, delete
-    case .internalKeyword:
+    case .keyword(.internal):
       diagnose(
         .removeRedundantAccessKeyword(name: node.extendedType.description),
         on: accessKeyword)

@@ -144,12 +144,12 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
 
     switch context.configuration.fileScopedDeclarationPrivacy.accessLevel {
     case .private:
-      invalidAccess = .fileprivateKeyword
-      validAccess = .privateKeyword
+      invalidAccess = .keyword(.fileprivate)
+      validAccess = .keyword(.private)
       diagnostic = .replaceFileprivateWithPrivate
     case .fileprivate:
-      invalidAccess = .privateKeyword
-      validAccess = .fileprivateKeyword
+      invalidAccess = .keyword(.private)
+      validAccess = .keyword(.fileprivate)
       diagnostic = .replacePrivateWithFileprivate
     }
 

@@ -26,7 +26,7 @@ public final class UseSingleLinePropertyGetter: SyntaxFormatRule {
       let acc = accessorBlock.accessors.first,
       let body = acc.body,
       accessorBlock.accessors.count == 1,
-      acc.accessorKind.tokenKind == .contextualKeyword(.get),
+      acc.accessorKind.tokenKind == .keyword(.get),
       acc.attributes == nil,
       acc.modifier == nil,
       acc.asyncKeyword == nil,
