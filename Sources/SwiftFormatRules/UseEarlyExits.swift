@@ -78,7 +78,7 @@ public final class UseEarlyExits: SyntaxFormatRule {
 
         var items = [
           CodeBlockItemSyntax(
-            item: .stmt(StmtSyntax(guardStatement)), semicolon: nil, errorTokens: nil),
+            item: .stmt(StmtSyntax(guardStatement)), semicolon: nil),
         ]
         items.append(contentsOf: trueBlock.statements)
         return items
