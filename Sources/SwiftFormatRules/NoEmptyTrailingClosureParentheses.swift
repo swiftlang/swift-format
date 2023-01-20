@@ -29,7 +29,7 @@ public final class NoEmptyTrailingClosureParentheses: SyntaxFormatRule {
     {
       return super.visit(node)
     }
-    guard let name = node.calledExpression.lastToken?.withoutTrivia() else {
+    guard let name = node.calledExpression.lastToken?.with(\.leadingTrivia, []).with(\.trailingTrivia, []) else {
       return super.visit(node)
     }
 
@@ -45,8 +45,8 @@ public final class NoEmptyTrailingClosureParentheses: SyntaxFormatRule {
       token: rewrittenCalledExpr.lastToken,
       trailingTrivia: .spaces(1))
     let formattedClosure = visit(trailingClosure).as(ClosureExprSyntax.self)
-    let result = node.withLeftParen(nil).withRightParen(nil).withCalledExpression(formattedExp)
-      .withTrailingClosure(formattedClosure)
+    let result = node.with(\.leftParen, nil).with(\.rightParen, nil).with(\.calledExpression, formattedExp)
+      .with(\.trailingClosure, formattedClosure)
     return ExprSyntax(result)
   }
 }

@@ -17,7 +17,7 @@ private final class LegacyTriviaBehaviorRewriter: SyntaxRewriter {
   override func visit(_ token: TokenSyntax) -> TokenSyntax {
     var token = token
     if let pendingLeadingTrivia = pendingLeadingTrivia {
-      token = token.withLeadingTrivia(pendingLeadingTrivia + token.leadingTrivia)
+      token = token.with(\.leadingTrivia, pendingLeadingTrivia + token.leadingTrivia)
       self.pendingLeadingTrivia = nil
     }
     if token.nextToken != nil,
@@ -25,7 +25,7 @@ private final class LegacyTriviaBehaviorRewriter: SyntaxRewriter {
     {
       pendingLeadingTrivia = Trivia(pieces: Array(token.trailingTrivia[firstIndexToMove...]))
       token =
-        token.withTrailingTrivia(Trivia(pieces: Array(token.trailingTrivia[..<firstIndexToMove])))
+        token.with(\.trailingTrivia, Trivia(pieces: Array(token.trailingTrivia[..<firstIndexToMove])))
     }
     return token
   }

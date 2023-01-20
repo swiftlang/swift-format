@@ -87,7 +87,7 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
 
         // This discards any trailingTrivia from the semicolon. That trivia is at most some spaces,
         // and the pretty printer adds any necessary spaces so it's safe to discard.
-        newItem = newItem.withSemicolon(nil)
+        newItem = newItem.with(\.semicolon, nil)
         if idx < node.count - 1 {
           diagnose(.removeSemicolonAndMove, on: semicolon)
         } else {

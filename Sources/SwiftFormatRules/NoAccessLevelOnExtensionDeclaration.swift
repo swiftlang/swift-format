@@ -39,7 +39,7 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
       let accessKeywordToAdd: DeclModifierSyntax
       if keywordKind == .keyword(.private) {
         accessKeywordToAdd
-          = accessKeyword.withName(accessKeyword.name.withKind(.keyword(.fileprivate)))
+          = accessKeyword.with(\.name, accessKeyword.name.withKind(.keyword(.fileprivate)))
       } else {
         accessKeywordToAdd = accessKeyword
       }
@@ -52,9 +52,9 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
         on: node.extensionKeyword,
         token: node.extensionKeyword,
         leadingTrivia: accessKeyword.leadingTrivia)
-      let result = node.withMembers(newMembers)
-        .withModifiers(modifiers.remove(name: accessKeyword.name.text))
-        .withExtensionKeyword(newKeyword)
+      let result = node.with(\.members, newMembers)
+        .with(\.modifiers, modifiers.remove(name: accessKeyword.name.text))
+        .with(\.extensionKeyword, newKeyword)
       return DeclSyntax(result)
 
     // Internal keyword redundant, delete
@@ -66,8 +66,8 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
         on: node.extensionKeyword,
         token: node.extensionKeyword,
         leadingTrivia: accessKeyword.leadingTrivia)
-      let result = node.withModifiers(modifiers.remove(name: accessKeyword.name.text))
-        .withExtensionKeyword(newKeyword)
+      let result = node.with(\.modifiers, modifiers.remove(name: accessKeyword.name.text))
+        .with(\.extensionKeyword, newKeyword)
       return DeclSyntax(result)
 
     default:
@@ -94,7 +94,7 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
         let newDecl = addModifier(declaration: member, modifierKeyword: formattedKeyword)
           .as(DeclSyntax.self)
       else { continue }
-      newMembers.append(memberItem.withDecl(newDecl))
+      newMembers.append(memberItem.with(\.decl, newDecl))
     }
     return MemberDeclListSyntax(newMembers)
   }

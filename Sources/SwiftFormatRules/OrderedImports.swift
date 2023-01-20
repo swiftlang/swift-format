@@ -131,7 +131,8 @@ public final class OrderedImports: SyntaxFormatRule {
       formatAndAppend(linesSection: lines[lastSliceStartIndex..<lines.endIndex])
     }
 
-    let newNode = node.withStatements(
+    let newNode = node.with(
+      \.statements, 
       CodeBlockItemListSyntax(convertToCodeBlockItems(lines: formattedLines))
     )
     return newNode
