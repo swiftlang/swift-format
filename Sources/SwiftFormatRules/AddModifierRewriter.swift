@@ -33,7 +33,7 @@ fileprivate final class AddModifierRewriter: SyntaxRewriter {
 
     // Put accessor keyword before the first modifier keyword in the declaration
     let newModifiers = modifiers.prepend(modifier: modifierKeyword)
-    return DeclSyntax(node.withModifiers(newModifiers))
+    return DeclSyntax(node.with(\.modifiers, newModifiers))
   }
 
   override func visit(_ node: FunctionDeclSyntax) -> DeclSyntax {
@@ -46,7 +46,7 @@ fileprivate final class AddModifierRewriter: SyntaxRewriter {
     }
     guard modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
     let newModifiers = modifiers.prepend(modifier: modifierKeyword)
-    return DeclSyntax(node.withModifiers(newModifiers))
+    return DeclSyntax(node.with(\.modifiers, newModifiers))
   }
 
   override func visit(_ node: AssociatedtypeDeclSyntax) -> DeclSyntax {
@@ -59,7 +59,7 @@ fileprivate final class AddModifierRewriter: SyntaxRewriter {
     }
     guard modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
     let newModifiers = modifiers.prepend(modifier: modifierKeyword)
-    return DeclSyntax(node.withModifiers(newModifiers))
+    return DeclSyntax(node.with(\.modifiers, newModifiers))
   }
 
   override func visit(_ node: ClassDeclSyntax) -> DeclSyntax {
@@ -72,7 +72,7 @@ fileprivate final class AddModifierRewriter: SyntaxRewriter {
     }
     guard modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
     let newModifiers = modifiers.prepend(modifier: modifierKeyword)
-    return DeclSyntax(node.withModifiers(newModifiers))
+    return DeclSyntax(node.with(\.modifiers, newModifiers))
   }
 
   override func visit(_ node: EnumDeclSyntax) -> DeclSyntax {
@@ -85,7 +85,7 @@ fileprivate final class AddModifierRewriter: SyntaxRewriter {
     }
     guard modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
     let newModifiers = modifiers.prepend(modifier: modifierKeyword)
-    return DeclSyntax(node.withModifiers(newModifiers))
+    return DeclSyntax(node.with(\.modifiers, newModifiers))
   }
 
   override func visit(_ node: ProtocolDeclSyntax) -> DeclSyntax {
@@ -98,7 +98,7 @@ fileprivate final class AddModifierRewriter: SyntaxRewriter {
     }
     guard modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
     let newModifiers = modifiers.prepend(modifier: modifierKeyword)
-    return DeclSyntax(node.withModifiers(newModifiers))
+    return DeclSyntax(node.with(\.modifiers, newModifiers))
   }
 
   override func visit(_ node: StructDeclSyntax) -> DeclSyntax {
@@ -111,7 +111,7 @@ fileprivate final class AddModifierRewriter: SyntaxRewriter {
     }
     guard modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
     let newModifiers = modifiers.prepend(modifier: modifierKeyword)
-    return DeclSyntax(node.withModifiers(newModifiers))
+    return DeclSyntax(node.with(\.modifiers, newModifiers))
   }
 
   override func visit(_ node: TypealiasDeclSyntax) -> DeclSyntax {
@@ -124,7 +124,7 @@ fileprivate final class AddModifierRewriter: SyntaxRewriter {
     }
     guard modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
     let newModifiers = modifiers.prepend(modifier: modifierKeyword)
-    return DeclSyntax(node.withModifiers(newModifiers))
+    return DeclSyntax(node.with(\.modifiers, newModifiers))
   }
 
   override func visit(_ node: InitializerDeclSyntax) -> DeclSyntax {
@@ -137,7 +137,7 @@ fileprivate final class AddModifierRewriter: SyntaxRewriter {
     }
     guard modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
     let newModifiers = modifiers.prepend(modifier: modifierKeyword)
-    return DeclSyntax(node.withModifiers(newModifiers))
+    return DeclSyntax(node.with(\.modifiers, newModifiers))
   }
 
   override func visit(_ node: SubscriptDeclSyntax) -> DeclSyntax {
@@ -150,7 +150,7 @@ fileprivate final class AddModifierRewriter: SyntaxRewriter {
     }
     guard modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
     let newModifiers = modifiers.prepend(modifier: modifierKeyword)
-    return DeclSyntax(node.withModifiers(newModifiers))
+    return DeclSyntax(node.with(\.modifiers, newModifiers))
   }
 
   /// Moves trivia in the given node to correct the placement of potentially displaced trivia in the

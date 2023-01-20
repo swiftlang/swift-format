@@ -77,7 +77,7 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
       input = node.input
     }
     let voidKeyword = makeVoidIdentifierType(toReplace: returnType)
-    return node.withInput(input).withOutput(output.withReturnType(TypeSyntax(voidKeyword)))
+    return node.with(\.input, input).with(\.output, output.with(\.returnType, TypeSyntax(voidKeyword)))
   }
 
   /// Returns a value indicating whether the leading trivia of the given token contained any

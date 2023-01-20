@@ -93,8 +93,8 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     // Even if we don't shorten this specific type that we're visiting, we may have rewritten
     // something in the generic argument list that we recursively visited, so return the original
     // node with that swapped out.
-    let result = node.withGenericArgumentClause(
-      genericArgumentClause.withArguments(genericArgumentList))
+    let result = node.with(\.genericArgumentClause, 
+      genericArgumentClause.with(\.arguments, genericArgumentList))
     return TypeSyntax(result)
   }
 
@@ -180,8 +180,8 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     // Even if we don't shorten this specific expression that we're visiting, we may have
     // rewritten something in the generic argument list that we recursively visited, so return the
     // original node with that swapped out.
-    let result = node.withGenericArgumentClause(
-      node.genericArgumentClause.withArguments(genericArgumentList))
+    let result = node.with(\.genericArgumentClause, 
+      node.genericArgumentClause.with(\.arguments, genericArgumentList))
     return ExprSyntax(result)
   }
 

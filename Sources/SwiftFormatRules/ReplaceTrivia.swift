@@ -29,8 +29,8 @@ fileprivate final class ReplaceTrivia: SyntaxRewriter {
   override func visit(_ token: TokenSyntax) -> TokenSyntax {
     guard token == self.token else { return token }
     return token
-      .withLeadingTrivia(leadingTrivia ?? token.leadingTrivia)
-      .withTrailingTrivia(trailingTrivia ?? token.trailingTrivia)
+      .with(\.leadingTrivia, leadingTrivia ?? token.leadingTrivia)
+      .with(\.trailingTrivia, trailingTrivia ?? token.trailingTrivia)
   }
 }
 

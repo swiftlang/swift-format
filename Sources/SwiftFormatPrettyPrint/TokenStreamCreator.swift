@@ -3476,7 +3476,7 @@ class CommentMovingRewriter: SyntaxRewriter {
 
   override func visit(_ token: TokenSyntax) -> TokenSyntax {
     if let rewrittenTrivia = rewriteTokenTriviaMap[token] {
-      return token.withLeadingTrivia(rewrittenTrivia)
+      return token.with(\.leadingTrivia, rewrittenTrivia)
     }
     return token
   }

@@ -44,10 +44,10 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
         return member
       }
 
-      let newCase = caseMember.withModifiers(modifiers.remove(name: "indirect"))
+      let newCase = caseMember.with(\.modifiers, modifiers.remove(name: "indirect"))
       let formattedCase = formatCase(
         unformattedCase: newCase, leadingTrivia: firstModifier.leadingTrivia)
-      return member.withDecl(DeclSyntax(formattedCase))
+      return member.with(\.decl, DeclSyntax(formattedCase))
     }
 
     // If the `indirect` keyword being added would be the first token in the decl, we need to move
@@ -70,8 +70,8 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
       name: TokenSyntax.identifier(
         "indirect", leadingTrivia: leadingTrivia, trailingTrivia: .spaces(1)), detail: nil)
 
-    let newMemberBlock = node.members.withMembers(MemberDeclListSyntax(newMembers))
-    return DeclSyntax(newEnumDecl.addModifier(newModifier).withMembers(newMemberBlock))
+    let newMemberBlock = node.members.with(\.members, MemberDeclListSyntax(newMembers))
+    return DeclSyntax(newEnumDecl.addModifier(newModifier).with(\.members, newMemberBlock))
   }
 
   /// Returns a value indicating whether all enum cases in the given list are indirect.

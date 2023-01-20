@@ -178,25 +178,26 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
       // more items.
       newCaseItems.append(contentsOf: label.caseItems.dropLast())
       newCaseItems.append(
-        label.caseItems.last!.withTrailingComma(
+        label.caseItems.last!.with(
+          \.trailingComma, 
           TokenSyntax.commaToken(trailingTrivia: .spaces(1))))
 
       // Diagnose the cases being collapsed. We do this for all but the last one in the array; the
       // last one isn't diagnosed because it will contain the body that applies to all the previous
       // cases.
-      diagnose(.collapseCase(name: label.caseItems.withoutTrivia().description), on: label)
+      diagnose(.collapseCase(name: label.caseItems.with(\.leadingTrivia, []).with(\.trailingTrivia, []).description), on: label)
     }
     newCaseItems.append(contentsOf: labels.last!.caseItems)
 
-    let newCase = cases.last!.withLabel(.case(
-      labels.last!.withCaseItems(CaseItemListSyntax(newCaseItems))))
+    let newCase = cases.last!.with(\.label, .case(
+      labels.last!.with(\.caseItems, CaseItemListSyntax(newCaseItems))))
 
     // Only the first violation case can have displaced trivia, because any non-whitespace
     // trivia in the other violation cases would've prevented collapsing.
     if let displacedLeadingTrivia = cases.first!.leadingTrivia?.withoutLastLine() {
       let existingLeadingTrivia = newCase.leadingTrivia ?? []
       let mergedLeadingTrivia = displacedLeadingTrivia + existingLeadingTrivia
-      return newCase.withLeadingTrivia(mergedLeadingTrivia)
+      return newCase.with(\.leadingTrivia, mergedLeadingTrivia)
     } else {
       return newCase
     }
