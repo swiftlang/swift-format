@@ -450,17 +450,17 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   override func visit(_ node: AccessorDeclSyntax) -> SyntaxVisitorContinueKind {
     arrangeAttributeList(node.attributes)
 
-    if let asyncKeyword = node.asyncKeyword {
-      if node.throwsKeyword != nil {
+    if let asyncKeyword = node.effectSpecifiers?.asyncSpecifier {
+      if node.effectSpecifiers?.throwsSpecifier != nil {
         before(asyncKeyword, tokens: .break, .open)
       } else {
         before(asyncKeyword, tokens: .break)
       }
     }
 
-    if let throwsKeyword = node.throwsKeyword {
-      before(node.throwsKeyword, tokens: .break)
-      if node.asyncKeyword != nil {
+    if let throwsKeyword = node.effectSpecifiers?.throwsSpecifier {
+      before(node.effectSpecifiers?.throwsSpecifier, tokens: .break)
+      if node.effectSpecifiers?.asyncSpecifier != nil {
         after(throwsKeyword, tokens: .close)
       }
     }
@@ -1132,9 +1132,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       }
     }
 
-    before(node.asyncKeyword, tokens: .break)
-    before(node.throwsTok, tokens: .break)
-    if let asyncKeyword = node.asyncKeyword, let throwsTok = node.throwsTok {
+    before(node.effectSpecifiers?.asyncSpecifier, tokens: .break)
+    before(node.effectSpecifiers?.throwsSpecifier, tokens: .break)
+    if let asyncKeyword = node.effectSpecifiers?.asyncSpecifier, let throwsTok = node.effectSpecifiers?.throwsSpecifier {
       before(asyncKeyword, tokens: .open)
       after(throwsTok, tokens: .close)
     }
@@ -1256,7 +1256,16 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: ReturnClauseSyntax) -> SyntaxVisitorContinueKind {
-    after(node.arrow, tokens: .space)
+    if node.parent?.is(FunctionTypeSyntax.self) ?? false {
+      // `FunctionTypeSyntax` used to not use `ReturnClauseSyntax` and had 
+      // slightly different formatting behavior than the normal 
+      // `ReturnClauseSyntax`. To maintain the previous formatting behavior, 
+      // add a special case.
+      before(node.arrow, tokens: .break)
+      before(node.returnType.firstToken, tokens: .break)
+    } else {
+      after(node.arrow, tokens: .space)
+    }
 
     // Member type identifier is used when the return type is a member of another type. Add a group
     // here so that the base, dot, and member type are kept together when they fit.
@@ -1500,10 +1509,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   override func visit(_ node: FunctionTypeSyntax) -> SyntaxVisitorContinueKind {
     after(node.leftParen, tokens: .break(.open, size: 0), .open)
     before(node.rightParen, tokens: .break(.close, size: 0), .close)
-    before(node.asyncKeyword, tokens: .break)
-    before(node.throwsOrRethrowsKeyword, tokens: .break)
-    before(node.arrow, tokens: .break)
-    before(node.returnType.firstToken, tokens: .break)
+    before(node.effectSpecifiers?.asyncSpecifier, tokens: .break)
+    before(node.effectSpecifiers?.throwsSpecifier, tokens: .break)
     return .visitChildren
   }
 
@@ -1723,10 +1730,10 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: FunctionSignatureSyntax) -> SyntaxVisitorContinueKind {
-    before(node.asyncOrReasyncKeyword, tokens: .break)
-    before(node.throwsOrRethrowsKeyword, tokens: .break)
-    if let asyncOrReasyncKeyword = node.asyncOrReasyncKeyword,
-      let throwsOrRethrowsKeyword = node.throwsOrRethrowsKeyword
+    before(node.effectSpecifiers?.asyncSpecifier, tokens: .break)
+    before(node.effectSpecifiers?.throwsSpecifier, tokens: .break)
+    if let asyncOrReasyncKeyword = node.effectSpecifiers?.asyncSpecifier,
+      let throwsOrRethrowsKeyword = node.effectSpecifiers?.throwsSpecifier
     {
       before(asyncOrReasyncKeyword, tokens: .open)
       after(throwsOrRethrowsKeyword, tokens: .close)
@@ -1868,7 +1875,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   override func visit(_ node: ArrowExprSyntax) -> SyntaxVisitorContinueKind {
     // The break before the `throws` keyword is inserted at the `InfixOperatorExpr` level so that it
     // is placed in the correct relative position to the group surrounding the "operator".
-    after(node.throwsToken, tokens: .break)
+    after(node.effectSpecifiers?.throwsSpecifier, tokens: .break)
     return .visitChildren
   }
 

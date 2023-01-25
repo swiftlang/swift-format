@@ -23,7 +23,7 @@ import SwiftSyntax
 /// Format: `-> ()` is replaced with `-> Void`
 public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
   public override func visit(_ node: FunctionTypeSyntax) -> TypeSyntax {
-    guard let returnType = node.returnType.as(TupleTypeSyntax.self),
+    guard let returnType = node.output.returnType.as(TupleTypeSyntax.self),
       returnType.elements.count == 0
     else {
       return super.visit(node)
@@ -43,7 +43,10 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
     // `(Int -> ()) -> ()` should become `(Int -> Void) -> Void`).
     let arguments = visit(node.arguments)
     let voidKeyword = makeVoidIdentifierType(toReplace: returnType)
-    return TypeSyntax(node.withArguments(arguments).withReturnType(TypeSyntax(voidKeyword)))
+    var rewrittenNode = node
+    rewrittenNode.arguments = arguments
+    rewrittenNode.output.returnType = TypeSyntax(voidKeyword)
+    return TypeSyntax(rewrittenNode)
   }
 
   public override func visit(_ node: ClosureSignatureSyntax) -> ClosureSignatureSyntax {
