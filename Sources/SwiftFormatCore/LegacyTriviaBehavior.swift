@@ -36,7 +36,7 @@ private final class LegacyTriviaBehaviorRewriter: SyntaxRewriter {
 /// behavior.
 private func shouldTriviaPieceBeMoved(_ piece: TriviaPiece) -> Bool {
   switch piece {
-  case .spaces, .tabs, .unexpectedText:
+  case .spaces, .tabs, .unexpectedText, .backslashes:
     return false
   default:
     return true
