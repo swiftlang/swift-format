@@ -63,7 +63,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
     }
 
     validateThrows(
-      signature.throwsOrRethrowsKeyword, name: name, throwsDesc: commentInfo.throwsDescription, node: node)
+      signature.effectSpecifiers?.throwsSpecifier, name: name, throwsDesc: commentInfo.throwsDescription, node: node)
     validateReturn(
       returnClause, name: name, returnDesc: commentInfo.returnsDescription, node: node)
     let funcParameters = funcParametersIdentifiers(in: signature.input.parameterList)
