@@ -29,8 +29,7 @@ public final class UseSingleLinePropertyGetter: SyntaxFormatRule {
       acc.accessorKind.tokenKind == .keyword(.get),
       acc.attributes == nil,
       acc.modifier == nil,
-      acc.asyncKeyword == nil,
-      acc.throwsKeyword == nil
+      acc.effectSpecifiers == nil
     else { return node }
 
     diagnose(.removeExtraneousGetBlock, on: acc)

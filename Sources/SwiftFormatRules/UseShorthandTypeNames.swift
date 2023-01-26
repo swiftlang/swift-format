@@ -419,10 +419,9 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         leftParen: functionType.leftParen,
         argumentTypes: functionType.arguments,
         rightParen: functionType.rightParen,
-        asyncKeyword: functionType.asyncKeyword,
-        throwsOrRethrowsKeyword: functionType.throwsOrRethrowsKeyword,
-        arrow: functionType.arrow,
-        returnType: functionType.returnType
+        effectSpecifiers: functionType.effectSpecifiers,
+        arrow: functionType.output.arrow,
+        returnType: functionType.output.returnType
       )
       return ExprSyntax(result)
 
@@ -461,8 +460,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     leftParen: TokenSyntax,
     argumentTypes: TupleTypeElementListSyntax,
     rightParen: TokenSyntax,
-    asyncKeyword: TokenSyntax?,
-    throwsOrRethrowsKeyword: TokenSyntax?,
+    effectSpecifiers: TypeEffectSpecifiersSyntax?,
     arrow: TokenSyntax,
     returnType: TypeSyntax
   ) -> SequenceExprSyntax? {
@@ -478,8 +476,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       elementList: argumentTypeExprs,
       rightParen: rightParen)
     let arrowExpr = ArrowExprSyntax(
-      asyncKeyword: asyncKeyword,
-      throwsToken: throwsOrRethrowsKeyword,
+      effectSpecifiers: effectSpecifiers,
       arrowToken: arrow)
 
     return SequenceExprSyntax(
