@@ -153,4 +153,14 @@ extension Trivia {
         return false
       })
   }
+
+  /// Returns `true` if this trivia contains any backslahes (used for multiline string newline
+  /// suppression).
+  public var containsBackslashes: Bool {
+    return contains(
+      where: {
+        if case .backslashes = $0 { return true }
+        return false
+      })
+  }
 }
