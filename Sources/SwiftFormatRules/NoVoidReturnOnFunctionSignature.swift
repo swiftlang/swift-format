@@ -26,11 +26,11 @@ public final class NoVoidReturnOnFunctionSignature: SyntaxFormatRule {
   public override func visit(_ node: FunctionSignatureSyntax) -> FunctionSignatureSyntax {
     if let ret = node.output?.returnType.as(SimpleTypeIdentifierSyntax.self), ret.name.text == "Void" {
       diagnose(.removeRedundantReturn("Void"), on: ret)
-      return node.withOutput(nil)
+      return node.with(\.output, nil)
     }
     if let tup = node.output?.returnType.as(TupleTypeSyntax.self), tup.elements.isEmpty {
       diagnose(.removeRedundantReturn("()"), on: tup)
-      return node.withOutput(nil)
+      return node.with(\.output, nil)
     }
     return node
   }

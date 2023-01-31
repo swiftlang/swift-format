@@ -26,11 +26,10 @@ public final class UseSingleLinePropertyGetter: SyntaxFormatRule {
       let acc = accessorBlock.accessors.first,
       let body = acc.body,
       accessorBlock.accessors.count == 1,
-      acc.accessorKind.tokenKind == .contextualKeyword("get"),
+      acc.accessorKind.tokenKind == .keyword(.get),
       acc.attributes == nil,
       acc.modifier == nil,
-      acc.asyncKeyword == nil,
-      acc.throwsKeyword == nil
+      acc.effectSpecifiers == nil
     else { return node }
 
     diagnose(.removeExtraneousGetBlock, on: acc)
@@ -38,7 +37,7 @@ public final class UseSingleLinePropertyGetter: SyntaxFormatRule {
     let newBlock = CodeBlockSyntax(
       leftBrace: accessorBlock.leftBrace, statements: body.statements,
       rightBrace: accessorBlock.rightBrace)
-    return node.withAccessor(.getter(newBlock))
+    return node.with(\.accessor, .getter(newBlock))
   }
 }
 

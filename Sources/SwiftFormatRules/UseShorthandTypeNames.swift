@@ -93,8 +93,8 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     // Even if we don't shorten this specific type that we're visiting, we may have rewritten
     // something in the generic argument list that we recursively visited, so return the original
     // node with that swapped out.
-    let result = node.withGenericArgumentClause(
-      genericArgumentClause.withArguments(genericArgumentList))
+    let result = node.with(\.genericArgumentClause, 
+      genericArgumentClause.with(\.arguments, genericArgumentList))
     return TypeSyntax(result)
   }
 
@@ -180,8 +180,8 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     // Even if we don't shorten this specific expression that we're visiting, we may have
     // rewritten something in the generic argument list that we recursively visited, so return the
     // original node with that swapped out.
-    let result = node.withGenericArgumentClause(
-      node.genericArgumentClause.withArguments(genericArgumentList))
+    let result = node.with(\.genericArgumentClause, 
+      node.genericArgumentClause.with(\.arguments, genericArgumentList))
     return ExprSyntax(result)
   }
 
@@ -197,7 +197,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     return (first, second)
   }
 
-  /// Retuns a `TypeSyntax` representing a shorthand array type (e.g., `[Foo]`) with the given
+  /// Returns a `TypeSyntax` representing a shorthand array type (e.g., `[Foo]`) with the given
   /// element type and trivia.
   private func shorthandArrayType(
     element: TypeSyntax,
@@ -419,10 +419,9 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         leftParen: functionType.leftParen,
         argumentTypes: functionType.arguments,
         rightParen: functionType.rightParen,
-        asyncKeyword: functionType.asyncKeyword,
-        throwsOrRethrowsKeyword: functionType.throwsOrRethrowsKeyword,
-        arrow: functionType.arrow,
-        returnType: functionType.returnType
+        effectSpecifiers: functionType.effectSpecifiers,
+        arrow: functionType.output.arrow,
+        returnType: functionType.output.returnType
       )
       return ExprSyntax(result)
 
@@ -461,8 +460,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     leftParen: TokenSyntax,
     argumentTypes: TupleTypeElementListSyntax,
     rightParen: TokenSyntax,
-    asyncKeyword: TokenSyntax?,
-    throwsOrRethrowsKeyword: TokenSyntax?,
+    effectSpecifiers: TypeEffectSpecifiersSyntax?,
     arrow: TokenSyntax,
     returnType: TypeSyntax
   ) -> SequenceExprSyntax? {
@@ -478,8 +476,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       elementList: argumentTypeExprs,
       rightParen: rightParen)
     let arrowExpr = ArrowExprSyntax(
-      asyncKeyword: asyncKeyword,
-      throwsToken: throwsOrRethrowsKeyword,
+      effectSpecifiers: effectSpecifiers,
       arrowToken: arrow)
 
     return SequenceExprSyntax(
@@ -520,12 +517,12 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       // Look for accessors that indicate that this is a computed property. If none are found, then
       // it is a stored property (e.g., having only observers like `willSet/didSet`).
       switch accessorDecl.accessorKind.tokenKind {
-      case .contextualKeyword("get"),
-        .contextualKeyword("set"),
-        .contextualKeyword("unsafeAddress"),
-        .contextualKeyword("unsafeMutableAddress"),
-        .contextualKeyword("_read"),
-        .contextualKeyword("_modify"):
+      case .keyword(.get),
+        .keyword(.set),
+        .keyword(.unsafeAddress),
+        .keyword(.unsafeMutableAddress),
+        .keyword(._read),
+        .keyword(._modify):
         return false
       default:
         return true
@@ -545,7 +542,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       isStoredProperty(patternBinding),
       patternBinding.initializer == nil,
       let variableDecl = nearestAncestor(of: patternBinding, type: VariableDeclSyntax.self),
-      variableDecl.letOrVarKeyword.tokenKind == .varKeyword
+      variableDecl.letOrVarKeyword.tokenKind == .keyword(.var)
     {
       return true
     }

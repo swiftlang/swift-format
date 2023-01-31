@@ -24,7 +24,7 @@ import SwiftSyntax
 public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
   public override func visit(_ node: SourceFileSyntax) -> SourceFileSyntax {
     let newStatements = rewrittenCodeBlockItems(node.statements)
-    return node.withStatements(newStatements)
+    return node.with(\.statements, newStatements)
   }
 
   /// Returns a list of code block items equivalent to the given list, but where any file-scoped
@@ -40,7 +40,7 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
     let newCodeBlockItems = codeBlockItems.map { codeBlockItem -> CodeBlockItemSyntax in
       switch codeBlockItem.item {
       case .decl(let decl):
-        return codeBlockItem.withItem(.decl(rewrittenDecl(decl)))
+        return codeBlockItem.with(\.item, .decl(rewrittenDecl(decl)))
       default:
         return codeBlockItem
       }
@@ -59,43 +59,43 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
       return DeclSyntax(rewrittenDecl(
           functionDecl,
           modifiers: functionDecl.modifiers,
-          factory: functionDecl.withModifiers))
+          factory: { functionDecl.with(\.modifiers, $0) }))
 
     case .variableDecl(let variableDecl):
       return DeclSyntax(rewrittenDecl(
           variableDecl,
           modifiers: variableDecl.modifiers,
-          factory: variableDecl.withModifiers))
+          factory: { variableDecl.with(\.modifiers, $0) }))
 
     case .classDecl(let classDecl):
       return DeclSyntax(rewrittenDecl(
           classDecl,
           modifiers: classDecl.modifiers,
-          factory: classDecl.withModifiers))
+          factory: { classDecl.with(\.modifiers, $0) }))
 
     case .structDecl(let structDecl):
       return DeclSyntax(rewrittenDecl(
           structDecl,
           modifiers: structDecl.modifiers,
-          factory: structDecl.withModifiers))
+          factory: { structDecl.with(\.modifiers, $0) }))
 
     case .enumDecl(let enumDecl):
       return DeclSyntax(rewrittenDecl(
           enumDecl,
           modifiers: enumDecl.modifiers,
-          factory: enumDecl.withModifiers))
+          factory: { enumDecl.with(\.modifiers, $0) }))
 
     case .protocolDecl(let protocolDecl):
       return DeclSyntax(rewrittenDecl(
           protocolDecl,
           modifiers: protocolDecl.modifiers,
-          factory: protocolDecl.withModifiers))
+          factory: { protocolDecl.with(\.modifiers, $0) }))
 
     case .typealiasDecl(let typealiasDecl):
       return DeclSyntax(rewrittenDecl(
           typealiasDecl,
           modifiers: typealiasDecl.modifiers,
-          factory: typealiasDecl.withModifiers))
+          factory: { typealiasDecl.with(\.modifiers, $0) }))
 
     default:
       return decl
@@ -113,12 +113,12 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
     let newClauses = ifConfigDecl.clauses.map { clause -> IfConfigClauseSyntax in
       switch clause.elements {
       case .statements(let codeBlockItemList)?:
-        return clause.withElements(.statements(rewrittenCodeBlockItems(codeBlockItemList)))
+        return clause.with(\.elements, .statements(rewrittenCodeBlockItems(codeBlockItemList)))
       default:
         return clause
       }
     }
-    return ifConfigDecl.withClauses(IfConfigClauseListSyntax(newClauses))
+    return ifConfigDecl.with(\.clauses, IfConfigClauseListSyntax(newClauses))
   }
 
   /// Returns a rewritten version of the given declaration if its modifier list contains `private`
@@ -144,12 +144,12 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
 
     switch context.configuration.fileScopedDeclarationPrivacy.accessLevel {
     case .private:
-      invalidAccess = .fileprivateKeyword
-      validAccess = .privateKeyword
+      invalidAccess = .keyword(.fileprivate)
+      validAccess = .keyword(.private)
       diagnostic = .replaceFileprivateWithPrivate
     case .fileprivate:
-      invalidAccess = .privateKeyword
-      validAccess = .fileprivateKeyword
+      invalidAccess = .keyword(.private)
+      validAccess = .keyword(.fileprivate)
       diagnostic = .replacePrivateWithFileprivate
     }
 
@@ -161,7 +161,7 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
       let name = modifier.name
       if name.tokenKind == invalidAccess {
         diagnose(diagnostic, on: name)
-        return modifier.withName(name.withKind(validAccess))
+        return modifier.with(\.name, name.withKind(validAccess))
       }
       return modifier
     }

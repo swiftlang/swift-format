@@ -186,7 +186,7 @@ public class PrettyPrinter {
     outputBuffer.append(String(str))
   }
 
-  /// Writes newlines into the output stream, taking into account any pre-existing consecutive
+  /// Writes newlines into the output stream, taking into account any preexisting consecutive
   /// newlines and the maximum allowed number of blank lines.
   ///
   /// This function does some implicit collapsing of consecutive newlines to ensure that the
@@ -248,7 +248,7 @@ public class PrettyPrinter {
   /// Print out the provided token, and apply line-wrapping and indentation as needed.
   ///
   /// This method takes a Token and it's length, and it keeps track of how much space is left on the
-  /// current line it is printing on. If a token exceeds the remaning space, we break to a new line,
+  /// current line it is printing on. If a token exceeds the remaining space, we break to a new line,
   /// and apply the appropriate level of indentation.
   ///
   /// - Parameters:
@@ -569,7 +569,7 @@ public class PrettyPrinter {
   ///
   /// - Returns: A String containing the formatted source code.
   public func prettyPrint() -> String {
-    // Keep track of the indicies of the .open and .break token locations.
+    // Keep track of the indices of the .open and .break token locations.
     var delimIndexStack = [Int]()
     // Keep a running total of the token lengths.
     var total = 0
@@ -584,7 +584,7 @@ public class PrettyPrinter {
         lengths.append(0)
 
       // Open tokens have lengths equal to the total of the contents of its group. The value is
-      // calcualted when close tokens are encountered.
+      // calculated when close tokens are encountered.
       case .open:
         lengths.append(-total)
         delimIndexStack.append(i)

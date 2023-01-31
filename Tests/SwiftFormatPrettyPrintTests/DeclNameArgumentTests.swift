@@ -19,12 +19,15 @@ final class DeclNameArgumentTests: PrettyPrintTestCase {
           thirdArg:
           fourthArg:
           fifthArg:
-        ))
+        )
+      )
       let selector = #selector(
-        FooClass.method(firstArg:secondArg:))
+        FooClass.method(firstArg:secondArg:)
+      )
       let selector = #selector(
         FooClass.VeryDeeply.NestedInner.Member
-          .foo(firstArg:secondArg:))
+          .foo(firstArg:secondArg:)
+      )
       let selector = #selector(
         FooClass.VeryDeeply.NestedInner.Member
           .foo(
@@ -33,7 +36,8 @@ final class DeclNameArgumentTests: PrettyPrintTestCase {
             thirdArg:
             fourthArg:
             fifthArg:
-          ))
+          )
+      )
 
       """
 

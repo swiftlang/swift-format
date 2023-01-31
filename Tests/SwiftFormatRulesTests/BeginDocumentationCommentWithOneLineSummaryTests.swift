@@ -13,7 +13,7 @@ final class BeginDocumentationCommentWithOneLineSummaryTests: LintOrFormatRuleTe
       /// Returns a bottle of Dr Pepper from the vending machine.
       public func drPepper(from vendingMachine: VendingMachine) -> Soda {}
 
-      /// Contains a comment as description that needs a sentece
+      /// Contains a comment as description that needs a sentence
       /// of two lines of code.
       public var twoLinesForOneSentence = "test"
 
@@ -46,7 +46,7 @@ final class BeginDocumentationCommentWithOneLineSummaryTests: LintOrFormatRuleTe
     XCTAssertNotDiagnosed(.addBlankLineAfterFirstSentence(
       "Returns a bottle of Dr Pepper from the vending machine."))
     XCTAssertNotDiagnosed(.addBlankLineAfterFirstSentence(
-      "Contains a comment as description that needs a sentece of two lines of code."))
+      "Contains a comment as description that needs a sentence of two lines of code."))
     XCTAssertNotDiagnosed(.addBlankLineAfterFirstSentence("The background color of the view."))
     XCTAssertNotDiagnosed(.addBlankLineAfterFirstSentence("Returns the sum of the numbers."))
   }
@@ -107,7 +107,7 @@ final class BeginDocumentationCommentWithOneLineSummaryTests: LintOrFormatRuleTe
       /// Returns a bottle of Dr Pepper from the vending machine.
       public func drPepper(from vendingMachine: VendingMachine) -> Soda {}
 
-      /// Contains a comment as description that needs a sentece
+      /// Contains a comment as description that needs a sentence
       /// of two lines of code.
       public var twoLinesForOneSentence = "test"
 
@@ -140,7 +140,7 @@ final class BeginDocumentationCommentWithOneLineSummaryTests: LintOrFormatRuleTe
     XCTAssertNotDiagnosed(.addBlankLineAfterFirstSentence(
       "Returns a bottle of Dr Pepper from the vending machine."))
     XCTAssertNotDiagnosed(.addBlankLineAfterFirstSentence(
-      "Contains a comment as description that needs a sentece of two lines of code."))
+      "Contains a comment as description that needs a sentence of two lines of code."))
     XCTAssertNotDiagnosed(.addBlankLineAfterFirstSentence("The background color of the view."))
     XCTAssertNotDiagnosed(.addBlankLineAfterFirstSentence("Returns the sum of the numbers."))
     #endif

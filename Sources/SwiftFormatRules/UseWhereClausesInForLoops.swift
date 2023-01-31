@@ -101,7 +101,7 @@ fileprivate func updateWithWhereCondition(
   if lastToken?.trailingTrivia.containsSpaces == false {
     whereLeadingTrivia = .spaces(1)
   }
-  let whereKeyword = TokenSyntax.whereKeyword(
+  let whereKeyword = TokenSyntax.keyword(.where,
     leadingTrivia: whereLeadingTrivia,
     trailingTrivia: .spaces(1)
   )
@@ -111,8 +111,8 @@ fileprivate func updateWithWhereCondition(
   )
 
   // Replace the where clause and extract the body from the IfStmt.
-  let newBody = node.body.withStatements(statements)
-  return node.withWhereClause(whereClause).withBody(newBody)
+  let newBody = node.body.with(\.statements, statements)
+  return node.with(\.whereClause, whereClause).with(\.body, newBody)
 }
 
 extension Finding.Message {

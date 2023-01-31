@@ -51,8 +51,7 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
       var splitter = VariableDeclSplitter {
         CodeBlockItemSyntax(
           item: .decl(DeclSyntax($0)),
-          semicolon: nil,
-          errorTokens: nil)
+          semicolon: nil)
       }
       newItems.append(contentsOf: splitter.nodes(bySplitting: visitedDecl))
     }
@@ -140,7 +139,7 @@ private struct VariableDeclSplitter<Node: SyntaxProtocol> {
         // it's an initializer following other un-flushed lone identifier
         // bindings, that's not valid Swift. But in either case, we'll flush
         // them as a single decl.
-        bindingQueue.append(binding.withTrailingComma(nil))
+        bindingQueue.append(binding.with(\.trailingComma, nil))
         flushRemaining()
       } else if let typeAnnotation = binding.typeAnnotation {
         bindingQueue.append(binding)
@@ -173,7 +172,7 @@ private struct VariableDeclSplitter<Node: SyntaxProtocol> {
     guard !bindingQueue.isEmpty else { return }
 
     let newDecl =
-      varDecl.withBindings(PatternBindingListSyntax(bindingQueue))
+      varDecl.with(\.bindings, PatternBindingListSyntax(bindingQueue))
     nodes.append(generator(newDecl))
 
     fixOriginalVarDeclTrivia()
@@ -192,9 +191,9 @@ private struct VariableDeclSplitter<Node: SyntaxProtocol> {
       assert(binding.initializer == nil)
 
       let newBinding =
-        binding.withTrailingComma(nil).withTypeAnnotation(typeAnnotation)
+        binding.with(\.trailingComma, nil).with(\.typeAnnotation, typeAnnotation)
       let newDecl =
-        varDecl.withBindings(PatternBindingListSyntax([newBinding]))
+        varDecl.with(\.bindings, PatternBindingListSyntax([newBinding]))
       nodes.append(generator(newDecl))
 
       fixOriginalVarDeclTrivia()

@@ -316,9 +316,6 @@ final class AttributeTests: PrettyPrintTestCase {
   }
 
   func testPropertyWrappers() {
-    // Property wrappers are `CustomAttributeSyntax` nodes (not `AttributeSyntax`) and their
-    // arguments are `TupleExprElementListSyntax` (like regular function call argument lists), so
-    // make sure that those are formatted properly.
     let input =
       """
       struct X {

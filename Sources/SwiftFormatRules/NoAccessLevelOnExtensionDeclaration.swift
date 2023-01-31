@@ -31,15 +31,15 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
     let keywordKind = accessKeyword.name.tokenKind
     switch keywordKind {
     // Public, private, or fileprivate keywords need to be moved to members
-    case .publicKeyword, .privateKeyword, .fileprivateKeyword:
+    case .keyword(.public), .keyword(.private), .keyword(.fileprivate):
       diagnose(.moveAccessKeyword(keyword: accessKeyword.name.text), on: accessKeyword)
 
       // The effective access level of the members of a `private` extension is `fileprivate`, so
       // we have to update the keyword to ensure that the result is correct.
       let accessKeywordToAdd: DeclModifierSyntax
-      if keywordKind == .privateKeyword {
+      if keywordKind == .keyword(.private) {
         accessKeywordToAdd
-          = accessKeyword.withName(accessKeyword.name.withKind(.fileprivateKeyword))
+          = accessKeyword.with(\.name, accessKeyword.name.withKind(.keyword(.fileprivate)))
       } else {
         accessKeywordToAdd = accessKeyword
       }
@@ -52,13 +52,13 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
         on: node.extensionKeyword,
         token: node.extensionKeyword,
         leadingTrivia: accessKeyword.leadingTrivia)
-      let result = node.withMembers(newMembers)
-        .withModifiers(modifiers.remove(name: accessKeyword.name.text))
-        .withExtensionKeyword(newKeyword)
+      let result = node.with(\.members, newMembers)
+        .with(\.modifiers, modifiers.remove(name: accessKeyword.name.text))
+        .with(\.extensionKeyword, newKeyword)
       return DeclSyntax(result)
 
     // Internal keyword redundant, delete
-    case .internalKeyword:
+    case .keyword(.internal):
       diagnose(
         .removeRedundantAccessKeyword(name: node.extendedType.description),
         on: accessKeyword)
@@ -66,8 +66,8 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
         on: node.extensionKeyword,
         token: node.extensionKeyword,
         leadingTrivia: accessKeyword.leadingTrivia)
-      let result = node.withModifiers(modifiers.remove(name: accessKeyword.name.text))
-        .withExtensionKeyword(newKeyword)
+      let result = node.with(\.modifiers, modifiers.remove(name: accessKeyword.name.text))
+        .with(\.extensionKeyword, newKeyword)
       return DeclSyntax(result)
 
     default:
@@ -94,7 +94,7 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
         let newDecl = addModifier(declaration: member, modifierKeyword: formattedKeyword)
           .as(DeclSyntax.self)
       else { continue }
-      newMembers.append(memberItem.withDecl(newDecl))
+      newMembers.append(memberItem.with(\.decl, newDecl))
     }
     return MemberDeclListSyntax(newMembers)
   }
