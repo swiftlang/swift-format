@@ -480,7 +480,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: IfStmtSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: IfExprSyntax) -> SyntaxVisitorContinueKind {
     // There may be a consistent breaking group around this node, see `CodeBlockItemSyntax`. This
     // group is necessary so that breaks around and inside of the conditions aren't forced to break
     // when the if-stmt spans multiple lines.
@@ -515,7 +515,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       // any newlines between `else` and the open brace or a following `if`.
       if let tokenAfterElse = elseKeyword.nextToken(viewMode: .all), tokenAfterElse.leadingTrivia.hasLineComment {
         after(node.elseKeyword, tokens: .break(.same, size: 1))
-      } else if let elseBody = node.elseBody, elseBody.is(IfStmtSyntax.self) {
+      } else if let elseBody = node.elseBody, elseBody.is(IfExprSyntax.self) {
         after(node.elseKeyword, tokens: .space)
       }
     }
@@ -680,7 +680,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: SwitchStmtSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: SwitchExprSyntax) -> SyntaxVisitorContinueKind {
     before(node.switchKeyword, tokens: .open)
     after(node.switchKeyword, tokens: .space)
     before(node.leftBrace, tokens: .break(.reset))
@@ -1480,7 +1480,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
     // This group applies to a top-level if-stmt so that all of the bodies will have the same
     // breaking behavior.
-    if let ifStmt = node.item.as(IfStmtSyntax.self) {
+    if let exprStmt = node.item.as(ExpressionStmtSyntax.self),
+       let ifStmt = exprStmt.expression.as(IfExprSyntax.self) {
       before(ifStmt.conditions.firstToken, tokens: .open(.consistent))
       after(ifStmt.lastToken, tokens: .close)
     }
