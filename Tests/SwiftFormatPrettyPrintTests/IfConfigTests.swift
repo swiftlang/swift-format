@@ -247,10 +247,10 @@ final class IfConfigTests: PrettyPrintTestCase {
       """
       VStack {
         Text("something")
-        #if os(iOS)
-          .iOSSpecificModifier()
-        #endif
-        .commonModifier()
+          #if os(iOS)
+            .iOSSpecificModifier()
+          #endif
+          .commonModifier()
       }
 
       """
@@ -277,13 +277,13 @@ final class IfConfigTests: PrettyPrintTestCase {
       """
       VStack {
         Text("something")
-        #if os(iOS)
-          .iOSSpecificModifier()
-          .anotherModifier()
-          .anotherAnotherModifier()
-        #endif
-        .commonModifier()
-        .anotherCommonModifier()
+          #if os(iOS)
+            .iOSSpecificModifier()
+            .anotherModifier()
+            .anotherAnotherModifier()
+          #endif
+          .commonModifier()
+          .anotherCommonModifier()
       }
 
       """
@@ -311,14 +311,14 @@ final class IfConfigTests: PrettyPrintTestCase {
       """
       VStack {
         Text("something")
-        #if os(iOS) || os(watchOS)
-          #if os(iOS)
-            .iOSModifier()
-          #else
-            .watchOSModifier()
+          #if os(iOS) || os(watchOS)
+            #if os(iOS)
+              .iOSModifier()
+            #else
+              .watchOSModifier()
+            #endif
+            .iOSAndWatchOSModifier()
           #endif
-          .iOSAndWatchOSModifier()
-        #endif
       }
 
       """
@@ -343,10 +343,10 @@ final class IfConfigTests: PrettyPrintTestCase {
       """
       VStack {
         textView
-        #if os(iOS)
-          .iOSSpecificModifier()
-        #endif
-        .commonModifier()
+          #if os(iOS)
+            .iOSSpecificModifier()
+          #endif
+          .commonModifier()
       }
 
       """
@@ -406,9 +406,9 @@ final class IfConfigTests: PrettyPrintTestCase {
       """
       EmptyView()
         .padding([.vertical])
-      #if os(iOS)
-        .iOSSpecificModifier()
-      #endif
+        #if os(iOS)
+          .iOSSpecificModifier()
+        #endif
         .commonModifier()
 
       """
@@ -438,17 +438,17 @@ final class IfConfigTests: PrettyPrintTestCase {
       """
       EmptyView()
         .padding([.vertical])
-      #if os(iOS)
-        .iOSSpecificModifier(
-          SpecificType()
-            .onChanged { _ in
-              // do things
-            }
-            .onEnded { _ in
-              // do things
-            }
-        )
-      #endif
+        #if os(iOS)
+          .iOSSpecificModifier(
+            SpecificType()
+              .onChanged { _ in
+                // do things
+              }
+              .onEnded { _ in
+                // do things
+              }
+          )
+        #endif
 
       """
 

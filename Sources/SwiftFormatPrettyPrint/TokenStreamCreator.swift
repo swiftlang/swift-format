@@ -1308,11 +1308,22 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     }
 
     if isNestedInPostfixIfConfig(node: Syntax(node)) {
+      let breakToken: Token
+      let previousToken = node.parent?.parent?.previousToken
+
+      if previousToken?.parent?.parent?.parent?.parent?.syntaxNodeType == IfConfigClauseSyntax.self ||
+          previousToken?.text == "}" {
+        breakToken = .break(.reset)
+      } else {
+        breakToken = .break
+        before(node.parent?.parent?.as(IfConfigDeclSyntax.self)?.poundEndif, tokens: [.break])
+      }
+
       before(
         node.firstToken,
         tokens: [
           .printerControl(kind: .enableBreaking),
-          .break(.reset),
+          breakToken,
         ]
       )
     } else if let condition = node.condition {
