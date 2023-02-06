@@ -1309,14 +1309,15 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
     if isNestedInPostfixIfConfig(node: Syntax(node)) {
       let breakToken: Token
-      let previousToken = node.parent?.parent?.previousToken
+      let currentIfConfigDecl = node.parent?.parent?.as(IfConfigDeclSyntax.self)
+      let tokenBeforeCurrentIfConfigDecl = currentIfConfigDecl?.previousToken
 
-      if previousToken?.parent?.parent?.parent?.parent?.syntaxNodeType == IfConfigClauseSyntax.self ||
-          previousToken?.text == "}" {
+      if isNestedInIfConfig(Syntax(tokenBeforeCurrentIfConfigDecl)) ||
+          tokenBeforeCurrentIfConfigDecl?.text == "}" {
         breakToken = .break(.reset)
       } else {
         breakToken = .break
-        before(node.parent?.parent?.as(IfConfigDeclSyntax.self)?.poundEndif, tokens: [.break])
+        before(currentIfConfigDecl?.poundEndif, tokens: [.break])
       }
 
       before(
@@ -3525,12 +3526,29 @@ private func isNestedInPostfixIfConfig(node: Syntax) -> Bool {
   var this: Syntax? = node
 
   while this?.parent != nil {
+    // This guard handles the situation where a type with its own modifiers
+    // is nested inside of an if config. That type should not count as being
+    // in a postfix if config because its entire body is inside the if config.
     if this?.is(TupleExprElementSyntax.self) == true {
       return false
     }
 
     if this?.is(IfConfigDeclSyntax.self) == true &&
         this?.parent?.is(PostfixIfConfigExprSyntax.self) == true {
+      return true
+    }
+
+    this = this?.parent
+  }
+
+  return false
+}
+
+private func isNestedInIfConfig(node: Syntax) -> Bool {
+  var this: Syntax? = node
+
+  while this?.parent != nil {
+    if this?.is(IfConfigClauseSyntax.self) == true {
       return true
     }
 
