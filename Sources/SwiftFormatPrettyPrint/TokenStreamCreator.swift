@@ -1335,9 +1335,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       let currentIfConfigDecl = node.parent?.parent?.as(IfConfigDeclSyntax.self)
 
       if let currentIfConfigDecl = currentIfConfigDecl,
-         let tokenBeforeCurrentIfConfigDecl = currentIfConfigDecl?.previousToken,
+         let tokenBeforeCurrentIfConfigDecl = currentIfConfigDecl.previousToken,
          isNestedInIfConfig(node: Syntax(tokenBeforeCurrentIfConfigDecl)) ||
-          tokenBeforeCurrentIfConfigDecl?.text == "}" {
+          tokenBeforeCurrentIfConfigDecl.text == "}" {
         breakToken = .break(.reset)
       } else {
         breakToken = .break
