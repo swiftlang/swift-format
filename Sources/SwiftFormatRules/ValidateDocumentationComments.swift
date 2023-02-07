@@ -49,7 +49,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
     guard let params = commentInfo.parameters else { return .skipChildren }
 
     // If a single sentence summary is the only documentation, parameter(s) and
-    // returns tags may be ommitted.
+    // returns tags may be omitted.
     if commentInfo.oneSentenceSummary != nil && commentInfo.commentParagraphs!.isEmpty && params
       .isEmpty && commentInfo.returnsDescription == nil
     {
@@ -63,7 +63,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
     }
 
     validateThrows(
-      signature.throwsOrRethrowsKeyword, name: name, throwsDesc: commentInfo.throwsDescription, node: node)
+      signature.effectSpecifiers?.throwsSpecifier, name: name, throwsDesc: commentInfo.throwsDescription, node: node)
     validateReturn(
       returnClause, name: name, returnDesc: commentInfo.returnsDescription, node: node)
     let funcParameters = funcParametersIdentifiers(in: signature.input.parameterList)
@@ -79,7 +79,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
       return .skipChildren
     }
 
-    // Ensures that the parameters of the documantation and the function signature
+    // Ensures that the parameters of the documentation and the function signature
     // are the same.
     if (params.count != funcParameters.count) || !parametersAreEqual(
       params: params, funcParam: funcParameters)
@@ -121,7 +121,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
     // If a function is marked as `rethrows`, it doesn't have any errors of its
     // own that should be documented. So only require documentation for
     // functions marked `throws`.
-    let needsThrowsDesc = throwsOrRethrowsKeyword?.tokenKind == .throwsKeyword
+    let needsThrowsDesc = throwsOrRethrowsKeyword?.tokenKind == .keyword(.throws)
 
     if !needsThrowsDesc && throwsDesc != nil {
       diagnose(.removeThrowsComment(funcName: name), on: throwsOrRethrowsKeyword ?? node.firstToken)
@@ -132,7 +132,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
 }
 
 /// Iterates through every parameter of paramList and returns a list of the
-/// paramters identifiers.
+/// parameters identifiers.
 fileprivate func funcParametersIdentifiers(in paramList: FunctionParameterListSyntax) -> [String] {
   var funcParameters = [String]()
   for parameter in paramList {

@@ -44,6 +44,16 @@ extension Trivia {
       })
   }
 
+  /// Returns this set of trivia, without any leading spaces.
+  public func withoutLeadingSpaces() -> Trivia {
+    return Trivia(
+      pieces: Array(drop {
+        if case .spaces = $0 { return false }
+        if case .tabs = $0 { return false }
+        return true
+      }))
+  }
+
   /// Returns this set of trivia, without any newlines.
   public func withoutNewlines() -> Trivia {
     return Trivia(
@@ -140,6 +150,16 @@ extension Trivia {
       where: {
         if case .spaces = $0 { return true }
         if case .tabs = $0 { return true }
+        return false
+      })
+  }
+
+  /// Returns `true` if this trivia contains any backslahes (used for multiline string newline
+  /// suppression).
+  public var containsBackslashes: Bool {
+    return contains(
+      where: {
+        if case .backslashes = $0 { return true }
         return false
       })
   }

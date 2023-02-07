@@ -29,20 +29,9 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
   }
 
   public override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
-    // Check if this class is an `XCTestCase`, otherwise it cannot contain any test cases.
     guard context.importsXCTest == .importsXCTest else { return .visitChildren }
 
-    // Identify and store all of the function decls that are test cases.
-    let testCases = node.members.members.compactMap {
-      $0.decl.as(FunctionDeclSyntax.self)
-    }.filter {
-      // Filter out non-test methods using the same heuristics as XCTest to identify tests.
-      // Test methods are methods that start with "test", have no arguments, and void return type.
-      $0.identifier.text.starts(with: "test")
-        && $0.signature.input.parameterList.isEmpty
-        && $0.signature.output.map { $0.isVoid } ?? true
-    }
-    testCaseFuncs.formUnion(testCases)
+    collectTestMethods(from: node.members.members, into: &testCaseFuncs)
     return .visitChildren
   }
 
@@ -135,6 +124,33 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
     return .skipChildren
   }
 
+  /// Collects methods that look like XCTest test case methods from the given member list, inserting
+  /// them into the given set.
+  private func collectTestMethods(
+    from members: MemberDeclListSyntax,
+    into set: inout Set<FunctionDeclSyntax>
+  ) {
+    for member in members {
+      if let ifConfigDecl = member.decl.as(IfConfigDeclSyntax.self) {
+        // Recurse into any conditional member lists and collect their test methods as well.
+        for clause in ifConfigDecl.clauses {
+          if let clauseMembers = clause.elements?.as(MemberDeclListSyntax.self) {
+            collectTestMethods(from: clauseMembers, into: &set)
+          }
+        }
+      } else if let functionDecl = member.decl.as(FunctionDeclSyntax.self) {
+        // Identify test methods using the same heuristics as XCTest: name starts with "test", has
+        // no arguments, and returns a void type.
+        if functionDecl.identifier.text.starts(with: "test")
+          && functionDecl.signature.input.parameterList.isEmpty
+          && (functionDecl.signature.output.map(\.isVoid) ?? true)
+        {
+          set.insert(functionDecl)
+        }
+      }
+    }
+  }
+
   private func diagnoseLowerCamelCaseViolations(
     _ identifier: TokenSyntax, allowUnderscores: Bool, description: String
   ) {
@@ -157,9 +173,9 @@ fileprivate func identifierDescription<NodeType: SyntaxProtocol>(for node: NodeT
   case .enumCaseElement: return "enum case"
   case .functionDecl: return "function"
   case .optionalBindingCondition(let binding):
-    return binding.letOrVarKeyword.tokenKind == .varKeyword ? "variable" : "constant"
+    return binding.letOrVarKeyword.tokenKind == .keyword(.var) ? "variable" : "constant"
   case .variableDecl(let variableDecl):
-    return variableDecl.letOrVarKeyword.tokenKind == .varKeyword ? "variable" : "constant"
+    return variableDecl.letOrVarKeyword.tokenKind == .keyword(.var) ? "variable" : "constant"
   default:
     return "identifier"
   }

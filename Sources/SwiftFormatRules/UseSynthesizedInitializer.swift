@@ -40,7 +40,7 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
         // Collect any possible redundant initializers into a list
       } else if let initDecl = member.as(InitializerDeclSyntax.self) {
         guard initDecl.optionalMark == nil else { continue }
-        guard initDecl.signature.throwsOrRethrowsKeyword == nil else { continue }
+        guard initDecl.signature.effectSpecifiers?.throwsSpecifier == nil else { continue }
         initializers.append(initDecl)
       }
     }
@@ -90,11 +90,11 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
     switch synthesizedAccessLevel {
     case .internal:
       // No explicit access level or internal are equivalent.
-      return accessLevel == nil || accessLevel!.name.tokenKind == .internalKeyword
+      return accessLevel == nil || accessLevel!.name.tokenKind == .keyword(.internal)
     case .fileprivate:
-      return accessLevel != nil && accessLevel!.name.tokenKind == .fileprivateKeyword
+      return accessLevel != nil && accessLevel!.name.tokenKind == .keyword(.fileprivate)
     case .private:
-      return accessLevel != nil && accessLevel!.name.tokenKind == .privateKeyword
+      return accessLevel != nil && accessLevel!.name.tokenKind == .keyword(.private)
     }
   }
 
@@ -116,7 +116,7 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
       // Ensure that parameters that correspond to properties declared using 'var' have a default
       // argument that is identical to the property's default value. Otherwise, a default argument
       // doesn't match the memberwise initializer.
-      let isVarDecl = property.letOrVarKeyword.tokenKind == .varKeyword
+      let isVarDecl = property.letOrVarKeyword.tokenKind == .keyword(.var)
       if isVarDecl, let initializer = property.firstInitializer {
         guard let defaultArg = parameter.defaultArgument else { return false }
         guard initializer.value.description == defaultArg.value.description else { return false }
@@ -142,27 +142,35 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
 
     var statements: [String] = []
     for statement in initBody.statements {
-      guard let exp = statement.item.as(SequenceExprSyntax.self) else { return false }
+      guard
+        let expr = statement.item.as(InfixOperatorExprSyntax.self),
+        expr.operatorOperand.is(AssignmentExprSyntax.self)
+      else {
+        return false
+      }
+
       var leftName = ""
       var rightName = ""
 
-      for element in exp.elements {
-        switch Syntax(element).as(SyntaxEnum.self) {
-        case .memberAccessExpr(let element):
-          guard let base = element.base,
-            base.description.trimmingCharacters(in: .whitespacesAndNewlines) == "self"
-          else {
-            return false
-          }
-          leftName = element.name.text
-        case .assignmentExpr(let element):
-          guard element.assignToken.tokenKind == .equal else { return false }
-        case .identifierExpr(let element):
-          rightName = element.identifier.text
-        default:
+      if let memberAccessExpr = expr.leftOperand.as(MemberAccessExprSyntax.self) {
+        guard
+          let base = memberAccessExpr.base,
+          base.description.trimmingCharacters(in: .whitespacesAndNewlines) == "self"
+        else {
           return false
         }
+
+        leftName = memberAccessExpr.name.text
+      } else {
+        return false
       }
+
+      if let identifierExpr = expr.rightOperand.as(IdentifierExprSyntax.self) {
+        rightName = identifierExpr.identifier.text
+      } else {
+        return false
+      }
+
       guard leftName == rightName else { return false }
       statements.append(leftName)
     }
@@ -193,7 +201,7 @@ fileprivate enum AccessLevel {
 /// a struct that contains the given properties.
 ///
 /// The rules for default memberwise initializer access levels are defined in The Swift
-/// Programming Languge:
+/// Programming Language:
 /// https://docs.swift.org/swift-book/LanguageGuide/AccessControl.html#ID21
 ///
 /// - Parameter properties: The properties contained within the struct.
@@ -204,10 +212,10 @@ fileprivate func synthesizedInitAccessLevel(using properties: [VariableDeclSynta
     guard let modifiers = property.modifiers else { continue }
 
     // Private takes precedence, so finding 1 private property defines the access level.
-    if modifiers.contains(where: {$0.name.tokenKind == .privateKeyword && $0.detail == nil}) {
+    if modifiers.contains(where: {$0.name.tokenKind == .keyword(.private) && $0.detail == nil}) {
       return .private
     }
-    if modifiers.contains(where: {$0.name.tokenKind == .fileprivateKeyword && $0.detail == nil}) {
+    if modifiers.contains(where: {$0.name.tokenKind == .keyword(.fileprivate) && $0.detail == nil}) {
       hasFileprivate = true
       // Can't break here because a later property might be private.
     }

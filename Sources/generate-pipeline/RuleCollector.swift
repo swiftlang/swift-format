@@ -58,7 +58,7 @@ final class RuleCollector {
 
       let fileURL = url.appendingPathComponent(baseName)
       let fileInput = try String(contentsOf: fileURL)
-      let sourceFile = try Parser.parse(source: fileInput)
+      let sourceFile = Parser.parse(source: fileInput)
 
       for statement in sourceFile.statements {
         guard let detectedRule = self.detectedRule(at: statement) else { continue }

@@ -12,6 +12,7 @@
 
 import Foundation
 import SwiftFormatConfiguration
+import SwiftOperators
 import SwiftSyntax
 
 /// Context contains the bits that each formatter and linter will need access to.
@@ -37,6 +38,9 @@ public final class Context {
   /// The configuration for this run of the pipeline, provided by a configuration JSON file.
   public let configuration: Configuration
 
+  /// Defines the operators and their precedence relationships that were used during parsing.
+  public let operatorTable: OperatorTable
+
   /// Emits findings to the finding consumer.
   public let findingEmitter: FindingEmitter
 
@@ -58,6 +62,7 @@ public final class Context {
   /// Creates a new Context with the provided configuration, diagnostic engine, and file URL.
   public init(
     configuration: Configuration,
+    operatorTable: OperatorTable,
     findingConsumer: ((Finding) -> Void)?,
     fileURL: URL,
     sourceFileSyntax: SourceFileSyntax,
@@ -65,6 +70,7 @@ public final class Context {
     ruleNameCache: [ObjectIdentifier: String]
   ) {
     self.configuration = configuration
+    self.operatorTable = operatorTable
     self.findingEmitter = FindingEmitter(consumer: findingConsumer)
     self.fileURL = fileURL
     self.importsXCTest = .notDetermined

@@ -87,7 +87,7 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
 
         // This discards any trailingTrivia from the semicolon. That trivia is at most some spaces,
         // and the pretty printer adds any necessary spaces so it's safe to discard.
-        newItem = newItem.withSemicolon(nil)
+        newItem = newItem.with(\.semicolon, nil)
         if idx < node.count - 1 {
           diagnose(.removeSemicolonAndMove, on: semicolon)
         } else {
@@ -98,12 +98,12 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
     return nodeCreator(newItems)
   }
 
-  public override func visit(_ node: CodeBlockItemListSyntax) -> Syntax {
-    return Syntax(nodeByRemovingSemicolons(from: node, nodeCreator: CodeBlockItemListSyntax.init))
+  public override func visit(_ node: CodeBlockItemListSyntax) -> CodeBlockItemListSyntax {
+    return nodeByRemovingSemicolons(from: node, nodeCreator: CodeBlockItemListSyntax.init)
   }
 
-  public override func visit(_ node: MemberDeclListSyntax) -> Syntax {
-    return Syntax(nodeByRemovingSemicolons(from: node, nodeCreator: MemberDeclListSyntax.init))
+  public override func visit(_ node: MemberDeclListSyntax) -> MemberDeclListSyntax {
+    return nodeByRemovingSemicolons(from: node, nodeCreator: MemberDeclListSyntax.init)
   }
 }
 

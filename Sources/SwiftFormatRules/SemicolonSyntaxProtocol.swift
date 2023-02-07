@@ -14,8 +14,7 @@ import SwiftSyntax
 
 /// Protocol that declares support for accessing and modifying a token that represents a semicolon.
 protocol SemicolonSyntaxProtocol: SyntaxProtocol {
-  var semicolon: TokenSyntax? { get }
-  func withSemicolon(_ newSemicolon: TokenSyntax?) -> Self
+  var semicolon: TokenSyntax? { get set }
 }
 
 extension MemberDeclListItemSyntax: SemicolonSyntaxProtocol {}

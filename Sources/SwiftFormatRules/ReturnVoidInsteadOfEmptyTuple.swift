@@ -23,7 +23,7 @@ import SwiftSyntax
 /// Format: `-> ()` is replaced with `-> Void`
 public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
   public override func visit(_ node: FunctionTypeSyntax) -> TypeSyntax {
-    guard let returnType = node.returnType.as(TupleTypeSyntax.self),
+    guard let returnType = node.output.returnType.as(TupleTypeSyntax.self),
       returnType.elements.count == 0
     else {
       return super.visit(node)
@@ -41,12 +41,15 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
 
     // Make sure that function types nested in the argument list are also rewritten (for example,
     // `(Int -> ()) -> ()` should become `(Int -> Void) -> Void`).
-    let arguments = visit(node.arguments).as(TupleTypeElementListSyntax.self)!
+    let arguments = visit(node.arguments)
     let voidKeyword = makeVoidIdentifierType(toReplace: returnType)
-    return TypeSyntax(node.withArguments(arguments).withReturnType(TypeSyntax(voidKeyword)))
+    var rewrittenNode = node
+    rewrittenNode.arguments = arguments
+    rewrittenNode.output.returnType = TypeSyntax(voidKeyword)
+    return TypeSyntax(rewrittenNode)
   }
 
-  public override func visit(_ node: ClosureSignatureSyntax) -> Syntax {
+  public override func visit(_ node: ClosureSignatureSyntax) -> ClosureSignatureSyntax {
     guard let output = node.output,
       let returnType = output.returnType.as(TupleTypeSyntax.self),
       returnType.elements.count == 0
@@ -64,19 +67,20 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
       return super.visit(node)
     }
 
-    let input: Syntax?
-    if let parameterClause = node.input?.as(ParameterClauseSyntax.self) {
+    let input: ClosureSignatureSyntax.Input?
+    switch node.input {
+    case .input(let parameterClause)?:
       // If the closure input is a complete parameter clause (variables and types), make sure that
       // nested function types are also rewritten (for example, `label: (Int -> ()) -> ()` should
       // become `label: (Int -> Void) -> Void`).
-      input = visit(parameterClause)
-    } else {
+      input = .input(visit(parameterClause))
+    default:
       // Otherwise, it's a simple signature (just variable names, no types), so there is nothing to
       // rewrite.
       input = node.input
     }
     let voidKeyword = makeVoidIdentifierType(toReplace: returnType)
-    return Syntax(node.withInput(input).withOutput(output.withReturnType(TypeSyntax(voidKeyword))))
+    return node.with(\.input, input).with(\.output, output.with(\.returnType, TypeSyntax(voidKeyword)))
   }
 
   /// Returns a value indicating whether the leading trivia of the given token contained any

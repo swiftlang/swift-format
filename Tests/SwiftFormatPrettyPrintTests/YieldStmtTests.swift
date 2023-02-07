@@ -17,14 +17,12 @@ final class YieldStmtTests: PrettyPrintTestCase {
       """
       var foo: Int {
         _read {
-          yield
-            1234567890
+          yield 1234567890
         }
         _modify {
           var someLongVariable =
             0
-          yield
-            &someLongVariable
+          yield &someLongVariable
         }
       }
 

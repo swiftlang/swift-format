@@ -177,7 +177,7 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
     /// Parameter(s) and Returns tags may be omitted only if the single-sentence
     /// brief summary fully describes the meaning of those items and including the
     /// tags would only repeat what has already been said
-    func ommitedFunc(p1: Int)
+    func omittedFunc(p1: Int)
     """
     performLint(ValidateDocumentationComments.self, input: input)
     XCTAssertNotDiagnosed(.useSingularParameter)
@@ -196,9 +196,9 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
     XCTAssertNotDiagnosed(.documentErrorsThrown(funcName: "pluralParam"))
     XCTAssertNotDiagnosed(.removeThrowsComment(funcName: "pluralParam"))
 
-    XCTAssertNotDiagnosed(.documentReturnValue(funcName: "ommitedFunc"))
-    XCTAssertNotDiagnosed(.removeReturnComment(funcName: "ommitedFunc"))
-    XCTAssertNotDiagnosed(.parametersDontMatch(funcName: "ommitedFunc"))
+    XCTAssertNotDiagnosed(.documentReturnValue(funcName: "omittedFunc"))
+    XCTAssertNotDiagnosed(.removeReturnComment(funcName: "omittedFunc"))
+    XCTAssertNotDiagnosed(.parametersDontMatch(funcName: "omittedFunc"))
   }
 
   func testSeparateLabelAndIdentifier() {

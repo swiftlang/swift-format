@@ -11,13 +11,13 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import SwiftDiagnostics
 import SwiftFormatConfiguration
 import SwiftFormatCore
 import SwiftFormatPrettyPrint
 import SwiftFormatRules
+import SwiftOperators
 import SwiftSyntax
-import SwiftParser
-import SwiftDiagnostics
 
 /// Formats Swift source code or syntax trees according to the Swift style guidelines.
 public final class SwiftFormatter {
@@ -46,6 +46,11 @@ public final class SwiftFormatter {
 
   /// Formats the Swift code at the given file URL and writes the result to an output stream.
   ///
+  /// This form of the `format` function automatically folds expressions using the default operator
+  /// set defined in Swift. If you need more control over this—for example, to provide the correct
+  /// precedence relationships for custom operators—you must parse and fold the syntax tree
+  /// manually and then call ``format(syntax:assumingFileURL:to:)``.
+  ///
   /// - Parameters:
   ///   - url: The URL of the file containing the code to format.
   ///   - outputStream: A value conforming to `TextOutputStream` to which the formatted output will
@@ -66,19 +71,22 @@ public final class SwiftFormatter {
       throw SwiftFormatError.isDirectory
     }
     let source = try String(contentsOf: url, encoding: .utf8)
-    let sourceFile = try Parser.parse(source: source)
-    if let parsingDiagnosticHandler = parsingDiagnosticHandler {
-      let expectedConverter = SourceLocationConverter(file: url.path, tree: sourceFile)
-      let diagnostics = ParseDiagnosticsGenerator.diagnostics(for: sourceFile)
-      for diagnostic in diagnostics {
-        let location = diagnostic.location(converter: expectedConverter)
-        parsingDiagnosticHandler(diagnostic, location)
-      }
-    }
-    try format(syntax: sourceFile, assumingFileURL: url, source: source, to: &outputStream)
+    let sourceFile = try parseAndEmitDiagnostics(
+      source: source,
+      operatorTable: .standardOperators,
+      assumingFileURL: url,
+      parsingDiagnosticHandler: parsingDiagnosticHandler)
+    try format(
+      syntax: sourceFile, operatorTable: .standardOperators, assumingFileURL: url, source: source,
+      to: &outputStream)
   }
 
   /// Formats the given Swift source code and writes the result to an output stream.
+  ///
+  /// This form of the `format` function automatically folds expressions using the default operator
+  /// set defined in Swift. If you need more control over this—for example, to provide the correct
+  /// precedence relationships for custom operators—you must parse and fold the syntax tree
+  /// manually and then call ``format(syntax:assumingFileURL:to:)``.
   ///
   /// - Parameters:
   ///   - source: The Swift source code to be formatted.
@@ -96,24 +104,29 @@ public final class SwiftFormatter {
     to outputStream: inout Output,
     parsingDiagnosticHandler: ((Diagnostic, SourceLocation) -> Void)? = nil
   ) throws {
-    let sourceFile = try Parser.parse(source: source)
-    if let parsingDiagnosticHandler = parsingDiagnosticHandler {
-      let expectedConverter = SourceLocationConverter(file: url?.path ?? "<unknown>", tree: sourceFile)
-      let diagnostics = ParseDiagnosticsGenerator.diagnostics(for: sourceFile)
-      for diagnostic in diagnostics {
-        let location = diagnostic.location(converter: expectedConverter)
-        parsingDiagnosticHandler(diagnostic, location)
-      }
-    }
-    try format(syntax: sourceFile, assumingFileURL: url, source: source, to: &outputStream)
+    let sourceFile = try parseAndEmitDiagnostics(
+      source: source,
+      operatorTable: .standardOperators,
+      assumingFileURL: url,
+      parsingDiagnosticHandler: parsingDiagnosticHandler)
+    try format(
+      syntax: sourceFile, operatorTable: .standardOperators, assumingFileURL: url, source: source,
+      to: &outputStream)
   }
 
   /// Formats the given Swift syntax tree and writes the result to an output stream.
+  ///
+  /// This form of the `format` function does not perform any additional processing on the given
+  /// syntax tree. The tree **must** have all expressions folded using an `OperatorTable`, and no
+  /// detection of warnings/errors is performed.
   ///
   /// - Note: The formatter may be faster using the source text, if it's available.
   ///
   /// - Parameters:
   ///   - syntax: The Swift syntax tree to be converted to source code and formatted.
+  ///   - operatorTable: The table that defines the operators and their precedence relationships.
+  ///     This must be the same operator table that was used to fold the expressions in the `syntax`
+  ///     argument.
   ///   - url: A file URL denoting the filename/path that should be assumed for this syntax tree,
   ///     which is associated with any diagnostics emitted during formatting. If this is nil, a
   ///     dummy value will be used.
@@ -121,23 +134,22 @@ public final class SwiftFormatter {
   ///     be written.
   /// - Throws: If an unrecoverable error occurs when formatting the code.
   public func format<Output: TextOutputStream>(
-    syntax: SourceFileSyntax, assumingFileURL url: URL?, to outputStream: inout Output
+    syntax: SourceFileSyntax, operatorTable: OperatorTable, assumingFileURL url: URL?,
+    to outputStream: inout Output
   ) throws {
-    try format(syntax: syntax, assumingFileURL: url, source: nil, to: &outputStream)
+    try format(
+      syntax: syntax, operatorTable: operatorTable, assumingFileURL: url, source: nil,
+      to: &outputStream)
   }
 
   private func format<Output: TextOutputStream>(
-    syntax: SourceFileSyntax, assumingFileURL url: URL?, source: String?,
-    to outputStream: inout Output
+    syntax: SourceFileSyntax, operatorTable: OperatorTable,
+    assumingFileURL url: URL?, source: String?, to outputStream: inout Output
   ) throws {
-    if let position = _firstInvalidSyntaxPosition(in: Syntax(syntax)) {
-      throw SwiftFormatError.fileContainsInvalidSyntax(position: position)
-    }
-
     let assumedURL = url ?? URL(fileURLWithPath: "source")
     let context = Context(
-      configuration: configuration, findingConsumer: findingConsumer, fileURL: assumedURL,
-      sourceFileSyntax: syntax, source: source, ruleNameCache: ruleNameCache)
+      configuration: configuration, operatorTable: operatorTable, findingConsumer: findingConsumer,
+      fileURL: assumedURL, sourceFileSyntax: syntax, source: source, ruleNameCache: ruleNameCache)
     let pipeline = FormatPipeline(context: context)
     let transformedSyntax = pipeline.visit(Syntax(syntax))
 
@@ -146,10 +158,8 @@ public final class SwiftFormatter {
       return
     }
 
-    let operatorContext = OperatorContext.makeBuiltinOperatorContext()
     let printer = PrettyPrinter(
       context: context,
-      operatorContext: operatorContext,
       node: transformedSyntax,
       printTokenStream: debugOptions.contains(.dumpTokenStream),
       whitespaceOnly: false)

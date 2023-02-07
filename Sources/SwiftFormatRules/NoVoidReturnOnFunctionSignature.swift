@@ -23,16 +23,16 @@ public final class NoVoidReturnOnFunctionSignature: SyntaxFormatRule {
   /// Remove the `-> Void` return type for function signatures. Do not remove
   /// it for closure signatures, because that may introduce an ambiguity when closure signatures
   /// are inferred.
-  public override func visit(_ node: FunctionSignatureSyntax) -> Syntax {
+  public override func visit(_ node: FunctionSignatureSyntax) -> FunctionSignatureSyntax {
     if let ret = node.output?.returnType.as(SimpleTypeIdentifierSyntax.self), ret.name.text == "Void" {
       diagnose(.removeRedundantReturn("Void"), on: ret)
-      return Syntax(node.withOutput(nil))
+      return node.with(\.output, nil)
     }
     if let tup = node.output?.returnType.as(TupleTypeSyntax.self), tup.elements.isEmpty {
       diagnose(.removeRedundantReturn("()"), on: tup)
-      return Syntax(node.withOutput(nil))
+      return node.with(\.output, nil)
     }
-    return Syntax(node)
+    return node
   }
 }
 

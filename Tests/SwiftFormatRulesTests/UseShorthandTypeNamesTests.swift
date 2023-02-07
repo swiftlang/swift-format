@@ -6,15 +6,15 @@ final class UseShorthandTypeNamesTests: LintOrFormatRuleTestCase {
       UseShorthandTypeNames.self,
       input:
         """
-        var a: Array<Int>
-        var b: Dictionary<String, Int>
-        var c: Optional<Foo>
+        var a: Array<Int> = []
+        var b: Dictionary<String, Int> = [:]
+        var c: Optional<Foo> = nil
         """,
       expected:
         """
-        var a: [Int]
-        var b: [String: Int]
-        var c: Foo?
+        var a: [Int] = []
+        var b: [String: Int] = [:]
+        var c: Foo? = nil
         """)
 
     XCTAssertDiagnosed(.useTypeShorthand(type: "Array"))
@@ -41,13 +41,13 @@ final class UseShorthandTypeNamesTests: LintOrFormatRuleTestCase {
         var h: [String: Dictionary<String, Int>]
         var i: [Dictionary<String, Int>: Dictionary<String, Int>]
 
-        var a: Optional<Array<Int>>
-        var b: Optional<Dictionary<String, Int>>
-        var c: Optional<Optional<Int>>
-        var d: Array<Int>?
-        var e: Dictionary<String, Int>?
-        var f: Optional<Int>?
-        var g: Optional<Int?>
+        let a: Optional<Array<Int>>
+        let b: Optional<Dictionary<String, Int>>
+        let c: Optional<Optional<Int>>
+        let d: Array<Int>?
+        let e: Dictionary<String, Int>?
+        let f: Optional<Int>?
+        let g: Optional<Int?>
 
         var a: Array<Optional<Int>>
         var b: Dictionary<Optional<String>, Optional<Int>>
@@ -70,13 +70,13 @@ final class UseShorthandTypeNamesTests: LintOrFormatRuleTestCase {
         var h: [String: [String: Int]]
         var i: [[String: Int]: [String: Int]]
 
-        var a: [Int]?
-        var b: [String: Int]?
-        var c: Int??
-        var d: [Int]?
-        var e: [String: Int]?
-        var f: Int??
-        var g: Int??
+        let a: [Int]?
+        let b: [String: Int]?
+        let c: Int??
+        let d: [Int]?
+        let e: [String: Int]?
+        let f: Int??
+        let g: Int??
 
         var a: [Int?]
         var b: [String?: Int?]
@@ -321,6 +321,96 @@ final class UseShorthandTypeNamesTests: LintOrFormatRuleTestCase {
         var a: Larry<Int> = Larry<Int>()
         var b: Pictionary<String, Int> = Pictionary<String, Int>()
         var c: Sectional<Couch> = Sectional<Couch>(from: warehouse)
+        """)
+  }
+
+  func testOptionalStoredVarsWithoutInitializersAreNotChangedUnlessImmutable() {
+    XCTAssertFormatting(
+      UseShorthandTypeNames.self,
+      input:
+        """
+        var a: Optional<Int>
+        var b: Optional<Int> {
+          didSet {}
+        }
+        let c: Optional<Int>
+        """,
+      expected:
+        """
+        var a: Optional<Int>
+        var b: Optional<Int> {
+          didSet {}
+        }
+        let c: Int?
+        """)
+  }
+
+  func testOptionalComputedVarsAreChanged() {
+    XCTAssertFormatting(
+      UseShorthandTypeNames.self,
+      input:
+        """
+        var a: Optional<Int> { nil }
+        var b: Optional<Int> {
+          get { 0 }
+        }
+        var c: Optional<Int> {
+          _read {}
+        }
+        var d: Optional<Int> {
+          unsafeAddress {}
+        }
+        """,
+      expected:
+        """
+        var a: Int? { nil }
+        var b: Int? {
+          get { 0 }
+        }
+        var c: Int? {
+          _read {}
+        }
+        var d: Int? {
+          unsafeAddress {}
+        }
+        """)
+  }
+
+  func testOptionalStoredVarsWithInitializersAreChanged() {
+    XCTAssertFormatting(
+      UseShorthandTypeNames.self,
+      input:
+        """
+        var a: Optional<Int> = nil
+        var b: Optional<Int> = nil {
+          didSet {}
+        }
+        let c: Optional<Int> = nil
+        """,
+      expected:
+        """
+        var a: Int? = nil
+        var b: Int? = nil {
+          didSet {}
+        }
+        let c: Int? = nil
+        """)
+  }
+
+  func testOptionalsNestedInOtherTypesInStoredVarsAreStillChanged() {
+    XCTAssertFormatting(
+      UseShorthandTypeNames.self,
+      input:
+        """
+        var c: Generic<Optional<Int>>
+        var d: [Optional<Int>]
+        var e: [String: Optional<Int>]
+        """,
+      expected:
+        """
+        var c: Generic<Int?>
+        var d: [Int?]
+        var e: [String: Int?]
         """)
   }
 }

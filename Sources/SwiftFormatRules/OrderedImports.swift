@@ -25,7 +25,7 @@ import SwiftSyntax
 /// Format: Imports will be reordered and grouped at the top of the file.
 public final class OrderedImports: SyntaxFormatRule {
 
-  public override func visit(_ node: SourceFileSyntax) -> Syntax {
+  public override func visit(_ node: SourceFileSyntax) -> SourceFileSyntax {
     let lines = generateLines(codeBlockItemList: node.statements, context: context)
 
     // Stores the formatted and sorted lines that will be used to reconstruct the list of code block
@@ -131,10 +131,11 @@ public final class OrderedImports: SyntaxFormatRule {
       formatAndAppend(linesSection: lines[lastSliceStartIndex..<lines.endIndex])
     }
 
-    let newNode = node.withStatements(
+    let newNode = node.with(
+      \.statements, 
       CodeBlockItemListSyntax(convertToCodeBlockItems(lines: formattedLines))
     )
-    return Syntax(newNode)
+    return newNode
   }
 
   /// Raise lint errors if the different import types appear in the wrong order, and if import
@@ -188,7 +189,7 @@ public final class OrderedImports: SyntaxFormatRule {
   }
 
   /// Sort the list of import lines lexicographically by the import path name. Any comments above an
-  /// import lines should be assocaited with it, and move with the line during sorting. We also emit
+  /// import lines should be associated with it, and move with the line during sorting. We also emit
   /// a linter error if an import line is discovered to be out of order.
   private func formatImports(_ imports: [Line]) -> [Line] {
     var linesWithLeadingComments: [(import: Line, comments: [Line])] = []
@@ -280,7 +281,7 @@ fileprivate func joinLines(_ inputLineLists: [Line]...) -> [Line] {
 }
 
 /// This function transforms the statements in a CodeBlockItemListSyntax object into a list of Line
-/// obejcts. Blank lines and standalone comments are represented by their own Line object. Code with
+/// objects. Blank lines and standalone comments are represented by their own Line object. Code with
 /// a trailing comment are represented together in the same Line.
 fileprivate func generateLines(codeBlockItemList: CodeBlockItemListSyntax, context: Context)
   -> [Line]

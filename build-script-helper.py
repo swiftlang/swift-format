@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 """
   This source file is part of the Swift.org open source project
@@ -31,14 +31,14 @@ def parse_args(args):
 
   parser.add_argument('--package-path', default='')
   parser.add_argument('-v', '--verbose', action='store_true', help='log executed commands')
-  parser.add_argument('--prefix', help='install path')
+  parser.add_argument('--prefix', dest='install_prefixes', nargs='*', metavar='PATHS', help='install path')
   parser.add_argument('--configuration', default='debug')
   parser.add_argument('--build-path', default=None)
   parser.add_argument('--multiroot-data-file', help='Path to an Xcode workspace to create a unified build of SwiftSyntax with other projects.')
   parser.add_argument('--toolchain', required=True, help='the toolchain to use when building this package')
   parser.add_argument('--update', action='store_true', help='update all SwiftPM dependencies')
   parser.add_argument('--no-local-deps', action='store_true', help='use normal remote dependencies when building')
-  parser.add_argument('build_actions', help="Extra actions to perform. Can be any number of the following", choices=['all', 'build', 'test', 'generate-xcodeproj'], nargs="*", default=['build'])
+  parser.add_argument('build_actions', help="Extra actions to perform. Can be any number of the following", choices=['all', 'build', 'test', 'generate-xcodeproj', 'install'], nargs="*", default=['build'])
 
   parsed = parser.parse_args(args)
 
@@ -57,11 +57,9 @@ def parse_args(args):
 def run(args):
   package_name = os.path.basename(args.package_path)
 
-  env = dict(os.environ)
+  env = get_swiftpm_environment_variables(no_local_deps=args.no_local_deps)
   # Use local dependencies (i.e. checked out next swift-format).
-  if not args.no_local_deps:
-    env['SWIFTCI_USE_LOCAL_DEPS'] = "1"
-
+  
   if args.update:
     print("** Updating dependencies of %s **" % package_name)
     try:
@@ -76,7 +74,7 @@ def run(args):
       sys.exit(1)
 
   # The test action creates its own build. No need to build if we are just testing.
-  if should_run_action('build', args.build_actions):
+  if should_run_action('build', args.build_actions) or should_run_action('install', args.build_actions):
     print("** Building %s **" % package_name)
     try:
       invoke_swift(package_path=args.package_path,
@@ -124,6 +122,23 @@ def run(args):
       printerr('Executing: %s' % ' '.join(e.cmd))
       sys.exit(1)
 
+  if should_run_action("install", args.build_actions):
+    print("** Installing %s **" % package_name)
+
+    swiftpm_args = get_swiftpm_options(
+      package_path=args.package_path,
+      build_path=args.build_path, 
+      multiroot_data_file=args.multiroot_data_file,
+      configuration=args.configuration,
+      verbose=args.verbose
+    )
+    cmd = [args.swift_exec, 'build', '--show-bin-path'] + swiftpm_args
+    bin_path = check_output(cmd, env=env, capture_stderr=False, verbose=args.verbose).strip()
+    
+    for prefix in args.install_prefixes:
+        cmd = ['rsync', '-a', os.path.join(bin_path, 'swift-format'), os.path.join(prefix, 'bin')]
+        check_call(cmd, verbose=args.verbose)
+
 def should_run_action(action_name, selected_actions):
   if action_name in selected_actions:
     return True
@@ -133,7 +148,7 @@ def should_run_action(action_name, selected_actions):
     return False
 
 def update_swiftpm_dependencies(package_path, swift_exec, build_path, env, verbose):
-  args = [swift_exec, 'package', '--package-path', package_path, '--build-path', build_path, 'update']
+  args = [swift_exec, 'package', '--package-path', package_path, '--scratch-path', build_path, 'update']
   check_call(args, env=env, verbose=verbose)
 
 def invoke_swift(package_path, swift_exec, action, products, build_path, multiroot_data_file, configuration, env, verbose):
@@ -142,20 +157,41 @@ def invoke_swift(package_path, swift_exec, action, products, build_path, multiro
   for product in products:
     invoke_swift_single_product(package_path, swift_exec, action, product, build_path, multiroot_data_file, configuration, env, verbose)
 
-def invoke_swift_single_product(package_path, swift_exec, action, product, build_path, multiroot_data_file, configuration, env, verbose):
-  args = [swift_exec, action, '--package-path', package_path, '-c', configuration, '--build-path', build_path]
-  if platform.system() != "Darwin":
-    args.extend(["--enable-test-discovery"])
+def get_swiftpm_options(package_path, build_path, multiroot_data_file, configuration, verbose):
+  args = [ 
+    '--package-path', package_path, 
+    '--configuration', configuration, 
+    '--scratch-path', build_path
+  ]
   if multiroot_data_file:
-    args.extend(['--multiroot-data-file', multiroot_data_file])
-  if action == 'test':
-    args.extend(['--test-product', product])
-  else:
-    args.extend(['--product', product])
+    args += ['--multiroot-data-file', multiroot_data_file]
+  if verbose:
+    args += ['--verbose']
+  if platform.system() == 'Darwin':
+    args += [
+        '-Xlinker', '-rpath', '-Xlinker', '/usr/lib/swift',
+        '-Xlinker', '-rpath', '-Xlinker', '@executable_path/../lib/swift/macosx',
+        '-Xlinker', '-rpath', '-Xlinker', '@executable_path/../lib/swift-5.5/macosx',
+    ]
+  return args
 
+def get_swiftpm_environment_variables(no_local_deps):
   # Tell SwiftSyntax that we are building in a build-script environment so that
   # it does not need to be rebuilt if it has already been built before.
+  env = dict(os.environ)
   env['SWIFT_BUILD_SCRIPT_ENVIRONMENT'] = '1'
+  if not no_local_deps:
+    env['SWIFTCI_USE_LOCAL_DEPS'] = "1"
+  return env
+
+
+def invoke_swift_single_product(package_path, swift_exec, action, product, build_path, multiroot_data_file, configuration, env, verbose):
+  args = [swift_exec, action]
+  args += get_swiftpm_options(package_path, build_path, multiroot_data_file, configuration, verbose)
+  if action == 'test':
+    args += ['--test-product', product]
+  else:
+    args += ['--product', product]
 
   check_call(args, env=env, verbose=verbose)
 
@@ -169,6 +205,15 @@ def check_call(cmd, verbose, env=os.environ, **kwargs):
   if verbose:
     print(' '.join([escape_cmd_arg(arg) for arg in cmd]))
   return subprocess.check_call(cmd, env=env, stderr=subprocess.STDOUT, **kwargs)
+
+def check_output(cmd, verbose, env=os.environ, capture_stderr=True, **kwargs):
+  if verbose:
+    print(' '.join([escape_cmd_arg(arg) for arg in cmd]))
+  if capture_stderr:
+    stderr = subprocess.STDOUT
+  else:
+    stderr = subprocess.DEVNULL
+  return subprocess.check_output(cmd, env=env, stderr=stderr, encoding='utf-8', **kwargs)
 
 def escape_cmd_arg(arg):
   if '"' in arg or ' ' in arg:

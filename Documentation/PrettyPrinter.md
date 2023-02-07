@@ -233,7 +233,7 @@ Tokens = [docBlock(" Doc Block comment\n  * Second line *")]
 Verbatim tokens are used to print text verbatim without any formatting apart
 from applying a global indentation. They have a length set to the maximum line
 width. They are typically used to handle syntax types that are classed as
-"unknown" by SwiftSyntax. In these cases, we don't have access to the
+"unexpected" by SwiftSyntax. In these cases, we don't have access to the
 substructure of the syntax node a manner useful for formatting, so we print them
 verbatim. The indentation for verbatim tokens is applied to the first line of
 the text. The relative indentation of subsequent lines is preserved unless they
@@ -241,7 +241,7 @@ have less indentation than the first line, in which case we set the indentation
 of those lines equal to the first.
 
 ```
-// Consider "ifnt", an unknown syntax structure:
+// Consider "ifnt", an unexpected syntax structure:
 
 if someCondition {
     ifnt anotherCondition {

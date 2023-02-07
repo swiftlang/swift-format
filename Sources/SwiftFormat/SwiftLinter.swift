@@ -11,14 +11,14 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import SwiftDiagnostics
 import SwiftFormatConfiguration
 import SwiftFormatCore
 import SwiftFormatPrettyPrint
 import SwiftFormatRules
 import SwiftFormatWhitespaceLinter
+import SwiftOperators
 import SwiftSyntax
-import SwiftParser
-import SwiftDiagnostics
 
 /// Diagnoses and reports problems in Swift source code or syntax trees according to the Swift style
 /// guidelines.
@@ -47,6 +47,11 @@ public final class SwiftLinter {
 
   /// Lints the Swift code at the given file URL.
   ///
+  /// This form of the `lint` function automatically folds expressions using the default operator
+  /// set defined in Swift. If you need more control over this—for example, to provide the correct
+  /// precedence relationships for custom operators—you must parse and fold the syntax tree
+  /// manually and then call ``lint(syntax:assumingFileURL:)``.
+  ///
   /// - Parameters:
   ///   - url: The URL of the file containing the code to format.
   ///   - parsingDiagnosticHandler: An optional callback that will be notified if there are any
@@ -64,12 +69,21 @@ public final class SwiftLinter {
       throw SwiftFormatError.isDirectory
     }
     let source = try String(contentsOf: url, encoding: .utf8)
-    let sourceFile = try Parser.parse(source: source)
-    try lint(syntax: sourceFile, assumingFileURL: url,
-             source: source, parsingDiagnosticHandler: parsingDiagnosticHandler)
+    let sourceFile = try parseAndEmitDiagnostics(
+      source: source,
+      operatorTable: .standardOperators,
+      assumingFileURL: url,
+      parsingDiagnosticHandler: parsingDiagnosticHandler)
+    try lint(
+      syntax: sourceFile, operatorTable: .standardOperators, assumingFileURL: url, source: source)
   }
 
   /// Lints the given Swift source code.
+  ///
+  /// This form of the `lint` function automatically folds expressions using the default operator
+  /// set defined in Swift. If you need more control over this—for example, to provide the correct
+  /// precedence relationships for custom operators—you must parse and fold the syntax tree
+  /// manually and then call ``lint(syntax:assumingFileURL:)``.
   ///
   /// - Parameters:
   ///   - source: The Swift source code to be linted.
@@ -82,46 +96,47 @@ public final class SwiftLinter {
     assumingFileURL url: URL,
     parsingDiagnosticHandler: ((Diagnostic, SourceLocation) -> Void)? = nil
   ) throws {
-    let sourceFile = try Parser.parse(source: source)
-    try lint(syntax: sourceFile, assumingFileURL: url,
-             source: source, parsingDiagnosticHandler: parsingDiagnosticHandler)
+    let sourceFile = try parseAndEmitDiagnostics(
+      source: source,
+      operatorTable: .standardOperators,
+      assumingFileURL: url,
+      parsingDiagnosticHandler: parsingDiagnosticHandler)
+    try lint(
+      syntax: sourceFile, operatorTable: .standardOperators, assumingFileURL: url, source: source)
   }
 
   /// Lints the given Swift syntax tree.
+  ///
+  /// This form of the `lint` function does not perform any additional processing on the given
+  /// syntax tree. The tree **must** have all expressions folded using an `OperatorTable`, and no
+  /// detection of warnings/errors is performed.
   ///
   /// - Note: The linter may be faster using the source text, if it's available.
   ///
   /// - Parameters:
   ///   - syntax: The Swift syntax tree to be converted to be linted.
+  ///   - operatorTable: The table that defines the operators and their precedence relationships.
+  ///     This must be the same operator table that was used to fold the expressions in the `syntax`
+  ///     argument.
   ///   - url: A file URL denoting the filename/path that should be assumed for this syntax tree.
   /// - Throws: If an unrecoverable error occurs when formatting the code.
-  public func lint(syntax: SourceFileSyntax, assumingFileURL url: URL) throws {
-    try lint(syntax: syntax, assumingFileURL: url,
-             source: nil, parsingDiagnosticHandler: nil)
+  public func lint(
+    syntax: SourceFileSyntax,
+    operatorTable: OperatorTable,
+    assumingFileURL url: URL
+  ) throws {
+    try lint(syntax: syntax, operatorTable: operatorTable, assumingFileURL: url, source: nil)
   }
 
   private func lint(
     syntax: SourceFileSyntax,
+    operatorTable: OperatorTable,
     assumingFileURL url: URL,
-    source: String?,
-    parsingDiagnosticHandler: ((Diagnostic, SourceLocation) -> Void)?
+    source: String?
   ) throws {
-    if let position = _firstInvalidSyntaxPosition(in: Syntax(syntax)) {
-      throw SwiftFormatError.fileContainsInvalidSyntax(position: position)
-    }
-
-    if let parsingDiagnosticHandler = parsingDiagnosticHandler {
-      let expectedConverter = SourceLocationConverter(file: url.path, tree: syntax)
-      let diagnostics = ParseDiagnosticsGenerator.diagnostics(for: syntax)
-      for diagnostic in diagnostics {
-        let location = diagnostic.location(converter: expectedConverter)
-        parsingDiagnosticHandler(diagnostic, location)
-      }
-    }
-
     let context = Context(
-      configuration: configuration, findingConsumer: findingConsumer, fileURL: url,
-      sourceFileSyntax: syntax, source: source, ruleNameCache: ruleNameCache)
+      configuration: configuration, operatorTable: operatorTable, findingConsumer: findingConsumer,
+      fileURL: url, sourceFileSyntax: syntax, source: source, ruleNameCache: ruleNameCache)
     let pipeline = LintPipeline(context: context)
     pipeline.walk(Syntax(syntax))
 
@@ -131,10 +146,8 @@ public final class SwiftLinter {
 
     // Perform whitespace linting by comparing the input source text with the output of the
     // pretty-printer.
-    let operatorContext = OperatorContext.makeBuiltinOperatorContext()
     let printer = PrettyPrinter(
       context: context,
-      operatorContext: operatorContext,
       node: Syntax(syntax),
       printTokenStream: debugOptions.contains(.dumpTokenStream),
       whitespaceOnly: true)

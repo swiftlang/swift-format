@@ -17,6 +17,7 @@ import PackageDescription
 let package = Package(
   name: "swift-format",
   platforms: [
+    .iOS("13.0"),
     .macOS("10.15")
   ],
   products: [
@@ -32,6 +33,14 @@ let package = Package(
       name: "SwiftFormatConfiguration",
       targets: ["SwiftFormatConfiguration"]
     ),
+    .plugin(
+      name: "FormatPlugin",
+      targets: ["Format Source Code"]
+    ),
+    .plugin(
+      name: "LintPlugin",
+      targets: ["Lint Source Code"]
+    ),
   ],
   dependencies: [
     // See the "Dependencies" section below.
@@ -46,7 +55,9 @@ let package = Package(
         "SwiftFormatRules",
         "SwiftFormatWhitespaceLinter",
         .product(name: "SwiftSyntax", package: "swift-syntax"),
+        .product(name: "SwiftOperators", package: "swift-syntax"),
         .product(name: "SwiftParser", package: "swift-syntax"),
+        .product(name: "SwiftParserDiagnostics", package: "swift-syntax"),
       ]
     ),
     .target(
@@ -56,6 +67,7 @@ let package = Package(
       name: "SwiftFormatCore",
       dependencies: [
         "SwiftFormatConfiguration",
+        .product(name: "SwiftOperators", package: "swift-syntax"),
         .product(name: "SwiftSyntax", package: "swift-syntax"),
       ]
     ),
@@ -65,7 +77,11 @@ let package = Package(
     ),
     .target(
       name: "SwiftFormatPrettyPrint",
-      dependencies: ["SwiftFormatCore", "SwiftFormatConfiguration"]
+      dependencies: [
+        "SwiftFormatCore",
+        "SwiftFormatConfiguration",
+        .product(name: "SwiftOperators", package: "swift-syntax"),
+      ]
     ),
     .target(
       name: "SwiftFormatTestSupport",
@@ -73,6 +89,7 @@ let package = Package(
         "SwiftFormatCore",
         "SwiftFormatRules",
         "SwiftFormatConfiguration",
+        .product(name: "SwiftOperators", package: "swift-syntax"),
       ]
     ),
     .target(
@@ -82,7 +99,32 @@ let package = Package(
         .product(name: "SwiftSyntax", package: "swift-syntax"),
       ]
     ),
-
+    .plugin(
+      name: "Format Source Code",
+      capability: .command(
+        intent: .sourceCodeFormatting(),
+        permissions: [
+          .writeToPackageDirectory(reason: "This command formats the Swift source files")
+        ]
+      ),
+      dependencies: [
+        .target(name: "swift-format")
+      ],
+      path: "Plugins/FormatPlugin"
+    ),
+    .plugin(
+      name: "Lint Source Code",
+      capability: .command(
+        intent: .custom(
+          verb: "lint-source-code",
+          description: "Lint source code for a specified target."
+        )
+      ),
+      dependencies: [
+        .target(name: "swift-format")
+      ],
+      path: "Plugins/LintPlugin"
+    ),
     .executableTarget(
       name: "generate-pipeline",
       dependencies: [
@@ -105,14 +147,6 @@ let package = Package(
       ]
     ),
 
-    .testTarget(
-      name: "SwiftFormatTests",
-      dependencies: [
-        "SwiftFormat",
-        .product(name: "SwiftSyntax", package: "swift-syntax"),
-        .product(name: "SwiftParser", package: "swift-syntax"),
-      ]
-    ),
     .testTarget(
       name: "SwiftFormatConfigurationTests",
       dependencies: ["SwiftFormatConfiguration"]
@@ -144,6 +178,7 @@ let package = Package(
         "SwiftFormatRules",
         "SwiftFormatTestSupport",
         .product(name: "SwiftSyntax", package: "swift-syntax"),
+        .product(name: "SwiftOperators", package: "swift-syntax"),
         .product(name: "SwiftParser", package: "swift-syntax"),
       ]
     ),
@@ -180,7 +215,9 @@ if ProcessInfo.processInfo.environment["SWIFTCI_USE_LOCAL_DEPS"] == nil {
   package.dependencies += [
     .package(
       url: "https://github.com/apple/swift-argument-parser.git",
-      branch: "main"
+      // This should be kept in sync with the same dependency used by
+      // swift-syntax.
+      Version("1.0.1")..<Version("1.2.0")
     ),
     .package(
       url: "https://github.com/apple/swift-syntax.git",
@@ -188,7 +225,7 @@ if ProcessInfo.processInfo.environment["SWIFTCI_USE_LOCAL_DEPS"] == nil {
     ),
     .package(
       url: "https://github.com/apple/swift-tools-support-core.git",
-      branch: "main"
+      exact: Version("0.4.0")
     ),
   ]
 } else {

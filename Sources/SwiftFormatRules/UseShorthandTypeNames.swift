@@ -40,7 +40,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 
     // Ensure that all arguments in the clause are shortened and in the expected format by visiting
     // the argument list, first.
-    let genericArgumentList = visit(genericArgumentClause.arguments).as(GenericArgumentListSyntax.self)!
+    let genericArgumentList = visit(genericArgumentClause.arguments)
 
     let (leadingTrivia, trailingTrivia) = boundaryTrivia(around: Syntax(node))
     let newNode: TypeSyntax?
@@ -68,6 +68,10 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         trailingTrivia: trailingTrivia)
 
     case "Optional":
+      guard !isTypeOfUninitializedStoredVar(node) else {
+        newNode = nil
+        break
+      }
       guard let typeArgument = genericArgumentList.firstAndOnly else {
         newNode = nil
         break
@@ -89,8 +93,8 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     // Even if we don't shorten this specific type that we're visiting, we may have rewritten
     // something in the generic argument list that we recursively visited, so return the original
     // node with that swapped out.
-    let result = node.withGenericArgumentClause(
-      genericArgumentClause.withArguments(genericArgumentList))
+    let result = node.with(\.genericArgumentClause, 
+      genericArgumentClause.with(\.arguments, genericArgumentList))
     return TypeSyntax(result)
   }
 
@@ -121,7 +125,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     // Ensure that all arguments in the clause are shortened and in the expected format by visiting
     // the argument list, first.
     let genericArgumentList =
-      visit(node.genericArgumentClause.arguments).as(GenericArgumentListSyntax.self)!
+      visit(node.genericArgumentClause.arguments)
 
     let (leadingTrivia, trailingTrivia) = boundaryTrivia(around: Syntax(node))
     let newNode: ExprSyntax?
@@ -176,8 +180,8 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     // Even if we don't shorten this specific expression that we're visiting, we may have
     // rewritten something in the generic argument list that we recursively visited, so return the
     // original node with that swapped out.
-    let result = node.withGenericArgumentClause(
-      node.genericArgumentClause.withArguments(genericArgumentList))
+    let result = node.with(\.genericArgumentClause, 
+      node.genericArgumentClause.with(\.arguments, genericArgumentList))
     return ExprSyntax(result)
   }
 
@@ -193,7 +197,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     return (first, second)
   }
 
-  /// Retuns a `TypeSyntax` representing a shorthand array type (e.g., `[Foo]`) with the given
+  /// Returns a `TypeSyntax` representing a shorthand array type (e.g., `[Foo]`) with the given
   /// element type and trivia.
   private func shorthandArrayType(
     element: TypeSyntax,
@@ -307,7 +311,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     ])
     return DictionaryExprSyntax(
       leftSquare: leftSquareBracket,
-      content: Syntax(dictElementList),
+      content: .elements(dictElementList),
       rightSquare: rightSquareBracket)
   }
 
@@ -367,7 +371,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       // the identifier and the generic arguments. Otherwise, we can return just the
       // `IdentifierExpr` itself.
       if let genericArgumentClause = simpleTypeIdentifier.genericArgumentClause {
-        let newGenericArgumentClause = visit(genericArgumentClause).as(GenericArgumentClauseSyntax.self)!
+        let newGenericArgumentClause = visit(genericArgumentClause)
         let result = SpecializeExprSyntax(
           expression: ExprSyntax(identifierExpr),
           genericArgumentClause: newGenericArgumentClause)
@@ -415,10 +419,9 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         leftParen: functionType.leftParen,
         argumentTypes: functionType.arguments,
         rightParen: functionType.rightParen,
-        asyncKeyword: functionType.asyncKeyword,
-        throwsOrRethrowsKeyword: functionType.throwsOrRethrowsKeyword,
-        arrow: functionType.arrow,
-        returnType: functionType.returnType
+        effectSpecifiers: functionType.effectSpecifiers,
+        arrow: functionType.output.arrow,
+        returnType: functionType.output.returnType
       )
       return ExprSyntax(result)
 
@@ -457,8 +460,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     leftParen: TokenSyntax,
     argumentTypes: TupleTypeElementListSyntax,
     rightParen: TokenSyntax,
-    asyncKeyword: TokenSyntax?,
-    throwsOrRethrowsKeyword: TokenSyntax?,
+    effectSpecifiers: TypeEffectSpecifiersSyntax?,
     arrow: TokenSyntax,
     returnType: TypeSyntax
   ) -> SequenceExprSyntax? {
@@ -474,8 +476,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       elementList: argumentTypeExprs,
       rightParen: rightParen)
     let arrowExpr = ArrowExprSyntax(
-      asyncKeyword: asyncKeyword,
-      throwsToken: throwsOrRethrowsKeyword,
+      effectSpecifiers: effectSpecifiers,
       arrowToken: arrow)
 
     return SequenceExprSyntax(
@@ -495,6 +496,72 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       leadingTrivia: node.firstToken?.leadingTrivia ?? [],
       trailingTrivia: node.lastToken?.trailingTrivia ?? []
     )
+  }
+
+  /// Returns true if the given pattern binding represents a stored property/variable (as opposed to
+  /// a computed property/variable).
+  private func isStoredProperty(_ node: PatternBindingSyntax) -> Bool {
+    guard let accessor = node.accessor else {
+      // If it has no accessors at all, it is definitely a stored property.
+      return true
+    }
+
+    guard let accessorBlock = accessor.as(AccessorBlockSyntax.self) else {
+      // If the accessor isn't an `AccessorBlockSyntax`, then it is a `CodeBlockSyntax`; i.e., the
+      // accessor an implicit `get`. So, it is definitely not a stored property.
+      assert(accessor.is(CodeBlockSyntax.self))
+      return false
+    }
+
+    for accessorDecl in accessorBlock.accessors {
+      // Look for accessors that indicate that this is a computed property. If none are found, then
+      // it is a stored property (e.g., having only observers like `willSet/didSet`).
+      switch accessorDecl.accessorKind.tokenKind {
+      case .keyword(.get),
+        .keyword(.set),
+        .keyword(.unsafeAddress),
+        .keyword(.unsafeMutableAddress),
+        .keyword(._read),
+        .keyword(._modify):
+        return false
+      default:
+        return true
+      }
+    }
+
+    // This should be unreachable.
+    assertionFailure("Should not have an AccessorBlock with no AccessorDecls")
+    return false
+  }
+
+  /// Returns true if the given type identifier node represents the type of a mutable variable or
+  /// stored property that does not have an initializer clause.
+  private func isTypeOfUninitializedStoredVar(_ node: SimpleTypeIdentifierSyntax) -> Bool {
+    if let typeAnnotation = node.parent?.as(TypeAnnotationSyntax.self),
+      let patternBinding = nearestAncestor(of: typeAnnotation, type: PatternBindingSyntax.self),
+      isStoredProperty(patternBinding),
+      patternBinding.initializer == nil,
+      let variableDecl = nearestAncestor(of: patternBinding, type: VariableDeclSyntax.self),
+      variableDecl.letOrVarKeyword.tokenKind == .keyword(.var)
+    {
+      return true
+    }
+    return false
+  }
+
+  /// Returns the node's nearest ancestor of the given type, if found; otherwise, returns nil.
+  private func nearestAncestor<NodeType: SyntaxProtocol, AncestorType: SyntaxProtocol>(
+    of node: NodeType,
+    type: AncestorType.Type = AncestorType.self
+  ) -> AncestorType? {
+    var parent: Syntax? = Syntax(node)
+    while let existingParent = parent {
+      if existingParent.is(type) {
+        return existingParent.as(type)
+      }
+      parent = existingParent.parent
+    }
+    return nil
   }
 }
 
