@@ -153,6 +153,74 @@ final class IfStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20, configuration: config)
   }
 
+  func testIfExpression1() {
+    let input =
+      """
+      func foo() -> Int {
+        if var1 < var2 {
+          23
+        }
+        else if d < e {
+          24
+        }
+        else {
+          0
+        }
+      }
+      """
+
+    let expected =
+      """
+      func foo() -> Int {
+        if var1 < var2 {
+          23
+        } else if d < e {
+          24
+        } else {
+          0
+        }
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 23)
+  }
+
+  func testIfExpression2() {
+    let input =
+      """
+      func foo() -> Int {
+        let x = if var1 < var2 {
+          23
+        }
+        else if d < e {
+          24
+        }
+        else {
+          0
+        }
+        return x
+      }
+      """
+
+    let expected =
+      """
+      func foo() -> Int {
+        let x = if var1 < var2 {
+          23
+        } else if d < e {
+          24
+        } else {
+          0
+        }
+        return x
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 26)
+  }
+
   func testMatchingPatternConditions() {
     let input =
       """

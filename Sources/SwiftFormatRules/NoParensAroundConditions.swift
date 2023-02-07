@@ -52,7 +52,7 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
     )
   }
 
-  public override func visit(_ node: IfStmtSyntax) -> StmtSyntax {
+  public override func visit(_ node: IfExprSyntax) -> ExprSyntax {
     let conditions = visit(node.conditions)
     var result = node.withIfKeyword(node.ifKeyword.withOneTrailingSpace())
       .withConditions(conditions)
@@ -60,7 +60,7 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
     if let elseBody = node.elseBody {
       result = result.withElseBody(visit(elseBody))
     }
-    return StmtSyntax(result)
+    return ExprSyntax(result)
   }
 
   public override func visit(_ node: ConditionElementSyntax) -> ConditionElementSyntax {
@@ -72,14 +72,14 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
     return node.withCondition(.expression(extractExpr(tup)))
   }
 
-  /// FIXME(hbh): Parsing for SwitchStmtSyntax is not implemented.
-  public override func visit(_ node: SwitchStmtSyntax) -> StmtSyntax {
+  /// FIXME(hbh): Parsing for SwitchExprSyntax is not implemented.
+  public override func visit(_ node: SwitchExprSyntax) -> ExprSyntax {
     guard let tup = node.expression.as(TupleExprSyntax.self),
       tup.elementList.firstAndOnly != nil
     else {
       return super.visit(node)
     }
-    return StmtSyntax(
+    return ExprSyntax(
       node.withExpression(extractExpr(tup)).withCases(visit(node.cases)))
   }
 
