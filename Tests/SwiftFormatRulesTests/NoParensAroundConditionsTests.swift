@@ -135,29 +135,4 @@ final class NoParensAroundConditionsTests: LintOrFormatRuleTestCase {
                 if foo.someCall({ if x {} }) {}
                 """)
   }
-
-  func testParensAroundIfAndSwitchExprs() {
-    XCTAssertFormatting(
-      NoParensAroundConditions.self,
-      input: """
-             let x = if (x) {}
-             let y = switch (4) { default: break }
-             func foo() {
-               return if (x) {}
-             }
-             func bar() {
-               return switch (4) { default: break }
-             }
-             """,
-      expected: """
-                let x = if x {}
-                let y = switch 4 { default: break }
-                func foo() {
-                  return if x {}
-                }
-                func bar() {
-                  return switch 4 { default: break }
-                }
-                """)
-  }
 }

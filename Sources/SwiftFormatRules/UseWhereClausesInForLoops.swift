@@ -52,26 +52,22 @@ public final class UseWhereClausesInForLoops: SyntaxFormatRule {
     forInStmt: ForInStmtSyntax
   ) -> ForInStmtSyntax {
     switch Syntax(firstStmt).as(SyntaxEnum.self) {
-    case .expressionStmt(let exprStmt):
-      switch Syntax(exprStmt.expression).as(SyntaxEnum.self) {
-      case .ifExpr(let ifExpr)
-        where ifExpr.conditions.count == 1
-        && ifExpr.elseKeyword == nil
-        && forInStmt.body.statements.count == 1:
-        // Extract the condition of the IfExpr.
-        let conditionElement = ifExpr.conditions.first!
-        guard let condition = conditionElement.condition.as(ExprSyntax.self) else {
-          return forInStmt
-        }
-        diagnose(.useWhereInsteadOfIf, on: ifExpr)
-        return updateWithWhereCondition(
-          node: forInStmt,
-          condition: condition,
-          statements: ifExpr.body.statements
-        )
-      default:
+    case .ifStmt(let ifStmt)
+    where ifStmt.conditions.count == 1
+      && ifStmt.elseKeyword == nil
+      && forInStmt.body.statements.count == 1:
+      // Extract the condition of the IfStmt.
+      let conditionElement = ifStmt.conditions.first!
+      guard let condition = conditionElement.condition.as(ExprSyntax.self) else {
         return forInStmt
       }
+      diagnose(.useWhereInsteadOfIf, on: ifStmt)
+      return updateWithWhereCondition(
+        node: forInStmt,
+        condition: condition,
+        statements: ifStmt.body.statements
+      )
+
     case .guardStmt(let guardStmt)
     where guardStmt.conditions.count == 1
       && guardStmt.body.statements.count == 1

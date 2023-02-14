@@ -161,7 +161,7 @@ class LintPipeline: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: IfExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: IfStmtSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(NoParensAroundConditions.visit, for: node)
     return .visitChildren
   }
@@ -271,7 +271,7 @@ class LintPipeline: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: SwitchExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: SwitchStmtSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(NoParensAroundConditions.visit, for: node)
     return .visitChildren
   }
