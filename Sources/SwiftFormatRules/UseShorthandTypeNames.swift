@@ -542,7 +542,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       isStoredProperty(patternBinding),
       patternBinding.initializer == nil,
       let variableDecl = nearestAncestor(of: patternBinding, type: VariableDeclSyntax.self),
-      variableDecl.letOrVarKeyword.tokenKind == .keyword(.var)
+      variableDecl.bindingKeyword.tokenKind == .keyword(.var)
     {
       return true
     }
