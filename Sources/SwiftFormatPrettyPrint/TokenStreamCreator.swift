@@ -1909,14 +1909,14 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     if node.bindings.count == 1 {
       // If there is only a single binding, don't allow a break between the `let/var` keyword and
       // the identifier; there are better places to break later on.
-      after(node.letOrVarKeyword, tokens: .space)
+      after(node.bindingKeyword, tokens: .space)
     } else {
       // If there is more than one binding, we permit an open-break after `let/var` so that each of
       // the comma-delimited items will potentially receive indentation. We also add a group around
       // the individual bindings to bind them together better. (This is done here, not in
       // `visit(_: PatternBindingSyntax)`, because we only want that behavior when there are
       // multiple bindings.)
-      after(node.letOrVarKeyword, tokens: .break(.open))
+      after(node.bindingKeyword, tokens: .break(.open))
 
       for binding in node.bindings {
         before(binding.firstToken, tokens: .open)
@@ -2106,7 +2106,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: ValueBindingPatternSyntax) -> SyntaxVisitorContinueKind {
-    after(node.letOrVarKeyword, tokens: .break)
+    after(node.bindingKeyword, tokens: .break)
     return .visitChildren
   }
 
@@ -2290,7 +2290,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: OptionalBindingConditionSyntax) -> SyntaxVisitorContinueKind {
-    after(node.letOrVarKeyword, tokens: .break)
+    after(node.bindingKeyword, tokens: .break)
 
     if let typeAnnotation = node.typeAnnotation {
       after(

@@ -173,9 +173,9 @@ fileprivate func identifierDescription<NodeType: SyntaxProtocol>(for node: NodeT
   case .enumCaseElement: return "enum case"
   case .functionDecl: return "function"
   case .optionalBindingCondition(let binding):
-    return binding.letOrVarKeyword.tokenKind == .keyword(.var) ? "variable" : "constant"
+    return binding.bindingKeyword.tokenKind == .keyword(.var) ? "variable" : "constant"
   case .variableDecl(let variableDecl):
-    return variableDecl.letOrVarKeyword.tokenKind == .keyword(.var) ? "variable" : "constant"
+    return variableDecl.bindingKeyword.tokenKind == .keyword(.var) ? "variable" : "constant"
   default:
     return "identifier"
   }
