@@ -9,13 +9,15 @@ struct LintPlugin {
     var arguments: [String] = ["lint"]
     
     arguments.append(contentsOf: targetDirectories)
-    
-    arguments.append(contentsOf: ["--recursive", "--parallel", "--strict"])
+    arguments.append(contentsOf: ["--recursive", "--parallel"])
     
     if let configurationFilePath = configurationFilePath {
       arguments.append(contentsOf: ["--configuration", configurationFilePath])
     }
-    
+
+    // Make sure that we don't have `--strict` anywhere in the args as it causes non-0 exits.
+    arguments = arguments.filter { $0 != "--strict" }
+
     let process = try Process.run(swiftFormatExec, arguments: arguments)
     process.waitUntilExit()
     
@@ -44,7 +46,7 @@ extension LintPlugin: CommandPlugin {
     let configurationFilePath = argExtractor.extractOption(named: "configuration").first
     
     let sourceCodeTargets = targetsToFormat.compactMap { $0 as? SourceModuleTarget }
-    
+
     try lint(
       tool: swiftFormatTool,
       targetDirectories: sourceCodeTargets.map(\.directory.string),
