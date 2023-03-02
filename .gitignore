@@ -1,5 +1,4 @@
 .build/
 .swiftpm/
 swift-format.xcodeproj/
-Package.resolved
 
