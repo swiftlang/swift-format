@@ -9,6 +9,7 @@ struct LintPlugin {
     var arguments: [String] = ["lint"]
     
     arguments.append(contentsOf: targetDirectories)
+    print(arguments)
     arguments.append(contentsOf: ["--recursive", "--parallel"])
     
     if let configurationFilePath = configurationFilePath {
