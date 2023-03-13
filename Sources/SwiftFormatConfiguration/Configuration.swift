@@ -29,6 +29,7 @@ public struct Configuration: Codable, Equatable {
     case lineBreakBeforeControlFlowKeywords
     case lineBreakBeforeEachArgument
     case lineBreakBeforeEachGenericRequirement
+    case lineBreakForMultipleArgFunctionDeclArgument
     case prioritizeKeepingFunctionOutputTogether
     case indentConditionalCompilationBlocks
     case lineBreakAroundMultilineExpressionChainComponents
@@ -89,6 +90,14 @@ public struct Configuration: Codable, Equatable {
   /// being fired when the line length would be exceeded. If true, a line break will be added before
   /// each argument, forcing the entire argument list to be laid out vertically.
   public var lineBreakBeforeEachArgument = false
+
+  /// Determines the line-breaking behavior for  function declaration arguments when there
+  /// are more than 1 argument.
+  ///
+  /// If false (the default), arguments will be laid out horizontally first, with line breaks only
+  /// being fired when the line length would be exceeded. If true, a line break will be added before
+  /// each argument, forcing the entire argument list to be laid out vertically.
+  public var lineBreakForMultipleArgFunctionDeclArgument = false
 
   /// Determines the line-breaking behavior for generic requirements when the requirements list
   /// is wrapped onto multiple lines.
@@ -190,6 +199,8 @@ public struct Configuration: Codable, Equatable {
       = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeControlFlowKeywords) ?? false
     self.lineBreakBeforeEachArgument
       = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeEachArgument) ?? false
+    self.lineBreakForMultipleArgFunctionDeclArgument
+      = try container.decodeIfPresent(Bool.self, forKey: .lineBreakForMultipleArgFunctionDeclArgument) ?? false
     self.lineBreakBeforeEachGenericRequirement
       = try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeEachGenericRequirement) ?? false
     self.prioritizeKeepingFunctionOutputTogether
@@ -228,6 +239,7 @@ public struct Configuration: Codable, Equatable {
     try container.encode(respectsExistingLineBreaks, forKey: .respectsExistingLineBreaks)
     try container.encode(lineBreakBeforeControlFlowKeywords, forKey: .lineBreakBeforeControlFlowKeywords)
     try container.encode(lineBreakBeforeEachArgument, forKey: .lineBreakBeforeEachArgument)
+    try container.encode(lineBreakForMultipleArgFunctionDeclArgument, forKey: .lineBreakForMultipleArgFunctionDeclArgument)
     try container.encode(lineBreakBeforeEachGenericRequirement, forKey: .lineBreakBeforeEachGenericRequirement)
     try container.encode(prioritizeKeepingFunctionOutputTogether, forKey: .prioritizeKeepingFunctionOutputTogether)
     try container.encode(indentConditionalCompilationBlocks, forKey: .indentConditionalCompilationBlocks)

@@ -51,6 +51,12 @@ top-level keys and values:
     If false (the default), arguments will be laid out horizontally first, with
     line breaks only being fired when the line length would be exceeded.
     
+*   `lineBreakForMultipleArgFunctionDeclArgument` _(boolean)_: Determines the line-breaking
+    behavior for  function declaration arguments when there are more than 1 argument.
+    If false (the default), arguments will be laid out horizontally first, with line breaks only
+    being fired when the line length would be exceeded. If true, a line break will be added before
+    each argument, forcing the entire argument list to be laid out vertically.
+    
 *   `lineBreakBeforeEachGenericRequirement` _(boolean)_:  Determines the 
     line-breaking behavior for generic requirements when the requirements list 
     is wrapped onto multiple lines. If true, a line break will be added before each

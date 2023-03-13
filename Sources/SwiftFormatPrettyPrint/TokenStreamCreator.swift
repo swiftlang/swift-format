@@ -290,6 +290,10 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       after(node.signature.lastToken, tokens: .close)
     }
 
+    if config.lineBreakForMultipleArgFunctionDeclArgument, node.signature.input.parameterList.count > 1 {
+      after(node.signature.input.parameterList.first?.trailingComma, tokens: .break(.contextual, newlines: .soft))
+    }
+
     let mustBreak = node.body != nil || node.signature.output != nil
     arrangeParameterClause(node.signature.input, forcesBreakBeforeRightParen: mustBreak)
 
