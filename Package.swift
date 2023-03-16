@@ -217,7 +217,7 @@ if ProcessInfo.processInfo.environment["SWIFTCI_USE_LOCAL_DEPS"] == nil {
       url: "https://github.com/apple/swift-argument-parser.git",
       // This should be kept in sync with the same dependency used by
       // swift-syntax.
-      Version("1.0.1")..<Version("1.2.0")
+      .upToNextMinor(from: "1.2.2")
     ),
     .package(
       url: "https://github.com/apple/swift-syntax.git",
