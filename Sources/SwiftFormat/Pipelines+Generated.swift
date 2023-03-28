@@ -55,6 +55,11 @@ class LintPipeline: SyntaxVisitor {
     return .visitChildren
   }
 
+  override func visit(_ node: ClosureParameterSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(NoLeadingUnderscores.visit, for: node)
+    return .visitChildren
+  }
+
   override func visit(_ node: ClosureSignatureSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AlwaysUseLowerCamelCase.visit, for: node)
     visitIfEnabled(ReturnVoidInsteadOfEmptyTuple.visit, for: node)
@@ -88,6 +93,11 @@ class LintPipeline: SyntaxVisitor {
 
   override func visit(_ node: EnumCaseElementSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AlwaysUseLowerCamelCase.visit, for: node)
+    visitIfEnabled(NoLeadingUnderscores.visit, for: node)
+    return .visitChildren
+  }
+
+  override func visit(_ node: EnumCaseParameterSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)
     return .visitChildren
   }

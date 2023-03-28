@@ -126,7 +126,7 @@ final class RuleCollector {
         guard let function = member.decl.as(FunctionDeclSyntax.self) else { continue }
         guard function.identifier.text == "visit" else { continue }
         let params = function.signature.input.parameterList
-        guard let firstType = params.firstAndOnly?.type?.as(SimpleTypeIdentifierSyntax.self) else {
+        guard let firstType = params.firstAndOnly?.type.as(SimpleTypeIdentifierSyntax.self) else {
           continue
         }
         visitedNodes.append(firstType.name.text)

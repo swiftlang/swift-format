@@ -106,8 +106,7 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
     guard parameters.count == properties.count else { return false }
     for (idx, parameter) in parameters.enumerated() {
 
-      guard let paramId = parameter.firstName, parameter.secondName == nil else { return false }
-      guard let paramType = parameter.type else { return false }
+      guard parameter.secondName == nil else { return false }
 
       let property = properties[idx]
       let propertyId = property.firstIdentifier
@@ -124,9 +123,9 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
         return false
       }
 
-      if propertyId.identifier.text != paramId.text
+      if propertyId.identifier.text != parameter.firstName.text
         || propertyType.description.trimmingCharacters(
-          in: .whitespaces) != paramType.description.trimmingCharacters(in: .whitespacesAndNewlines)
+          in: .whitespaces) != parameter.type.description.trimmingCharacters(in: .whitespacesAndNewlines)
       { return false }
     }
     return true
