@@ -56,13 +56,29 @@ public final class NoLeadingUnderscores: SyntaxLintRule {
     return .visitChildren
   }
 
-  public override func visit(_ node: FunctionParameterSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: ClosureParameterSyntax) -> SyntaxVisitorContinueKind {
+    // If both names are provided, we want to check `secondName`, which will be the parameter name
+    // (in that case, `firstName` is the label). If only one name is present, then it is recorded in
+    // `firstName`, and it is both the label and the parameter name.
+    diagnoseIfNameStartsWithUnderscore(node.secondName ?? node.firstName)
+    return .visitChildren
+  }
+
+  public override func visit(_ node: EnumCaseParameterSyntax) -> SyntaxVisitorContinueKind {
     // If both names are provided, we want to check `secondName`, which will be the parameter name
     // (in that case, `firstName` is the label). If only one name is present, then it is recorded in
     // `firstName`, and it is both the label and the parameter name.
     if let variableIdentifier = node.secondName ?? node.firstName {
       diagnoseIfNameStartsWithUnderscore(variableIdentifier)
     }
+    return .visitChildren
+  }
+
+  public override func visit(_ node: FunctionParameterSyntax) -> SyntaxVisitorContinueKind {
+    // If both names are provided, we want to check `secondName`, which will be the parameter name
+    // (in that case, `firstName` is the label). If only one name is present, then it is recorded in
+    // `firstName`, and it is both the label and the parameter name.
+    diagnoseIfNameStartsWithUnderscore(node.secondName ?? node.firstName)
     return .visitChildren
   }
 

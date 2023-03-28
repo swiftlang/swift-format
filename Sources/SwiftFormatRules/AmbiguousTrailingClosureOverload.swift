@@ -41,7 +41,7 @@ public final class AmbiguousTrailingClosureOverload: SyntaxLintRule {
     for fn in functions {
       let params = fn.signature.input.parameterList
       guard let firstParam = params.firstAndOnly else { continue }
-      guard let type = firstParam.type, type.is(FunctionTypeSyntax.self) else { continue }
+      guard firstParam.type.is(FunctionTypeSyntax.self) else { continue }
       if let mods = fn.modifiers, mods.has(modifier: "static") || mods.has(modifier: "class") {
         staticOverloads[fn.identifier.text, default: []].append(fn)
       } else {
