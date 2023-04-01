@@ -298,23 +298,20 @@ fileprivate func generateLines(codeBlockItemList: CodeBlockItemListSyntax, conte
   }
 
   for block in codeBlockItemList {
+    afterNewline = false
 
-    if let leadingTrivia = block.leadingTrivia {
-      afterNewline = false
-
-      for piece in leadingTrivia {
-        switch piece {
-        // Create new Line objects when we encounter newlines.
-        case .newlines(let N):
-          for _ in 0..<N {
-            appendNewLine()
-          }
-        default:
-          if afterNewline || isFirstBlock {
-            currentLine.leadingTrivia.append(piece)  // This will be a standalone comment.
-          } else {
-            currentLine.trailingTrivia.append(piece)  // This will be a trailing line comment.
-          }
+    for piece in block.leadingTrivia {
+      switch piece {
+      // Create new Line objects when we encounter newlines.
+      case .newlines(let N):
+        for _ in 0..<N {
+          appendNewLine()
+        }
+      default:
+        if afterNewline || isFirstBlock {
+          currentLine.leadingTrivia.append(piece)  // This will be a standalone comment.
+        } else {
+          currentLine.trailingTrivia.append(piece)  // This will be a trailing line comment.
         }
       }
     }
@@ -491,8 +488,7 @@ fileprivate class Line {
     // description includes all leading and trailing trivia. It would be unusual to have any
     // non-whitespace trivia on the components of the import. Trim off the leading trivia, where
     // comments could be, and trim whitespace that might be after the import.
-    let leadingText = importDecl.leadingTrivia?.reduce(into: "") { $1.write(to: &$0) } ?? ""
-    return importDecl.description.dropFirst(leadingText.count)
+    return importDecl.with(\.leadingTrivia, []).description
       .trimmingCharacters(in: .whitespacesAndNewlines)
   }
 

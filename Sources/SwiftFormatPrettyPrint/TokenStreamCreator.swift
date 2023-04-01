@@ -876,7 +876,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // The node's content is either a `DictionaryElementListSyntax` or a `TokenSyntax` for a colon
     // token (for an empty dictionary).
     if !(node.content.as(DictionaryElementListSyntax.self)?.isEmpty ?? true)
-      || node.content.leadingTrivia?.numberOfComments ?? 0 > 0
+      || node.content.leadingTrivia.numberOfComments > 0
       || node.rightSquare.leadingTrivia.numberOfComments > 0
     {
       after(node.leftSquare, tokens: .break(.open, size: 0), .open)
@@ -2161,7 +2161,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       appendToken(.syntax(segmentText))
     }
 
-    if node.trailingTrivia?.containsBackslashes == true {
+    if node.trailingTrivia.containsBackslashes {
       // Segments with trailing backslashes won't end with a literal newline; the backslash is
       // considered trivia. To preserve the original text and wrapping, we need to manually render
       // the backslash and a break into the token stream.
