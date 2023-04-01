@@ -73,13 +73,13 @@ public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
   /// a docLineComment.
   private func convertDocBlockCommentToDocLineComment(_ decl: DeclSyntax) -> DeclSyntax {
     guard let commentText = decl.docComment else { return decl }
-    guard let declLeadingTrivia = decl.leadingTrivia else { return decl }
+
     let docComments = commentText.components(separatedBy: "\n")
     var pieces = [TriviaPiece]()
 
     // Ensures the documentation comment is a docLineComment.
     var hasFoundDocComment = false
-    for piece in declLeadingTrivia.reversed() {
+    for piece in decl.leadingTrivia.reversed() {
       if case .docBlockComment(_) = piece, !hasFoundDocComment {
         hasFoundDocComment = true
         diagnose(.avoidDocBlockComment, on: decl)
