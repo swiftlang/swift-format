@@ -1339,7 +1339,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         ]
       )
     } else if let condition = node.condition {
-      before(condition.firstToken, tokens: .printerControl(kind: .disableBreaking))
+      before(condition.firstToken, tokens: .printerControl(kind: .disableBreaking(allowDiscretionary: true)))
       after(
         condition.lastToken,
         tokens: .printerControl(kind: .enableBreaking), .break(.reset, size: 0))
@@ -1668,9 +1668,14 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: ImportDeclSyntax) -> SyntaxVisitorContinueKind {
-    after(node.attributes?.lastToken, tokens: .space)
+    // Import declarations should never be wrapped.
+    before(node.firstToken, tokens: .printerControl(kind: .disableBreaking(allowDiscretionary: false)))
+
+    arrangeAttributeList(node.attributes)
     after(node.importTok, tokens: .space)
     after(node.importKind, tokens: .space)
+
+    after(node.lastToken, tokens: .printerControl(kind: .enableBreaking))
     return .visitChildren
   }
 
