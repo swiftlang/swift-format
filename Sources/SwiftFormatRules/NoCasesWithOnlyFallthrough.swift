@@ -139,13 +139,11 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
     }
 
     // Check for any comments that are adjacent to the case or fallthrough statement.
-    if let leadingTrivia = switchCase.leadingTrivia,
-      leadingTrivia.drop(while: { !$0.isNewline }).contains(where: { $0.isComment })
+    if switchCase.leadingTrivia.drop(while: { !$0.isNewline }).contains(where: { $0.isComment })
     {
       return false
     }
-    if let leadingTrivia = onlyStatement.leadingTrivia,
-      leadingTrivia.drop(while: { !$0.isNewline }).contains(where: { $0.isComment })
+    if onlyStatement.leadingTrivia.drop(while: { !$0.isNewline }).contains(where: { $0.isComment })
     {
       return false
     }
@@ -194,13 +192,7 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
 
     // Only the first violation case can have displaced trivia, because any non-whitespace
     // trivia in the other violation cases would've prevented collapsing.
-    if let displacedLeadingTrivia = cases.first!.leadingTrivia?.withoutLastLine() {
-      let existingLeadingTrivia = newCase.leadingTrivia ?? []
-      let mergedLeadingTrivia = displacedLeadingTrivia + existingLeadingTrivia
-      return newCase.with(\.leadingTrivia, mergedLeadingTrivia)
-    } else {
-      return newCase
-    }
+    return newCase.with(\.leadingTrivia, cases.first!.leadingTrivia.withoutLastLine() + newCase.leadingTrivia)
   }
 }
 
