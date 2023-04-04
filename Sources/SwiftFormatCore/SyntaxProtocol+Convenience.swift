@@ -25,7 +25,6 @@ extension SyntaxProtocol {
   ///   be returned.
   /// - Returns: The absolute position of the trivia piece.
   public func position(ofLeadingTriviaAt index: Trivia.Index) -> AbsolutePosition {
-    let leadingTrivia = self.leadingTrivia ?? []
     guard leadingTrivia.indices.contains(index) else {
       preconditionFailure("Index was out of bounds in the node's leading trivia.")
     }

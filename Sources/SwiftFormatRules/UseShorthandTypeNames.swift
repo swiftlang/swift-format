@@ -338,7 +338,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         elementList: tupleExprElementList,
         rightParen: TokenSyntax.rightParenToken())
       wrappedTypeExpr = ExprSyntax(tupleExpr)
-    } else if let leadingTrivia = leadingTrivia {
+    } else {
       // Otherwise, the argument type can safely become an optional by simply appending a "?". If
       // we were given leading trivia from another node (for example, from `Optional` when
       // converting a long-form to short-form), we need to transfer it over. By doing so, something

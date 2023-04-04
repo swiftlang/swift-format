@@ -60,7 +60,7 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
             semicolon: nil
           )
           .with(\.leadingTrivia, 
-            (returnStmt.leadingTrivia ?? []) + (assignmentExpr.leadingTrivia ?? []))
+            (returnStmt.leadingTrivia) + (assignmentExpr.leadingTrivia))
           .with(\.trailingTrivia, []))
         newItems.append(
           CodeBlockItemSyntax(
@@ -68,7 +68,7 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
             semicolon: nil
           )
           .with(\.leadingTrivia, [.newlines(1)])
-          .with(\.trailingTrivia, returnStmt.trailingTrivia?.withoutLeadingSpaces() ?? []))
+          .with(\.trailingTrivia, returnStmt.trailingTrivia.withoutLeadingSpaces()))
 
       default:
         newItems.append(newItem)
