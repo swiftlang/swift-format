@@ -160,4 +160,17 @@ final class NoParensAroundConditionsTests: LintOrFormatRuleTestCase {
                 }
                 """)
   }
+
+  func testParensAroundAmbiguousConditions() {
+    XCTAssertFormatting(
+      NoParensAroundConditions.self,
+      input: """
+             if ({ true }()) {}
+             if (functionWithTrailingClosure { 5 }) {}
+             """,
+      expected: """
+                if ({ true }()) {}
+                if (functionWithTrailingClosure { 5 }) {}
+                """)
+  }
 }
