@@ -161,7 +161,7 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
       let name = modifier.name
       if name.tokenKind == invalidAccess {
         diagnose(diagnostic, on: name)
-        return modifier.with(\.name, name.withKind(validAccess))
+        return modifier.with(\.name, name.with(\.tokenKind, validAccess))
       }
       return modifier
     }
