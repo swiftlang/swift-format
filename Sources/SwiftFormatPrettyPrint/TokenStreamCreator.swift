@@ -1122,7 +1122,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       // When it's parenthesized, the input is a `ParameterClauseSyntax`. Otherwise, it's a
       // `ClosureParamListSyntax`. The parenthesized version is wrapped in open/close breaks so that
       // the parens create an extra level of indentation.
-      if let parameterClause = input.as(ParameterClauseSyntax.self) {
+      if let parameterClause = input.as(ClosureParameterClauseSyntax.self) {
         // Whether we should prioritize keeping ") throws -> <return_type>" together. We can only do
         // this if the closure has arguments.
         let keepOutputTogether =
@@ -1141,7 +1141,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
           after(input.lastToken, tokens: .close)
         }
 
-        arrangeParameterClause(parameterClause, forcesBreakBeforeRightParen: true)
+        arrangeClosureParameterClause(parameterClause, forcesBreakBeforeRightParen: true)
       } else {
         // Group around the arguments, but don't use open/close breaks because there are no parens
         // to create a new scope.
@@ -1245,6 +1245,30 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
+  override func visit(_ node: ClosureParameterClauseSyntax) -> SyntaxVisitorContinueKind {
+    // Prioritize keeping ") throws -> <return_type>" together. We can only do this if the function
+    // has arguments.
+    if !node.parameterList.isEmpty && config.prioritizeKeepingFunctionOutputTogether {
+      // Due to visitation order, this .open corresponds to a .close added in FunctionDeclSyntax
+      // or SubscriptDeclSyntax.
+      before(node.rightParen, tokens: .open)
+    }
+
+    return .visitChildren
+  }
+
+  override func visit(_ node: EnumCaseParameterClauseSyntax) -> SyntaxVisitorContinueKind {
+    // Prioritize keeping ") throws -> <return_type>" together. We can only do this if the function
+    // has arguments.
+    if !node.parameterList.isEmpty && config.prioritizeKeepingFunctionOutputTogether {
+      // Due to visitation order, this .open corresponds to a .close added in FunctionDeclSyntax
+      // or SubscriptDeclSyntax.
+      before(node.rightParen, tokens: .open)
+    }
+
+    return .visitChildren
+  }
+
   override func visit(_ node: ParameterClauseSyntax) -> SyntaxVisitorContinueKind {
     // Prioritize keeping ") throws -> <return_type>" together. We can only do this if the function
     // has arguments.
@@ -1254,6 +1278,37 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       before(node.rightParen, tokens: .open)
     }
 
+    return .visitChildren
+  }
+
+  override func visit(_ node: ClosureParameterSyntax) -> SyntaxVisitorContinueKind {
+    before(node.firstToken, tokens: .open)
+    arrangeAttributeList(node.attributes)
+    before(
+      node.secondName,
+      tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
+    after(node.colon, tokens: .break)
+
+    if let trailingComma = node.trailingComma {
+      after(trailingComma, tokens: .close, .break(.same))
+    } else {
+      after(node.lastToken, tokens: .close)
+    }
+    return .visitChildren
+  }
+
+  override func visit(_ node: EnumCaseParameterSyntax) -> SyntaxVisitorContinueKind {
+    before(node.firstToken, tokens: .open)
+    before(
+      node.secondName,
+      tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
+    after(node.colon, tokens: .break)
+
+    if let trailingComma = node.trailingComma {
+      after(trailingComma, tokens: .close, .break(.same))
+    } else {
+      after(node.lastToken, tokens: .close)
+    }
     return .visitChildren
   }
 
@@ -1413,7 +1468,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     after(node.trailingComma, tokens: .break)
 
     if let associatedValue = node.associatedValue {
-      arrangeParameterClause(associatedValue, forcesBreakBeforeRightParen: false)
+      arrangeEnumCaseParameterClause(associatedValue, forcesBreakBeforeRightParen: false)
     }
 
     return .visitChildren
@@ -2586,6 +2641,42 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // iterator and check if it returns `nil` immediately.
     var contentsIterator = node[keyPath: contentsKeyPath].makeIterator()
     return contentsIterator.next() == nil && !commentPrecedesRightBrace
+  }
+
+  /// Applies formatting to a collection of parameters for a decl.
+  ///
+  /// - Parameters:
+  ///    - parameters: A node that contains the parameters that can be passed to a decl when its
+  ///      called.
+  ///    - forcesBreakBeforeRightParen: Whether a break should be required before the right paren
+  ///      when the right paren is on a different line than the corresponding left paren.
+  private func arrangeClosureParameterClause(
+    _ parameters: ClosureParameterClauseSyntax, forcesBreakBeforeRightParen: Bool
+  ) {
+    guard !parameters.parameterList.isEmpty else { return }
+
+    after(parameters.leftParen, tokens: .break(.open, size: 0), .open(argumentListConsistency()))
+    before(
+      parameters.rightParen,
+      tokens: .break(.close(mustBreak: forcesBreakBeforeRightParen), size: 0), .close)
+  }
+
+  /// Applies formatting to a collection of enum case parameters for a decl.
+  ///
+  /// - Parameters:
+  ///    - parameters: A node that contains the parameters that can be passed to a decl when its
+  ///      called.
+  ///    - forcesBreakBeforeRightParen: Whether a break should be required before the right paren
+  ///      when the right paren is on a different line than the corresponding left paren.
+  private func arrangeEnumCaseParameterClause(
+    _ parameters: EnumCaseParameterClauseSyntax, forcesBreakBeforeRightParen: Bool
+  ) {
+    guard !parameters.parameterList.isEmpty else { return }
+
+    after(parameters.leftParen, tokens: .break(.open, size: 0), .open(argumentListConsistency()))
+    before(
+      parameters.rightParen,
+      tokens: .break(.close(mustBreak: forcesBreakBeforeRightParen), size: 0), .close)
   }
 
   /// Applies formatting to a collection of parameters for a decl.

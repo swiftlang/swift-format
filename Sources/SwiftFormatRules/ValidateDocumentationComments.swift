@@ -139,9 +139,7 @@ fileprivate func funcParametersIdentifiers(in paramList: FunctionParameterListSy
     // If there is a label and an identifier, then the identifier (`secondName`) is the name that
     // should be documented. Otherwise, the label and identifier are the same, occupying
     // `firstName`.
-    guard let parameterIdentifier = parameter.secondName ?? parameter.firstName else {
-      continue
-    }
+    let parameterIdentifier = parameter.secondName ?? parameter.firstName
     funcParameters.append(parameterIdentifier.text)
   }
   return funcParameters

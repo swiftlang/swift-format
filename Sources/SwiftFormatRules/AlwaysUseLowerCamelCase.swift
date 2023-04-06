@@ -73,12 +73,30 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
           diagnoseLowerCamelCaseViolations(
             param.name, allowUnderscores: false, description: identifierDescription(for: node))
         }
-      } else if let parameterClause = input.as(ParameterClauseSyntax.self) {
+      } else if let parameterClause = input.as(ClosureParameterClauseSyntax.self) {
+        for param in parameterClause.parameterList {
+          diagnoseLowerCamelCaseViolations(
+            param.firstName, allowUnderscores: false, description: identifierDescription(for: node))
+          if let secondName = param.secondName {
+            diagnoseLowerCamelCaseViolations(
+              secondName, allowUnderscores: false, description: identifierDescription(for: node))
+          }
+        }
+      } else if let parameterClause = input.as(EnumCaseParameterClauseSyntax.self) {
         for param in parameterClause.parameterList {
           if let firstName = param.firstName {
             diagnoseLowerCamelCaseViolations(
               firstName, allowUnderscores: false, description: identifierDescription(for: node))
           }
+          if let secondName = param.secondName {
+            diagnoseLowerCamelCaseViolations(
+              secondName, allowUnderscores: false, description: identifierDescription(for: node))
+          }
+        }
+      } else if let parameterClause = input.as(ParameterClauseSyntax.self) {
+        for param in parameterClause.parameterList {
+          diagnoseLowerCamelCaseViolations(
+            param.firstName, allowUnderscores: false, description: identifierDescription(for: node))
           if let secondName = param.secondName {
             diagnoseLowerCamelCaseViolations(
               secondName, allowUnderscores: false, description: identifierDescription(for: node))
@@ -106,10 +124,8 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
     for param in node.signature.input.parameterList {
       // These identifiers aren't described using `identifierDescription(for:)` because no single
       // node can disambiguate the argument label from the parameter name.
-      if let label = param.firstName {
-        diagnoseLowerCamelCaseViolations(
-          label, allowUnderscores: false, description: "argument label")
-      }
+      diagnoseLowerCamelCaseViolations(
+        param.firstName, allowUnderscores: false, description: "argument label")
       if let paramName = param.secondName {
         diagnoseLowerCamelCaseViolations(
           paramName, allowUnderscores: false, description: "function parameter")
