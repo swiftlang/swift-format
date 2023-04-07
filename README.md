@@ -13,14 +13,25 @@ invoked via an [API](#api-usage).
 > and the code is provided so that it can be tested on real-world code and
 > experiments can be made by modifying it.
 
-## Matching swift-format to Your Swift Version (Swift 5.7 and earlier)
+## Matching swift-format to Your Swift Version
 
-> NOTE: `swift-format` on the `main` branch now uses a version of
-> [SwiftSyntax](https://github.com/apple/swift-syntax) whose parser has been
-> rewritten in Swift and no longer has dependencies on libraries in the
-> Swift toolchain. This allows `swift-format` to be built, developed, and
-> run using any version of Swift that can compile it, decoupling it from
-> the version that supported a particular syntax.
+### Swift 5.8 and later
+
+As of Swift 5.8, swift-format depends on the version of
+[SwiftSyntax](https://github.com/apple/swift-syntax) whose parser has been
+rewritten in Swift and no longer has dependencies on libraries in the
+Swift toolchain.
+
+This change allows `swift-format` to be built, developed, and run using
+any version of Swift that can compile it, decoupling it from the version
+that supported a particular syntax. However, earlier versions of swift-format
+will still not be able to recognize new syntax added in later versions of the
+language and parser.
+
+Note also that the version numbering scheme has changed to match
+SwiftSyntax; the 5.8 release of swift-format is `508.0.0`, not `0.50800.0`.
+
+### Swift 5.7 and earlier
 
 `swift-format` versions 0.50700.0 and earlier depend on versions of
 [SwiftSyntax](https://github.com/apple/swift-syntax) that used a standalone
@@ -54,7 +65,7 @@ then once you have identified the version you need, you can check out the
 source and build it using the following commands:
 
 ```sh
-VERSION=0.50700.0  # replace this with the version you need
+VERSION=508.0.0  # replace this with the version you need
 git clone https://github.com/apple/swift-format.git
 cd swift-format
 git checkout "tags/$VERSION"
