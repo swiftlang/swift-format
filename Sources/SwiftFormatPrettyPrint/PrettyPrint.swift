@@ -129,10 +129,15 @@ public class PrettyPrinter {
   private var activeBreakSuppressionCount = 0
 
   /// Whether breaks are supressed from firing. When true, no breaks should fire and the only way to
-  /// move to a new line is an explicit new line token.
-  private var isBreakingSupressed: Bool {
+  /// move to a new line is an explicit new line token. Discretionary breaks aren't suppressed
+  /// if ``allowSuppressedDiscretionaryBreaks`` is true.
+  private var isBreakingSuppressed: Bool {
     return activeBreakSuppressionCount > 0
   }
+
+  /// Indicates whether discretionary breaks should still be included even if break suppression is
+  /// enabled (see ``isBreakingSuppressed``).
+  private var allowSuppressedDiscretionaryBreaks = false
 
   /// The computed indentation level, as a number of spaces, based on the state of any unclosed
   /// delimiters and whether or not the current line is a continuation line.
@@ -469,7 +474,7 @@ public class PrettyPrinter {
       case .soft(_, let discretionary):
         // A discretionary newline (i.e. from the source) should create a line break even if the
         // rules for breaking are disabled.
-        overrideBreakingSuppressed = discretionary
+        overrideBreakingSuppressed = discretionary && allowSuppressedDiscretionaryBreaks
         mustBreak = true
       case .hard:
         // A hard newline must always create a line break, regardless of the context.
@@ -477,7 +482,7 @@ public class PrettyPrinter {
         mustBreak = true
       }
 
-      let suppressBreaking = isBreakingSupressed && !overrideBreakingSuppressed
+      let suppressBreaking = isBreakingSuppressed && !overrideBreakingSuppressed
       if !suppressBreaking && ((!isAtStartOfLine && length > spaceRemaining) || mustBreak) {
         currentLineIsContinuation = isContinuationIfBreakFires
         writeNewlines(newline)
@@ -527,8 +532,14 @@ public class PrettyPrinter {
 
     case .printerControl(let kind):
       switch kind {
-      case .disableBreaking:
+      case .disableBreaking(let allowDiscretionary):
         activeBreakSuppressionCount += 1
+        // Override the supression of discretionary breaks if we're at the top level or
+        // discretionary breaks are currently allowed (false should override true, but not the other
+        // way around).
+        if activeBreakSuppressionCount == 1 || allowSuppressedDiscretionaryBreaks {
+          allowSuppressedDiscretionaryBreaks = allowDiscretionary
+        }
       case .enableBreaking:
         activeBreakSuppressionCount -= 1
       }

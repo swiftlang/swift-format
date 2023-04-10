@@ -7,6 +7,12 @@ final class ImportTests: PrettyPrintTestCase {
       import class MyModule.MyClass
       import struct MyModule.MyStruct
       @testable import testModule
+
+      @_spi(
+        STP
+      )
+      @testable
+      import testModule
       """
 
     let expected =
@@ -16,6 +22,8 @@ final class ImportTests: PrettyPrintTestCase {
       import class MyModule.MyClass
       import struct MyModule.MyStruct
       @testable import testModule
+
+      @_spi(STP) @testable import testModule
 
       """
 
