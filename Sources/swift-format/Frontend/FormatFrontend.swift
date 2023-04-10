@@ -40,7 +40,8 @@ class FormatFrontend: Frontend {
       return
     }
 
-    let diagnosticHandler: (Diagnostic, SourceLocation) -> () =  { (diagnostic, location) in
+    let diagnosticHandler: (SwiftDiagnostics.Diagnostic, SourceLocation) -> () = {
+      (diagnostic, location) in
       guard !self.lintFormatOptions.ignoreUnparsableFiles else {
         // No diagnostics should be emitted in this mode.
         return
