@@ -1083,7 +1083,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: ClosureExprSyntax) -> SyntaxVisitorContinueKind {
     let newlineBehavior: NewlineBehavior
-    if forcedBreakingClosures.remove(node.id) != nil {
+    if forcedBreakingClosures.remove(node.id) != nil || node.statements.count > 1 {
       newlineBehavior = .soft
     } else {
       newlineBehavior = .elective

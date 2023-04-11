@@ -516,4 +516,24 @@ final class ClosureExprTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
+
+  func testClosureWithSignatureAndMultipleStatements() {
+    let input =
+      """
+      { a in a + 1
+        a + 2
+      }
+      """
+
+    let expected =
+      """
+      { a in
+        a + 1
+        a + 2
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+  }
 }
