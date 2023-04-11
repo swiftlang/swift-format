@@ -39,7 +39,7 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
       let accessKeywordToAdd: DeclModifierSyntax
       if keywordKind == .keyword(.private) {
         accessKeywordToAdd
-          = accessKeyword.with(\.name, accessKeyword.name.withKind(.keyword(.fileprivate)))
+          = accessKeyword.with(\.name, accessKeyword.name.with(\.tokenKind, .keyword(.fileprivate)))
       } else {
         accessKeywordToAdd = accessKeyword
       }
