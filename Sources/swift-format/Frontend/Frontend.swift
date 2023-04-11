@@ -57,7 +57,7 @@ class Frontend {
   final let diagnosticPrinter: StderrDiagnosticPrinter
 
   /// The diagnostic engine to which warnings and errors will be emitted.
-  final let diagnosticsEngine: UnifiedDiagnosticsEngine
+  final let diagnosticsEngine: DiagnosticsEngine
 
   /// Options that apply during formatting or linting.
   final let lintFormatOptions: LintFormatOptions
@@ -83,7 +83,7 @@ class Frontend {
     self.diagnosticPrinter = StderrDiagnosticPrinter(
       colorMode: lintFormatOptions.colorDiagnostics.map { $0 ? .on : .off } ?? .auto)
     self.diagnosticsEngine =
-      UnifiedDiagnosticsEngine(diagnosticsHandlers: [diagnosticPrinter.printDiagnostic])
+      DiagnosticsEngine(diagnosticsHandlers: [diagnosticPrinter.printDiagnostic])
   }
 
   /// Runs the linter or formatter over the inputs.
