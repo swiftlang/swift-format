@@ -1396,11 +1396,24 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     }
 
     if isNestedInPostfixIfConfig(node: Syntax(node)) {
+      let breakToken: Token
+      let currentIfConfigDecl = node.parent?.parent?.as(IfConfigDeclSyntax.self)
+
+      if let currentIfConfigDecl = currentIfConfigDecl,
+         let tokenBeforeCurrentIfConfigDecl = currentIfConfigDecl.previousToken,
+         isNestedInIfConfig(node: Syntax(tokenBeforeCurrentIfConfigDecl)) ||
+          tokenBeforeCurrentIfConfigDecl.text == "}" {
+        breakToken = .break(.reset)
+      } else {
+        breakToken = .break
+        before(currentIfConfigDecl?.poundEndif, tokens: [.break])
+      }
+
       before(
         node.firstToken,
         tokens: [
           .printerControl(kind: .enableBreaking),
-          .break(.reset),
+          breakToken,
         ]
       )
     } else if let condition = node.condition {
@@ -3567,17 +3580,39 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 }
 
 private func isNestedInPostfixIfConfig(node: Syntax) -> Bool {
-    var this: Syntax? = node
+  var this: Syntax? = node
 
-    while this?.parent != nil {
-      if this?.parent?.is(PostfixIfConfigExprSyntax.self) == true {
-        return true
-      }
-
-      this = this?.parent
+  while this?.parent != nil {
+    // This guard handles the situation where a type with its own modifiers
+    // is nested inside of an if config. That type should not count as being
+    // in a postfix if config because its entire body is inside the if config.
+    if this?.is(TupleExprElementSyntax.self) == true {
+      return false
     }
 
-    return false
+    if this?.is(IfConfigDeclSyntax.self) == true &&
+        this?.parent?.is(PostfixIfConfigExprSyntax.self) == true {
+      return true
+    }
+
+    this = this?.parent
+  }
+
+  return false
+}
+
+private func isNestedInIfConfig(node: Syntax) -> Bool {
+  var this: Syntax? = node
+
+  while this?.parent != nil {
+    if this?.is(IfConfigClauseSyntax.self) == true {
+      return true
+    }
+
+    this = this?.parent
+  }
+
+  return false
 }
 
 extension Syntax {
