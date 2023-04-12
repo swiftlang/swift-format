@@ -136,7 +136,7 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
   // MARK: - Syntax Visitation Methods
 
   override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
-    guard let firstToken = node.firstToken else {
+    guard let firstToken = node.firstToken(viewMode: .sourceAccurate) else {
       return .visitChildren
     }
     let comments = loneLineComments(in: firstToken.leadingTrivia, isFirstToken: true)
@@ -159,14 +159,14 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
   }
 
   override func visit(_ node: CodeBlockItemSyntax) -> SyntaxVisitorContinueKind {
-    guard let firstToken = node.firstToken else {
+    guard let firstToken = node.firstToken(viewMode: .sourceAccurate) else {
       return .visitChildren
     }
     return appendRuleStatusDirectives(from: firstToken, of: Syntax(node))
   }
 
   override func visit(_ node: MemberDeclListItemSyntax) -> SyntaxVisitorContinueKind {
-    guard let firstToken = node.firstToken else {
+    guard let firstToken = node.firstToken(viewMode: .sourceAccurate) else {
       return .visitChildren
     }
     return appendRuleStatusDirectives(from: firstToken, of: Syntax(node))
@@ -183,7 +183,7 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
   private func appendRuleStatusDirectives(from token: TokenSyntax, of node: Syntax)
     -> SyntaxVisitorContinueKind
   {
-    let isFirstInFile = token.previousToken == nil
+    let isFirstInFile = token.previousToken(viewMode: .sourceAccurate) == nil
     let matches = loneLineComments(in: token.leadingTrivia, isFirstToken: isFirstInFile)
       .compactMap(ruleStatusDirectiveMatch)
     let sourceRange = node.sourceRange(converter: sourceLocationConverter)

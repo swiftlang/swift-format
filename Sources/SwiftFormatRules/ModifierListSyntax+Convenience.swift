@@ -72,12 +72,12 @@ extension ModifierListSyntax {
 
     if index == 0 {
       guard formatTrivia else { return inserting(modifier, at: index) }
-      guard let firstMod = first, let firstTok = firstMod.firstToken else {
+      guard let firstMod = first, let firstTok = firstMod.firstToken(viewMode: .sourceAccurate) else {
         return inserting(modifier, at: index)
       }
       let formattedMod = replaceTrivia(
         on: modifier,
-        token: modifier.firstToken,
+        token: modifier.firstToken(viewMode: .sourceAccurate),
         leadingTrivia: firstTok.leadingTrivia)
       newModifiers[0] = replaceTrivia(
         on: firstMod,

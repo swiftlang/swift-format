@@ -166,18 +166,18 @@ fileprivate final class AddModifierRewriter: SyntaxRewriter {
     for modifiersProvider: (NodeType) -> ModifierListSyntax?
   ) -> NodeType {
     guard let modifier = modifiersProvider(node)?.firstAndOnly,
-      let movingLeadingTrivia = modifier.nextToken?.leadingTrivia
+      let movingLeadingTrivia = modifier.nextToken(viewMode: .sourceAccurate)?.leadingTrivia
     else {
       // Otherwise, there's no trivia that needs to be relocated so the node is fine.
       return node
     }
     let nodeWithTrivia = replaceTrivia(
       on: node,
-      token: modifier.firstToken,
+      token: modifier.firstToken(viewMode: .sourceAccurate),
       leadingTrivia: movingLeadingTrivia)
     return replaceTrivia(
       on: nodeWithTrivia,
-      token: modifiersProvider(nodeWithTrivia)?.first?.nextToken,
+      token: modifiersProvider(nodeWithTrivia)?.first?.nextToken(viewMode: .sourceAccurate),
       leadingTrivia: [])
   }
 }

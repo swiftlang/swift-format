@@ -362,7 +362,7 @@ fileprivate func convertToCodeBlockItems(lines: [Line]) -> [CodeBlockItemSyntax]
       output.append(
         replaceTrivia(
           on: codeBlockItem,
-          token: codeBlockItem.firstToken,
+          token: codeBlockItem.firstToken(viewMode: .sourceAccurate),
           leadingTrivia: Trivia(pieces: triviaBuffer)
         )
       )
@@ -509,17 +509,17 @@ fileprivate class Line {
     guard let syntaxNode = syntaxNode else { return nil }
     switch syntaxNode {
     case .importCodeBlock(let codeBlock, _):
-      return codeBlock.firstToken
+      return codeBlock.firstToken(viewMode: .sourceAccurate)
     case .nonImportCodeBlocks(let codeBlocks):
-      return codeBlocks.first?.firstToken
+      return codeBlocks.first?.firstToken(viewMode: .sourceAccurate)
     }
   }
 
   /// Returns a `LineType` the represents the type of import from the given import decl.
   private func importType(of importDecl: ImportDeclSyntax) -> LineType {
-    if let attr = importDecl.attributes?.firstToken,
+    if let attr = importDecl.attributes?.firstToken(viewMode: .sourceAccurate),
       attr.tokenKind == .atSign,
-      attr.nextToken?.text == "testable"
+      attr.nextToken(viewMode: .sourceAccurate)?.text == "testable"
     {
       return .testableImport
     }

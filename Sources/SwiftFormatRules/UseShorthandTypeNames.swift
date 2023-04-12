@@ -258,7 +258,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       // instead of discarding the comment.
       wrappedType =
         replaceTrivia(
-          on: wrappedType, token: wrappedType.firstToken, leadingTrivia: leadingTrivia)
+          on: wrappedType, token: wrappedType.firstToken(viewMode: .sourceAccurate), leadingTrivia: leadingTrivia)
     }
 
     let optionalType = OptionalTypeSyntax(
@@ -346,7 +346,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       // the comment.
       wrappedTypeExpr =
         replaceTrivia(
-          on: wrappedTypeExpr, token: wrappedTypeExpr.firstToken, leadingTrivia: leadingTrivia)
+          on: wrappedTypeExpr, token: wrappedTypeExpr.firstToken(viewMode: .sourceAccurate), leadingTrivia: leadingTrivia)
     }
 
     return OptionalChainingExprSyntax(
@@ -410,7 +410,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     case .optionalType(let optionalType):
       let result = makeOptionalTypeExpression(
         wrapping: optionalType.wrappedType,
-        leadingTrivia: optionalType.firstToken?.leadingTrivia,
+        leadingTrivia: optionalType.firstToken(viewMode: .sourceAccurate)?.leadingTrivia,
         questionMark: optionalType.questionMark)
       return ExprSyntax(result)
 
@@ -493,8 +493,8 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     -> (leadingTrivia: Trivia, trailingTrivia: Trivia)
   {
     return (
-      leadingTrivia: node.firstToken?.leadingTrivia ?? [],
-      trailingTrivia: node.lastToken?.trailingTrivia ?? []
+      leadingTrivia: node.firstToken(viewMode: .sourceAccurate)?.leadingTrivia ?? [],
+      trailingTrivia: node.lastToken(viewMode: .sourceAccurate)?.trailingTrivia ?? []
     )
   }
 

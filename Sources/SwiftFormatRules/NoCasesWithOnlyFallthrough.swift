@@ -150,7 +150,7 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
 
     // Check for any comments that are inline on the fallthrough statement. Inline comments are
     // always stored in the next token's leading trivia.
-    if let nextLeadingTrivia = onlyStatement.nextToken?.leadingTrivia,
+    if let nextLeadingTrivia = onlyStatement.nextToken(viewMode: .sourceAccurate)?.leadingTrivia,
       nextLeadingTrivia.prefix(while: { !$0.isNewline }).contains(where: { $0.isComment })
     {
       return false
