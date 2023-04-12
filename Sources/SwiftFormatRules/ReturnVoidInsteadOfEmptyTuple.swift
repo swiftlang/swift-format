@@ -105,8 +105,8 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
     return SimpleTypeIdentifierSyntax(
       name: TokenSyntax.identifier(
         "Void",
-        leadingTrivia: node.firstToken?.leadingTrivia ?? [],
-        trailingTrivia: node.lastToken?.trailingTrivia ?? []),
+        leadingTrivia: node.firstToken(viewMode: .sourceAccurate)?.leadingTrivia ?? [],
+        trailingTrivia: node.lastToken(viewMode: .sourceAccurate)?.trailingTrivia ?? []),
       genericArgumentClause: nil)
   }
 }
