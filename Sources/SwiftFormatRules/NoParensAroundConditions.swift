@@ -52,7 +52,7 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
     }
     return replaceTrivia(
       on: visitedExpr,
-      token: visitedExpr.lastToken,
+      token: visitedExpr.lastToken(viewMode: .sourceAccurate),
       leadingTrivia: visitedTuple.leftParen.leadingTrivia,
       trailingTrivia: visitedTuple.rightParen.trailingTrivia
     )

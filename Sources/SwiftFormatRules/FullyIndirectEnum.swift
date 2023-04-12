@@ -53,14 +53,14 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
     // If the `indirect` keyword being added would be the first token in the decl, we need to move
     // the leading trivia from the `enum` keyword to the new modifier to preserve the existing
     // line breaks/comments/indentation.
-    let firstTok = node.firstToken!
+    let firstTok = node.firstToken(viewMode: .sourceAccurate)!
     let leadingTrivia: Trivia
     let newEnumDecl: EnumDeclSyntax
 
     if firstTok.tokenKind == .keyword(.enum) {
       leadingTrivia = firstTok.leadingTrivia
       newEnumDecl = replaceTrivia(
-        on: node, token: node.firstToken, leadingTrivia: [])
+        on: node, token: node.firstToken(viewMode: .sourceAccurate), leadingTrivia: [])
     } else {
       leadingTrivia = []
       newEnumDecl = node
@@ -97,7 +97,7 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
   ) -> EnumCaseDeclSyntax {
     if let modifiers = unformattedCase.modifiers, let first = modifiers.first {
       return replaceTrivia(
-        on: unformattedCase, token: first.firstToken, leadingTrivia: leadingTrivia
+        on: unformattedCase, token: first.firstToken(viewMode: .sourceAccurate), leadingTrivia: leadingTrivia
       )
     } else {
       return replaceTrivia(

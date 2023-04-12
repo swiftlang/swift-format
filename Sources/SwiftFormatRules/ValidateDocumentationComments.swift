@@ -124,7 +124,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
     let needsThrowsDesc = throwsOrRethrowsKeyword?.tokenKind == .keyword(.throws)
 
     if !needsThrowsDesc && throwsDesc != nil {
-      diagnose(.removeThrowsComment(funcName: name), on: throwsOrRethrowsKeyword ?? node.firstToken)
+      diagnose(.removeThrowsComment(funcName: name), on: throwsOrRethrowsKeyword ?? node.firstToken(viewMode: .sourceAccurate))
     } else if needsThrowsDesc && throwsDesc == nil {
       diagnose(.documentErrorsThrown(funcName: name), on: throwsOrRethrowsKeyword)
     }
