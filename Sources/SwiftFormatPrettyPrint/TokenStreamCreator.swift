@@ -162,7 +162,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       genericParameterOrPrimaryAssociatedTypeClause: node.genericParameterClause.map(Syntax.init),
       inheritanceClause: node.inheritanceClause,
       genericWhereClause: node.genericWhereClause,
-      members: node.members)
+      memberBlock: node.memberBlock)
     return .visitChildren
   }
 
@@ -176,7 +176,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       genericParameterOrPrimaryAssociatedTypeClause: node.genericParameterClause.map(Syntax.init),
       inheritanceClause: node.inheritanceClause,
       genericWhereClause: node.genericWhereClause,
-      members: node.members)
+      memberBlock: node.memberBlock)
     return .visitChildren
   }
 
@@ -190,7 +190,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       genericParameterOrPrimaryAssociatedTypeClause: node.genericParameterClause.map(Syntax.init),
       inheritanceClause: node.inheritanceClause,
       genericWhereClause: node.genericWhereClause,
-      members: node.members)
+      memberBlock: node.memberBlock)
     return .visitChildren
   }
 
@@ -204,7 +204,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       genericParameterOrPrimaryAssociatedTypeClause: node.genericParameters.map(Syntax.init),
       inheritanceClause: node.inheritanceClause,
       genericWhereClause: node.genericWhereClause,
-      members: node.members)
+      memberBlock: node.memberBlock)
     return .visitChildren
   }
 
@@ -219,7 +219,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         node.primaryAssociatedTypeClause.map(Syntax.init),
       inheritanceClause: node.inheritanceClause,
       genericWhereClause: node.genericWhereClause,
-      members: node.members)
+      memberBlock: node.memberBlock)
     return .visitChildren
   }
 
@@ -236,7 +236,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       genericParameterOrPrimaryAssociatedTypeClause: nil,
       inheritanceClause: node.inheritanceClause,
       genericWhereClause: node.genericWhereClause,
-      members: node.members)
+      memberBlock: node.memberBlock)
     return .visitChildren
   }
 
@@ -251,7 +251,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     genericParameterOrPrimaryAssociatedTypeClause: Syntax?,
     inheritanceClause: TypeInheritanceClauseSyntax?,
     genericWhereClause: GenericWhereClauseSyntax?,
-    members: MemberDeclBlockSyntax
+    memberBlock: MemberDeclBlockSyntax
   ) {
     before(node.firstToken(viewMode: .sourceAccurate), tokens: .open)
 
@@ -263,11 +263,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     before(firstTokenAfterAttributes, tokens: .open)
     after(typeKeyword, tokens: .break)
 
-    arrangeBracesAndContents(of: members, contentsKeyPath: \.members)
+    arrangeBracesAndContents(of: memberBlock, contentsKeyPath: \.members)
 
     if let genericWhereClause = genericWhereClause {
       before(genericWhereClause.firstToken(viewMode: .sourceAccurate), tokens: .break(.same), .open)
-      after(members.leftBrace, tokens: .close)
+      after(memberBlock.leftBrace, tokens: .close)
     }
 
     let lastTokenBeforeBrace = inheritanceClause?.colon
