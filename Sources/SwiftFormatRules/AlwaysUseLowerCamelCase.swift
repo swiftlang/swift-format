@@ -31,7 +31,7 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
   public override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
     guard context.importsXCTest == .importsXCTest else { return .visitChildren }
 
-    collectTestMethods(from: node.members.members, into: &testCaseFuncs)
+    collectTestMethods(from: node.memberBlock.members, into: &testCaseFuncs)
     return .visitChildren
   }
 

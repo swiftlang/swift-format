@@ -87,7 +87,7 @@ public final class OneCasePerLine: SyntaxFormatRule {
   public override func visit(_ node: EnumDeclSyntax) -> DeclSyntax {
     var newMembers: [MemberDeclListItemSyntax] = []
 
-    for member in node.members.members {
+    for member in node.memberBlock.members {
       // If it's not a case declaration, or it's a case declaration with only one element, leave it
       // alone.
       guard let caseDecl = member.decl.as(EnumCaseDeclSyntax.self), caseDecl.elements.count > 1 else {
@@ -123,8 +123,8 @@ public final class OneCasePerLine: SyntaxFormatRule {
       }
     }
 
-    let newMemberBlock = node.members.with(\.members, MemberDeclListSyntax(newMembers))
-    return DeclSyntax(node.with(\.members, newMemberBlock))
+    let newMemberBlock = node.memberBlock.with(\.members, MemberDeclListSyntax(newMembers))
+    return DeclSyntax(node.with(\.memberBlock, newMemberBlock))
   }
 }
 
