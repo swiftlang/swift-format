@@ -45,14 +45,14 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
       }
 
       let newMembers = MemberDeclBlockSyntax(
-        leftBrace: node.members.leftBrace,
-        members: addMemberAccessKeywords(memDeclBlock: node.members, keyword: accessKeywordToAdd),
-        rightBrace: node.members.rightBrace)
+        leftBrace: node.memberBlock.leftBrace,
+        members: addMemberAccessKeywords(memDeclBlock: node.memberBlock, keyword: accessKeywordToAdd),
+        rightBrace: node.memberBlock.rightBrace)
       let newKeyword = replaceTrivia(
         on: node.extensionKeyword,
         token: node.extensionKeyword,
         leadingTrivia: accessKeyword.leadingTrivia)
-      let result = node.with(\.members, newMembers)
+      let result = node.with(\.memberBlock, newMembers)
         .with(\.modifiers, modifiers.remove(name: accessKeyword.name.text))
         .with(\.extensionKeyword, newKeyword)
       return DeclSyntax(result)

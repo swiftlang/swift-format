@@ -88,11 +88,11 @@ final class RuleCollector {
 
     if let classDecl = statement.item.as(ClassDeclSyntax.self) {
       typeName = classDecl.identifier.text
-      members = classDecl.members.members
+      members = classDecl.memberBlock.members
       maybeInheritanceClause = classDecl.inheritanceClause
     } else if let structDecl = statement.item.as(StructDeclSyntax.self) {
       typeName = structDecl.identifier.text
-      members = structDecl.members.members
+      members = structDecl.memberBlock.members
       maybeInheritanceClause = structDecl.inheritanceClause
     } else {
       return nil
