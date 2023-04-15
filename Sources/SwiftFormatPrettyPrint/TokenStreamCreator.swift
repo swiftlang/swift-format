@@ -267,7 +267,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
     if let genericWhereClause = genericWhereClause {
       before(genericWhereClause.firstToken(viewMode: .sourceAccurate), tokens: .break(.same), .open)
-      after(members.leftBrace, tokens: .close)
+      after(memberBlock.leftBrace, tokens: .close)
     }
 
     let lastTokenBeforeBrace = inheritanceClause?.colon
