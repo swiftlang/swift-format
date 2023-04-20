@@ -55,9 +55,7 @@ final class UnifiedDiagnosticsEngine {
     var description: String {
       switch self {
       case .parserLocation(let location):
-        // SwiftSyntax's old diagnostic printer also force-unwrapped these, so we assume that they
-        // will always be present if the location itself is non-nil.
-        return "\(location.file!):\(location.line!):\(location.column!)"
+        return "\(location.file):\(location.line):\(location.column)"
       case .findingLocation(let location):
         return "\(location.file):\(location.line):\(location.column)"
       }
