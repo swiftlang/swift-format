@@ -36,9 +36,9 @@ struct Diagnostic {
 
     /// Creates a new diagnostic location from the given source location.
     init(_ sourceLocation: SourceLocation) {
-      self.file = sourceLocation.file!
-      self.line = sourceLocation.line!
-      self.column = sourceLocation.column!
+      self.file = sourceLocation.file
+      self.line = sourceLocation.line
+      self.column = sourceLocation.column
     }
 
     /// Creates a new diagnostic location with the given finding location.
