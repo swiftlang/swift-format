@@ -23,27 +23,27 @@ import SwiftSyntax
 public final class DontRepeatTypeInStaticProperties: SyntaxLintRule {
 
   public override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseStaticMembers(node.members.members, endingWith: node.identifier.text)
+    diagnoseStaticMembers(node.memberBlock.members, endingWith: node.identifier.text)
     return .skipChildren
   }
 
   public override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseStaticMembers(node.members.members, endingWith: node.identifier.text)
+    diagnoseStaticMembers(node.memberBlock.members, endingWith: node.identifier.text)
     return .skipChildren
   }
 
   public override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseStaticMembers(node.members.members, endingWith: node.identifier.text)
+    diagnoseStaticMembers(node.memberBlock.members, endingWith: node.identifier.text)
     return .skipChildren
   }
 
   public override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseStaticMembers(node.members.members, endingWith: node.identifier.text)
+    diagnoseStaticMembers(node.memberBlock.members, endingWith: node.identifier.text)
     return .skipChildren
   }
 
   public override func visit(_ node: ExtensionDeclSyntax) -> SyntaxVisitorContinueKind {
-    let members = node.members.members
+    let members = node.memberBlock.members
 
     switch Syntax(node.extendedType).as(SyntaxEnum.self) {
     case .simpleTypeIdentifier(let simpleType):

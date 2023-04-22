@@ -23,7 +23,7 @@ import SwiftSyntax
 public final class FullyIndirectEnum: SyntaxFormatRule {
 
   public override func visit(_ node: EnumDeclSyntax) -> DeclSyntax {
-    let enumMembers = node.members.members
+    let enumMembers = node.memberBlock.members
     guard let enumModifiers = node.modifiers,
       !enumModifiers.has(modifier: "indirect"),
       allCasesAreIndirect(in: enumMembers)
@@ -70,8 +70,8 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
       name: TokenSyntax.identifier(
         "indirect", leadingTrivia: leadingTrivia, trailingTrivia: .spaces(1)), detail: nil)
 
-    let newMemberBlock = node.members.with(\.members, MemberDeclListSyntax(newMembers))
-    return DeclSyntax(newEnumDecl.addModifier(newModifier).with(\.members, newMemberBlock))
+    let newMemberBlock = node.memberBlock.with(\.members, MemberDeclListSyntax(newMembers))
+    return DeclSyntax(newEnumDecl.addModifier(newModifier).with(\.memberBlock, newMemberBlock))
   }
 
   /// Returns a value indicating whether all enum cases in the given list are indirect.
