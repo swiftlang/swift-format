@@ -217,7 +217,7 @@ if ProcessInfo.processInfo.environment["SWIFTCI_USE_LOCAL_DEPS"] == nil {
       url: "https://github.com/apple/swift-argument-parser.git", from: "1.2.2"),
     .package(
       url: "https://github.com/apple/swift-syntax.git",
-      branch: "main"
+      branch: "release/5.9"
     ),
     .package(
       url: "https://github.com/apple/swift-tools-support-core.git",
