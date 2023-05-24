@@ -14,18 +14,7 @@ import SwiftSyntax
 
 extension Finding.Location {
   /// Creates a new `Finding.Location` by converting the given `SourceLocation` from `SwiftSyntax`.
-  ///
-  /// If the source location is invalid (i.e., any of its fields are nil), then the initializer will
-  /// return nil.
-  public init?(_ sourceLocation: SourceLocation) {
-    guard
-      let file = sourceLocation.file,
-      let line = sourceLocation.line,
-      let column = sourceLocation.column
-    else {
-      return nil
-    }
-
-    self.init(file: file, line: line, column: column)
+  public init(_ sourceLocation: SourceLocation) {
+    self.init(file: sourceLocation.file, line: sourceLocation.line, column: sourceLocation.column)
   }
 }
