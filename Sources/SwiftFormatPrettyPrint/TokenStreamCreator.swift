@@ -201,7 +201,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       modifiers: node.modifiers,
       typeKeyword: node.enumKeyword,
       identifier: node.identifier,
-      genericParameterOrPrimaryAssociatedTypeClause: node.genericParameters.map(Syntax.init),
+      genericParameterOrPrimaryAssociatedTypeClause: node.genericParameterClause.map(Syntax.init),
       inheritanceClause: node.inheritanceClause,
       genericWhereClause: node.genericWhereClause,
       memberBlock: node.memberBlock)
@@ -2289,7 +2289,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: AccessPathComponentSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ImportPathComponentSyntax) -> SyntaxVisitorContinueKind {
     return .visitChildren
   }
 
