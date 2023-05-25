@@ -327,4 +327,72 @@ final class StringTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
   }
+
+  func testLeadingMultilineStringsInOtherExpressions() {
+    // The stacked indentation behavior needs to drill down into different node types to find the
+    // leftmost multiline string literal. This makes sure that we cover various cases.
+    let input =
+      #"""
+      let bytes = """
+        {
+          "key": "value"
+        }
+        """.utf8.count
+      let json = """
+        {
+          "key": "value"
+        }
+        """.data(using: .utf8)
+      let slice = """
+        {
+          "key": "value"
+        }
+        """[...]
+      let forceUnwrap = """
+        {
+          "key": "value"
+        }
+        """!
+      let optionalChaining = """
+        {
+          "key": "value"
+        }
+        """?
+      let postfix = """
+        {
+          "key": "value"
+        }
+        """^*^
+      let prefix = +"""
+        {
+          "key": "value"
+        }
+        """
+      let postfixIf = """
+        {
+          "key": "value"
+        }
+        """
+        #if FLAG
+          .someMethod
+        #endif
+
+      // Like the infix operator cases, cast operations force the string's open quotes to wrap.
+      // This could be considered consistent if you look at it through the right lens. Let's make
+      // sure to test it so that we can see if the behavior ever changes accidentally.
+      let cast =
+        """
+        {
+          "key": "value"
+        }
+        """ as NSString
+      let typecheck =
+        """
+        {
+          "key": "value"
+        }
+        """ is NSString
+      """#
+    assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 100)
+  }
 }
