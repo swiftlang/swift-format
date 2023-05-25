@@ -27,7 +27,7 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
   public override func visit(_ node: InfixOperatorExprSyntax) -> ExprSyntax {
     // Diagnose any assignment that isn't directly a child of a `CodeBlockItem` (which would be the
     // case if it was its own statement).
-    if isAssignmentExpression(node) && node.parent?.is(CodeBlockItemSyntax.self) == false {
+    if isAssignmentExpression(node) && !isStandaloneAssignmentStatement(node) {
       diagnose(.moveAssignmentToOwnStatement, on: node)
     }
     return ExprSyntax(node)
@@ -59,7 +59,8 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
             item: .expr(ExprSyntax(assignmentExpr)),
             semicolon: nil
           )
-          .with(\.leadingTrivia, 
+          .with(
+            \.leadingTrivia,
             (returnStmt.leadingTrivia) + (assignmentExpr.leadingTrivia))
           .with(\.trailingTrivia, []))
         newItems.append(
@@ -105,6 +106,30 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
     }
     return context.operatorTable.infixOperator(named: binaryOp.operatorToken.text)?.precedenceGroup
       == "AssignmentPrecedence"
+  }
+
+  /// Returns a value indicating whether the given node is a standalone assignment statement.
+  ///
+  /// This function considers try/await expressions and automatically walks up through them as
+  /// needed. This is because `try f().x = y` should still be a standalone assignment for our
+  /// purposes, even though a `TryExpr` will wrap the `InfixOperatorExpr` and thus would not be
+  /// considered a standalone assignment if we only checked the infix expression for a
+  /// `CodeBlockItem` parent.
+  private func isStandaloneAssignmentStatement(_ node: InfixOperatorExprSyntax) -> Bool {
+    var node = Syntax(node)
+    while
+      let parent = node.parent,
+      parent.is(TryExprSyntax.self) || parent.is(AwaitExprSyntax.self)
+    {
+      node = parent
+    }
+
+    guard let parent = node.parent else {
+      // This shouldn't happen under normal circumstances (i.e., unless the expression is detached
+      // from the rest of a tree). In that case, we may as well consider it to be "standalone".
+      return true
+    }
+    return parent.is(CodeBlockItemSyntax.self)
   }
 }
 
