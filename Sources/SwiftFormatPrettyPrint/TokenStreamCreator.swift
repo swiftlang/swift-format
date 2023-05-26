@@ -3298,7 +3298,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   /// Walks the expression and returns the leftmost multiline string literal (which might be the
-  /// expression itself) if the leftmost child is a multiline string literal.
+  /// expression itself) if the leftmost child is a multiline string literal or if it is a unary
+  /// operation applied to a multiline string literal.
   ///
   /// - Parameter expr: The expression whose leftmost multiline string literal should be returned.
   /// - Returns: The leftmost multiline string literal, or nil if the leftmost subexpression was
@@ -3310,8 +3311,28 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       return stringLiteralExpr
     case .infixOperatorExpr(let infixOperatorExpr):
       return leftmostMultilineStringLiteral(of: infixOperatorExpr.leftOperand)
+    case .asExpr(let asExpr):
+      return leftmostMultilineStringLiteral(of: asExpr.expression)
+    case .isExpr(let isExpr):
+      return leftmostMultilineStringLiteral(of: isExpr.expression)
+    case .forcedValueExpr(let forcedValueExpr):
+      return leftmostMultilineStringLiteral(of: forcedValueExpr.expression)
+    case .optionalChainingExpr(let optionalChainingExpr):
+      return leftmostMultilineStringLiteral(of: optionalChainingExpr.expression)
+    case .postfixUnaryExpr(let postfixUnaryExpr):
+      return leftmostMultilineStringLiteral(of: postfixUnaryExpr.expression)
+    case .prefixOperatorExpr(let prefixOperatorExpr):
+      return leftmostMultilineStringLiteral(of: prefixOperatorExpr.postfixExpression)
     case .ternaryExpr(let ternaryExpr):
       return leftmostMultilineStringLiteral(of: ternaryExpr.conditionExpression)
+    case .functionCallExpr(let functionCallExpr):
+      return leftmostMultilineStringLiteral(of: functionCallExpr.calledExpression)
+    case .subscriptExpr(let subscriptExpr):
+      return leftmostMultilineStringLiteral(of: subscriptExpr.calledExpression)
+    case .memberAccessExpr(let memberAccessExpr):
+      return memberAccessExpr.base.flatMap { leftmostMultilineStringLiteral(of: $0) }
+    case .postfixIfConfigExpr(let postfixIfConfigExpr):
+      return postfixIfConfigExpr.base.flatMap { leftmostMultilineStringLiteral(of: $0) }
     default:
       return nil
     }
