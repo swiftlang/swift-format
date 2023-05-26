@@ -161,4 +161,23 @@ final class NoAssignmentInExpressionsTests: LintOrFormatRuleTestCase {
     )
     XCTAssertDiagnosed(.moveAssignmentToOwnStatement, line: 2, column: 29)
   }
+
+  func testTryAndAwaitAssignmentExpressionsAreUnchanged() {
+    XCTAssertFormatting(
+      NoAssignmentInExpressions.self,
+      input: """
+        func foo() {
+          try a.b = c
+          await a.b = c
+        }
+        """,
+      expected: """
+        func foo() {
+          try a.b = c
+          await a.b = c
+        }
+        """
+    )
+    XCTAssertNotDiagnosed(.moveAssignmentToOwnStatement)
+  }
 }
