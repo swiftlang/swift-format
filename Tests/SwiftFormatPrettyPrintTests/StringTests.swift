@@ -296,10 +296,35 @@ final class StringTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
   }
 
+  func testMultilineStringsInExpressionWithNarrowMargins() {
+    let input =
+      #"""
+      x = """
+          abcdefg
+          hijklmn
+          """ + """
+          abcde
+          hijkl
+          """
+      """#
+
+    let expected =
+      #"""
+      x = """
+        abcdefg
+        hijklmn
+        """
+          + """
+          abcde
+          hijkl
+          """
+
+      """#
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 9)
+  }
+
   func testMultilineStringsInExpression() {
-    // This output could probably be improved, but it's also a fairly unlikely occurrence. The
-    // important part of this test is that the first string in the expression is indented relative
-    // to the `let`.
     let input =
       #"""
       let x = """
@@ -313,12 +338,10 @@ final class StringTests: PrettyPrintTestCase {
 
     let expected =
       #"""
-      let x =
-        """
+      let x = """
         this is a
         multiline string
-        """
-          + """
+        """ + """
           this is more
           multiline string
           """
@@ -327,7 +350,6 @@ final class StringTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
   }
-
   func testLeadingMultilineStringsInOtherExpressions() {
     // The stacked indentation behavior needs to drill down into different node types to find the
     // leftmost multiline string literal. This makes sure that we cover various cases.

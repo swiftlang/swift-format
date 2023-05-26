@@ -1883,10 +1883,13 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
         // If the rhs starts with a parenthesized expression, stack indentation around it.
         // Otherwise, use regular continuation breaks.
-        if let (unindentingNode, _, breakKind) = stackedIndentationBehavior(after: binOp, rhs: rhs)
+        if let (unindentingNode, _, breakKind, _) =
+          stackedIndentationBehavior(after: binOp, rhs: rhs)
         {
           beforeTokens = [.break(.open(kind: breakKind))]
-          after(unindentingNode.lastToken(viewMode: .sourceAccurate), tokens: [.break(.close(mustBreak: false), size: 0)])
+          after(
+            unindentingNode.lastToken(viewMode: .sourceAccurate),
+            tokens: [.break(.close(mustBreak: false), size: 0)])
         } else {
           beforeTokens = [.break(.continue)]
         }
@@ -1894,13 +1897,13 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         // When the RHS is a simple expression, even if is requires multiple lines, we don't add a
         // group so that as much of the expression as possible can stay on the same line as the
         // operator token.
-        if isCompoundExpression(rhs) {
+        if isCompoundExpression(rhs) && leftmostMultilineStringLiteral(of: rhs) == nil {
           beforeTokens.append(.open)
           after(rhs.lastToken(viewMode: .sourceAccurate), tokens: .close)
         }
 
         after(binOp.lastToken(viewMode: .sourceAccurate), tokens: beforeTokens)
-      } else if let (unindentingNode, shouldReset, breakKind) =
+      } else if let (unindentingNode, shouldReset, breakKind, shouldGroup) =
         stackedIndentationBehavior(after: binOp, rhs: rhs)
       {
         // For parenthesized expressions and for unparenthesized usages of `&&` and `||`, we don't
@@ -1910,16 +1913,22 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         // use open-continuation/close pairs around such operators and their right-hand sides so
         // that the continuation breaks inside those scopes "stack", instead of receiving the
         // usual single-level "continuation line or not" behavior.
-        let openBreakTokens: [Token] = [.break(.open(kind: breakKind)), .open]
+        var openBreakTokens: [Token] = [.break(.open(kind: breakKind))]
+        if shouldGroup {
+          openBreakTokens.append(.open)
+        }
         if wrapsBeforeOperator {
           before(binOp.firstToken(viewMode: .sourceAccurate), tokens: openBreakTokens)
         } else {
           after(binOp.lastToken(viewMode: .sourceAccurate), tokens: openBreakTokens)
         }
 
-        let closeBreakTokens: [Token] =
+        var closeBreakTokens: [Token] =
           (shouldReset ? [.break(.reset, size: 0)] : [])
-          + [.break(.close(mustBreak: false), size: 0), .close]
+          + [.break(.close(mustBreak: false), size: 0)]
+        if shouldGroup {
+          closeBreakTokens.append(.close)
+        }
         after(unindentingNode.lastToken(viewMode: .sourceAccurate), tokens: closeBreakTokens)
       } else {
         if wrapsBeforeOperator {
@@ -2031,7 +2040,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     if let initializer = node.initializer {
       let expr = initializer.value
 
-      if let (unindentingNode, _, breakKind) = stackedIndentationBehavior(rhs: expr) {
+      if let (unindentingNode, _, breakKind, _) = stackedIndentationBehavior(rhs: expr) {
         after(initializer.equal, tokens: .break(.open(kind: breakKind)))
         after(unindentingNode.lastToken(viewMode: .sourceAccurate), tokens: .break(.close(mustBreak: false), size: 0))
       } else {
@@ -2042,7 +2051,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       // When the RHS is a simple expression, even if is requires multiple lines, we don't add a
       // group so that as much of the expression as possible can stay on the same line as the
       // operator token.
-      if isCompoundExpression(expr) {
+      if isCompoundExpression(expr) && leftmostMultilineStringLiteral(of: expr) == nil {
         before(expr.firstToken(viewMode: .sourceAccurate), tokens: .open)
         after(expr.lastToken(viewMode: .sourceAccurate), tokens: .close)
       }
@@ -3357,8 +3366,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   /// Determines if indentation should be stacked around a subexpression to the right of the given
-  /// operator, and, if so, returns the node after which indentation stacking should be closed and
-  /// whether or not the continuation state should be reset as well.
+  /// operator, and, if so, returns the node after which indentation stacking should be closed,
+  /// whether or not the continuation state should be reset as well, and whether or not a group
+  /// should be placed around the operator and the expression.
   ///
   /// Stacking is applied around parenthesized expressions, but also for low-precedence operators
   /// that frequently occur in long chains, such as logical AND (`&&`) and OR (`||`) in conditional
@@ -3367,7 +3377,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   private func stackedIndentationBehavior(
     after operatorExpr: ExprSyntax? = nil,
     rhs: ExprSyntax
-  ) -> (unindentingNode: Syntax, shouldReset: Bool, breakKind: OpenBreakKind)? {
+  ) -> (unindentingNode: Syntax, shouldReset: Bool, breakKind: OpenBreakKind, shouldGroup: Bool)? {
     // Check for logical operators first, and if it's that kind of operator, stack indentation
     // around the entire right-hand-side. We have to do this check before checking the RHS for
     // parentheses because if the user writes something like `... && (foo) > bar || ...`, we don't
@@ -3387,9 +3397,18 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         // the paren to the last token of `rhs`.
         if let unindentingParenExpr = outermostEnclosingNode(from: Syntax(rhs)) {
           return (
-            unindentingNode: unindentingParenExpr, shouldReset: true, breakKind: .continuation)
+            unindentingNode: unindentingParenExpr,
+            shouldReset: true,
+            breakKind: .continuation,
+            shouldGroup: true
+          )
         }
-        return (unindentingNode: Syntax(rhs), shouldReset: true, breakKind: .continuation)
+        return (
+          unindentingNode: Syntax(rhs),
+          shouldReset: true,
+          breakKind: .continuation,
+          shouldGroup: true
+        )
       }
     }
 
@@ -3399,8 +3418,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       // We don't try to absorb any parens in this case, because the condition of a ternary cannot
       // be grouped with any exprs outside of the condition.
       return (
-        unindentingNode: Syntax(ternaryExpr.conditionExpression), shouldReset: false,
-        breakKind: .continuation)
+        unindentingNode: Syntax(ternaryExpr.conditionExpression),
+        shouldReset: false,
+        breakKind: .continuation,
+        shouldGroup: true
+      )
     }
 
     // If the right-hand-side of the operator is or starts with a parenthesized expression, stack
@@ -3411,7 +3433,12 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       // paren into the right hand side by unindenting after the final closing paren. This glues the
       // paren to the last token of `rhs`.
       if let unindentingParenExpr = outermostEnclosingNode(from: Syntax(rhs)) {
-        return (unindentingNode: unindentingParenExpr, shouldReset: true, breakKind: .continuation)
+        return (
+          unindentingNode: unindentingParenExpr,
+          shouldReset: true,
+          breakKind: .continuation,
+          shouldGroup: true
+        )
       }
 
       if let innerExpr = parenthesizedExpr.elementList.first?.expression,
@@ -3423,14 +3450,23 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       }
 
       return (
-        unindentingNode: Syntax(parenthesizedExpr), shouldReset: false, breakKind: .continuation)
+        unindentingNode: Syntax(parenthesizedExpr),
+        shouldReset: false,
+        breakKind: .continuation,
+        shouldGroup: true
+      )
     }
 
     // If the expression is a multiline string that is unparenthesized, create a block-based
     // indentation scope and have the segments aligned inside it.
     if let stringLiteralExpr = leftmostMultilineStringLiteral(of: rhs) {
       pendingMultilineStringBreakKinds[stringLiteralExpr] = .same
-      return (unindentingNode: Syntax(stringLiteralExpr), shouldReset: false, breakKind: .block)
+      return (
+        unindentingNode: Syntax(stringLiteralExpr),
+        shouldReset: false,
+        breakKind: .block,
+        shouldGroup: false
+      )
     }
 
     // Otherwise, don't stack--use regular continuation breaks instead.
