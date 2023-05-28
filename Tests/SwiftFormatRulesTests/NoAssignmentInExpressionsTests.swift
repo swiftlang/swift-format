@@ -180,4 +180,35 @@ final class NoAssignmentInExpressionsTests: LintOrFormatRuleTestCase {
     )
     XCTAssertNotDiagnosed(.moveAssignmentToOwnStatement)
   }
+
+  func testAssignmentExpressionsInAllowedFunctions() {
+    XCTAssertFormatting(
+      NoAssignmentInExpressions.self,
+      input: """
+        // These should not diagnose.
+        XCTAssertNoThrow(a = try b())
+        XCTAssertNoThrow { a = try b() }
+        XCTAssertNoThrow({ a = try b() })
+        someRegularFunction({ a = b })
+        someRegularFunction { a = b }
+
+        // This should be diagnosed.
+        someRegularFunction(a = b)
+        """,
+      expected: """
+        // These should not diagnose.
+        XCTAssertNoThrow(a = try b())
+        XCTAssertNoThrow { a = try b() }
+        XCTAssertNoThrow({ a = try b() })
+        someRegularFunction({ a = b })
+        someRegularFunction { a = b }
+
+        // This should be diagnosed.
+        someRegularFunction(a = b)
+        """
+    )
+    XCTAssertDiagnosed(.moveAssignmentToOwnStatement, line: 9, column: 21)
+    // Make sure no other expressions were diagnosed.
+    XCTAssertNotDiagnosed(.moveAssignmentToOwnStatement)
+  }
 }
