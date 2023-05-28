@@ -10,6 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftFormatConfiguration
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -27,7 +28,10 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
   public override func visit(_ node: InfixOperatorExprSyntax) -> ExprSyntax {
     // Diagnose any assignment that isn't directly a child of a `CodeBlockItem` (which would be the
     // case if it was its own statement).
-    if isAssignmentExpression(node) && !isStandaloneAssignmentStatement(node) {
+    if isAssignmentExpression(node)
+      && !isStandaloneAssignmentStatement(node)
+      && !isInAllowedFunction(node)
+    {
       diagnose(.moveAssignmentToOwnStatement, on: node)
     }
     return ExprSyntax(node)
@@ -130,6 +134,30 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
       return true
     }
     return parent.is(CodeBlockItemSyntax.self)
+  }
+
+  /// Returns true if the infix operator expression is in the (non-closure) parameters of an allowed
+  /// function call.
+  private func isInAllowedFunction(_ node: InfixOperatorExprSyntax) -> Bool {
+    let allowedFunctions = context.configuration.noAssignmentInExpressions.allowedFunctions
+    // Walk up the tree until we find a FunctionCallExprSyntax, and if the name matches, return
+    // true. However, stop early if we hit a CodeBlockItemSyntax first; this would represent a
+    // closure context where we *don't* want the exception to apply (for example, in
+    // `someAllowedFunction(a, b) { return c = d }`, the `c = d` is a descendent of a function call
+    // but we want it to be evaluated in its own context.
+    var node = Syntax(node)
+    while let parent = node.parent {
+      node = parent
+      if node.is(CodeBlockItemSyntax.self) {
+        break
+      }
+      if let functionCallExpr = node.as(FunctionCallExprSyntax.self),
+        allowedFunctions.contains(functionCallExpr.calledExpression.trimmedDescription)
+      {
+        return true
+      }
+    }
+    return false
   }
 }
 
