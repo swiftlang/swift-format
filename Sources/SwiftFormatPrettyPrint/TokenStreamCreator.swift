@@ -1471,6 +1471,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: OperatorDeclSyntax) -> SyntaxVisitorContinueKind {
+    after(node.fixity, tokens: .break)
     after(node.operatorKeyword, tokens: .break)
     return .visitChildren
   }
