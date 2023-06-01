@@ -335,7 +335,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       let tupleExprElementList = TupleExprElementListSyntax([tupleExprElement])
       let tupleExpr = TupleExprSyntax(
         leftParen: TokenSyntax.leftParenToken(leadingTrivia: leadingTrivia ?? []),
-        elementList: tupleExprElementList,
+        elements: tupleExprElementList,
         rightParen: TokenSyntax.rightParenToken())
       wrappedTypeExpr = ExprSyntax(tupleExpr)
     } else {
@@ -429,7 +429,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       guard let elementExprs = expressionRepresentation(of: tupleType.elements) else { return nil }
       let result = TupleExprSyntax(
         leftParen: tupleType.leftParen,
-        elementList: elementExprs,
+        elements: elementExprs,
         rightParen: tupleType.rightParen)
       return ExprSyntax(result)
 
@@ -473,7 +473,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 
     let tupleExpr = TupleExprSyntax(
       leftParen: leftParen,
-      elementList: argumentTypeExprs,
+      elements: argumentTypeExprs,
       rightParen: rightParen)
     let arrowExpr = ArrowExprSyntax(
       effectSpecifiers: effectSpecifiers,
