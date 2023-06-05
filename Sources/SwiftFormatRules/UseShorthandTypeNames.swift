@@ -417,7 +417,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     case .functionType(let functionType):
       let result = makeFunctionTypeExpression(
         leftParen: functionType.leftParen,
-        argumentTypes: functionType.arguments,
+        parameters: functionType.parameters,
         rightParen: functionType.rightParen,
         effectSpecifiers: functionType.effectSpecifiers,
         arrow: functionType.output.arrow,
@@ -458,14 +458,14 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 
   private func makeFunctionTypeExpression(
     leftParen: TokenSyntax,
-    argumentTypes: TupleTypeElementListSyntax,
+    parameters: TupleTypeElementListSyntax,
     rightParen: TokenSyntax,
     effectSpecifiers: TypeEffectSpecifiersSyntax?,
     arrow: TokenSyntax,
     returnType: TypeSyntax
   ) -> SequenceExprSyntax? {
     guard
-      let argumentTypeExprs = expressionRepresentation(of: argumentTypes),
+      let parameterExprs = expressionRepresentation(of: parameters),
       let returnTypeExpr = expressionRepresentation(of: returnType)
     else {
       return nil
@@ -473,7 +473,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 
     let tupleExpr = TupleExprSyntax(
       leftParen: leftParen,
-      elements: argumentTypeExprs,
+      elements: parameterExprs,
       rightParen: rightParen)
     let arrowExpr = ArrowExprSyntax(
       effectSpecifiers: effectSpecifiers,
