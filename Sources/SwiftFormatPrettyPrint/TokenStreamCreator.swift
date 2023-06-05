@@ -786,7 +786,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   override func visit(_ node: TupleExprSyntax) -> SyntaxVisitorContinueKind {
     // We'll do nothing if it's a zero-element tuple, because we just want to keep the empty `()`
     // together.
-    let elementCount = node.elementList.count
+    let elementCount = node.elements.count
 
     if elementCount == 1 {
       // A tuple with one element is a parenthesized expression; add a group around it to keep it
@@ -808,9 +808,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       after(node.leftParen, tokens: .break(.open, size: 0), .open)
       before(node.rightParen, tokens: .break(.close, size: 0), .close)
 
-      insertTokens(.break(.same), betweenElementsOf: node.elementList)
+      insertTokens(.break(.same), betweenElementsOf: node.elements)
 
-      for element in node.elementList {
+      for element in node.elements {
         arrangeAsTupleExprElement(element)
       }
     }
@@ -3261,8 +3261,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       return true
     case .tryExpr(let tryExpr):
       return isCompoundExpression(tryExpr.expression)
-    case .tupleExpr(let tupleExpr) where tupleExpr.elementList.count == 1:
-      return isCompoundExpression(tupleExpr.elementList.first!.expression)
+    case .tupleExpr(let tupleExpr) where tupleExpr.elements.count == 1:
+      return isCompoundExpression(tupleExpr.elements.first!.expression)
     default:
       return false
     }
@@ -3296,7 +3296,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   ///   not parenthesized.
   private func parenthesizedLeftmostExpr(of expr: ExprSyntax) -> TupleExprSyntax? {
     switch Syntax(expr).as(SyntaxEnum.self) {
-    case .tupleExpr(let tupleExpr) where tupleExpr.elementList.count == 1:
+    case .tupleExpr(let tupleExpr) where tupleExpr.elements.count == 1:
       return tupleExpr
     case .infixOperatorExpr(let infixOperatorExpr):
       return parenthesizedLeftmostExpr(of: infixOperatorExpr.leftOperand)
@@ -3442,7 +3442,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         )
       }
 
-      if let innerExpr = parenthesizedExpr.elementList.first?.expression,
+      if let innerExpr = parenthesizedExpr.elements.first?.expression,
         let stringLiteralExpr = innerExpr.as(StringLiteralExprSyntax.self),
         stringLiteralExpr.openQuote.tokenKind == .multilineStringQuote
       {

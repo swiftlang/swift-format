@@ -27,8 +27,8 @@ import SwiftSyntax
 ///         call with a trailing closure.
 public final class NoParensAroundConditions: SyntaxFormatRule {
   private func extractExpr(_ tuple: TupleExprSyntax) -> ExprSyntax {
-    assert(tuple.elementList.count == 1)
-    let expr = tuple.elementList.first!.expression
+    assert(tuple.elements.count == 1)
+    let expr = tuple.elements.first!.expression
 
     // If the condition is a function with a trailing closure or if it's an immediately called
     // closure, removing the outer set of parentheses introduces a parse ambiguity.
@@ -46,7 +46,7 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
 
     guard
       let visitedTuple = visit(tuple).as(TupleExprSyntax.self),
-      let visitedExpr = visitedTuple.elementList.first?.expression
+      let visitedExpr = visitedTuple.elements.first?.expression
     else {
       return expr
     }
@@ -71,7 +71,7 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
 
   public override func visit(_ node: ConditionElementSyntax) -> ConditionElementSyntax {
     guard let tup = node.condition.as(TupleExprSyntax.self),
-      tup.elementList.firstAndOnly != nil
+      tup.elements.firstAndOnly != nil
     else {
       return super.visit(node)
     }
@@ -81,7 +81,7 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
   /// FIXME(hbh): Parsing for SwitchExprSyntax is not implemented.
   public override func visit(_ node: SwitchExprSyntax) -> ExprSyntax {
     guard let tup = node.expression.as(TupleExprSyntax.self),
-      tup.elementList.firstAndOnly != nil
+      tup.elements.firstAndOnly != nil
     else {
       return super.visit(node)
     }
@@ -91,7 +91,7 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
 
   public override func visit(_ node: RepeatWhileStmtSyntax) -> StmtSyntax {
     guard let tup = node.condition.as(TupleExprSyntax.self),
-      tup.elementList.firstAndOnly != nil
+      tup.elements.firstAndOnly != nil
     else {
       return super.visit(node)
     }
