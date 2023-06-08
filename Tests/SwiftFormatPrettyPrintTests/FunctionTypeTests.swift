@@ -60,6 +60,127 @@ final class FunctionTypeTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
   }
 
+  func testFunctionTypeAsync() {
+    let input =
+      """
+      func f(g: (_ somevalue: Int) async -> String?) {
+        let a = 123
+        let b = "abc"
+      }
+      func f(g: (currentLevel: Int) async -> String?) {
+        let a = 123
+        let b = "abc"
+      }
+      func f(g: (currentLevel: inout Int) async -> String?) {
+        let a = 123
+        let b = "abc"
+      }
+      func f(g: (variable1: Int, variable2: Double, variable3: Bool) async -> Double) {
+        let a = 123
+        let b = "abc"
+      }
+      func f(g: (variable1: Int, variable2: Double, variable3: Bool, variable4: String) async -> Double) {
+        let a = 123
+        let b = "abc"
+      }
+      """
+
+    let expected =
+      """
+      func f(g: (_ somevalue: Int) async -> String?) {
+        let a = 123
+        let b = "abc"
+      }
+      func f(g: (currentLevel: Int) async -> String?) {
+        let a = 123
+        let b = "abc"
+      }
+      func f(g: (currentLevel: inout Int) async -> String?) {
+        let a = 123
+        let b = "abc"
+      }
+      func f(
+        g: (variable1: Int, variable2: Double, variable3: Bool) async ->
+          Double
+      ) {
+        let a = 123
+        let b = "abc"
+      }
+      func f(
+        g: (
+          variable1: Int, variable2: Double, variable3: Bool,
+          variable4: String
+        ) async -> Double
+      ) {
+        let a = 123
+        let b = "abc"
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 66)
+  }
+
+  func testFunctionTypeAsyncThrows() {
+    let input =
+      """
+      func f(g: (_ somevalue: Int) async throws -> String?) {
+        let a = 123
+        let b = "abc"
+      }
+      func f(g: (currentLevel: Int) async throws -> String?) {
+        let a = 123
+        let b = "abc"
+      }
+      func f(g: (currentLevel: inout Int) async throws -> String?) {
+        let a = 123
+        let b = "abc"
+      }
+      func f(g: (variable1: Int, variable2: Double, variable3: Bool) async throws -> Double) {
+        let a = 123
+        let b = "abc"
+      }
+      func f(g: (variable1: Int, variable2: Double, variable3: Bool, variable4: String) async throws -> Double) {
+        let a = 123
+        let b = "abc"
+      }
+      """
+
+    let expected =
+      """
+      func f(g: (_ somevalue: Int) async throws -> String?) {
+        let a = 123
+        let b = "abc"
+      }
+      func f(g: (currentLevel: Int) async throws -> String?) {
+        let a = 123
+        let b = "abc"
+      }
+      func f(g: (currentLevel: inout Int) async throws -> String?) {
+        let a = 123
+        let b = "abc"
+      }
+      func f(
+        g: (variable1: Int, variable2: Double, variable3: Bool) async throws ->
+          Double
+      ) {
+        let a = 123
+        let b = "abc"
+      }
+      func f(
+        g: (
+          variable1: Int, variable2: Double, variable3: Bool, variable4: String
+        ) async throws -> Double
+      ) {
+        let a = 123
+        let b = "abc"
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 73)
+  }
+
   func testFunctionTypeThrows() {
     let input =
       """
@@ -84,7 +205,7 @@ final class FunctionTypeTests: PrettyPrintTestCase {
         let b = "abc"
       }
       """
-    
+
     let expected =
       """
       func f(g: (_ somevalue: Int) throws -> String?) {
@@ -117,7 +238,7 @@ final class FunctionTypeTests: PrettyPrintTestCase {
       }
 
       """
-    
+
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 67)
   }
 
