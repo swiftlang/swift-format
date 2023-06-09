@@ -1752,7 +1752,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     before(node.firstToken(viewMode: .sourceAccurate), tokens: .printerControl(kind: .disableBreaking(allowDiscretionary: false)))
 
     arrangeAttributeList(node.attributes)
-    after(node.importTok, tokens: .space)
+    after(node.importKeyword, tokens: .space)
     after(node.importKind, tokens: .space)
 
     after(node.lastToken(viewMode: .sourceAccurate), tokens: .printerControl(kind: .enableBreaking))
