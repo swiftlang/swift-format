@@ -138,9 +138,8 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       }
       let arrayTypeExpr = makeArrayTypeExpression(
         elementType: typeArgument.argumentType,
-        leftSquareBracket: TokenSyntax.leftSquareBracketToken(leadingTrivia: leadingTrivia),
-        rightSquareBracket:
-          TokenSyntax.rightSquareBracketToken(trailingTrivia: trailingTrivia))
+        leftSquare: TokenSyntax.leftSquareToken(leadingTrivia: leadingTrivia),
+        rightSquare: TokenSyntax.rightSquareToken(trailingTrivia: trailingTrivia))
       newNode = ExprSyntax(arrayTypeExpr)
 
     case "Dictionary":
@@ -151,10 +150,9 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       let dictTypeExpr = makeDictionaryTypeExpression(
         keyType: typeArguments.0.argumentType,
         valueType: typeArguments.1.argumentType,
-        leftSquareBracket: TokenSyntax.leftSquareBracketToken(leadingTrivia: leadingTrivia),
+        leftSquare: TokenSyntax.leftSquareToken(leadingTrivia: leadingTrivia),
         colon: TokenSyntax.colonToken(trailingTrivia: .spaces(1)),
-        rightSquareBracket:
-          TokenSyntax.rightSquareBracketToken(trailingTrivia: trailingTrivia))
+        rightSquare: TokenSyntax.rightSquareToken(trailingTrivia: trailingTrivia))
       newNode = ExprSyntax(dictTypeExpr)
 
     case "Optional":
@@ -205,9 +203,9 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     trailingTrivia: Trivia
   ) -> TypeSyntax {
     let result = ArrayTypeSyntax(
-      leftSquareBracket: TokenSyntax.leftSquareBracketToken(leadingTrivia: leadingTrivia),
+      leftSquare: TokenSyntax.leftSquareToken(leadingTrivia: leadingTrivia),
       elementType: element,
-      rightSquareBracket: TokenSyntax.rightSquareBracketToken(trailingTrivia: trailingTrivia))
+      rightSquare: TokenSyntax.rightSquareToken(trailingTrivia: trailingTrivia))
     return TypeSyntax(result)
   }
 
@@ -220,11 +218,11 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     trailingTrivia: Trivia
   ) -> TypeSyntax {
     let result = DictionaryTypeSyntax(
-      leftSquareBracket: TokenSyntax.leftSquareBracketToken(leadingTrivia: leadingTrivia),
+      leftSquare: TokenSyntax.leftSquareToken(leadingTrivia: leadingTrivia),
       keyType: key,
       colon: TokenSyntax.colonToken(trailingTrivia: .spaces(1)),
       valueType: value,
-      rightSquareBracket: TokenSyntax.rightSquareBracketToken(trailingTrivia: trailingTrivia))
+      rightSquare: TokenSyntax.rightSquareToken(trailingTrivia: trailingTrivia))
     return TypeSyntax(result)
   }
 
@@ -272,18 +270,18 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
   /// have a valid expression representation.
   private func makeArrayTypeExpression(
     elementType: TypeSyntax,
-    leftSquareBracket: TokenSyntax,
-    rightSquareBracket: TokenSyntax
+    leftSquare: TokenSyntax,
+    rightSquare: TokenSyntax
   ) -> ArrayExprSyntax? {
     guard let elementTypeExpr = expressionRepresentation(of: elementType) else {
       return nil
     }
     return ArrayExprSyntax(
-      leftSquare: leftSquareBracket,
+      leftSquare: leftSquare,
       elements: ArrayElementListSyntax([
         ArrayElementSyntax(expression: elementTypeExpr, trailingComma: nil),
       ]),
-      rightSquare: rightSquareBracket)
+      rightSquare: rightSquare)
   }
 
   /// Returns a `DictionaryExprSyntax` whose single key/value pair is the expression representations
@@ -292,9 +290,9 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
   private func makeDictionaryTypeExpression(
     keyType: TypeSyntax,
     valueType: TypeSyntax,
-    leftSquareBracket: TokenSyntax,
+    leftSquare: TokenSyntax,
     colon: TokenSyntax,
-    rightSquareBracket: TokenSyntax
+    rightSquare: TokenSyntax
   ) -> DictionaryExprSyntax? {
     guard
       let keyTypeExpr = expressionRepresentation(of: keyType),
@@ -310,9 +308,9 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         trailingComma: nil),
     ])
     return DictionaryExprSyntax(
-      leftSquare: leftSquareBracket,
+      leftSquare: leftSquare,
       content: .elements(dictElementList),
-      rightSquare: rightSquareBracket)
+      rightSquare: rightSquare)
   }
 
   /// Returns an `OptionalChainingExprSyntax` whose wrapped expression is the expression
@@ -394,17 +392,17 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     case .arrayType(let arrayType):
       let result = makeArrayTypeExpression(
         elementType: arrayType.elementType,
-        leftSquareBracket: arrayType.leftSquareBracket,
-        rightSquareBracket: arrayType.rightSquareBracket)
+        leftSquare: arrayType.leftSquare,
+        rightSquare: arrayType.rightSquare)
       return ExprSyntax(result)
 
     case .dictionaryType(let dictionaryType):
       let result = makeDictionaryTypeExpression(
         keyType: dictionaryType.keyType,
         valueType: dictionaryType.valueType,
-        leftSquareBracket: dictionaryType.leftSquareBracket,
+        leftSquare: dictionaryType.leftSquare,
         colon: dictionaryType.colon,
-        rightSquareBracket: dictionaryType.rightSquareBracket)
+        rightSquare: dictionaryType.rightSquare)
       return ExprSyntax(result)
 
     case .optionalType(let optionalType):
