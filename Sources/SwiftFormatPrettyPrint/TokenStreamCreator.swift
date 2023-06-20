@@ -240,6 +240,52 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
+  override func visit(_ node: MacroDeclSyntax) -> SyntaxVisitorContinueKind {
+    // Macro declarations have a syntax that combines the best parts of types and functions while
+    // adding their own unique flavor, so we have to copy and adapt the relevant parts of those
+    // `arrange*` functions here.
+    before(node.firstToken(viewMode: .sourceAccurate), tokens: .open)
+
+    arrangeAttributeList(node.attributes)
+
+    let hasArguments = !node.signature.input.parameterList.isEmpty
+
+    // Prioritize keeping ") -> <return_type>" together. We can only do this if the macro has
+    // arguments.
+    if hasArguments && config.prioritizeKeepingFunctionOutputTogether {
+      // Due to visitation order, the matching .open break is added in ParameterClauseSyntax.
+      after(node.signature.lastToken(viewMode: .sourceAccurate), tokens: .close)
+    }
+
+    let mustBreak = node.signature.output != nil || node.definition != nil
+    arrangeParameterClause(node.signature.input, forcesBreakBeforeRightParen: mustBreak)
+
+    // Prioritize keeping "<modifiers> macro <name>(" together. Also include the ")" if the
+    // parameter list is empty.
+    let firstTokenAfterAttributes =
+      node.modifiers?.firstToken(viewMode: .sourceAccurate) ?? node.macroKeyword
+    before(firstTokenAfterAttributes, tokens: .open)
+    after(node.macroKeyword, tokens: .break)
+    if hasArguments || node.genericParameterClause != nil {
+      after(node.signature.input.leftParen, tokens: .close)
+    } else {
+      after(node.signature.input.rightParen, tokens: .close)
+    }
+
+    if let genericWhereClause = node.genericWhereClause {
+      before(genericWhereClause.firstToken(viewMode: .sourceAccurate), tokens: .break(.same), .open)
+      after(genericWhereClause.lastToken(viewMode: .sourceAccurate), tokens: .close)
+    }
+    if let definition = node.definition {
+      // Start the group *after* the `=` so that it all wraps onto its own line if it doesn't fit.
+      after(definition.equal, tokens: .open)
+      after(definition.lastToken(viewMode: .sourceAccurate), tokens: .close)
+    }
+
+    after(node.lastToken(viewMode: .sourceAccurate), tokens: .close)
+    return .visitChildren
+  }
+
   /// Applies formatting tokens to the tokens in the given type declaration node (i.e., a class,
   /// struct, enum, protocol, or extension).
   private func arrangeTypeDeclBlock(
