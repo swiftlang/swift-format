@@ -1296,11 +1296,23 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: MacroExpansionExprSyntax) -> SyntaxVisitorContinueKind {
+    let arguments = node.argumentList
+
+    // If there is a trailing closure, force the right parenthesis down to the next line so it
+    // stays with the open curly brace.
+    let breakBeforeRightParen =
+      (node.trailingClosure != nil && !isCompactSingleFunctionCallArgument(arguments))
+      || mustBreakBeforeClosingDelimiter(of: node, argumentListPath: \.argumentList)
+
+    before(
+      node.trailingClosure?.leftBrace,
+      tokens: .break(.same, newlines: .elective(ignoresDiscretionary: true)))
+
     arrangeFunctionCallArgumentList(
-      node.argumentList,
+      arguments,
       leftDelimiter: node.leftParen,
       rightDelimiter: node.rightParen,
-      forcesBreakBeforeRightDelimiter: false)
+      forcesBreakBeforeRightDelimiter: breakBeforeRightParen)
     return .visitChildren
   }
 
