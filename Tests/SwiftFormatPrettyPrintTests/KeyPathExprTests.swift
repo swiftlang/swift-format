@@ -1,5 +1,3 @@
-// TODO: Add more tests and figure out how we want to wrap keypaths. Right now, they just get
-// printed without breaks.
 final class KeyPathExprTests: PrettyPrintTestCase {
   func testSimple() {
     let input =
@@ -47,7 +45,7 @@ final class KeyPathExprTests: PrettyPrintTestCase {
       let z = a.map(\.foo!.bar)
       """#
 
-    let expected =
+    let expected80 =
       #"""
       let x = \.foo?
       let y = \.foo!.bar
@@ -55,7 +53,23 @@ final class KeyPathExprTests: PrettyPrintTestCase {
 
       """#
 
-    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
+    assertPrettyPrintEqual(input: input, expected: expected80, linelength: 80)
+
+    let expected11 =
+      #"""
+      let x =
+        \.foo?
+      let y =
+        \.foo!
+        .bar
+      let z =
+        a.map(
+          \.foo!
+            .bar)
+
+      """#
+
+    assertPrettyPrintEqual(input: input, expected: expected11, linelength: 11)
   }
 
   func testSubscript() {
@@ -80,19 +94,63 @@ final class KeyPathExprTests: PrettyPrintTestCase {
   func testImplicitSelfUnwrap() {
     let input =
       #"""
-      //let x = \.?.foo
-      //let y = \.?.foo.bar
+      let x = \.?.foo
+      let y = \.?.foo.bar
       let z = a.map(\.?.foo.bar)
+      """#
+
+    let expected80 =
+      #"""
+      let x = \.?.foo
+      let y = \.?.foo.bar
+      let z = a.map(\.?.foo.bar)
+
+      """#
+
+    assertPrettyPrintEqual(input: input, expected: expected80, linelength: 80)
+
+    let expected11 =
+      #"""
+      let x =
+        \.?.foo
+      let y =
+        \.?.foo
+        .bar
+      let z =
+        a.map(
+          \.?.foo
+            .bar)
+
+      """#
+
+    assertPrettyPrintEqual(input: input, expected: expected11, linelength: 11)
+  }
+
+  func testWrapping() {
+    let input =
+      #"""
+      let x = \ReallyLongType.reallyLongProperty.anotherLongProperty
+      let x = \.reeeeallyLongProperty.anotherLongProperty
+      let x = \.longProperty.a.b.c[really + long + expression].anotherLongProperty
       """#
 
     let expected =
       #"""
-      //let x = \.?.foo
-      //let y = \.?.foo.bar
-      let z = a.map(\.?.foo.bar)
+      let x =
+        \ReallyLongType
+        .reallyLongProperty
+        .anotherLongProperty
+      let x =
+        \.reeeeallyLongProperty
+        .anotherLongProperty
+      let x =
+        \.longProperty.a.b.c[
+          really + long
+            + expression
+        ].anotherLongProperty
 
       """#
 
-    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 23)
   }
 }
