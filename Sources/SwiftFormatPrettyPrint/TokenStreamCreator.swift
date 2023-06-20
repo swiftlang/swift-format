@@ -1760,6 +1760,30 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: KeyPathExprSyntax) -> SyntaxVisitorContinueKind {
+    before(node.backslash, tokens: .open)
+    after(node.lastToken(viewMode: .sourceAccurate), tokens: .close)
+    return .visitChildren
+  }
+
+  override func visit(_ node: KeyPathComponentSyntax) -> SyntaxVisitorContinueKind {
+    // If this is the first component (immediately after the backslash), allow a break after the
+    // slash only if a typename follows it. Do not break in the middle of `\.`.
+    var breakBeforePeriod = true
+    if let keyPathComponents = node.parent?.as(KeyPathComponentListSyntax.self),
+      let keyPathExpr = keyPathComponents.parent?.as(KeyPathExprSyntax.self),
+      node == keyPathExpr.components.first, keyPathExpr.root == nil
+    {
+      breakBeforePeriod = false
+    }
+    if breakBeforePeriod {
+      before(node.period, tokens: .break(.continue, size: 0))
+    }
+    return .visitChildren
+  }
+
+  override func visit(_ node: KeyPathSubscriptComponentSyntax) -> SyntaxVisitorContinueKind {
+    after(node.leftBracket, tokens: .break(.open, size: 0), .open)
+    before(node.rightBracket, tokens: .break(.close, size: 0), .close)
     return .visitChildren
   }
 
@@ -1847,24 +1871,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: InfixOperatorExprSyntax) -> SyntaxVisitorContinueKind {
-    // FIXME: This is a workaround/hack for https://github.com/apple/swift-syntax/issues/928. For
-    // keypaths like `\.?.foo`, they get represented (after folding) as an infix operator expression
-    // with an empty keypath, followed by the "binary operator" `.?.`, followed by other
-    // expressions. We can detect this and treat the whole thing as a verbatim node, which mimics
-    // what we do today for keypaths (i.e., nothing).
-    if let keyPathExpr = node.leftOperand.as(KeyPathExprSyntax.self),
-      keyPathExpr.components.isEmpty
-    {
-      // If there were spaces in the trailing trivia of the previous token, they would have been
-      // ignored (since this expression would be expected to insert its own preceding breaks).
-      // Preserve that whitespace verbatim for now.
-      if let previousToken = node.firstToken(viewMode: .sourceAccurate)?.previousToken(viewMode: .sourceAccurate) {
-        appendTrailingTrivia(previousToken, forced: true)
-      }
-      verbatimToken(Syntax(node), indentingBehavior: .none)
-      return .skipChildren
-    }
-
     let binOp = node.operatorOperand
     if binOp.is(ArrowExprSyntax.self) {
       // `ArrowExprSyntax` nodes occur when a function type is written in an expression context;
