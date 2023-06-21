@@ -3222,7 +3222,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   private func startsWithOpenDelimiter(_ node: Syntax) -> Bool {
     guard let token = node.firstToken(viewMode: .sourceAccurate) else { return false }
     switch token.tokenKind {
-    case .leftBrace, .leftParen, .leftSquareBracket: return true
+    case .leftBrace, .leftParen, .leftSquare: return true
     default: return false
     }
   }
