@@ -1783,10 +1783,26 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
+  override func visit(_ node: AvailabilityVersionRestrictionListSyntax)
+    -> SyntaxVisitorContinueKind
+  {
+    insertTokens(.break(.same, size: 1), betweenElementsOf: node)
+    return .visitChildren
+  }
+
   override func visit(_ node: AvailabilityVersionRestrictionSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken(viewMode: .sourceAccurate), tokens: .open)
     after(node.platform, tokens: .break(.continue, size: 1))
     after(node.lastToken(viewMode: .sourceAccurate), tokens: .close)
+    return .visitChildren
+  }
+
+  override func visit(_ node: BackDeployedAttributeSpecListSyntax) -> SyntaxVisitorContinueKind {
+    before(
+      node.platforms.firstToken(viewMode: .sourceAccurate),
+      tokens: .break(.open, size: 1), .open(argumentListConsistency()))
+    after(
+      node.platforms.lastToken(viewMode: .sourceAccurate), tokens: .break(.close, size: 0), .close)
     return .visitChildren
   }
 
