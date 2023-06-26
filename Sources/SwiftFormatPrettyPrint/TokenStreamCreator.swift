@@ -2287,7 +2287,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       // Looks up the correct break kind based on prior context.
       let breakKind = pendingMultilineStringBreakKinds[node, default: .same]
       after(node.openQuote, tokens: .break(breakKind, size: 0, newlines: .hard(count: 1)))
-      before(node.closeQuote, tokens: .break(breakKind, newlines: .hard(count: 1)))
+      if !node.segments.isEmpty {
+        before(node.closeQuote, tokens: .break(breakKind, newlines: .hard(count: 1)))
+      }
     }
     return .visitChildren
   }

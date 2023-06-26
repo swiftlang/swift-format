@@ -350,6 +350,7 @@ final class StringTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
   }
+
   func testLeadingMultilineStringsInOtherExpressions() {
     // The stacked indentation behavior needs to drill down into different node types to find the
     // leftmost multiline string literal. This makes sure that we cover various cases.
@@ -416,5 +417,45 @@ final class StringTests: PrettyPrintTestCase {
         """ is NSString
       """#
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 100)
+  }
+
+  func testEmptyMultilineStrings() {
+    let input =
+      ##"""
+      let x = """
+        """
+      let y =
+        """
+        """
+      let x = #"""
+        """#
+      let y =
+        #"""
+        """#
+      """##
+
+    assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 20)
+  }
+
+  func testOnlyBlankLinesMultilineStrings() {
+    let input =
+      ##"""
+      let x = """
+
+        """
+      let y =
+        """
+
+        """
+      let x = #"""
+
+        """#
+      let y =
+        #"""
+
+        """#
+      """##
+
+    assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 20)
   }
 }
