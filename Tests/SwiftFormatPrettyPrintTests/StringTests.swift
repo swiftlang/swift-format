@@ -419,6 +419,33 @@ final class StringTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 100)
   }
 
+  func testMultilineStringsNestedInAnotherWrappingContext() {
+    let input =
+      #"""
+      guard
+          let x = """
+              blah
+              blah
+              """.data(using: .utf8) {
+          print(x)
+      }
+      """#
+
+    let expected =
+      #"""
+      guard
+        let x = """
+          blah
+          blah
+          """.data(using: .utf8)
+      {
+        print(x)
+      }
+
+      """#
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
+  }
+
   func testEmptyMultilineStrings() {
     let input =
       ##"""

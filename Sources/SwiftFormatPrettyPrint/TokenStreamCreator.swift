@@ -1948,13 +1948,18 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
         // If the rhs starts with a parenthesized expression, stack indentation around it.
         // Otherwise, use regular continuation breaks.
-        if let (unindentingNode, _, breakKind, _) =
+        if let (unindentingNode, _, breakKind, shouldGroup) =
           stackedIndentationBehavior(after: binOp, rhs: rhs)
         {
           beforeTokens = [.break(.open(kind: breakKind))]
+          var afterTokens: [Token] = [.break(.close(mustBreak: false), size: 0)]
+          if shouldGroup {
+            beforeTokens.append(.open)
+            afterTokens.append(.close)
+          }
           after(
             unindentingNode.lastToken(viewMode: .sourceAccurate),
-            tokens: [.break(.close(mustBreak: false), size: 0)])
+            tokens: afterTokens)
         } else {
           beforeTokens = [.break(.continue)]
         }
@@ -2104,9 +2109,17 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     if let initializer = node.initializer {
       let expr = initializer.value
 
-      if let (unindentingNode, _, breakKind, _) = stackedIndentationBehavior(rhs: expr) {
-        after(initializer.equal, tokens: .break(.open(kind: breakKind)))
-        after(unindentingNode.lastToken(viewMode: .sourceAccurate), tokens: .break(.close(mustBreak: false), size: 0))
+      if let (unindentingNode, _, breakKind, shouldGroup) = stackedIndentationBehavior(rhs: expr) {
+        var openTokens: [Token] = [.break(.open(kind: breakKind))]
+        if shouldGroup {
+          openTokens.append(.open)
+        }
+        after(initializer.equal, tokens: openTokens)
+        var closeTokens: [Token] = [.break(.close(mustBreak: false), size: 0)]
+        if shouldGroup {
+          closeTokens.append(.close)
+        }
+        after(unindentingNode.lastToken(viewMode: .sourceAccurate), tokens: closeTokens)
       } else {
         after(initializer.equal, tokens: .break(.continue))
       }
@@ -2273,9 +2286,13 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   override func visit(_ node: InitializerClauseSyntax) -> SyntaxVisitorContinueKind {
     before(node.equal, tokens: .space)
 
-    // InitializerClauses that are children of a PatternBindingSyntax are already handled in the
-    // latter node, to ensure that continuations stack appropriately.
-    if node.parent == nil || !node.parent!.is(PatternBindingSyntax.self) {
+    // InitializerClauses that are children of a PatternBindingSyntax or
+    // OptionalBindingConditionSyntax are already handled in the latter node, to ensure that
+    // continuations stack appropriately.
+    if let parent = node.parent,
+      !parent.is(PatternBindingSyntax.self)
+        && !parent.is(OptionalBindingConditionSyntax.self)
+    {
       after(node.equal, tokens: .break)
     }
     return .visitChildren
@@ -2455,6 +2472,26 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         typeAnnotation.colon,
         tokens: .break(.open(kind: .continuation), newlines: .elective(ignoresDiscretionary: true)))
       after(typeAnnotation.lastToken(viewMode: .sourceAccurate), tokens: .break(.close(mustBreak: false), size: 0))
+    }
+
+    if let initializer = node.initializer {
+      if let (unindentingNode, _, breakKind, shouldGroup) =
+        stackedIndentationBehavior(rhs: initializer.value)
+      {
+        var openTokens: [Token] = [.break(.open(kind: breakKind))]
+        if shouldGroup {
+          openTokens.append(.open)
+        }
+        after(initializer.equal, tokens: openTokens)
+
+        var closeTokens: [Token] = [.break(.close(mustBreak: false), size: 0)]
+        if shouldGroup {
+          closeTokens.append(.close)
+        }
+        after(unindentingNode.lastToken(viewMode: .sourceAccurate), tokens: closeTokens)
+      } else {
+        after(initializer.equal, tokens: .break(.continue))
+      }
     }
 
     return .visitChildren
@@ -3372,6 +3409,50 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     }
   }
 
+  /// Walks the expression and returns the leftmost subexpression (which might be the expression
+  /// itself) if the leftmost child is a node of the given type or if it is a unary operation
+  /// applied to a node of the given type.
+  ///
+  /// - Parameter expr: The expression whose leftmost matching subexpression should be returned.
+  /// - Returns: The leftmost subexpression, or nil if the leftmost subexpression was not the
+  ///   desired type.
+  private func leftmostExpr(
+    of expr: ExprSyntax,
+    ifMatching predicate: (ExprSyntax) -> Bool
+  ) -> ExprSyntax? {
+    if predicate(expr) {
+      return expr
+    }
+    switch Syntax(expr).as(SyntaxEnum.self) {
+    case .infixOperatorExpr(let infixOperatorExpr):
+      return leftmostExpr(of: infixOperatorExpr.leftOperand, ifMatching: predicate)
+    case .asExpr(let asExpr):
+      return leftmostExpr(of: asExpr.expression, ifMatching: predicate)
+    case .isExpr(let isExpr):
+      return leftmostExpr(of: isExpr.expression, ifMatching: predicate)
+    case .forcedValueExpr(let forcedValueExpr):
+      return leftmostExpr(of: forcedValueExpr.expression, ifMatching: predicate)
+    case .optionalChainingExpr(let optionalChainingExpr):
+      return leftmostExpr(of: optionalChainingExpr.expression, ifMatching: predicate)
+    case .postfixUnaryExpr(let postfixUnaryExpr):
+      return leftmostExpr(of: postfixUnaryExpr.expression, ifMatching: predicate)
+    case .prefixOperatorExpr(let prefixOperatorExpr):
+      return leftmostExpr(of: prefixOperatorExpr.postfixExpression, ifMatching: predicate)
+    case .ternaryExpr(let ternaryExpr):
+      return leftmostExpr(of: ternaryExpr.conditionExpression, ifMatching: predicate)
+    case .functionCallExpr(let functionCallExpr):
+      return leftmostExpr(of: functionCallExpr.calledExpression, ifMatching: predicate)
+    case .subscriptExpr(let subscriptExpr):
+      return leftmostExpr(of: subscriptExpr.calledExpression, ifMatching: predicate)
+    case .memberAccessExpr(let memberAccessExpr):
+      return memberAccessExpr.base.flatMap { leftmostExpr(of: $0, ifMatching: predicate) }
+    case .postfixIfConfigExpr(let postfixIfConfigExpr):
+      return postfixIfConfigExpr.base.flatMap { leftmostExpr(of: $0, ifMatching: predicate) }
+    default:
+      return nil
+    }
+  }
+
   /// Walks the expression and returns the leftmost multiline string literal (which might be the
   /// expression itself) if the leftmost child is a multiline string literal or if it is a unary
   /// operation applied to a multiline string literal.
@@ -3380,37 +3461,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   /// - Returns: The leftmost multiline string literal, or nil if the leftmost subexpression was
   ///   not a multiline string literal.
   private func leftmostMultilineStringLiteral(of expr: ExprSyntax) -> StringLiteralExprSyntax? {
-    switch Syntax(expr).as(SyntaxEnum.self) {
-    case .stringLiteralExpr(let stringLiteralExpr)
-      where stringLiteralExpr.openQuote.tokenKind == .multilineStringQuote:
-      return stringLiteralExpr
-    case .infixOperatorExpr(let infixOperatorExpr):
-      return leftmostMultilineStringLiteral(of: infixOperatorExpr.leftOperand)
-    case .asExpr(let asExpr):
-      return leftmostMultilineStringLiteral(of: asExpr.expression)
-    case .isExpr(let isExpr):
-      return leftmostMultilineStringLiteral(of: isExpr.expression)
-    case .forcedValueExpr(let forcedValueExpr):
-      return leftmostMultilineStringLiteral(of: forcedValueExpr.expression)
-    case .optionalChainingExpr(let optionalChainingExpr):
-      return leftmostMultilineStringLiteral(of: optionalChainingExpr.expression)
-    case .postfixUnaryExpr(let postfixUnaryExpr):
-      return leftmostMultilineStringLiteral(of: postfixUnaryExpr.expression)
-    case .prefixOperatorExpr(let prefixOperatorExpr):
-      return leftmostMultilineStringLiteral(of: prefixOperatorExpr.postfixExpression)
-    case .ternaryExpr(let ternaryExpr):
-      return leftmostMultilineStringLiteral(of: ternaryExpr.conditionExpression)
-    case .functionCallExpr(let functionCallExpr):
-      return leftmostMultilineStringLiteral(of: functionCallExpr.calledExpression)
-    case .subscriptExpr(let subscriptExpr):
-      return leftmostMultilineStringLiteral(of: subscriptExpr.calledExpression)
-    case .memberAccessExpr(let memberAccessExpr):
-      return memberAccessExpr.base.flatMap { leftmostMultilineStringLiteral(of: $0) }
-    case .postfixIfConfigExpr(let postfixIfConfigExpr):
-      return postfixIfConfigExpr.base.flatMap { leftmostMultilineStringLiteral(of: $0) }
-    default:
-      return nil
-    }
+    return leftmostExpr(of: expr) {
+      $0.as(StringLiteralExprSyntax.self)?.openQuote.tokenKind == .multilineStringQuote
+    }?.as(StringLiteralExprSyntax.self)
   }
 
   /// Returns the outermost node enclosing the given node whose closing delimiter(s) must be kept
@@ -3503,7 +3556,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
           unindentingNode: unindentingParenExpr,
           shouldReset: true,
           breakKind: .continuation,
-          shouldGroup: true
+          shouldGroup: false
         )
       }
 
@@ -3519,7 +3572,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         unindentingNode: Syntax(parenthesizedExpr),
         shouldReset: false,
         breakKind: .continuation,
-        shouldGroup: true
+        shouldGroup: false
       )
     }
 
@@ -3532,6 +3585,17 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         shouldReset: false,
         breakKind: .block,
         shouldGroup: false
+      )
+    }
+
+    if let leftmostExpr = leftmostExpr(of: rhs, ifMatching: {
+      $0.is(IfExprSyntax.self) || $0.is(SwitchExprSyntax.self)
+    }) {
+      return (
+        unindentingNode: Syntax(leftmostExpr),
+        shouldReset: false,
+        breakKind: .block,
+        shouldGroup: true
       )
     }
 
