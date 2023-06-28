@@ -163,25 +163,25 @@ final class IfConfigTests: PrettyPrintTestCase {
 
   func testInvalidDiscretionaryLineBreaksRemoved() {
     let input =
-         """
-         #if (canImport(SwiftUI) &&
-         !(os(iOS) &&
-          arch(arm)) &&
-            ((canImport(AppKit) ||
-         canImport(UIKit)) && !os(watchOS)))
-         conditionalFunc(foo, bar, baz)
-           #endif
-         """
+      """
+      #if (canImport(SwiftUI) &&
+      !(os(iOS) &&
+       arch(arm)) &&
+         ((canImport(AppKit) ||
+      canImport(UIKit)) && !os(watchOS)))
+      conditionalFunc(foo, bar, baz)
+        #endif
+      """
 
-       let expected =
-         """
-         #if (canImport(SwiftUI) && !(os(iOS) && arch(arm)) && ((canImport(AppKit) || canImport(UIKit)) && !os(watchOS)))
-           conditionalFunc(foo, bar, baz)
-         #endif
+    let expected =
+      """
+      #if (canImport(SwiftUI) && !(os(iOS) && arch(arm)) && ((canImport(AppKit) || canImport(UIKit)) && !os(watchOS)))
+        conditionalFunc(foo, bar, baz)
+      #endif
 
-         """
+      """
 
-       assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
 
   func testValidDiscretionaryLineBreaksRetained() {
@@ -299,6 +299,8 @@ final class IfConfigTests: PrettyPrintTestCase {
         #if os(iOS) || os(watchOS)
           #if os(iOS)
           .iOSModifier()
+          #elseif os(tvOS)
+          .tvOSModifier()
           #else
           .watchOSModifier()
           #endif
@@ -314,6 +316,8 @@ final class IfConfigTests: PrettyPrintTestCase {
           #if os(iOS) || os(watchOS)
             #if os(iOS)
               .iOSModifier()
+            #elseif os(tvOS)
+              .tvOSModifier()
             #else
               .watchOSModifier()
             #endif
@@ -325,7 +329,6 @@ final class IfConfigTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
-
 
   func testPostfixPoundIfAfterVariables() {
     let input =
@@ -398,6 +401,7 @@ final class IfConfigTests: PrettyPrintTestCase {
         .padding([.vertical])
       #if os(iOS)
         .iOSSpecificModifier()
+        .anotherIOSSpecificModifier()
       #endif
         .commonModifier()
       """
@@ -408,6 +412,7 @@ final class IfConfigTests: PrettyPrintTestCase {
         .padding([.vertical])
         #if os(iOS)
           .iOSSpecificModifier()
+          .anotherIOSSpecificModifier()
         #endif
         .commonModifier()
 
@@ -449,6 +454,63 @@ final class IfConfigTests: PrettyPrintTestCase {
               }
           )
         #endif
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
+  }
+
+  func testPostfixPoundIfNotIndentedIfClosingParenOnOwnLine() {
+    let input =
+      """
+      SomeFunction(
+        foo,
+        bar
+      )
+      #if os(iOS)
+      .iOSSpecificModifier()
+      #endif
+      .commonModifier()
+      """
+
+    let expected =
+      """
+      SomeFunction(
+        foo,
+        bar
+      )
+      #if os(iOS)
+        .iOSSpecificModifier()
+      #endif
+      .commonModifier()
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
+  }
+
+  func testPostfixPoundIfForcesPrecedingClosingParenOntoNewLine() {
+    let input =
+      """
+      SomeFunction(
+        foo,
+        bar)
+        #if os(iOS)
+        .iOSSpecificModifier()
+        #endif
+        .commonModifier()
+      """
+
+    let expected =
+      """
+      SomeFunction(
+        foo,
+        bar
+      )
+      #if os(iOS)
+        .iOSSpecificModifier()
+      #endif
+      .commonModifier()
 
       """
 
