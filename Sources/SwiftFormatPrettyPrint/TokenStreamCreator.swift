@@ -988,11 +988,19 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: MemberAccessExprSyntax) -> SyntaxVisitorContinueKind {
     preVisitInsertingContextualBreaks(node)
-
     return .visitChildren
   }
 
   override func visitPost(_ node: MemberAccessExprSyntax) {
+    clearContextualBreakState(node)
+  }
+
+  override func visit(_ node: PostfixIfConfigExprSyntax) -> SyntaxVisitorContinueKind {
+    preVisitInsertingContextualBreaks(node)
+    return .visitChildren
+  }
+
+  override func visitPost(_ node: PostfixIfConfigExprSyntax) {
     clearContextualBreakState(node)
   }
 
@@ -1456,29 +1464,10 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       before(tokenToOpenWith.nextToken(viewMode: .all), tokens: .break(breakKindClose, newlines: .soft), .close)
     }
 
-    if isNestedInPostfixIfConfig(node: Syntax(node)) {
-      let breakToken: Token
-      let currentIfConfigDecl = node.parent?.parent?.as(IfConfigDeclSyntax.self)
-
-      if let currentIfConfigDecl = currentIfConfigDecl,
-         let tokenBeforeCurrentIfConfigDecl = currentIfConfigDecl.previousToken(viewMode: .sourceAccurate),
-         isNestedInIfConfig(node: Syntax(tokenBeforeCurrentIfConfigDecl)) ||
-          tokenBeforeCurrentIfConfigDecl.text == "}" {
-        breakToken = .break(.reset)
-      } else {
-        breakToken = .break
-        before(currentIfConfigDecl?.poundEndif, tokens: [.break])
-      }
-
+    if !isNestedInPostfixIfConfig(node: Syntax(node)), let condition = node.condition {
       before(
-        node.firstToken(viewMode: .sourceAccurate),
-        tokens: [
-          .printerControl(kind: .enableBreaking),
-          breakToken,
-        ]
-      )
-    } else if let condition = node.condition {
-      before(condition.firstToken(viewMode: .sourceAccurate), tokens: .printerControl(kind: .disableBreaking(allowDiscretionary: true)))
+        condition.firstToken(viewMode: .sourceAccurate),
+        tokens: .printerControl(kind: .disableBreaking(allowDiscretionary: true)))
       after(
         condition.lastToken(viewMode: .sourceAccurate),
         tokens: .printerControl(kind: .enableBreaking), .break(.reset, size: 0))
@@ -3304,7 +3293,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   private func mustBreakBeforeClosingDelimiter<T: ExprSyntaxProtocol>(
     of expr: T, argumentListPath: KeyPath<T, TupleExprElementListSyntax>
   ) -> Bool {
-    guard let parent = expr.parent, parent.is(MemberAccessExprSyntax.self) else { return false }
+    guard
+      let parent = expr.parent,
+      parent.is(MemberAccessExprSyntax.self) || parent.is(PostfixIfConfigExprSyntax.self)
+    else { return false }
+
     let argumentList = expr[keyPath: argumentListPath]
 
     // When there's a single compact argument, there is no extra indentation for the argument and
@@ -3739,6 +3732,23 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         after(expr.lastToken(viewMode: .sourceAccurate), tokens: .contextualBreakingEnd)
       }
       return (hasCompoundExpression, true)
+    } else if let postfixIfExpr = expr.as(PostfixIfConfigExprSyntax.self),
+      let base = postfixIfExpr.base
+    {
+      // For postfix-if expressions with bases (i.e., they aren't the first `#if` nested inside
+      // another `#if`), add contextual breaks before the top-level clauses (and the terminating
+      // `#endif`) so that they nest or line-up properly based on the preceding node. We don't do
+      // this for initial nested `#if`s because they will already get open/close breaks to control
+      // their indentation from their parent clause.
+      before(postfixIfExpr.firstToken(viewMode: .sourceAccurate), tokens: .contextualBreakingStart)
+      after(postfixIfExpr.lastToken(viewMode: .sourceAccurate), tokens: .contextualBreakingEnd)
+
+      for clause in postfixIfExpr.config.clauses {
+        before(clause.poundKeyword, tokens: .break(.contextual, size: 0))
+      }
+      before(postfixIfExpr.config.poundEndif, tokens: .break(.contextual, size: 0))
+
+      return insertContextualBreaks(base, isTopLevel: false)
     } else if let callingExpr = expr.asProtocol(CallingExprSyntaxProtocol.self) {
       let calledExpression = callingExpr.calledExpression
       let (hasCompoundExpression, hasMemberAccess) =
@@ -3796,20 +3806,6 @@ private func isNestedInPostfixIfConfig(node: Syntax) -> Bool {
 
     if this?.is(IfConfigDeclSyntax.self) == true &&
         this?.parent?.is(PostfixIfConfigExprSyntax.self) == true {
-      return true
-    }
-
-    this = this?.parent
-  }
-
-  return false
-}
-
-private func isNestedInIfConfig(node: Syntax) -> Bool {
-  var this: Syntax? = node
-
-  while this?.parent != nil {
-    if this?.is(IfConfigClauseSyntax.self) == true {
       return true
     }
 
