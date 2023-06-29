@@ -78,6 +78,43 @@ final class SwitchStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 35)
   }
 
+  func testSwitchEmptyCases() {
+    let input =
+      """
+      switch a {
+      case b:
+      default:
+        print("Not b")
+      }
+
+      switch a {
+      case b:
+        // Comment but no statements
+      default:
+        print("Not b")
+      }
+      """
+
+    let expected =
+      """
+      switch a {
+      case b:
+      default:
+        print("Not b")
+      }
+
+      switch a {
+      case b:
+        // Comment but no statements
+      default:
+        print("Not b")
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 35)
+  }
+
   func testSwitchCompoundCases() {
     let input =
       """
@@ -260,20 +297,42 @@ final class SwitchStmtTests: PrettyPrintTestCase {
     let expected =
       """
       func foo() -> Int {
-        let x = switch value1 + value2 + value3 + value4 {
-        case "a":
-          0
-        case "b":
-          1
-        default:
-          2
-        }
+        let x =
+          switch value1 + value2 + value3 + value4 {
+          case "a":
+            0
+          case "b":
+            1
+          default:
+            2
+          }
         return x
       }
 
       """
 
-    assertPrettyPrintEqual(input: input, expected: expected, linelength: 52)
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 46)
+
+    let expected43 =
+      """
+      func foo() -> Int {
+        let x =
+          switch value1 + value2 + value3
+            + value4
+          {
+          case "a":
+            0
+          case "b":
+            1
+          default:
+            2
+          }
+        return x
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected43, linelength: 43)
   }
 
   func testUnknownDefault() {

@@ -163,25 +163,25 @@ final class IfConfigTests: PrettyPrintTestCase {
 
   func testInvalidDiscretionaryLineBreaksRemoved() {
     let input =
-         """
-         #if (canImport(SwiftUI) &&
-         !(os(iOS) &&
-          arch(arm)) &&
-            ((canImport(AppKit) ||
-         canImport(UIKit)) && !os(watchOS)))
-         conditionalFunc(foo, bar, baz)
-           #endif
-         """
+      """
+      #if (canImport(SwiftUI) &&
+      !(os(iOS) &&
+       arch(arm)) &&
+         ((canImport(AppKit) ||
+      canImport(UIKit)) && !os(watchOS)))
+      conditionalFunc(foo, bar, baz)
+        #endif
+      """
 
-       let expected =
-         """
-         #if (canImport(SwiftUI) && !(os(iOS) && arch(arm)) && ((canImport(AppKit) || canImport(UIKit)) && !os(watchOS)))
-           conditionalFunc(foo, bar, baz)
-         #endif
+    let expected =
+      """
+      #if (canImport(SwiftUI) && !(os(iOS) && arch(arm)) && ((canImport(AppKit) || canImport(UIKit)) && !os(watchOS)))
+        conditionalFunc(foo, bar, baz)
+      #endif
 
-         """
+      """
 
-       assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
 
   func testValidDiscretionaryLineBreaksRetained() {
@@ -247,10 +247,10 @@ final class IfConfigTests: PrettyPrintTestCase {
       """
       VStack {
         Text("something")
-        #if os(iOS)
-          .iOSSpecificModifier()
-        #endif
-        .commonModifier()
+          #if os(iOS)
+            .iOSSpecificModifier()
+          #endif
+          .commonModifier()
       }
 
       """
@@ -277,13 +277,13 @@ final class IfConfigTests: PrettyPrintTestCase {
       """
       VStack {
         Text("something")
-        #if os(iOS)
-          .iOSSpecificModifier()
-          .anotherModifier()
-          .anotherAnotherModifier()
-        #endif
-        .commonModifier()
-        .anotherCommonModifier()
+          #if os(iOS)
+            .iOSSpecificModifier()
+            .anotherModifier()
+            .anotherAnotherModifier()
+          #endif
+          .commonModifier()
+          .anotherCommonModifier()
       }
 
       """
@@ -299,6 +299,8 @@ final class IfConfigTests: PrettyPrintTestCase {
         #if os(iOS) || os(watchOS)
           #if os(iOS)
           .iOSModifier()
+          #elseif os(tvOS)
+          .tvOSModifier()
           #else
           .watchOSModifier()
           #endif
@@ -311,21 +313,22 @@ final class IfConfigTests: PrettyPrintTestCase {
       """
       VStack {
         Text("something")
-        #if os(iOS) || os(watchOS)
-          #if os(iOS)
-            .iOSModifier()
-          #else
-            .watchOSModifier()
+          #if os(iOS) || os(watchOS)
+            #if os(iOS)
+              .iOSModifier()
+            #elseif os(tvOS)
+              .tvOSModifier()
+            #else
+              .watchOSModifier()
+            #endif
+            .iOSAndWatchOSModifier()
           #endif
-          .iOSAndWatchOSModifier()
-        #endif
       }
 
       """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
-
 
   func testPostfixPoundIfAfterVariables() {
     let input =
@@ -343,10 +346,10 @@ final class IfConfigTests: PrettyPrintTestCase {
       """
       VStack {
         textView
-        #if os(iOS)
-          .iOSSpecificModifier()
-        #endif
-        .commonModifier()
+          #if os(iOS)
+            .iOSSpecificModifier()
+          #endif
+          .commonModifier()
       }
 
       """
@@ -385,6 +388,129 @@ final class IfConfigTests: PrettyPrintTestCase {
             ? "On" : "Off"
         )
       }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
+  }
+
+  func testPostfixPoundIfBetweenOtherModifiers() {
+    let input =
+      """
+      EmptyView()
+        .padding([.vertical])
+      #if os(iOS)
+        .iOSSpecificModifier()
+        .anotherIOSSpecificModifier()
+      #endif
+        .commonModifier()
+      """
+
+    let expected =
+      """
+      EmptyView()
+        .padding([.vertical])
+        #if os(iOS)
+          .iOSSpecificModifier()
+          .anotherIOSSpecificModifier()
+        #endif
+        .commonModifier()
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
+  }
+
+  func testPostfixPoundIfWithTypeInModifier() {
+    let input =
+      """
+      EmptyView()
+        .padding([.vertical])
+      #if os(iOS)
+        .iOSSpecificModifier(
+          SpecificType()
+            .onChanged { _ in
+              // do things
+            }
+            .onEnded { _ in
+              // do things
+            }
+        )
+      #endif
+      """
+
+    let expected =
+      """
+      EmptyView()
+        .padding([.vertical])
+        #if os(iOS)
+          .iOSSpecificModifier(
+            SpecificType()
+              .onChanged { _ in
+                // do things
+              }
+              .onEnded { _ in
+                // do things
+              }
+          )
+        #endif
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
+  }
+
+  func testPostfixPoundIfNotIndentedIfClosingParenOnOwnLine() {
+    let input =
+      """
+      SomeFunction(
+        foo,
+        bar
+      )
+      #if os(iOS)
+      .iOSSpecificModifier()
+      #endif
+      .commonModifier()
+      """
+
+    let expected =
+      """
+      SomeFunction(
+        foo,
+        bar
+      )
+      #if os(iOS)
+        .iOSSpecificModifier()
+      #endif
+      .commonModifier()
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
+  }
+
+  func testPostfixPoundIfForcesPrecedingClosingParenOntoNewLine() {
+    let input =
+      """
+      SomeFunction(
+        foo,
+        bar)
+        #if os(iOS)
+        .iOSSpecificModifier()
+        #endif
+        .commonModifier()
+      """
+
+    let expected =
+      """
+      SomeFunction(
+        foo,
+        bar
+      )
+      #if os(iOS)
+        .iOSSpecificModifier()
+      #endif
+      .commonModifier()
 
       """
 

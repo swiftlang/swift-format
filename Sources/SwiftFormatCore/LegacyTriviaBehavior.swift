@@ -20,7 +20,7 @@ private final class LegacyTriviaBehaviorRewriter: SyntaxRewriter {
       token = token.with(\.leadingTrivia, pendingLeadingTrivia + token.leadingTrivia)
       self.pendingLeadingTrivia = nil
     }
-    if token.nextToken != nil,
+    if token.nextToken(viewMode: .sourceAccurate) != nil,
       let firstIndexToMove = token.trailingTrivia.firstIndex(where: shouldTriviaPieceBeMoved)
     {
       pendingLeadingTrivia = Trivia(pieces: Array(token.trailingTrivia[firstIndexToMove...]))

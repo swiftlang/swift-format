@@ -56,7 +56,7 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
       defer { newItems[idx] = newItem }
 
       // Check if the leading trivia for this statement needs a new line.
-      if previousHadSemicolon, let firstToken = newItem.firstToken,
+      if previousHadSemicolon, let firstToken = newItem.firstToken(viewMode: .sourceAccurate),
         !firstToken.leadingTrivia.containsNewlines
       {
         let leadingTrivia = .newlines(1) + firstToken.leadingTrivia

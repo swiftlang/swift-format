@@ -12,7 +12,6 @@
 
 import Dispatch
 import Foundation
-import TSCBasic
 
 /// Manages printing of diagnostics to standard error.
 final class StderrDiagnosticPrinter {
@@ -49,11 +48,7 @@ final class StderrDiagnosticPrinter {
   init(colorMode: ColorMode) {
     switch colorMode {
     case .auto:
-      if let stream = stderrStream.stream as? LocalFileOutputByteStream {
-        useColors = TerminalController.isTTY(stream)
-      } else {
-        useColors = false
-      }
+      useColors = isTTY(FileHandle.standardError)
     case .off:
       useColors = false
     case .on:
@@ -62,25 +57,32 @@ final class StderrDiagnosticPrinter {
   }
 
   /// Prints a diagnostic to standard error.
-  func printDiagnostic(_ diagnostic: TSCBasic.Diagnostic) {
+  func printDiagnostic(_ diagnostic: Diagnostic) {
     printQueue.sync {
       let stderr = FileHandleTextOutputStream(FileHandle.standardError)
 
-      stderr.write("\(ansiSGR(.boldWhite))\(diagnostic.location): ")
+      stderr.write("\(ansiSGR(.boldWhite))\(description(of: diagnostic.location)): ")
 
-      switch diagnostic.behavior {
+      switch diagnostic.severity {
       case .error: stderr.write("\(ansiSGR(.boldRed))error: ")
       case .warning: stderr.write("\(ansiSGR(.boldMagenta))warning: ")
       case .note: stderr.write("\(ansiSGR(.boldGray))note: ")
-      case .remark, .ignored: break
       }
 
-      let data = diagnostic.data as! UnifiedDiagnosticData
-      if let category = data.category {
+      if let category = diagnostic.category {
         stderr.write("\(ansiSGR(.boldYellow))[\(category)] ")
       }
-      stderr.write("\(ansiSGR(.boldWhite))\(data.message)\(ansiSGR(.reset))\n")
+      stderr.write("\(ansiSGR(.boldWhite))\(diagnostic.message)\(ansiSGR(.reset))\n")
     }
+  }
+
+  /// Returns a string representation of the given diagnostic location, or a fallback string if the
+  /// location was not known.
+  private func description(of location: Diagnostic.Location?) -> String {
+    if let location = location {
+      return "\(location.file):\(location.line):\(location.column)"
+    }
+    return "<unknown>"
   }
 
   /// Returns the complete ANSI sequence used to enable the given SGR if colors are enabled in the

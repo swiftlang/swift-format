@@ -70,17 +70,70 @@ final class ArrayDeclTests: PrettyPrintTestCase {
     let input =
       """
       let A = [(Int, Double) -> Bool]()
+      let A = [(Int, Double) async -> Bool]()
       let A = [(Int, Double) throws -> Bool]()
+      let A = [(Int, Double) async throws -> Bool]()
       """
 
-    let expected =
+    let expected46 =
       """
       let A = [(Int, Double) -> Bool]()
+      let A = [(Int, Double) async -> Bool]()
       let A = [(Int, Double) throws -> Bool]()
+      let A = [(Int, Double) async throws -> Bool]()
 
       """
+    assertPrettyPrintEqual(input: input, expected: expected46, linelength: 46)
 
-    assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
+    let expected43 =
+      """
+      let A = [(Int, Double) -> Bool]()
+      let A = [(Int, Double) async -> Bool]()
+      let A = [(Int, Double) throws -> Bool]()
+      let A = [
+        (Int, Double) async throws -> Bool
+      ]()
+
+      """
+    assertPrettyPrintEqual(input: input, expected: expected43, linelength: 43)
+
+    let expected35 =
+      """
+      let A = [(Int, Double) -> Bool]()
+      let A = [
+        (Int, Double) async -> Bool
+      ]()
+      let A = [
+        (Int, Double) throws -> Bool
+      ]()
+      let A = [
+        (Int, Double) async throws
+          -> Bool
+      ]()
+
+      """
+    assertPrettyPrintEqual(input: input, expected: expected35, linelength: 35)
+
+    let expected27 =
+      """
+      let A = [
+        (Int, Double) -> Bool
+      ]()
+      let A = [
+        (Int, Double) async
+          -> Bool
+      ]()
+      let A = [
+        (Int, Double) throws
+          -> Bool
+      ]()
+      let A = [
+        (Int, Double)
+          async throws -> Bool
+      ]()
+
+      """
+    assertPrettyPrintEqual(input: input, expected: expected27, linelength: 27)
   }
 
   func testNoTrailingCommasInTypes() {

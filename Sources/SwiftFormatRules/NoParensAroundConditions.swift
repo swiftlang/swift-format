@@ -30,10 +30,16 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
     assert(tuple.elementList.count == 1)
     let expr = tuple.elementList.first!.expression
 
-    // If the condition is a function with a trailing closure, removing the
-    // outer set of parentheses introduces a parse ambiguity.
-    if let fnCall = expr.as(FunctionCallExprSyntax.self), fnCall.trailingClosure != nil {
-      return ExprSyntax(tuple)
+    // If the condition is a function with a trailing closure or if it's an immediately called
+    // closure, removing the outer set of parentheses introduces a parse ambiguity.
+    if let fnCall = expr.as(FunctionCallExprSyntax.self) {
+      if fnCall.trailingClosure != nil {
+        // Leave parentheses around call with trailing closure.
+        return ExprSyntax(tuple)
+      } else if fnCall.calledExpression.as(ClosureExprSyntax.self) != nil {
+        // Leave parentheses around immediately called closure.
+        return ExprSyntax(tuple)
+      }
     }
 
     diagnose(.removeParensAroundExpression, on: expr)
@@ -46,7 +52,7 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
     }
     return replaceTrivia(
       on: visitedExpr,
-      token: visitedExpr.lastToken,
+      token: visitedExpr.lastToken(viewMode: .sourceAccurate),
       leadingTrivia: visitedTuple.leftParen.leadingTrivia,
       trailingTrivia: visitedTuple.rightParen.trailingTrivia
     )

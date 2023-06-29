@@ -296,10 +296,35 @@ final class StringTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
   }
 
+  func testMultilineStringsInExpressionWithNarrowMargins() {
+    let input =
+      #"""
+      x = """
+          abcdefg
+          hijklmn
+          """ + """
+          abcde
+          hijkl
+          """
+      """#
+
+    let expected =
+      #"""
+      x = """
+        abcdefg
+        hijklmn
+        """
+          + """
+          abcde
+          hijkl
+          """
+
+      """#
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 9)
+  }
+
   func testMultilineStringsInExpression() {
-    // This output could probably be improved, but it's also a fairly unlikely occurrence. The
-    // important part of this test is that the first string in the expression is indented relative
-    // to the `let`.
     let input =
       #"""
       let x = """
@@ -313,12 +338,10 @@ final class StringTests: PrettyPrintTestCase {
 
     let expected =
       #"""
-      let x =
-        """
+      let x = """
         this is a
         multiline string
-        """
-          + """
+        """ + """
           this is more
           multiline string
           """
@@ -326,5 +349,151 @@ final class StringTests: PrettyPrintTestCase {
       """#
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
+  }
+
+  func testLeadingMultilineStringsInOtherExpressions() {
+    // The stacked indentation behavior needs to drill down into different node types to find the
+    // leftmost multiline string literal. This makes sure that we cover various cases.
+    let input =
+      #"""
+      let bytes = """
+        {
+          "key": "value"
+        }
+        """.utf8.count
+      let json = """
+        {
+          "key": "value"
+        }
+        """.data(using: .utf8)
+      let slice = """
+        {
+          "key": "value"
+        }
+        """[...]
+      let forceUnwrap = """
+        {
+          "key": "value"
+        }
+        """!
+      let optionalChaining = """
+        {
+          "key": "value"
+        }
+        """?
+      let postfix = """
+        {
+          "key": "value"
+        }
+        """^*^
+      let prefix = +"""
+        {
+          "key": "value"
+        }
+        """
+      let postfixIf = """
+        {
+          "key": "value"
+        }
+        """
+        #if FLAG
+          .someMethod
+        #endif
+
+      // Like the infix operator cases, cast operations force the string's open quotes to wrap.
+      // This could be considered consistent if you look at it through the right lens. Let's make
+      // sure to test it so that we can see if the behavior ever changes accidentally.
+      let cast =
+        """
+        {
+          "key": "value"
+        }
+        """ as NSString
+      let typecheck =
+        """
+        {
+          "key": "value"
+        }
+        """ is NSString
+      """#
+    assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 100)
+  }
+
+  func testMultilineStringsAsEnumRawValues() {
+    let input = #"""
+      enum E: String {
+        case x = """
+          blah blah
+          """
+      }
+      """#
+    assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 100)
+  }
+
+  func testMultilineStringsNestedInAnotherWrappingContext() {
+    let input =
+      #"""
+      guard
+          let x = """
+              blah
+              blah
+              """.data(using: .utf8) {
+          print(x)
+      }
+      """#
+
+    let expected =
+      #"""
+      guard
+        let x = """
+          blah
+          blah
+          """.data(using: .utf8)
+      {
+        print(x)
+      }
+
+      """#
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
+  }
+
+  func testEmptyMultilineStrings() {
+    let input =
+      ##"""
+      let x = """
+        """
+      let y =
+        """
+        """
+      let x = #"""
+        """#
+      let y =
+        #"""
+        """#
+      """##
+
+    assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 20)
+  }
+
+  func testOnlyBlankLinesMultilineStrings() {
+    let input =
+      ##"""
+      let x = """
+
+        """
+      let y =
+        """
+
+        """
+      let x = #"""
+
+        """#
+      let y =
+        #"""
+
+        """#
+      """##
+
+    assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 20)
   }
 }

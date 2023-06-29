@@ -98,7 +98,7 @@ public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
     return !hasFoundDocComment
       ? decl : replaceTrivia(
         on: decl,
-        token: decl.firstToken,
+        token: decl.firstToken(viewMode: .sourceAccurate),
         leadingTrivia: Trivia(pieces: pieces.reversed())
       )
   }

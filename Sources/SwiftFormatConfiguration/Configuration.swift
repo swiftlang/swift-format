@@ -36,6 +36,7 @@ public struct Configuration: Codable, Equatable {
     case indentSwitchCaseLabels
     case rules
     case spacesAroundRangeFormationOperators
+    case noAssignmentInExpressions
   }
 
   /// The version of this configuration.
@@ -147,6 +148,9 @@ public struct Configuration: Codable, Equatable {
   /// `...` and `..<`.
   public var spacesAroundRangeFormationOperators = false
 
+  /// Contains exceptions for the `NoAssignmentInExpressions` rule.
+  public var noAssignmentInExpressions = NoAssignmentInExpressionsConfiguration()
+
   /// Constructs a Configuration with all default values.
   public init() {
     self.version = highestSupportedConfigurationVersion
@@ -208,6 +212,10 @@ public struct Configuration: Codable, Equatable {
       ?? FileScopedDeclarationPrivacyConfiguration()
     self.indentSwitchCaseLabels
       = try container.decodeIfPresent(Bool.self, forKey: .indentSwitchCaseLabels) ?? false
+    self.noAssignmentInExpressions =
+      try container.decodeIfPresent(
+        NoAssignmentInExpressionsConfiguration.self, forKey: .noAssignmentInExpressions)
+      ?? NoAssignmentInExpressionsConfiguration()
 
     // If the `rules` key is not present at all, default it to the built-in set
     // so that the behavior is the same as if the configuration had been
@@ -238,6 +246,7 @@ public struct Configuration: Codable, Equatable {
       spacesAroundRangeFormationOperators, forKey: .spacesAroundRangeFormationOperators)
     try container.encode(fileScopedDeclarationPrivacy, forKey: .fileScopedDeclarationPrivacy)
     try container.encode(indentSwitchCaseLabels, forKey: .indentSwitchCaseLabels)
+    try container.encode(noAssignmentInExpressions, forKey: .noAssignmentInExpressions)
     try container.encode(rules, forKey: .rules)
   }
 
@@ -286,4 +295,16 @@ public struct FileScopedDeclarationPrivacyConfiguration: Codable, Equatable {
   /// The formal access level to use when encountering a file-scoped declaration with effective
   /// private access.
   public var accessLevel: AccessLevel = .private
+}
+
+/// Configuration for the `NoAssignmentInExpressions` rule.
+public struct NoAssignmentInExpressionsConfiguration: Codable, Equatable {
+  /// A list of function names where assignments are allowed to be embedded in expressions that are
+  /// passed as parameters to that function.
+  public var allowedFunctions: [String] = [
+    // Allow `XCTAssertNoThrow` because `XCTAssertNoThrow(x = try ...)` is clearer about intent than
+    // `x = try XCTUnwrap(try? ...)` or force-unwrapped if you need to use the value `x` later on
+    // in the test.
+    "XCTAssertNoThrow"
+  ]
 }

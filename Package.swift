@@ -143,7 +143,6 @@ let package = Package(
         .product(name: "ArgumentParser", package: "swift-argument-parser"),
         .product(name: "SwiftSyntax", package: "swift-syntax"),
         .product(name: "SwiftParser", package: "swift-syntax"),
-        .product(name: "TSCBasic", package: "swift-tools-support-core"),
       ]
     ),
 
@@ -214,20 +213,17 @@ if ProcessInfo.processInfo.environment["SWIFTCI_USE_LOCAL_DEPS"] == nil {
   // Building standalone.
   package.dependencies += [
     .package(
-      url: "https://github.com/apple/swift-argument-parser.git", from: "1.2.2"),
+      url: "https://github.com/apple/swift-argument-parser.git", 
+      from: "1.2.2"
+    ),
     .package(
       url: "https://github.com/apple/swift-syntax.git",
       branch: "release/5.9"
-    ),
-    .package(
-      url: "https://github.com/apple/swift-tools-support-core.git",
-      exact: Version("0.4.0")
     ),
   ]
 } else {
   package.dependencies += [
     .package(path: "../swift-argument-parser"),
     .package(path: "../swift-syntax"),
-    .package(path: "../swift-tools-support-core"),
   ]
 }
