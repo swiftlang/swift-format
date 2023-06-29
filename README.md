@@ -29,7 +29,8 @@ will still not be able to recognize new syntax added in later versions of the
 language and parser.
 
 Note also that the version numbering scheme has changed to match
-SwiftSyntax; the 5.8 release of swift-format is `508.0.0`, not `0.50800.0`.
+SwiftSyntax; the 5.8 release of swift-format is `508.0.0`, not `0.50800.0`,
+and future versions are also expressed this way.
 
 ### Swift 5.7 and earlier
 
@@ -65,7 +66,7 @@ then once you have identified the version you need, you can check out the
 source and build it using the following commands:
 
 ```sh
-VERSION=508.0.0  # replace this with the version you need
+VERSION=509.0.0  # replace this with the version you need
 git clone https://github.com/apple/swift-format.git
 cd swift-format
 git checkout "tags/$VERSION"
