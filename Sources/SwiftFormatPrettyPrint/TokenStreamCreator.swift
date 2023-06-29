@@ -1544,6 +1544,26 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       arrangeEnumCaseParameterClause(associatedValue, forcesBreakBeforeRightParen: false)
     }
 
+    if let initializer = node.rawValue {
+      if let (unindentingNode, _, breakKind, shouldGroup) =
+        stackedIndentationBehavior(rhs: initializer.value)
+      {
+        var openTokens: [Token] = [.break(.open(kind: breakKind))]
+        if shouldGroup {
+          openTokens.append(.open)
+        }
+        after(initializer.equal, tokens: openTokens)
+
+        var closeTokens: [Token] = [.break(.close(mustBreak: false), size: 0)]
+        if shouldGroup {
+          closeTokens.append(.close)
+        }
+        after(unindentingNode.lastToken(viewMode: .sourceAccurate), tokens: closeTokens)
+      } else {
+        after(initializer.equal, tokens: .break(.continue))
+      }
+    }
+
     return .visitChildren
   }
 
@@ -2275,12 +2295,13 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   override func visit(_ node: InitializerClauseSyntax) -> SyntaxVisitorContinueKind {
     before(node.equal, tokens: .space)
 
-    // InitializerClauses that are children of a PatternBindingSyntax or
+    // InitializerClauses that are children of a PatternBindingSyntax, EnumCaseElementSyntax, or
     // OptionalBindingConditionSyntax are already handled in the latter node, to ensure that
     // continuations stack appropriately.
     if let parent = node.parent,
       !parent.is(PatternBindingSyntax.self)
         && !parent.is(OptionalBindingConditionSyntax.self)
+        && !parent.is(EnumCaseElementSyntax.self)
     {
       after(node.equal, tokens: .break)
     }

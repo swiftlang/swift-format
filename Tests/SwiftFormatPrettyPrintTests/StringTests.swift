@@ -419,6 +419,17 @@ final class StringTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 100)
   }
 
+  func testMultilineStringsAsEnumRawValues() {
+    let input = #"""
+      enum E: String {
+        case x = """
+          blah blah
+          """
+      }
+      """#
+    assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 100)
+  }
+
   func testMultilineStringsNestedInAnotherWrappingContext() {
     let input =
       #"""
