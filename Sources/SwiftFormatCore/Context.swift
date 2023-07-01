@@ -14,6 +14,7 @@ import Foundation
 import SwiftFormatConfiguration
 import SwiftOperators
 import SwiftSyntax
+import SwiftParser
 
 /// Context contains the bits that each formatter and linter will need access to.
 ///
@@ -74,9 +75,8 @@ public final class Context {
     self.findingEmitter = FindingEmitter(consumer: findingConsumer)
     self.fileURL = fileURL
     self.importsXCTest = .notDetermined
-    self.sourceLocationConverter =
-      source.map { SourceLocationConverter(file: fileURL.relativePath, source: $0) }
-      ?? SourceLocationConverter(file: fileURL.relativePath, tree: sourceFileSyntax)
+    let tree = source.map { Parser.parse(source: $0) } ?? sourceFileSyntax
+    self.sourceLocationConverter = SourceLocationConverter(file: fileURL.relativePath, tree: tree)
     self.ruleMask = RuleMask(
       syntaxNode: Syntax(sourceFileSyntax),
       sourceLocationConverter: sourceLocationConverter

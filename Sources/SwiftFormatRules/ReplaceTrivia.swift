@@ -59,5 +59,5 @@ func replaceTrivia<SyntaxType: SyntaxProtocol>(
     token: token,
     leadingTrivia: leadingTrivia,
     trailingTrivia: trailingTrivia
-  ).visit(Syntax(node)).as(SyntaxType.self)!
+  ).rewrite(Syntax(node)).as(SyntaxType.self)!
 }

@@ -241,7 +241,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       // otherwise the "?" applies to the return type instead of the function type. Attach the
       // leading trivia to the left-paren that we're adding in this case.
       let tupleTypeElement = TupleTypeElementSyntax(
-        inOut: nil, name: nil, secondName: nil, colon: nil, type: TypeSyntax(functionType),
+        inoutKeyword: nil, name: nil, secondName: nil, colon: nil, type: TypeSyntax(functionType),
         ellipsis: nil, initializer: nil, trailingComma: nil)
       let tupleTypeElementList = TupleTypeElementListSyntax([tupleTypeElement])
       let tupleType = TupleTypeSyntax(
@@ -384,7 +384,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       }
       let result = MemberAccessExprSyntax(
         base: baseType,
-        dot: memberTypeIdentifier.period,
+        period: memberTypeIdentifier.period,
         name: memberTypeIdentifier.name,
         declNameArguments: nil)
       return ExprSyntax(result)
@@ -475,7 +475,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       rightParen: rightParen)
     let arrowExpr = ArrowExprSyntax(
       effectSpecifiers: effectSpecifiers,
-      arrowToken: arrow)
+      arrow: arrow)
 
     return SequenceExprSyntax(
       elements: ExprListSyntax([
