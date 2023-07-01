@@ -321,28 +321,28 @@ class LintPipeline: SyntaxVisitor {
 
 extension FormatPipeline {
 
-  func visit(_ node: Syntax) -> Syntax {
+  func rewrite(_ node: Syntax) -> Syntax {
     var node = node
-    node = DoNotUseSemicolons(context: context).visit(node)
-    node = FileScopedDeclarationPrivacy(context: context).visit(node)
-    node = FullyIndirectEnum(context: context).visit(node)
-    node = GroupNumericLiterals(context: context).visit(node)
-    node = NoAccessLevelOnExtensionDeclaration(context: context).visit(node)
-    node = NoAssignmentInExpressions(context: context).visit(node)
-    node = NoCasesWithOnlyFallthrough(context: context).visit(node)
-    node = NoEmptyTrailingClosureParentheses(context: context).visit(node)
-    node = NoLabelsInCasePatterns(context: context).visit(node)
-    node = NoParensAroundConditions(context: context).visit(node)
-    node = NoVoidReturnOnFunctionSignature(context: context).visit(node)
-    node = OneCasePerLine(context: context).visit(node)
-    node = OneVariableDeclarationPerLine(context: context).visit(node)
-    node = OrderedImports(context: context).visit(node)
-    node = ReturnVoidInsteadOfEmptyTuple(context: context).visit(node)
-    node = UseEarlyExits(context: context).visit(node)
-    node = UseShorthandTypeNames(context: context).visit(node)
-    node = UseSingleLinePropertyGetter(context: context).visit(node)
-    node = UseTripleSlashForDocumentationComments(context: context).visit(node)
-    node = UseWhereClausesInForLoops(context: context).visit(node)
+    node = DoNotUseSemicolons(context: context).rewrite(node)
+    node = FileScopedDeclarationPrivacy(context: context).rewrite(node)
+    node = FullyIndirectEnum(context: context).rewrite(node)
+    node = GroupNumericLiterals(context: context).rewrite(node)
+    node = NoAccessLevelOnExtensionDeclaration(context: context).rewrite(node)
+    node = NoAssignmentInExpressions(context: context).rewrite(node)
+    node = NoCasesWithOnlyFallthrough(context: context).rewrite(node)
+    node = NoEmptyTrailingClosureParentheses(context: context).rewrite(node)
+    node = NoLabelsInCasePatterns(context: context).rewrite(node)
+    node = NoParensAroundConditions(context: context).rewrite(node)
+    node = NoVoidReturnOnFunctionSignature(context: context).rewrite(node)
+    node = OneCasePerLine(context: context).rewrite(node)
+    node = OneVariableDeclarationPerLine(context: context).rewrite(node)
+    node = OrderedImports(context: context).rewrite(node)
+    node = ReturnVoidInsteadOfEmptyTuple(context: context).rewrite(node)
+    node = UseEarlyExits(context: context).rewrite(node)
+    node = UseShorthandTypeNames(context: context).rewrite(node)
+    node = UseSingleLinePropertyGetter(context: context).rewrite(node)
+    node = UseTripleSlashForDocumentationComments(context: context).rewrite(node)
+    node = UseWhereClausesInForLoops(context: context).rewrite(node)
     return node
   }
 }

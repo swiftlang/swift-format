@@ -532,7 +532,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   // MARK: - Control flow statement nodes
 
   override func visit(_ node: LabeledStmtSyntax) -> SyntaxVisitorContinueKind {
-    after(node.labelColon, tokens: .space)
+    after(node.colon, tokens: .space)
     return .visitChildren
   }
 
@@ -1156,9 +1156,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     if let signature = node.signature {
       after(node.leftBrace, tokens: .break(.open))
       if node.statements.count > 0 {
-        after(signature.inTok, tokens: .break(.same, newlines: newlineBehavior))
+        after(signature.inKeyword, tokens: .break(.same, newlines: newlineBehavior))
       } else {
-        after(signature.inTok, tokens: .break(.same, size: 0, newlines: newlineBehavior))
+        after(signature.inKeyword, tokens: .break(.same, size: 0, newlines: newlineBehavior))
       }
       before(node.rightBrace, tokens: .break(.close))
     } else {
@@ -1207,7 +1207,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
           // Due to visitation order, the matching .open break is added in ParameterClauseSyntax.
           // Since the output clause is optional but the in-token is required, placing the .close
           // before `inTok` ensures the close gets into the token stream.
-          before(node.inTok, tokens: .close)
+          before(node.inKeyword, tokens: .close)
         } else  {
           // Group outside of the parens, so that the argument list together, preferring to break
           // between the argument list and the output.
@@ -1226,7 +1226,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
     before(node.output?.arrow, tokens: .break)
     after(node.lastToken(viewMode: .sourceAccurate), tokens: .close)
-    before(node.inTok, tokens: .break(.same))
+    before(node.inKeyword, tokens: .break(.same))
     return .visitChildren
   }
 
@@ -1239,8 +1239,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   override func visit(_ node: ClosureCaptureItemSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken(viewMode: .sourceAccurate), tokens: .open)
     after(node.specifier?.lastToken(viewMode: .sourceAccurate), tokens: .break)
-    before(node.assignToken, tokens: .break)
-    after(node.assignToken, tokens: .break)
+    before(node.equal, tokens: .break)
+    after(node.equal, tokens: .break)
     if let trailingComma = node.trailingComma {
       before(trailingComma, tokens: .close)
       after(trailingComma, tokens: .break(.same))
@@ -1274,8 +1274,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
     arrangeFunctionCallArgumentList(
       arguments,
-      leftDelimiter: node.leftBracket,
-      rightDelimiter: node.rightBracket,
+      leftDelimiter: node.leftSquare,
+      rightDelimiter: node.rightSquare,
       forcesBreakBeforeRightDelimiter: breakBeforeRightBracket)
 
     return .visitChildren
@@ -1506,7 +1506,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       appendFormatterIgnored(node: Syntax(node))
       return .skipChildren
     }
-    after(node.eofToken, tokens: .break(.same, newlines: .soft))
+    after(node.endOfFileToken, tokens: .break(.same, newlines: .soft))
     return .visitChildren
   }
 
@@ -1637,14 +1637,14 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: GenericParameterClauseSyntax) -> SyntaxVisitorContinueKind {
-    after(node.leftAngleBracket, tokens: .break(.open, size: 0), .open(argumentListConsistency()))
-    before(node.rightAngleBracket, tokens: .break(.close, size: 0), .close)
+    after(node.leftAngle, tokens: .break(.open, size: 0), .open(argumentListConsistency()))
+    before(node.rightAngle, tokens: .break(.close, size: 0), .close)
     return .visitChildren
   }
 
   override func visit(_ node: PrimaryAssociatedTypeClauseSyntax) -> SyntaxVisitorContinueKind {
-    after(node.leftAngleBracket, tokens: .break(.open, size: 0), .open(argumentListConsistency()))
-    before(node.rightAngleBracket, tokens: .break(.close, size: 0), .close)
+    after(node.leftAngle, tokens: .break(.open, size: 0), .open(argumentListConsistency()))
+    before(node.rightAngle, tokens: .break(.close, size: 0), .close)
     return .visitChildren
   }
 
@@ -1680,8 +1680,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: GenericArgumentClauseSyntax) -> SyntaxVisitorContinueKind {
-    after(node.leftAngleBracket, tokens: .break(.open, size: 0), .open)
-    before(node.rightAngleBracket, tokens: .break(.close, size: 0), .close)
+    after(node.leftAngle, tokens: .break(.open, size: 0), .open)
+    before(node.rightAngle, tokens: .break(.close, size: 0), .close)
     return .visitChildren
   }
 
@@ -1848,8 +1848,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: KeyPathSubscriptComponentSyntax) -> SyntaxVisitorContinueKind {
-    after(node.leftBracket, tokens: .break(.open, size: 0), .open)
-    before(node.rightBracket, tokens: .break(.close, size: 0), .close)
+    after(node.leftSquare, tokens: .break(.open, size: 0), .open)
+    before(node.rightSquare, tokens: .break(.close, size: 0), .close)
     return .visitChildren
   }
 
@@ -1861,9 +1861,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     before(node.questionMark, tokens: .break(.open(kind: .continuation)), .open)
     after(node.questionMark, tokens: .space)
     before(
-      node.colonMark,
+      node.colon,
       tokens: .break(.close(mustBreak: false), size: 0), .break(.open(kind: .continuation)), .open)
-    after(node.colonMark, tokens: .space)
+    after(node.colon, tokens: .space)
 
     // When the ternary is wrapped in parens, absorb the closing paren into the ternary's group so
     // that it is glued to the last token of the ternary.
@@ -2036,14 +2036,14 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: AsExprSyntax) -> SyntaxVisitorContinueKind {
-    before(node.asTok, tokens: .break(.continue), .open)
+    before(node.asKeyword, tokens: .break(.continue), .open)
     before(node.typeName.firstToken(viewMode: .sourceAccurate), tokens: .space)
     after(node.lastToken(viewMode: .sourceAccurate), tokens: .close)
     return .visitChildren
   }
 
   override func visit(_ node: IsExprSyntax) -> SyntaxVisitorContinueKind {
-    before(node.isTok, tokens: .break(.continue), .open)
+    before(node.isKeyword, tokens: .break(.continue), .open)
     before(node.typeName.firstToken(viewMode: .sourceAccurate), tokens: .space)
     after(node.lastToken(viewMode: .sourceAccurate), tokens: .close)
     return .visitChildren
@@ -2064,8 +2064,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: ArrowExprSyntax) -> SyntaxVisitorContinueKind {
-    before(node.arrowToken, tokens: .break)
-    after(node.arrowToken, tokens: .space)
+    before(node.arrow, tokens: .break)
+    after(node.arrow, tokens: .space)
     return .visitChildren
   }
 
@@ -2546,7 +2546,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   // `DerivativeRegistrationAttributeArguments` was added after the Swift 5.2 release was cut.
   #if HAS_DERIVATIVE_REGISTRATION_ATTRIBUTE
-    override func visit(_ node: DerivativeRegistrationAttributeArgumentsSyntax)
+    override func rewrite(_ node: DerivativeRegistrationAttributeArgumentsSyntax)
       -> SyntaxVisitorContinueKind
     {
       // This node encapsulates the entire list of arguments in a `@derivative(...)` or
@@ -3394,7 +3394,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       return true
     }
     if let binOpExpr = operatorExpr.as(BinaryOperatorExprSyntax.self) {
-      if let binOp = operatorTable.infixOperator(named: binOpExpr.operatorToken.text),
+      if let binOp = operatorTable.infixOperator(named: binOpExpr.operator.text),
         let precedenceGroup = binOp.precedenceGroup, precedenceGroup == "AssignmentPrecedence"
       {
         return true
@@ -3520,7 +3520,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // We also want to reset after undoing the stacked indentation so that we have a visual
     // indication that the subexpression has ended.
     if let binOpExpr = operatorExpr?.as(BinaryOperatorExprSyntax.self) {
-      if let binOp = operatorTable.infixOperator(named: binOpExpr.operatorToken.text),
+      if let binOp = operatorTable.infixOperator(named: binOpExpr.operator.text),
         let precedenceGroup = binOp.precedenceGroup,
         precedenceGroup == "LogicalConjunctionPrecedence"
           || precedenceGroup == "LogicalDisjunctionPrecedence"
@@ -3629,7 +3629,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // The token kind (spaced or unspaced operator) represents how the *user* wrote it, and we want
     // to ignore that and apply our own rules.
     if let binaryOperator = operatorExpr.as(BinaryOperatorExprSyntax.self) {
-      let token = binaryOperator.operatorToken
+      let token = binaryOperator.operator
       if !config.spacesAroundRangeFormationOperators,
          let binOp = operatorTable.infixOperator(named: token.text),
          let precedenceGroup = binOp.precedenceGroup, precedenceGroup == "RangeFormationPrecedence"
@@ -3725,7 +3725,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       // scoping tokens (e.g. `contextualBreakingStart`, `open`).
       if memberAccessExpr.base != nil &&
           expr.parent?.isProtocol(CallingExprSyntaxProtocol.self) != true {
-        before(memberAccessExpr.dot, tokens: .break(.contextual, size: 0))
+        before(memberAccessExpr.period, tokens: .break(.contextual, size: 0))
       }
       var hasCompoundExpression = false
       if let base = memberAccessExpr.base {
@@ -3769,12 +3769,12 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       if let calledMemberAccessExpr = calledExpression.as(MemberAccessExprSyntax.self) {
         if calledMemberAccessExpr.base != nil {
           if isNestedInPostfixIfConfig(node: Syntax(calledMemberAccessExpr)) {
-            before(calledMemberAccessExpr.dot, tokens: [.break(.same, size: 0)])
+            before(calledMemberAccessExpr.period, tokens: [.break(.same, size: 0)])
           } else {
-            before(calledMemberAccessExpr.dot, tokens: [.break(.contextual, size: 0)])
+            before(calledMemberAccessExpr.period, tokens: [.break(.contextual, size: 0)])
           }
         }
-        before(calledMemberAccessExpr.dot, tokens: beforeTokens)
+        before(calledMemberAccessExpr.period, tokens: beforeTokens)
         after(expr.lastToken(viewMode: .sourceAccurate), tokens: afterTokens)
         if isTopLevel {
           before(expr.firstToken(viewMode: .sourceAccurate), tokens: .contextualBreakingStart)
@@ -3822,7 +3822,7 @@ private func isNestedInPostfixIfConfig(node: Syntax) -> Bool {
 extension Syntax {
   /// Creates a pretty-printable token stream for the provided Syntax node.
   func makeTokenStream(configuration: Configuration, operatorTable: OperatorTable) -> [Token] {
-    let commentsMoved = CommentMovingRewriter().visit(self)
+    let commentsMoved = CommentMovingRewriter().rewrite(self)
     return TokenStreamCreator(configuration: configuration, operatorTable: operatorTable)
       .makeStream(from: commentsMoved)
   }
@@ -3867,13 +3867,13 @@ class CommentMovingRewriter: SyntaxRewriter {
 
   override func visit(_ node: InfixOperatorExprSyntax) -> ExprSyntax {
     if let binaryOperatorExpr = node.operatorOperand.as(BinaryOperatorExprSyntax.self),
-      let followingToken = binaryOperatorExpr.operatorToken.nextToken(viewMode: .all),
+      let followingToken = binaryOperatorExpr.operator.nextToken(viewMode: .all),
       followingToken.leadingTrivia.hasLineComment
     {
       // Rewrite the trivia so that the comment is in the operator token's leading trivia.
       let (remainingTrivia, extractedTrivia) = extractLineCommentTrivia(from: followingToken)
-      let combinedTrivia = binaryOperatorExpr.operatorToken.leadingTrivia + extractedTrivia
-      rewriteTokenTriviaMap[binaryOperatorExpr.operatorToken] = combinedTrivia
+      let combinedTrivia = binaryOperatorExpr.operator.leadingTrivia + extractedTrivia
+      rewriteTokenTriviaMap[binaryOperatorExpr.operator] = combinedTrivia
       rewriteTokenTriviaMap[followingToken] = remainingTrivia
     }
     return super.visit(node)

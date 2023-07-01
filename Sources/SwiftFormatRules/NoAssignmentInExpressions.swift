@@ -108,7 +108,7 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
     guard let binaryOp = expr.operatorOperand.as(BinaryOperatorExprSyntax.self) else {
       return false
     }
-    return context.operatorTable.infixOperator(named: binaryOp.operatorToken.text)?.precedenceGroup
+    return context.operatorTable.infixOperator(named: binaryOp.operator.text)?.precedenceGroup
       == "AssignmentPrecedence"
   }
 
