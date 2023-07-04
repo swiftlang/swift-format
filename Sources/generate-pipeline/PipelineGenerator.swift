@@ -95,7 +95,7 @@ final class PipelineGenerator: FileGenerator {
 
       extension FormatPipeline {
 
-        func visit(_ node: Syntax) -> Syntax {
+        func rewrite(_ node: Syntax) -> Syntax {
           var node = node
 
       """
@@ -104,7 +104,7 @@ final class PipelineGenerator: FileGenerator {
     for ruleName in ruleCollector.allFormatters.map({ $0.typeName }).sorted() {
       handle.write(
         """
-            node = \(ruleName)(context: context).visit(node)
+            node = \(ruleName)(context: context).rewrite(node)
 
         """)
     }

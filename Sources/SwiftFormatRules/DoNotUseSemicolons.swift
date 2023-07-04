@@ -43,7 +43,7 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
 
       // Check for semicolons in statements inside of the item, because code blocks may be nested
       // inside of other code blocks.
-      guard let visitedItem = visit(Syntax(item)).as(ItemType.self) else {
+      guard let visitedItem = rewrite(Syntax(item)).as(ItemType.self) else {
         return node
       }
 

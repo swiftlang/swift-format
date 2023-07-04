@@ -37,7 +37,7 @@ public final class NoEmptyTrailingClosureParentheses: SyntaxFormatRule {
 
     // Need to visit `calledExpression` before creating a new node so that the location data (column
     // and line numbers) is available.
-    guard let rewrittenCalledExpr = ExprSyntax(visit(Syntax(node.calledExpression))) else {
+    guard let rewrittenCalledExpr = ExprSyntax(rewrite(Syntax(node.calledExpression))) else {
       return super.visit(node)
     }
     let formattedExp = replaceTrivia(
