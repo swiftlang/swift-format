@@ -2544,26 +2544,23 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  // `DerivativeRegistrationAttributeArguments` was added after the Swift 5.2 release was cut.
-  #if HAS_DERIVATIVE_REGISTRATION_ATTRIBUTE
-    override func rewrite(_ node: DerivativeRegistrationAttributeArgumentsSyntax)
-      -> SyntaxVisitorContinueKind
-    {
-      // This node encapsulates the entire list of arguments in a `@derivative(...)` or
-      // `@transpose(...)` attribute.
-      before(node.ofLabel, tokens: .open)
-      after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
-      // The comma after originalDeclName is optional and is only present if there are diffParams.
-      after(node.comma ?? node.originalDeclName.lastToken, tokens: .close)
+  override func visit(_ node: DerivativeRegistrationAttributeArgumentsSyntax)
+    -> SyntaxVisitorContinueKind
+  {
+    // This node encapsulates the entire list of arguments in a `@derivative(...)` or
+    // `@transpose(...)` attribute.
+    before(node.ofLabel, tokens: .open)
+    after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
+    // The comma after originalDeclName is optional and is only present if there are diffParams.
+    after(node.comma ?? node.originalDeclName.lastToken(viewMode: .sourceAccurate), tokens: .close)
 
-      if let diffParams = node.diffParams {
-        before(diffParams.firstToken, tokens: .break(.same), .open)
-        after(diffParams.lastToken, tokens: .close)
-      }
-
-      return .visitChildren
+    if let diffParams = node.diffParams {
+      before(diffParams.firstToken(viewMode: .sourceAccurate), tokens: .break(.same), .open)
+      after(diffParams.lastToken(viewMode: .sourceAccurate), tokens: .close)
     }
-  #endif
+
+    return .visitChildren
+  }
 
   override func visit(_ node: DifferentiabilityParamsClauseSyntax) -> SyntaxVisitorContinueKind {
     // This node encapsulates the `wrt:` label and value/variable in a `@differentiable`,
