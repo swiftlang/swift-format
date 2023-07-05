@@ -108,6 +108,9 @@ final class UseTripleSlashForDocumentationCommentsTests: LintOrFormatRuleTestCas
   }
 
   func testManyDocComments() {
+    // Note that this retains the trailing space at the end of a single-line doc block comment
+    // (i.e., the space in `name. */`). It's fine to leave it here; the pretty printer will remove
+    // it later.
     XCTAssertFormatting(
       UseTripleSlashForDocumentationComments.self,
       input: """
@@ -140,7 +143,7 @@ final class UseTripleSlashForDocumentationCommentsTests: LintOrFormatRuleTestCas
                 /// Why are there so many comments?
                 /// Who knows! But there are loads.
 
-                /// AClazz is a class with good name.
+                /// AClazz is a class with good name.\u{0020}
                 public class AClazz {
                 }
                 """)

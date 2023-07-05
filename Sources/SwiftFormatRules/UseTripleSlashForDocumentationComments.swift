@@ -72,56 +72,35 @@ public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
   /// comment. Returns the declaration with the docBlockComment converted to
   /// a docLineComment.
   private func convertDocBlockCommentToDocLineComment(_ decl: DeclSyntax) -> DeclSyntax {
-    guard let commentText = decl.docComment else { return decl }
-
-    let docComments = commentText.components(separatedBy: "\n")
-    var pieces = [TriviaPiece]()
-
-    // Ensures the documentation comment is a docLineComment.
-    var hasFoundDocComment = false
-    for piece in decl.leadingTrivia.reversed() {
-      if case .docBlockComment(_) = piece, !hasFoundDocComment {
-        hasFoundDocComment = true
-        diagnose(.avoidDocBlockComment, on: decl)
-        pieces.append(contentsOf: separateDocBlockIntoPieces(docComments).reversed())
-      } else if case .docLineComment(_) = piece, !hasFoundDocComment {
-        // The comment was a doc-line comment all along. Leave it alone.
-        // This intentionally only considers the comment closest to the decl. There may be other
-        // comments, including block or doc-block comments, which are left as-is because they aren't
-        // necessarily related to the decl and are unlikely part of the decl's documentation.
-        return decl
-      } else {
-        pieces.append(piece)
-      }
+    guard let commentInfo = documentationCommentText(extractedFrom: decl.leadingTrivia) else {
+      return decl
     }
 
-    return !hasFoundDocComment
-      ? decl : replaceTrivia(
-        on: decl,
-        token: decl.firstToken(viewMode: .sourceAccurate),
-        leadingTrivia: Trivia(pieces: pieces.reversed())
-      )
-  }
+    // Keep any trivia leading up to the doc comment.
+    var pieces = Array(decl.leadingTrivia[..<commentInfo.startIndex])
 
-  /// Breaks down the docBlock comment into the correct trivia pieces
-  /// for a docLineComment.
-  private func separateDocBlockIntoPieces(_ docComments: [String]) -> [TriviaPiece] {
-    var pieces = [TriviaPiece]()
-    for lineText in docComments.dropLast() {
-      // Adds an space as indentation for the lines that needed it.
-      let docLineMark = lineText.first == " " || lineText.trimmingCharacters(in: .whitespaces) == ""
-        ? "///" : "/// "
-      pieces.append(.docLineComment(docLineMark + lineText))
+    // If the comment text ends with a newline, remove it so that we don't end up with an extra
+    // blank line after splitting.
+    var text = commentInfo.text[...]
+    if text.hasSuffix("\n") {
+      text = text.dropLast(1)
+    }
+
+    // Append each line of the doc comment with `///` prefixes.
+    for line in text.split(separator: "\n", omittingEmptySubsequences: false) {
+      var newLine = "///"
+      if !line.isEmpty {
+        newLine.append(" \(line)")
+      }
+      pieces.append(.docLineComment(newLine))
       pieces.append(.newlines(1))
     }
 
-    // The last piece doesn't need a newline after it.
-    if docComments.last!.trimmingCharacters(in: .whitespaces) != "" {
-      let docLineMark = docComments.last!.first == " " || docComments.last!.trimmingCharacters(
-        in: .whitespaces) == "" ? "///" : "/// "
-      pieces.append(.docLineComment(docLineMark + docComments.last!))
-    }
-    return pieces
+    return replaceTrivia(
+      on: decl,
+      token: decl.firstToken(viewMode: .sourceAccurate),
+      leadingTrivia: Trivia(pieces: pieces)
+    )
   }
 }
 
