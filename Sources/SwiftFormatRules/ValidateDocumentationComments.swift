@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import Markdown
 import SwiftFormatCore
 import SwiftSyntax
 
@@ -21,7 +22,6 @@ import SwiftSyntax
 /// Lint: Documentation comments that are incomplete (e.g. missing parameter documentation) or
 ///       invalid (uses `Parameters` when there is only one parameter) will yield a lint error.
 public final class ValidateDocumentationComments: SyntaxLintRule {
-
   /// Identifies this rule as being opt-in. Accurate and complete documentation comments are
   /// important, but this rule isn't able to handle situations where portions of documentation are
   /// redundant. For example when the returns clause is redundant for a simple declaration.
@@ -44,45 +44,50 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
     signature: FunctionSignatureSyntax,
     returnClause: ReturnClauseSyntax? = nil
   ) -> SyntaxVisitorContinueKind {
-    guard let declComment = node.docComment else { return .skipChildren }
-    guard let commentInfo = node.docCommentInfo else { return .skipChildren }
-    guard let params = commentInfo.parameters else { return .skipChildren }
+    guard
+      let docComment = DocumentationComment(extractedFrom: node),
+      !docComment.parameters.isEmpty
+    else {
+      return .skipChildren
+    }
 
     // If a single sentence summary is the only documentation, parameter(s) and
     // returns tags may be omitted.
-    if commentInfo.oneSentenceSummary != nil && commentInfo.commentParagraphs!.isEmpty && params
-      .isEmpty && commentInfo.returnsDescription == nil
+    if docComment.briefSummary != nil
+      && docComment.bodyNodes.isEmpty
+      && docComment.parameters.isEmpty
+      && docComment.returns == nil
     {
       return .skipChildren
     }
 
-    // Indicates if the documentation uses 'Parameters' as description of the
-    // documented parameters.
-    let hasPluralDesc = declComment.components(separatedBy: .newlines).contains {
-      $0.trimmingCharacters(in: .whitespaces).starts(with: "- Parameters")
-    }
-
     validateThrows(
-      signature.effectSpecifiers?.throwsSpecifier, name: name, throwsDesc: commentInfo.throwsDescription, node: node)
+      signature.effectSpecifiers?.throwsSpecifier,
+      name: name,
+      throwsDescription: docComment.throws,
+      node: node)
     validateReturn(
-      returnClause, name: name, returnDesc: commentInfo.returnsDescription, node: node)
+      returnClause,
+      name: name,
+      returnsDescription: docComment.returns,
+      node: node)
     let funcParameters = funcParametersIdentifiers(in: signature.input.parameterList)
 
     // If the documentation of the parameters is wrong 'docCommentInfo' won't
     // parse the parameters correctly. First the documentation has to be fix
     // in order to validate the other conditions.
-    if hasPluralDesc && funcParameters.count == 1 {
+    if docComment.parameterLayout != .separated && funcParameters.count == 1 {
       diagnose(.useSingularParameter, on: node)
       return .skipChildren
-    } else if !hasPluralDesc && funcParameters.count > 1 {
+    } else if docComment.parameterLayout != .outline && funcParameters.count > 1 {
       diagnose(.usePluralParameters, on: node)
       return .skipChildren
     }
 
     // Ensures that the parameters of the documentation and the function signature
     // are the same.
-    if (params.count != funcParameters.count) || !parametersAreEqual(
-      params: params, funcParam: funcParameters)
+    if (docComment.parameters.count != funcParameters.count)
+      || !parametersAreEqual(params: docComment.parameters, funcParam: funcParameters)
     {
       diagnose(.parametersDontMatch(funcName: name), on: node)
     }
@@ -95,12 +100,12 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
   private func validateReturn(
     _ returnClause: ReturnClauseSyntax?,
     name: String,
-    returnDesc: String?,
+    returnsDescription: Paragraph?,
     node: DeclSyntax
   ) {
-    if returnClause == nil && returnDesc != nil {
+    if returnClause == nil && returnsDescription != nil {
       diagnose(.removeReturnComment(funcName: name), on: node)
-    } else if let returnClause = returnClause, returnDesc == nil {
+    } else if let returnClause = returnClause, returnsDescription == nil {
       if let returnTypeIdentifier = returnClause.returnType.as(SimpleTypeIdentifierSyntax.self),
          returnTypeIdentifier.name.text == "Never"
       {
@@ -115,7 +120,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
   private func validateThrows(
     _ throwsOrRethrowsKeyword: TokenSyntax?,
     name: String,
-    throwsDesc: String?,
+    throwsDescription: Paragraph?,
     node: DeclSyntax
   ) {
     // If a function is marked as `rethrows`, it doesn't have any errors of its
@@ -123,9 +128,11 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
     // functions marked `throws`.
     let needsThrowsDesc = throwsOrRethrowsKeyword?.tokenKind == .keyword(.throws)
 
-    if !needsThrowsDesc && throwsDesc != nil {
-      diagnose(.removeThrowsComment(funcName: name), on: throwsOrRethrowsKeyword ?? node.firstToken(viewMode: .sourceAccurate))
-    } else if needsThrowsDesc && throwsDesc == nil {
+    if !needsThrowsDesc && throwsDescription != nil {
+      diagnose(
+        .removeThrowsComment(funcName: name),
+        on: throwsOrRethrowsKeyword ?? node.firstToken(viewMode: .sourceAccurate))
+    } else if needsThrowsDesc && throwsDescription == nil {
       diagnose(.documentErrorsThrown(funcName: name), on: throwsOrRethrowsKeyword)
     }
   }
@@ -147,7 +154,10 @@ fileprivate func funcParametersIdentifiers(in paramList: FunctionParameterListSy
 
 /// Indicates if the parameters name from the documentation and the parameters
 /// from the declaration are the same.
-fileprivate func parametersAreEqual(params: [ParseComment.Parameter], funcParam: [String]) -> Bool {
+fileprivate func parametersAreEqual(
+  params: [DocumentationComment.Parameter],
+  funcParam: [String]
+) -> Bool {
   for index in 0..<params.count {
     if params[index].name != funcParam[index] {
       return false
