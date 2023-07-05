@@ -96,84 +96,80 @@ final class DifferentiationAttributeTests: PrettyPrintTestCase {
   }
 
   func testDerivative() {
-    #if HAS_DERIVATIVE_REGISTRATION_ATTRIBUTE
-      let input =
-        """
-        @derivative(of: foo)
-        func deriv<T>() {}
+    let input =
+      """
+      @derivative(of: foo)
+      func deriv<T>() {}
 
-        @derivative(of: foo, wrt: x)
-        func deriv<T>(_ x: T) {}
+      @derivative(of: foo, wrt: x)
+      func deriv<T>(_ x: T) {}
 
-        @derivative(of: foobar, wrt: x)
-        func deriv<T>(_ x: T) {}
+      @derivative(of: foobar, wrt: x)
+      func deriv<T>(_ x: T) {}
 
-        @derivative(of: foobarbaz, wrt: theVariableNamedX)
-        func deriv<T>(_ theVariableNamedX: T) {}
-        """
+      @derivative(of: foobarbaz, wrt: theVariableNamedX)
+      func deriv<T>(_ theVariableNamedX: T) {}
+      """
 
-      let expected =
-        """
-        @derivative(of: foo)
-        func deriv<T>() {}
+    let expected =
+      """
+      @derivative(of: foo)
+      func deriv<T>() {}
 
-        @derivative(of: foo, wrt: x)
-        func deriv<T>(_ x: T) {}
+      @derivative(of: foo, wrt: x)
+      func deriv<T>(_ x: T) {}
 
-        @derivative(
-          of: foobar, wrt: x
-        )
-        func deriv<T>(_ x: T) {}
+      @derivative(
+        of: foobar, wrt: x
+      )
+      func deriv<T>(_ x: T) {}
 
-        @derivative(
-          of: foobarbaz,
-          wrt: theVariableNamedX
-        )
-        func deriv<T>(
-          _ theVariableNamedX: T
-        ) {}
+      @derivative(
+        of: foobarbaz,
+        wrt: theVariableNamedX
+      )
+      func deriv<T>(
+        _ theVariableNamedX: T
+      ) {}
 
-        """
+      """
 
-      assertPrettyPrintEqual(input: input, expected: expected, linelength: 28)
-    #endif
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 28)
   }
 
   func testTranspose() {
-    #if HAS_DERIVATIVE_REGISTRATION_ATTRIBUTE
-      let input =
-        """
-        @transpose(of: foo, wrt: 0)
-        func trans<T>(_ v: T) {}
+    let input =
+      """
+      @transpose(of: foo, wrt: 0)
+      func trans<T>(_ v: T) {}
 
-        @transpose(of: foobar, wrt: 0)
-        func trans<T>(_ v: T) {}
+      @transpose(of: foobar, wrt: 0)
+      func trans<T>(_ v: T) {}
 
-        @transpose(of: someReallyLongName, wrt: 0)
-        func trans<T>(_ theVariableNamedV: T) {}
-        """
+      @transpose(of: someReallyLongName, wrt: 0)
+      func trans<T>(_ theVariableNamedV: T) {}
+      """
 
-      let expected =
-        """
-        @transpose(of: foo, wrt: 0)
-        func trans<T>(_ v: T) {}
+    let expected =
+      """
+      @transpose(of: foo, wrt: 0)
+      func trans<T>(_ v: T) {}
 
-        @transpose(
-          of: foobar, wrt: 0
-        )
-        func trans<T>(_ v: T) {}
+      @transpose(
+        of: foobar, wrt: 0
+      )
+      func trans<T>(_ v: T) {}
 
-        @transpose(
-          of: someReallyLongName,
-          wrt: 0
-        )
-        func trans<T>(
-          _ theVariableNamedV: T
-        ) {}
+      @transpose(
+        of: someReallyLongName,
+        wrt: 0
+      )
+      func trans<T>(
+        _ theVariableNamedV: T
+      ) {}
 
-        """
+      """
 
-      assertPrettyPrintEqual(input: input, expected: expected, linelength: 27)
-    #endif
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 27)
   }
 }
