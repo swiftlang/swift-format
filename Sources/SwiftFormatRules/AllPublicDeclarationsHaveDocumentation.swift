@@ -75,10 +75,9 @@ public final class AllPublicDeclarationsHaveDocumentation: SyntaxLintRule {
     name: String,
     modifiers: ModifierListSyntax?
   ) {
-    guard decl.docComment == nil else { return }
-    guard let mods = modifiers,
-      mods.has(modifier: "public"),
-      !mods.has(modifier: "override")
+    guard
+      documentationCommentText(extractedFrom: decl.leadingTrivia) == nil,
+      let mods = modifiers, mods.has(modifier: "public") && !mods.has(modifier: "override")
     else {
       return
     }

@@ -87,11 +87,14 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
 
   /// Diagnose documentation comments that don't start with one sentence summary.
   private func diagnoseDocComments(in decl: DeclSyntax) {
-    guard let commentText = decl.docComment else { return }
-    let docComments = commentText.components(separatedBy: "\n")
-    guard let firstPart = firstParagraph(docComments) else { return }
+    guard
+      let docComment = DocumentationComment(extractedFrom: decl),
+      let briefSummary = docComment.briefSummary
+    else { return }
 
-    let trimmedText = firstPart.trimmingCharacters(in: .whitespacesAndNewlines)
+    // For the purposes of checking the sentence structure of the comment, we can operate on the
+    // plain text; we don't need any of the styling.
+    let trimmedText = briefSummary.plainText.trimmingCharacters(in: .whitespacesAndNewlines)
     let (commentSentences, trailingText) = sentences(in: trimmedText)
     if commentSentences.count == 0 {
       diagnose(.terminateSentenceWithPeriod(trimmedText), on: decl)
@@ -101,17 +104,6 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
         diagnose(.terminateSentenceWithPeriod(trailingText), on: decl)
       }
     }
-  }
-
-  /// Returns the text of the first part of the comment,
-  private func firstParagraph(_ comments: [String]) -> String? {
-    var text = [String]()
-    var index = 0
-    while index < comments.count && comments[index] != "*" && comments[index] != "" {
-      text.append(comments[index])
-      index += 1
-    }
-    return comments.isEmpty ? nil : text.joined(separator: " ")
   }
 
   /// Returns all the sentences in the given text.
