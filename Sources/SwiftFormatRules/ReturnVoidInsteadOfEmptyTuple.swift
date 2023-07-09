@@ -69,7 +69,7 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
 
     let input: ClosureSignatureSyntax.Input?
     switch node.input {
-    case .input(let parameterClause)?:
+    case .parameterClause(let parameterClause)?:
       // If the closure input is a complete parameter clause (variables and types), make sure that
       // nested function types are also rewritten (for example, `label: (Int -> ()) -> ()` should
       // become `label: (Int -> Void) -> Void`).
