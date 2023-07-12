@@ -43,7 +43,7 @@ public func documentationCommentText(extractedFrom trivia: Trivia)
   // Look backwards from the end of the trivia collection to find the logical start of the comment.
   // We have to copy it into an array since `Trivia` doesn't support bidirectional indexing.
   let triviaArray = Array(trivia)
-  let commentStartIndex: [TriviaPiece].Index
+  let commentStartIndex: Array<TriviaPiece>.Index
   if
     let lastNonDocCommentIndex = triviaArray.lastIndex(where: {
       switch $0 {
@@ -140,7 +140,7 @@ private func indentationDistance(of text: Substring) -> Int {
 /// given trivia piece.
 private func contiguousWhitespace(
   in trivia: [TriviaPiece],
-  before index: [TriviaPiece].Index
+  before index: Array<TriviaPiece>.Index
 ) -> Int {
   var index = index
   var whitespace = 0
