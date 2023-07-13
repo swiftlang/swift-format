@@ -420,8 +420,8 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         argumentTypes: functionType.arguments,
         rightParen: functionType.rightParen,
         effectSpecifiers: functionType.effectSpecifiers,
-        arrow: functionType.output.arrow,
-        returnType: functionType.output.returnType
+        arrow: functionType.returnClause.arrow,
+        returnType: functionType.returnClause.returnType
       )
       return ExprSyntax(result)
 
@@ -516,7 +516,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     for accessorDecl in accessorBlock.accessors {
       // Look for accessors that indicate that this is a computed property. If none are found, then
       // it is a stored property (e.g., having only observers like `willSet/didSet`).
-      switch accessorDecl.accessorKind.tokenKind {
+      switch accessorDecl.accessorSpecifier.tokenKind {
       case .keyword(.get),
         .keyword(.set),
         .keyword(.unsafeAddress),
@@ -542,7 +542,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       isStoredProperty(patternBinding),
       patternBinding.initializer == nil,
       let variableDecl = nearestAncestor(of: patternBinding, type: VariableDeclSyntax.self),
-      variableDecl.bindingKeyword.tokenKind == .keyword(.var)
+       variableDecl.bindingSpecifier.tokenKind == .keyword(.var)
     {
       return true
     }

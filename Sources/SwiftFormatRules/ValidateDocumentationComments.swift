@@ -35,7 +35,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
   public override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
     return checkFunctionLikeDocumentation(
       DeclSyntax(node), name: node.identifier.text, signature: node.signature,
-      returnClause: node.signature.output)
+      returnClause: node.signature.returnClause)
   }
 
   private func checkFunctionLikeDocumentation(
@@ -71,7 +71,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
       name: name,
       returnsDescription: docComment.returns,
       node: node)
-    let funcParameters = funcParametersIdentifiers(in: signature.input.parameterList)
+    let funcParameters = funcParametersIdentifiers(in: signature.parameterClause.parameterList)
 
     // If the documentation of the parameters is wrong 'docCommentInfo' won't
     // parse the parameters correctly. First the documentation has to be fix
