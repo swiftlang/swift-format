@@ -196,7 +196,7 @@ file is not found, then it looks in the parent directory, and so on.
 
 If no configuration file is found, a default configuration is used. The
 settings in the default configuration can be viewed by running
-`swift-format --mode dump-configuration`, which will dump it to standard
+`swift-format dump-configuration`, which will dump it to standard
 output.
 
 If the `--configuration <file>` option is passed to `swift-format`, then that
