@@ -523,7 +523,7 @@ fileprivate class Line {
     {
       return .testableImport
     }
-    if importDecl.importKind != nil {
+    if importDecl.importKindSpecifier != nil {
       return .declImport
     }
     return .regularImport

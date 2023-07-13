@@ -67,14 +67,14 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
   }
 
   public override func visit(_ node: ClosureSignatureSyntax) -> SyntaxVisitorContinueKind {
-    if let input = node.input {
-      if let closureParamList = input.as(ClosureParamListSyntax.self) {
+    if let parameterClause = node.parameterClause {
+      if let closureParamList = parameterClause.as(ClosureParamListSyntax.self) {
         for param in closureParamList {
           diagnoseLowerCamelCaseViolations(
             param.name, allowUnderscores: false, description: identifierDescription(for: node))
         }
-      } else if let parameterClause = input.as(ClosureParameterClauseSyntax.self) {
-        for param in parameterClause.parameterList {
+      } else if let closureParameterClause = parameterClause.as(ClosureParameterClauseSyntax.self) {
+        for param in closureParameterClause.parameterList {
           diagnoseLowerCamelCaseViolations(
             param.firstName, allowUnderscores: false, description: identifierDescription(for: node))
           if let secondName = param.secondName {
@@ -82,8 +82,8 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
               secondName, allowUnderscores: false, description: identifierDescription(for: node))
           }
         }
-      } else if let parameterClause = input.as(EnumCaseParameterClauseSyntax.self) {
-        for param in parameterClause.parameterList {
+      } else if let enumCaseParameterClause = parameterClause.as(EnumCaseParameterClauseSyntax.self) {
+        for param in enumCaseParameterClause.parameterList {
           if let firstName = param.firstName {
             diagnoseLowerCamelCaseViolations(
               firstName, allowUnderscores: false, description: identifierDescription(for: node))
@@ -93,7 +93,7 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
               secondName, allowUnderscores: false, description: identifierDescription(for: node))
           }
         }
-      } else if let parameterClause = input.as(ParameterClauseSyntax.self) {
+      } else if let parameterClause = parameterClause.as(ParameterClauseSyntax.self) {
         for param in parameterClause.parameterList {
           diagnoseLowerCamelCaseViolations(
             param.firstName, allowUnderscores: false, description: identifierDescription(for: node))
@@ -121,7 +121,7 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
     diagnoseLowerCamelCaseViolations(
       node.identifier, allowUnderscores: allowUnderscores,
       description: identifierDescription(for: node))
-    for param in node.signature.input.parameterList {
+    for param in node.signature.parameterClause.parameterList {
       // These identifiers aren't described using `identifierDescription(for:)` because no single
       // node can disambiguate the argument label from the parameter name.
       diagnoseLowerCamelCaseViolations(
@@ -158,8 +158,8 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
         // Identify test methods using the same heuristics as XCTest: name starts with "test", has
         // no arguments, and returns a void type.
         if functionDecl.identifier.text.starts(with: "test")
-          && functionDecl.signature.input.parameterList.isEmpty
-          && (functionDecl.signature.output.map(\.isVoid) ?? true)
+            && functionDecl.signature.parameterClause.parameterList.isEmpty
+            && (functionDecl.signature.returnClause.map(\.isVoid) ?? true)
         {
           set.insert(functionDecl)
         }
@@ -189,9 +189,9 @@ fileprivate func identifierDescription<NodeType: SyntaxProtocol>(for node: NodeT
   case .enumCaseElement: return "enum case"
   case .functionDecl: return "function"
   case .optionalBindingCondition(let binding):
-    return binding.bindingKeyword.tokenKind == .keyword(.var) ? "variable" : "constant"
+    return binding.bindingSpecifier.tokenKind == .keyword(.var) ? "variable" : "constant"
   case .variableDecl(let variableDecl):
-    return variableDecl.bindingKeyword.tokenKind == .keyword(.var) ? "variable" : "constant"
+    return variableDecl.bindingSpecifier.tokenKind == .keyword(.var) ? "variable" : "constant"
   default:
     return "identifier"
   }

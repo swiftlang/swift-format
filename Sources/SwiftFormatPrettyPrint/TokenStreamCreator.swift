@@ -248,7 +248,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
     arrangeAttributeList(node.attributes)
 
-    let hasArguments = !node.signature.input.parameterList.isEmpty
+    let hasArguments = !node.signature.parameterClause.parameterList.isEmpty
 
     // Prioritize keeping ") -> <return_type>" together. We can only do this if the macro has
     // arguments.
@@ -257,8 +257,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       after(node.signature.lastToken(viewMode: .sourceAccurate), tokens: .close)
     }
 
-    let mustBreak = node.signature.output != nil || node.definition != nil
-    arrangeParameterClause(node.signature.input, forcesBreakBeforeRightParen: mustBreak)
+    let mustBreak = node.signature.returnClause != nil || node.definition != nil
+    arrangeParameterClause(node.signature.parameterClause, forcesBreakBeforeRightParen: mustBreak)
 
     // Prioritize keeping "<modifiers> macro <name>(" together. Also include the ")" if the
     // parameter list is empty.
@@ -267,9 +267,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     before(firstTokenAfterAttributes, tokens: .open)
     after(node.macroKeyword, tokens: .break)
     if hasArguments || node.genericParameterClause != nil {
-      after(node.signature.input.leftParen, tokens: .close)
+      after(node.signature.parameterClause.leftParen, tokens: .close)
     } else {
-      after(node.signature.input.rightParen, tokens: .close)
+      after(node.signature.parameterClause.rightParen, tokens: .close)
     }
 
     if let genericWhereClause = node.genericWhereClause {
@@ -327,7 +327,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   // MARK: - Function and function-like declaration nodes (initializers, deinitializers, subscripts)
 
   override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
-    let hasArguments = !node.signature.input.parameterList.isEmpty
+    let hasArguments = !node.signature.parameterClause.parameterList.isEmpty
 
     // Prioritize keeping ") throws -> <return_type>" together. We can only do this if the function
     // has arguments.
@@ -336,8 +336,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       after(node.signature.lastToken(viewMode: .sourceAccurate), tokens: .close)
     }
 
-    let mustBreak = node.body != nil || node.signature.output != nil
-    arrangeParameterClause(node.signature.input, forcesBreakBeforeRightParen: mustBreak)
+    let mustBreak = node.body != nil || node.signature.returnClause != nil
+    arrangeParameterClause(node.signature.parameterClause, forcesBreakBeforeRightParen: mustBreak)
 
     // Prioritize keeping "<modifiers> func <name>(" together. Also include the ")" if the parameter
     // list is empty.
@@ -345,9 +345,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     before(firstTokenAfterAttributes, tokens: .open)
     after(node.funcKeyword, tokens: .break)
     if hasArguments || node.genericParameterClause != nil {
-      after(node.signature.input.leftParen, tokens: .close)
+      after(node.signature.parameterClause.leftParen, tokens: .close)
     } else {
-      after(node.signature.input.rightParen, tokens: .close)
+      after(node.signature.parameterClause.rightParen, tokens: .close)
     }
 
     // Add a non-breaking space after the identifier if it's an operator, to separate it visually
@@ -369,7 +369,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: InitializerDeclSyntax) -> SyntaxVisitorContinueKind {
-    let hasArguments = !node.signature.input.parameterList.isEmpty
+    let hasArguments = !node.signature.parameterClause.parameterList.isEmpty
 
     // Prioritize keeping ") throws" together. We can only do this if the function
     // has arguments.
@@ -378,16 +378,16 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       after(node.signature.lastToken(viewMode: .sourceAccurate), tokens: .close)
     }
 
-    arrangeParameterClause(node.signature.input, forcesBreakBeforeRightParen: node.body != nil)
+    arrangeParameterClause(node.signature.parameterClause, forcesBreakBeforeRightParen: node.body != nil)
 
     // Prioritize keeping "<modifiers> init<punctuation>" together.
     let firstTokenAfterAttributes = node.modifiers?.firstToken(viewMode: .sourceAccurate) ?? node.initKeyword
     before(firstTokenAfterAttributes, tokens: .open)
 
     if hasArguments || node.genericParameterClause != nil {
-      after(node.signature.input.leftParen, tokens: .close)
+      after(node.signature.parameterClause.leftParen, tokens: .close)
     } else {
-      after(node.signature.input.rightParen, tokens: .close)
+      after(node.signature.parameterClause.rightParen, tokens: .close)
     }
 
     arrangeFunctionLikeDecl(
@@ -411,7 +411,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: SubscriptDeclSyntax) -> SyntaxVisitorContinueKind {
-    let hasArguments = !node.indices.parameterList.isEmpty
+    let hasArguments = !node.parameterClause.parameterList.isEmpty
 
     before(node.firstToken(viewMode: .sourceAccurate), tokens: .open)
 
@@ -420,9 +420,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       before(firstModifierToken, tokens: .open)
 
       if hasArguments || node.genericParameterClause != nil {
-        after(node.indices.leftParen, tokens: .close)
+        after(node.parameterClause.leftParen, tokens: .close)
       } else {
-        after(node.indices.rightParen, tokens: .close)
+        after(node.parameterClause.rightParen, tokens: .close)
       }
     }
 
@@ -430,7 +430,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // arguments.
     if hasArguments && config.prioritizeKeepingFunctionOutputTogether {
       // Due to visitation order, the matching .open break is added in ParameterClauseSyntax.
-      after(node.result.lastToken(viewMode: .sourceAccurate), tokens: .close)
+      after(node.returnClause.lastToken(viewMode: .sourceAccurate), tokens: .close)
     }
 
     arrangeAttributeList(node.attributes)
@@ -440,7 +440,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       after(genericWhereClause.lastToken(viewMode: .sourceAccurate), tokens: .close)
     }
 
-    before(node.result.firstToken(viewMode: .sourceAccurate), tokens: .break)
+    before(node.returnClause.firstToken(viewMode: .sourceAccurate), tokens: .break)
 
     if let accessorOrCodeBlock = node.accessor {
       switch accessorOrCodeBlock {
@@ -453,7 +453,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
     after(node.lastToken(viewMode: .sourceAccurate), tokens: .close)
 
-    arrangeParameterClause(node.indices, forcesBreakBeforeRightParen: true)
+    arrangeParameterClause(node.parameterClause, forcesBreakBeforeRightParen: true)
 
     return .visitChildren
   }
@@ -1185,22 +1185,22 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     before(node.firstToken(viewMode: .sourceAccurate), tokens: .open)
 
     arrangeAttributeList(
-      node.attributes, suppressFinalBreak: node.input == nil && node.capture == nil)
+      node.attributes, suppressFinalBreak: node.parameterClause == nil && node.capture == nil)
 
-    if let input = node.input {
+    if let parameterClause = node.parameterClause {
       // We unconditionally put a break before the `in` keyword below, so we should only put a break
       // after the capture list's right bracket if there are arguments following it or we'll end up
       // with an extra space if the line doesn't wrap.
       after(node.capture?.rightSquare, tokens: .break(.same))
 
-      // When it's parenthesized, the input is a `ParameterClauseSyntax`. Otherwise, it's a
+      // When it's parenthesized, the parameterClause is a `ParameterClauseSyntax`. Otherwise, it's a
       // `ClosureParamListSyntax`. The parenthesized version is wrapped in open/close breaks so that
       // the parens create an extra level of indentation.
-      if let parameterClause = input.as(ClosureParameterClauseSyntax.self) {
+      if let closureParameterClause = parameterClause.as(ClosureParameterClauseSyntax.self) {
         // Whether we should prioritize keeping ") throws -> <return_type>" together. We can only do
         // this if the closure has arguments.
         let keepOutputTogether =
-          !parameterClause.parameterList.isEmpty && config.prioritizeKeepingFunctionOutputTogether
+          !closureParameterClause.parameterList.isEmpty && config.prioritizeKeepingFunctionOutputTogether
 
         // Keep the output together by grouping from the right paren to the end of the output.
         if keepOutputTogether {
@@ -1211,20 +1211,20 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         } else  {
           // Group outside of the parens, so that the argument list together, preferring to break
           // between the argument list and the output.
-          before(input.firstToken(viewMode: .sourceAccurate), tokens: .open)
-          after(input.lastToken(viewMode: .sourceAccurate), tokens: .close)
+          before(parameterClause.firstToken(viewMode: .sourceAccurate), tokens: .open)
+          after(parameterClause.lastToken(viewMode: .sourceAccurate), tokens: .close)
         }
 
-        arrangeClosureParameterClause(parameterClause, forcesBreakBeforeRightParen: true)
+        arrangeClosureParameterClause(closureParameterClause, forcesBreakBeforeRightParen: true)
       } else {
         // Group around the arguments, but don't use open/close breaks because there are no parens
         // to create a new scope.
-        before(input.firstToken(viewMode: .sourceAccurate), tokens: .open(argumentListConsistency()))
-        after(input.lastToken(viewMode: .sourceAccurate), tokens: .close)
+        before(parameterClause.firstToken(viewMode: .sourceAccurate), tokens: .open(argumentListConsistency()))
+        after(parameterClause.lastToken(viewMode: .sourceAccurate), tokens: .close)
       }
     }
 
-    before(node.output?.arrow, tokens: .break)
+    before(node.returnClause?.arrow, tokens: .break)
     after(node.lastToken(viewMode: .sourceAccurate), tokens: .close)
     before(node.inKeyword, tokens: .break(.same))
     return .visitChildren
@@ -1521,7 +1521,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: OperatorDeclSyntax) -> SyntaxVisitorContinueKind {
-    after(node.fixity, tokens: .break)
+    after(node.fixitySpecifier, tokens: .break)
     after(node.operatorKeyword, tokens: .break)
     return .visitChildren
   }
@@ -1836,7 +1836,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
     arrangeAttributeList(node.attributes)
     after(node.importKeyword, tokens: .space)
-    after(node.importKind, tokens: .space)
+    after(node.importKindSpecifier, tokens: .space)
 
     after(node.lastToken(viewMode: .sourceAccurate), tokens: .printerControl(kind: .enableBreaking))
     return .visitChildren
@@ -1941,7 +1941,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: FunctionSignatureSyntax) -> SyntaxVisitorContinueKind {
-    before(node.output?.firstToken(viewMode: .sourceAccurate), tokens: .break)
+    before(node.returnClause?.firstToken(viewMode: .sourceAccurate), tokens: .break)
     return .visitChildren
   }
 
@@ -2096,14 +2096,14 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     if node.bindings.count == 1 {
       // If there is only a single binding, don't allow a break between the `let/var` keyword and
       // the identifier; there are better places to break later on.
-      after(node.bindingKeyword, tokens: .space)
+      after(node.bindingSpecifier, tokens: .space)
     } else {
       // If there is more than one binding, we permit an open-break after `let/var` so that each of
       // the comma-delimited items will potentially receive indentation. We also add a group around
       // the individual bindings to bind them together better. (This is done here, not in
       // `visit(_: PatternBindingSyntax)`, because we only want that behavior when there are
       // multiple bindings.)
-      after(node.bindingKeyword, tokens: .break(.open))
+      after(node.bindingSpecifier, tokens: .break(.open))
 
       for binding in node.bindings {
         before(binding.firstToken(viewMode: .sourceAccurate), tokens: .open)
@@ -2301,7 +2301,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: ValueBindingPatternSyntax) -> SyntaxVisitorContinueKind {
-    after(node.bindingKeyword, tokens: .break)
+    after(node.bindingSpecifier, tokens: .break)
     return .visitChildren
   }
 
@@ -2492,7 +2492,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: OptionalBindingConditionSyntax) -> SyntaxVisitorContinueKind {
-    after(node.bindingKeyword, tokens: .break)
+    after(node.bindingSpecifier, tokens: .break)
 
     if let typeAnnotation = node.typeAnnotation {
       after(
@@ -2532,20 +2532,20 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // This node encapsulates the entire list of arguments in a `@differentiable(...)` attribute.
     var needsBreakBeforeWhereClause = false
 
-    if let diffParamsComma = node.diffParamsComma {
-      after(diffParamsComma, tokens: .break(.same))
-    } else if node.diffParams != nil {
+    if let parametersComma = node.parametersComma {
+      after(parametersComma, tokens: .break(.same))
+    } else if node.parameters != nil {
       // If there were diff params but no comma following them, then we have "wrt: foo where ..."
       // and we need a break before the where clause.
       needsBreakBeforeWhereClause = true
     }
 
-    if let whereClause = node.whereClause {
+    if let genericWhereClause = node.genericWhereClause {
       if needsBreakBeforeWhereClause {
-        before(whereClause.firstToken(viewMode: .sourceAccurate), tokens: .break(.same))
+        before(genericWhereClause.firstToken(viewMode: .sourceAccurate), tokens: .break(.same))
       }
-      before(whereClause.firstToken(viewMode: .sourceAccurate), tokens: .open)
-      after(whereClause.lastToken(viewMode: .sourceAccurate), tokens: .close)
+      before(genericWhereClause.firstToken(viewMode: .sourceAccurate), tokens: .open)
+      after(genericWhereClause.lastToken(viewMode: .sourceAccurate), tokens: .close)
     }
     return .visitChildren
   }
@@ -2571,9 +2571,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // The comma after originalDeclName is optional and is only present if there are diffParams.
     after(node.comma ?? node.originalDeclName.lastToken(viewMode: .sourceAccurate), tokens: .close)
 
-    if let diffParams = node.diffParams {
-      before(diffParams.firstToken(viewMode: .sourceAccurate), tokens: .break(.same), .open)
-      after(diffParams.lastToken(viewMode: .sourceAccurate), tokens: .close)
+    if let parameters = node.parameters {
+      before(parameters.firstToken(viewMode: .sourceAccurate), tokens: .break(.same), .open)
+      after(parameters.lastToken(viewMode: .sourceAccurate), tokens: .close)
     }
 
     return .visitChildren
@@ -3069,7 +3069,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // If we're at the end of the file, determine at which index to stop checking trivia pieces to
     // prevent trailing newlines.
     var cutoffIndex: Int? = nil
-    if token.tokenKind == TokenKind.eof {
+    if token.tokenKind == TokenKind.endOfFile {
       cutoffIndex = 0
       for (index, piece) in trivia.enumerated() {
         switch piece {
