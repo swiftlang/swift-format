@@ -15,6 +15,9 @@ import SwiftSyntax
 
 /// Force-unwraps are strongly discouraged and must be documented.
 ///
+/// This rule does not apply to test code, defined as code which:
+///   * Contains the line `import XCTest`
+///
 /// Lint: If a force unwrap is used, a lint warning is raised.
 public final class NeverForceUnwrap: SyntaxLintRule {
 
