@@ -16,6 +16,9 @@ import SwiftSyntax
 /// All values should be written in lower camel-case (`lowerCamelCase`).
 /// Underscores (except at the beginning of an identifier) are disallowed.
 ///
+/// This rule does not apply to test code, defined as code which:
+///   * Contains the line `import XCTest`
+///
 /// Lint: If an identifier contains underscores or begins with a capital letter, a lint error is
 ///       raised.
 public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
