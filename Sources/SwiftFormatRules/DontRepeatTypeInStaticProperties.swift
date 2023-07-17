@@ -23,22 +23,22 @@ import SwiftSyntax
 public final class DontRepeatTypeInStaticProperties: SyntaxLintRule {
 
   public override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseStaticMembers(node.memberBlock.members, endingWith: node.identifier.text)
+    diagnoseStaticMembers(node.memberBlock.members, endingWith: node.name.text)
     return .skipChildren
   }
 
   public override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseStaticMembers(node.memberBlock.members, endingWith: node.identifier.text)
+    diagnoseStaticMembers(node.memberBlock.members, endingWith: node.name.text)
     return .skipChildren
   }
 
   public override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseStaticMembers(node.memberBlock.members, endingWith: node.identifier.text)
+    diagnoseStaticMembers(node.memberBlock.members, endingWith: node.name.text)
     return .skipChildren
   }
 
   public override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseStaticMembers(node.memberBlock.members, endingWith: node.identifier.text)
+    diagnoseStaticMembers(node.memberBlock.members, endingWith: node.name.text)
     return .skipChildren
   }
 

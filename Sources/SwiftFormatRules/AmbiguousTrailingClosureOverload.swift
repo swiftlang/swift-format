@@ -24,12 +24,12 @@ public final class AmbiguousTrailingClosureOverload: SyntaxLintRule {
       let decl = decls[0]
       diagnose(
         .ambiguousTrailingClosureOverload(decl.fullDeclName),
-        on: decl.identifier,
+        on: decl.name,
         notes: decls.dropFirst().map { decl in
           Finding.Note(
             message: .otherAmbiguousOverloadHere(decl.fullDeclName),
             location: Finding.Location(
-              decl.identifier.startLocation(converter: self.context.sourceLocationConverter))
+              decl.name.startLocation(converter: self.context.sourceLocationConverter))
           )
         })
     }
@@ -39,13 +39,13 @@ public final class AmbiguousTrailingClosureOverload: SyntaxLintRule {
     var overloads = [String: [FunctionDeclSyntax]]()
     var staticOverloads = [String: [FunctionDeclSyntax]]()
     for fn in functions {
-      let params = fn.signature.parameterClause.parameterList
+      let params = fn.signature.parameterClause.parameters
       guard let firstParam = params.firstAndOnly else { continue }
       guard firstParam.type.is(FunctionTypeSyntax.self) else { continue }
       if let mods = fn.modifiers, mods.has(modifier: "static") || mods.has(modifier: "class") {
-        staticOverloads[fn.identifier.text, default: []].append(fn)
+        staticOverloads[fn.name.text, default: []].append(fn)
       } else {
-        overloads[fn.identifier.text, default: []].append(fn)
+        overloads[fn.name.text, default: []].append(fn)
       }
     }
 

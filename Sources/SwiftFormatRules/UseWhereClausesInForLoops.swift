@@ -100,7 +100,7 @@ fileprivate func updateWithWhereCondition(
   statements: CodeBlockItemListSyntax
 ) -> ForInStmtSyntax {
   // Construct a new `where` clause with the condition.
-  let lastToken = node.sequenceExpr.lastToken(viewMode: .sourceAccurate)
+  let lastToken = node.sequence.lastToken(viewMode: .sourceAccurate)
   var whereLeadingTrivia = Trivia()
   if lastToken?.trailingTrivia.containsSpaces == false {
     whereLeadingTrivia = .spaces(1)

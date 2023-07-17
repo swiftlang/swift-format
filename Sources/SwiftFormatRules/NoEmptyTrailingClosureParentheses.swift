@@ -22,10 +22,10 @@ import SwiftSyntax
 public final class NoEmptyTrailingClosureParentheses: SyntaxFormatRule {
 
   public override func visit(_ node: FunctionCallExprSyntax) -> ExprSyntax {
-    guard node.argumentList.count == 0 else { return super.visit(node) }
+    guard node.arguments.count == 0 else { return super.visit(node) }
 
     guard let trailingClosure = node.trailingClosure,
-      node.argumentList.isEmpty && node.leftParen != nil else
+      node.arguments.isEmpty && node.leftParen != nil else
     {
       return super.visit(node)
     }

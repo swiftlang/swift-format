@@ -32,27 +32,27 @@ public final class NoLeadingUnderscores: SyntaxLintRule {
   public override class var isOptIn: Bool { return true }
 
   public override func visit(_ node: AssociatedtypeDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseIfNameStartsWithUnderscore(node.identifier)
+    diagnoseIfNameStartsWithUnderscore(node.name)
     return .visitChildren
   }
 
   public override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseIfNameStartsWithUnderscore(node.identifier)
+    diagnoseIfNameStartsWithUnderscore(node.name)
     return .visitChildren
   }
 
   public override func visit(_ node: EnumCaseElementSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseIfNameStartsWithUnderscore(node.identifier)
+    diagnoseIfNameStartsWithUnderscore(node.name)
     return .visitChildren
   }
 
   public override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseIfNameStartsWithUnderscore(node.identifier)
+    diagnoseIfNameStartsWithUnderscore(node.name)
     return .visitChildren
   }
 
   public override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseIfNameStartsWithUnderscore(node.identifier)
+    diagnoseIfNameStartsWithUnderscore(node.name)
     return .visitChildren
   }
 
@@ -93,22 +93,22 @@ public final class NoLeadingUnderscores: SyntaxLintRule {
   }
 
   public override func visit(_ node: PrecedenceGroupDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseIfNameStartsWithUnderscore(node.identifier)
+    diagnoseIfNameStartsWithUnderscore(node.name)
     return .visitChildren
   }
 
   public override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseIfNameStartsWithUnderscore(node.identifier)
+    diagnoseIfNameStartsWithUnderscore(node.name)
     return .visitChildren
   }
 
   public override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseIfNameStartsWithUnderscore(node.identifier)
+    diagnoseIfNameStartsWithUnderscore(node.name)
     return .visitChildren
   }
 
   public override func visit(_ node: TypealiasDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseIfNameStartsWithUnderscore(node.identifier)
+    diagnoseIfNameStartsWithUnderscore(node.name)
     return .visitChildren
   }
 

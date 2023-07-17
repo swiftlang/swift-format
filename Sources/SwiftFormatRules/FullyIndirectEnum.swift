@@ -31,7 +31,7 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
       return DeclSyntax(node)
     }
 
-    diagnose(.moveIndirectKeywordToEnumDecl(name: node.identifier.text), on: node.identifier)
+    diagnose(.moveIndirectKeywordToEnumDecl(name: node.name.text), on: node.name)
 
     // Removes 'indirect' keyword from cases, reformats
     let newMembers = enumMembers.map {

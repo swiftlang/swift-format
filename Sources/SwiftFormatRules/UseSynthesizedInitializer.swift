@@ -51,7 +51,7 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
     for initializer in initializers {
       guard
         matchesPropertyList(
-          parameters: initializer.signature.parameterClause.parameterList,
+          parameters: initializer.signature.parameterClause.parameters,
           properties: storedProperties)
       else { continue }
       guard
