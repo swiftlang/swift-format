@@ -15,9 +15,9 @@ import SwiftSyntax
 extension FunctionDeclSyntax {
   /// Constructs a name for a function that includes parameter labels, i.e. `foo(_:bar:)`.
   var fullDeclName: String {
-    let params = signature.parameterClause.parameterList.map { param in
+    let params = signature.parameterClause.parameters.map { param in
       "\(param.firstName.text):"
     }
-    return "\(identifier.text)(\(params.joined()))"
+    return "\(name.text)(\(params.joined()))"
   }
 }

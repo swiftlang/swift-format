@@ -52,7 +52,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         break
       }
       newNode = shorthandArrayType(
-        element: typeArgument.argumentType,
+        element: typeArgument.argument,
         leadingTrivia: leadingTrivia,
         trailingTrivia: trailingTrivia)
 
@@ -62,8 +62,8 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         break
       }
       newNode = shorthandDictionaryType(
-        key: typeArguments.0.argumentType,
-        value: typeArguments.1.argumentType,
+        key: typeArguments.0.argument,
+        value: typeArguments.1.argument,
         leadingTrivia: leadingTrivia,
         trailingTrivia: trailingTrivia)
 
@@ -77,7 +77,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         break
       }
       newNode = shorthandOptionalType(
-        wrapping: typeArgument.argumentType,
+        wrapping: typeArgument.argument,
         leadingTrivia: leadingTrivia,
         trailingTrivia: trailingTrivia)
 
@@ -137,10 +137,9 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         break
       }
       let arrayTypeExpr = makeArrayTypeExpression(
-        elementType: typeArgument.argumentType,
-        leftSquareBracket: TokenSyntax.leftSquareBracketToken(leadingTrivia: leadingTrivia),
-        rightSquareBracket:
-          TokenSyntax.rightSquareBracketToken(trailingTrivia: trailingTrivia))
+        elementType: typeArgument.argument,
+        leftSquare: TokenSyntax.leftSquareToken(leadingTrivia: leadingTrivia),
+        rightSquare: TokenSyntax.rightSquareToken(trailingTrivia: trailingTrivia))
       newNode = ExprSyntax(arrayTypeExpr)
 
     case "Dictionary":
@@ -149,9 +148,9 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         break
       }
       let dictTypeExpr = makeDictionaryTypeExpression(
-        keyType: typeArguments.0.argumentType,
-        valueType: typeArguments.1.argumentType,
-        leftSquareBracket: TokenSyntax.leftSquareBracketToken(leadingTrivia: leadingTrivia),
+        keyType: typeArguments.0.argument,
+        valueType: typeArguments.1.argument,
+        leftSquare: TokenSyntax.leftSquareToken(leadingTrivia: leadingTrivia),
         colon: TokenSyntax.colonToken(trailingTrivia: .spaces(1)),
         rightSquareBracket:
           TokenSyntax.rightSquareBracketToken(trailingTrivia: trailingTrivia))
@@ -163,7 +162,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         break
       }
       let optionalTypeExpr = makeOptionalTypeExpression(
-        wrapping: typeArgument.argumentType,
+        wrapping: typeArgument.argument,
         leadingTrivia: leadingTrivia,
         questionMark: TokenSyntax.postfixQuestionMarkToken(trailingTrivia: trailingTrivia))
       newNode = ExprSyntax(optionalTypeExpr)
@@ -205,9 +204,9 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     trailingTrivia: Trivia
   ) -> TypeSyntax {
     let result = ArrayTypeSyntax(
-      leftSquareBracket: TokenSyntax.leftSquareBracketToken(leadingTrivia: leadingTrivia),
-      elementType: element,
-      rightSquareBracket: TokenSyntax.rightSquareBracketToken(trailingTrivia: trailingTrivia))
+      leftSquare: TokenSyntax.leftSquareToken(leadingTrivia: leadingTrivia),
+      element: element,
+      rightSquare: TokenSyntax.rightSquareToken(trailingTrivia: trailingTrivia))
     return TypeSyntax(result)
   }
 
@@ -220,11 +219,11 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     trailingTrivia: Trivia
   ) -> TypeSyntax {
     let result = DictionaryTypeSyntax(
-      leftSquareBracket: TokenSyntax.leftSquareBracketToken(leadingTrivia: leadingTrivia),
-      keyType: key,
+      leftSquare: TokenSyntax.leftSquareToken(leadingTrivia: leadingTrivia),
+      key: key,
       colon: TokenSyntax.colonToken(trailingTrivia: .spaces(1)),
-      valueType: value,
-      rightSquareBracket: TokenSyntax.rightSquareBracketToken(trailingTrivia: trailingTrivia))
+      value: value,
+      rightSquare: TokenSyntax.rightSquareToken(trailingTrivia: trailingTrivia))
     return TypeSyntax(result)
   }
 
@@ -304,9 +303,9 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     }
     let dictElementList = DictionaryElementListSyntax([
       DictionaryElementSyntax(
-        keyExpression: keyTypeExpr,
+        key: keyTypeExpr,
         colon: colon,
-        valueExpression: valueTypeExpr,
+        value: valueTypeExpr,
         trailingComma: nil),
     ])
     return DictionaryExprSyntax(
@@ -393,16 +392,16 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 
     case .arrayType(let arrayType):
       let result = makeArrayTypeExpression(
-        elementType: arrayType.elementType,
-        leftSquareBracket: arrayType.leftSquareBracket,
-        rightSquareBracket: arrayType.rightSquareBracket)
+        elementType: arrayType.element,
+        leftSquare: arrayType.leftSquare,
+        rightSquare: arrayType.rightSquare)
       return ExprSyntax(result)
 
     case .dictionaryType(let dictionaryType):
       let result = makeDictionaryTypeExpression(
-        keyType: dictionaryType.keyType,
-        valueType: dictionaryType.valueType,
-        leftSquareBracket: dictionaryType.leftSquareBracket,
+        keyType: dictionaryType.key,
+        valueType: dictionaryType.value,
+        leftSquare: dictionaryType.leftSquare,
         colon: dictionaryType.colon,
         rightSquareBracket: dictionaryType.rightSquareBracket)
       return ExprSyntax(result)
@@ -421,7 +420,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         rightParen: functionType.rightParen,
         effectSpecifiers: functionType.effectSpecifiers,
         arrow: functionType.returnClause.arrow,
-        returnType: functionType.returnClause.returnType
+        returnType: functionType.returnClause.type
       )
       return ExprSyntax(result)
 
@@ -501,7 +500,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
   /// Returns true if the given pattern binding represents a stored property/variable (as opposed to
   /// a computed property/variable).
   private func isStoredProperty(_ node: PatternBindingSyntax) -> Bool {
-    guard let accessor = node.accessor else {
+    guard let accessor = node.accessors else {
       // If it has no accessors at all, it is definitely a stored property.
       return true
     }

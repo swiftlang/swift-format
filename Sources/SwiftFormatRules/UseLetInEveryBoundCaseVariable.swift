@@ -24,7 +24,7 @@ public final class UseLetInEveryBoundCaseVariable: SyntaxLintRule {
   public override func visit(_ node: ValueBindingPatternSyntax) -> SyntaxVisitorContinueKind {
     // Diagnose a pattern binding if it is a function call and the callee is a member access
     // expression (e.g., `case let .x(y)` or `case let T.x(y)`).
-    if canDistributeLetVarThroughPattern(node.valuePattern) {
+    if canDistributeLetVarThroughPattern(node.pattern) {
       diagnose(.useLetInBoundCaseVariables, on: node)
     }
     return .visitChildren

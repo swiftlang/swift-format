@@ -44,7 +44,7 @@ public final class NeverForceUnwrap: SyntaxLintRule {
     guard context.importsXCTest == .doesNotImportXCTest else { return .skipChildren }
     guard let questionOrExclamation = node.questionOrExclamationMark else { return .skipChildren }
     guard questionOrExclamation.tokenKind == .exclamationMark else { return .skipChildren }
-    diagnose(.doNotForceCast(name: node.typeName.with(\.leadingTrivia, []).with(\.trailingTrivia, []).description), on: node)
+    diagnose(.doNotForceCast(name: node.type.with(\.leadingTrivia, []).with(\.trailingTrivia, []).description), on: node)
     return .skipChildren
   }
 }

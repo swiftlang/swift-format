@@ -37,7 +37,7 @@ public final class NoLabelsInCasePatterns: SyntaxFormatRule {
 
       // Search function call argument list for violations
       var newArgs: [TupleExprElementSyntax] = []
-      for argument in funcCall.argumentList {
+      for argument in funcCall.arguments {
         guard let label = argument.label else {
           newArgs.append(argument)
           continue
@@ -50,7 +50,7 @@ public final class NoLabelsInCasePatterns: SyntaxFormatRule {
         }
 
         // Remove label if it's the same as the value identifier
-        let name = valueBinding.valuePattern.with(\.leadingTrivia, []).with(\.trailingTrivia, []).description
+        let name = valueBinding.pattern.with(\.leadingTrivia, []).with(\.trailingTrivia, []).description
         guard name == label.text else {
           newArgs.append(argument)
           continue
@@ -60,7 +60,7 @@ public final class NoLabelsInCasePatterns: SyntaxFormatRule {
       }
 
       let newArgList = TupleExprElementListSyntax(newArgs)
-      let newFuncCall = funcCall.with(\.argumentList, newArgList)
+      let newFuncCall = funcCall.with(\.arguments, newArgList)
       let newExpPat = expPat.with(\.expression, ExprSyntax(newFuncCall))
       let newItem = item.with(\.pattern, PatternSyntax(newExpPat))
       newCaseItems.append(newItem)

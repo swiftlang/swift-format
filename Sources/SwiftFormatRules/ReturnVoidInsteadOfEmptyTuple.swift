@@ -23,7 +23,7 @@ import SwiftSyntax
 /// Format: `-> ()` is replaced with `-> Void`
 public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
   public override func visit(_ node: FunctionTypeSyntax) -> TypeSyntax {
-    guard let returnType = node.returnClause.returnType.as(TupleTypeSyntax.self),
+    guard let returnType = node.returnClause.type.as(TupleTypeSyntax.self),
       returnType.elements.count == 0
     else {
       return super.visit(node)
@@ -45,13 +45,13 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
     let voidKeyword = makeVoidIdentifierType(toReplace: returnType)
     var rewrittenNode = node
     rewrittenNode.parameters = parameters
-    rewrittenNode.returnClause.returnType = TypeSyntax(voidKeyword)
+    rewrittenNode.returnClause.type = TypeSyntax(voidKeyword)
     return TypeSyntax(rewrittenNode)
   }
 
   public override func visit(_ node: ClosureSignatureSyntax) -> ClosureSignatureSyntax {
     guard let returnClause = node.returnClause,
-      let returnType = returnClause.returnType.as(TupleTypeSyntax.self),
+      let returnType = returnClause.type.as(TupleTypeSyntax.self),
       returnType.elements.count == 0
     else {
       return super.visit(node)
@@ -80,7 +80,7 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
       closureParameterClause = node.parameterClause
     }
     let voidKeyword = makeVoidIdentifierType(toReplace: returnType)
-    return node.with(\.parameterClause, closureParameterClause).with(\.returnClause, returnClause.with(\.returnType, TypeSyntax(voidKeyword)))
+    return node.with(\.parameterClause, closureParameterClause).with(\.returnClause, returnClause.with(\.type, TypeSyntax(voidKeyword)))
   }
 
   /// Returns a value indicating whether the leading trivia of the given token contained any
