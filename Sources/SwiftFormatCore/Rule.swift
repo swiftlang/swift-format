@@ -46,6 +46,7 @@ extension Rule {
   public func diagnose<SyntaxType: SyntaxProtocol>(
     _ message: Finding.Message,
     on node: SyntaxType?,
+    severity: Finding.Severity? = nil,
     leadingTriviaIndex: Trivia.Index? = nil,
     notes: [Finding.Note] = []
   ) {
@@ -57,9 +58,10 @@ extension Rule {
       syntaxLocation = node?.startLocation(converter: context.sourceLocationConverter)
     }
 
+    let category = RuleBasedFindingCategory(ruleType: type(of: self), severity: severity)
     context.findingEmitter.emit(
         message,
-        category: RuleBasedFindingCategory(ruleType: type(of: self)),
+        category: category,
         location: syntaxLocation.flatMap(Finding.Location.init),
         notes: notes)
   }
