@@ -22,8 +22,11 @@ struct RuleBasedFindingCategory: FindingCategorizing {
 
   var description: String { ruleType.ruleName }
 
+  var severity: Finding.Severity?
+
   /// Creates a finding category that wraps the given rule type.
-  init(ruleType: Rule.Type) {
+  init(ruleType: Rule.Type, severity: Finding.Severity? = nil) {
     self.ruleType = ruleType
+    self.severity = severity
   }
 }

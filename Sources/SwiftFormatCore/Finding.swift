@@ -16,6 +16,7 @@ public struct Finding {
   public enum Severity {
     case warning
     case error
+    case refactoring
   }
 
   /// The file path and location in that file where a finding was encountered.
