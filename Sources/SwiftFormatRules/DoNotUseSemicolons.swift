@@ -74,10 +74,11 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
         // 'while' statement.
         if Syntax(item).as(CodeBlockItemSyntax.self)?
           .children(viewMode: .sourceAccurate).first?.is(DoStmtSyntax.self) == true,
-          idx < node.count - 1
+          idx < node.count - 1,
+          let childrenIdx = node.index(of: item)
         {
           let children = node.children(viewMode: .sourceAccurate)
-          let nextItem = children[children.index(after: item.index)]
+          let nextItem = children[children.index(after: childrenIdx)]
           if Syntax(nextItem).as(CodeBlockItemSyntax.self)?
             .children(viewMode: .sourceAccurate).first?.is(WhileStmtSyntax.self) == true
           {
