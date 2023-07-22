@@ -85,7 +85,7 @@ public final class UseWhereClausesInForLoops: SyntaxFormatRule {
       return updateWithWhereCondition(
         node: forInStmt,
         condition: condition,
-        statements: forInStmt.body.statements.removingFirst()
+        statements: CodeBlockItemListSyntax(forInStmt.body.statements.dropFirst())
       )
 
     default:
