@@ -41,6 +41,7 @@ enum RuleRegistry {
     "OnlyOneTrailingClosureArgument": true,
     "OrderedImports": true,
     "ReturnVoidInsteadOfEmptyTuple": true,
+    "TypeNamesShouldBeCapitalized": true,
     "UseEarlyExits": false,
     "UseLetInEveryBoundCaseVariable": true,
     "UseShorthandTypeNames": true,
