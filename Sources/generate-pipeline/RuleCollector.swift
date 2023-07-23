@@ -87,11 +87,11 @@ final class RuleCollector {
     let maybeInheritanceClause: TypeInheritanceClauseSyntax?
 
     if let classDecl = statement.item.as(ClassDeclSyntax.self) {
-      typeName = classDecl.identifier.text
+      typeName = classDecl.name.text
       members = classDecl.memberBlock.members
       maybeInheritanceClause = classDecl.inheritanceClause
     } else if let structDecl = statement.item.as(StructDeclSyntax.self) {
-      typeName = structDecl.identifier.text
+      typeName = structDecl.name.text
       members = structDecl.memberBlock.members
       maybeInheritanceClause = structDecl.inheritanceClause
     } else {
@@ -104,8 +104,8 @@ final class RuleCollector {
     }
 
     // Scan through the inheritance clause to find one of the protocols/types we're interested in.
-    for inheritance in inheritanceClause.inheritedTypeCollection {
-      guard let identifier = inheritance.typeName.as(SimpleTypeIdentifierSyntax.self) else {
+    for inheritance in inheritanceClause.inheritedTypes {
+      guard let identifier = inheritance.type.as(SimpleTypeIdentifierSyntax.self) else {
         continue
       }
 
@@ -124,8 +124,8 @@ final class RuleCollector {
       var visitedNodes = [String]()
       for member in members {
         guard let function = member.decl.as(FunctionDeclSyntax.self) else { continue }
-        guard function.identifier.text == "visit" else { continue }
-        let params = function.signature.parameterClause.parameterList
+        guard function.name.text == "visit" else { continue }
+        let params = function.signature.parameterClause.parameters
         guard let firstType = params.firstAndOnly?.type.as(SimpleTypeIdentifierSyntax.self) else {
           continue
         }

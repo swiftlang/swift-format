@@ -103,7 +103,7 @@ public final class OneCasePerLine: SyntaxFormatRule {
         if element.associatedValue != nil || element.rawValue != nil {
           // Once we reach one of these, we need to write out the ones we've collected so far, then
           // emit a separate case declaration with the associated/raw value element.
-          diagnose(.moveAssociatedOrRawValueCase(name: element.identifier.text), on: element)
+          diagnose(.moveAssociatedOrRawValueCase(name: element.name.text), on: element)
 
           if let caseDeclForCollectedElements = collector.makeCaseDeclAndReset() {
             newMembers.append(member.with(\.decl, DeclSyntax(caseDeclForCollectedElements)))

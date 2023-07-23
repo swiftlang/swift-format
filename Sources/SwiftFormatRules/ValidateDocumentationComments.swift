@@ -34,7 +34,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
 
   public override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
     return checkFunctionLikeDocumentation(
-      DeclSyntax(node), name: node.identifier.text, signature: node.signature,
+      DeclSyntax(node), name: node.name.text, signature: node.signature,
       returnClause: node.signature.returnClause)
   }
 
@@ -71,7 +71,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
       name: name,
       returnsDescription: docComment.returns,
       node: node)
-    let funcParameters = funcParametersIdentifiers(in: signature.parameterClause.parameterList)
+    let funcParameters = funcParametersIdentifiers(in: signature.parameterClause.parameters)
 
     // If the documentation of the parameters is wrong 'docCommentInfo' won't
     // parse the parameters correctly. First the documentation has to be fix
@@ -106,7 +106,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
     if returnClause == nil && returnsDescription != nil {
       diagnose(.removeReturnComment(funcName: name), on: node)
     } else if let returnClause = returnClause, returnsDescription == nil {
-      if let returnTypeIdentifier = returnClause.returnType.as(SimpleTypeIdentifierSyntax.self),
+      if let returnTypeIdentifier = returnClause.type.as(SimpleTypeIdentifierSyntax.self),
          returnTypeIdentifier.name.text == "Never"
       {
         return

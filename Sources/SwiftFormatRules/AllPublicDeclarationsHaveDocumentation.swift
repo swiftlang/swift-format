@@ -45,7 +45,7 @@ public final class AllPublicDeclarationsHaveDocumentation: SyntaxLintRule {
   }
 
   public override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseMissingDocComment(DeclSyntax(node), name: node.identifier.text, modifiers: node.modifiers)
+    diagnoseMissingDocComment(DeclSyntax(node), name: node.name.text, modifiers: node.modifiers)
     return .skipChildren
   }
 
@@ -56,17 +56,17 @@ public final class AllPublicDeclarationsHaveDocumentation: SyntaxLintRule {
   }
 
   public override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseMissingDocComment(DeclSyntax(node), name: node.identifier.text, modifiers: node.modifiers)
+    diagnoseMissingDocComment(DeclSyntax(node), name: node.name.text, modifiers: node.modifiers)
     return .skipChildren
   }
 
   public override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseMissingDocComment(DeclSyntax(node), name: node.identifier.text, modifiers: node.modifiers)
+    diagnoseMissingDocComment(DeclSyntax(node), name: node.name.text, modifiers: node.modifiers)
     return .skipChildren
   }
 
   public override func visit(_ node: TypealiasDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseMissingDocComment(DeclSyntax(node), name: node.identifier.text, modifiers: node.modifiers)
+    diagnoseMissingDocComment(DeclSyntax(node), name: node.name.text, modifiers: node.modifiers)
     return .skipChildren
   }
 
