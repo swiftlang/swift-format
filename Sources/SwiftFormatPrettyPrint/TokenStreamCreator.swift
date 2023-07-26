@@ -3360,8 +3360,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   private func maybeGroupAroundSubexpression(
     _ expr: ExprSyntax, combiningOperator operatorExpr: ExprSyntax? = nil
   ) {
-    switch Syntax(expr).as(SyntaxEnum.self) {
-    case .memberAccessExpr, .subscriptExpr:
+    switch Syntax(expr).kind {
+    case .memberAccessExpr, .subscriptCallExpr:
       before(expr.firstToken(viewMode: .sourceAccurate), tokens: .open)
       after(expr.lastToken(viewMode: .sourceAccurate), tokens: .close)
     default:
@@ -3458,19 +3458,19 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       return leftmostExpr(of: asExpr.expression, ifMatching: predicate)
     case .isExpr(let isExpr):
       return leftmostExpr(of: isExpr.expression, ifMatching: predicate)
-    case .forcedValueExpr(let forcedValueExpr):
+    case .forceUnwrapExpr(let forcedValueExpr):
       return leftmostExpr(of: forcedValueExpr.expression, ifMatching: predicate)
     case .optionalChainingExpr(let optionalChainingExpr):
       return leftmostExpr(of: optionalChainingExpr.expression, ifMatching: predicate)
-    case .postfixUnaryExpr(let postfixUnaryExpr):
+    case .postfixOperatorExpr(let postfixUnaryExpr):
       return leftmostExpr(of: postfixUnaryExpr.expression, ifMatching: predicate)
     case .prefixOperatorExpr(let prefixOperatorExpr):
-      return leftmostExpr(of: prefixOperatorExpr.base, ifMatching: predicate)
+      return leftmostExpr(of: prefixOperatorExpr.expression, ifMatching: predicate)
     case .ternaryExpr(let ternaryExpr):
       return leftmostExpr(of: ternaryExpr.condition, ifMatching: predicate)
     case .functionCallExpr(let functionCallExpr):
       return leftmostExpr(of: functionCallExpr.calledExpression, ifMatching: predicate)
-    case .subscriptExpr(let subscriptExpr):
+    case .subscriptCallExpr(let subscriptExpr):
       return leftmostExpr(of: subscriptExpr.calledExpression, ifMatching: predicate)
     case .memberAccessExpr(let memberAccessExpr):
       return memberAccessExpr.base.flatMap { leftmostExpr(of: $0, ifMatching: predicate) }
