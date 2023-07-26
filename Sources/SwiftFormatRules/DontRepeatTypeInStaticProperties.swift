@@ -46,9 +46,9 @@ public final class DontRepeatTypeInStaticProperties: SyntaxLintRule {
     let members = node.memberBlock.members
 
     switch Syntax(node.extendedType).as(SyntaxEnum.self) {
-    case .simpleTypeIdentifier(let simpleType):
+    case .identifierType(let simpleType):
       diagnoseStaticMembers(members, endingWith: simpleType.name.text)
-    case .memberTypeIdentifier(let memberType):
+    case .memberType(let memberType):
       // We don't need to drill recursively into this structure because types with more than two
       // components are constructed left-heavy; that is, `A.B.C.D` is structured as `((A.B).C).D`,
       // and the final component of the top type is what we want.

@@ -242,7 +242,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       // otherwise the "?" applies to the return type instead of the function type. Attach the
       // leading trivia to the left-paren that we're adding in this case.
       let tupleTypeElement = TupleTypeElementSyntax(
-        inoutKeyword: nil, name: nil, secondName: nil, colon: nil, type: TypeSyntax(functionType),
+        inoutKeyword: nil, firstName: nil, secondName: nil, colon: nil, type: TypeSyntax(functionType),
         ellipsis: nil, initializer: nil, trailingComma: nil)
       let tupleTypeElementList = TupleTypeElementListSyntax([tupleTypeElement])
       let tupleType = TupleTypeSyntax(
@@ -361,7 +361,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
   /// written `Array<Int>.Index` to compile correctly.
   private func expressionRepresentation(of type: TypeSyntax) -> ExprSyntax? {
     switch Syntax(type).as(SyntaxEnum.self) {
-    case .simpleTypeIdentifier(let simpleTypeIdentifier):
+    case .identifierType(let simpleTypeIdentifier):
       let identifierExpr = IdentifierExprSyntax(
         identifier: simpleTypeIdentifier.name,
         declNameArguments: nil)
@@ -379,7 +379,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         return ExprSyntax(identifierExpr)
       }
 
-    case .memberTypeIdentifier(let memberTypeIdentifier):
+    case .memberType(let memberTypeIdentifier):
       guard let baseType = expressionRepresentation(of: memberTypeIdentifier.baseType) else {
         return nil
       }

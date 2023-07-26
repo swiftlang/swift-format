@@ -91,7 +91,7 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
           modifiers: protocolDecl.modifiers,
           factory: { protocolDecl.with(\.modifiers, $0) }))
 
-    case .typealiasDecl(let typealiasDecl):
+    case .typeAliasDecl(let typealiasDecl):
       return DeclSyntax(rewrittenDecl(
           typealiasDecl,
           modifiers: typealiasDecl.modifiers,
