@@ -243,7 +243,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       // leading trivia to the left-paren that we're adding in this case.
       let tupleTypeElement = TupleTypeElementSyntax(
         inoutKeyword: nil, firstName: nil, secondName: nil, colon: nil, type: TypeSyntax(functionType),
-        ellipsis: nil, initializer: nil, trailingComma: nil)
+        ellipsis: nil, trailingComma: nil)
       let tupleTypeElementList = TupleTypeElementListSyntax([tupleTypeElement])
       let tupleType = TupleTypeSyntax(
         leftParen: TokenSyntax.leftParenToken(leadingTrivia: leadingTrivia),
