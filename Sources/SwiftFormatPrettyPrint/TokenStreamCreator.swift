@@ -744,7 +744,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
     // An if-configuration clause around a switch-case encloses the case's node, so an
     // if-configuration clause requires a break here in order to be allowed on a new line.
-    for ifConfigDecl in node.cases.filter({ $0.is(IfConfigDeclSyntax.self) }) {
+    for ifConfigDecl in node.cases where ifConfigDecl.is(IfConfigDeclSyntax.self) {
       if config.indentSwitchCaseLabels {
         before(ifConfigDecl.firstToken(viewMode: .sourceAccurate), tokens: .break(.open))
         after(ifConfigDecl.lastToken(viewMode: .sourceAccurate), tokens: .break(.close, size: 0))
