@@ -2516,9 +2516,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // This node encapsulates the entire list of arguments in a `@differentiable(...)` attribute.
     var needsBreakBeforeWhereClause = false
 
-    if let diffParamsComma = node.parametersComma {
+    if let diffParamsComma = node.argumentsComma {
       after(diffParamsComma, tokens: .break(.same))
-    } else if node.parameters != nil {
+    } else if node.arguments != nil {
       // If there were diff params but no comma following them, then we have "wrt: foo where ..."
       // and we need a break before the where clause.
       needsBreakBeforeWhereClause = true
@@ -2555,7 +2555,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // The comma after originalDeclName is optional and is only present if there are diffParams.
     after(node.comma ?? node.originalDeclName.lastToken(viewMode: .sourceAccurate), tokens: .close)
 
-    if let diffParams = node.parameters {
+    if let diffParams = node.arguments {
       before(diffParams.firstToken(viewMode: .sourceAccurate), tokens: .break(.same), .open)
       after(diffParams.lastToken(viewMode: .sourceAccurate), tokens: .close)
     }
