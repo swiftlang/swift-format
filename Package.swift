@@ -218,7 +218,7 @@ if ProcessInfo.processInfo.environment["SWIFTCI_USE_LOCAL_DEPS"] == nil {
     ),
     .package(
       url: "https://github.com/apple/swift-syntax.git",
-      revision: "2ae7e2e" // cannot use version 5.9-macros-remove-macrosystem since it is not semver, so the workarround is to link it to a speciffic commit.
+      revision: "a6cc6ab" // cannot use tags in this repo since it is not semver, so the workarround is to link it to a speciffic commit.
     ),
   ]
 } else {
