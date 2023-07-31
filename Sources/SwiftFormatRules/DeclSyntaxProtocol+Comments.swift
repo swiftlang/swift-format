@@ -62,7 +62,7 @@ extension DeclSyntaxProtocol {
       case .newlines(let n), .carriageReturns(let n), .carriageReturnLineFeeds(let n):
         // Only allow for 1 newline between doc line comments, but allow for newlines between the
         // doc comment and the declaration.
-        guard n == 1 || !hasSeenFirstLineComment else { break gatherComments }
+        guard !hasSeenFirstLineComment else { break gatherComments }
       case .spaces, .tabs:
         // Skip all spaces/tabs. They're irrelevant here.
         break
