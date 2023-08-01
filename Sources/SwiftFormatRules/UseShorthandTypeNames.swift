@@ -499,19 +499,18 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
   /// Returns true if the given pattern binding represents a stored property/variable (as opposed to
   /// a computed property/variable).
   private func isStoredProperty(_ node: PatternBindingSyntax) -> Bool {
-    guard let accessor = node.accessors else {
+    guard let accessor = node.accessorBlock else {
       // If it has no accessors at all, it is definitely a stored property.
       return true
     }
 
-    guard let accessorBlock = accessor.as(AccessorBlockSyntax.self) else {
+    guard case .accessors(let accessors) = accessor.accessors else {
       // If the accessor isn't an `AccessorBlockSyntax`, then it is a `CodeBlockSyntax`; i.e., the
       // accessor an implicit `get`. So, it is definitely not a stored property.
-      assert(accessor.is(CodeBlockSyntax.self))
       return false
     }
 
-    for accessorDecl in accessorBlock.accessors {
+    for accessorDecl in accessors {
       // Look for accessors that indicate that this is a computed property. If none are found, then
       // it is a stored property (e.g., having only observers like `willSet/didSet`).
       switch accessorDecl.accessorSpecifier.tokenKind {
