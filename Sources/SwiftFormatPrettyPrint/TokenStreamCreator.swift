@@ -16,6 +16,17 @@ import SwiftFormatCore
 import SwiftOperators
 import SwiftSyntax
 
+fileprivate extension AccessorBlockSyntax {
+  /// Assuming that the accessor only contains an implicit getter (i.e. no 
+  /// `get` or `set`), return the code block items in that getter.
+  var getterCodeBlockItems: CodeBlockItemListSyntax {
+    guard case .getter(let codeBlockItemList) = self.accessors else {
+      preconditionFailure("AccessorBlock has an accessor list and not just a getter")
+    }
+    return codeBlockItemList
+  }
+}
+
 /// Visits the nodes of a syntax tree and constructs a linear stream of formatting tokens that
 /// tell the pretty printer how the source text should be laid out.
 fileprivate final class TokenStreamCreator: SyntaxVisitor {
@@ -442,12 +453,16 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
     before(node.returnClause.firstToken(viewMode: .sourceAccurate), tokens: .break)
 
-    if let accessorOrCodeBlock = node.accessors {
-      switch accessorOrCodeBlock {
-      case .accessors(let accessorBlock):
-        arrangeBracesAndContents(of: accessorBlock)
-      case .getter(let codeBlock):
-        arrangeBracesAndContents(of: codeBlock, contentsKeyPath: \.statements)
+    if let accessorBlock = node.accessorBlock {
+      switch accessorBlock.accessors {
+      case .accessors(let accessors):
+        arrangeBracesAndContents(
+          leftBrace: accessorBlock.leftBrace,
+          accessors: accessors,
+          rightBrace: accessorBlock.rightBrace
+        )
+      case .getter:
+        arrangeBracesAndContents(of: accessorBlock, contentsKeyPath: \.getterCodeBlockItems)
       }
     }
 
@@ -2144,12 +2159,16 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       }
     }
 
-    if let accessorOrCodeBlock = node.accessors {
-      switch accessorOrCodeBlock {
-      case .accessors(let accessorBlock):
-        arrangeBracesAndContents(of: accessorBlock)
-      case .getter(let codeBlock):
-        arrangeBracesAndContents(of: codeBlock, contentsKeyPath: \.statements)
+    if let accessorBlock = node.accessorBlock {
+      switch accessorBlock.accessors {
+      case .accessors(let accessors):
+        arrangeBracesAndContents(
+          leftBrace: accessorBlock.leftBrace,
+          accessors: accessors,
+          rightBrace: accessorBlock.rightBrace
+        )
+      case .getter:
+        arrangeBracesAndContents(of: accessorBlock, contentsKeyPath: \.getterCodeBlockItems)
       }
     } else if let trailingComma = node.trailingComma {
       // If this is one of multiple comma-delimited bindings, move any pending close breaks to
@@ -2944,24 +2963,24 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   /// Applies consistent formatting to the braces and contents of the given node.
   ///
   /// - Parameter node: An `AccessorBlockSyntax` node.
-  private func arrangeBracesAndContents(of node: AccessorBlockSyntax) {
+  private func arrangeBracesAndContents(leftBrace: TokenSyntax, accessors: AccessorDeclListSyntax, rightBrace: TokenSyntax) {
     // If the collection is empty, then any comments that might be present in the block must be
     // leading trivia of the right brace.
-    let commentPrecedesRightBrace = node.rightBrace.leadingTrivia.numberOfComments > 0
+    let commentPrecedesRightBrace = rightBrace.leadingTrivia.numberOfComments > 0
     // We can't use `count` here because it also includes missing children. Instead, we get an
     // iterator and check if it returns `nil` immediately.
-    var accessorsIterator = node.accessors.makeIterator()
+    var accessorsIterator = accessors.makeIterator()
     let areAccessorsEmpty = accessorsIterator.next() == nil
     let bracesAreCompletelyEmpty = areAccessorsEmpty && !commentPrecedesRightBrace
 
-    before(node.leftBrace, tokens: .break(.reset, size: 1))
+    before(leftBrace, tokens: .break(.reset, size: 1))
 
     if !bracesAreCompletelyEmpty {
-      after(node.leftBrace, tokens: .break(.open, size: 1), .open)
-      before(node.rightBrace, tokens: .break(.close, size: 1), .close)
+      after(leftBrace, tokens: .break(.open, size: 1), .open)
+      before(rightBrace, tokens: .break(.close, size: 1), .close)
     } else {
-      after(node.leftBrace, tokens: .break(.open, size: 0))
-      before(node.rightBrace, tokens: .break(.close, size: 0))
+      after(leftBrace, tokens: .break(.open, size: 0))
+      before(rightBrace, tokens: .break(.close, size: 0))
     }
   }
 
