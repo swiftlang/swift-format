@@ -22,10 +22,11 @@ public final class UseSingleLinePropertyGetter: SyntaxFormatRule {
 
   public override func visit(_ node: PatternBindingSyntax) -> PatternBindingSyntax {
     guard
-      let accessorBlock = node.accessors?.as(AccessorBlockSyntax.self),
-      let acc = accessorBlock.accessors.first,
+      let accessorBlock = node.accessorBlock,
+      case .accessors(let accessors) = accessorBlock.accessors,
+      let acc = accessors.first,
       let body = acc.body,
-      accessorBlock.accessors.count == 1,
+      accessors.count == 1,
       acc.accessorSpecifier.tokenKind == .keyword(.get),
       acc.attributes == nil,
       acc.modifier == nil,
@@ -34,10 +35,9 @@ public final class UseSingleLinePropertyGetter: SyntaxFormatRule {
 
     diagnose(.removeExtraneousGetBlock, on: acc)
 
-    let newBlock = CodeBlockSyntax(
-      leftBrace: accessorBlock.leftBrace, statements: body.statements,
-      rightBrace: accessorBlock.rightBrace)
-    return node.with(\.accessors, .getter(newBlock))
+    var result = node
+    result.accessorBlock?.accessors = .getter(body.statements)
+    return result
   }
 }
 
