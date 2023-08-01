@@ -385,8 +385,8 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       let result = MemberAccessExprSyntax(
         base: baseType,
         period: memberTypeIdentifier.period,
-        name: memberTypeIdentifier.name,
-        declNameArguments: nil)
+        name: memberTypeIdentifier.name
+      )
       return ExprSyntax(result)
 
     case .arrayType(let arrayType):
