@@ -152,7 +152,5 @@ public final class SwiftLinter {
       printTokenStream: debugOptions.contains(.dumpTokenStream),
       whitespaceOnly: true)
     let formatted = printer.prettyPrint()
-    let ws = WhitespaceLinter(user: syntax.description, formatted: formatted, context: context)
-    ws.lint()
   }
 }

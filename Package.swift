@@ -218,7 +218,7 @@ if ProcessInfo.processInfo.environment["SWIFTCI_USE_LOCAL_DEPS"] == nil {
     ),
     .package(
       url: "https://github.com/apple/swift-syntax.git",
-      branch: "main"
+      revision: "a6cc6ab" // cannot use tags in this repo since it is not semver, so the workarround is to link it to a speciffic commit.
     ),
   ]
 } else {
