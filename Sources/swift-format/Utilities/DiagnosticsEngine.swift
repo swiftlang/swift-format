@@ -116,6 +116,8 @@ final class DiagnosticsEngine {
     switch finding.severity {
     case .error: severity = .error
     case .warning: severity = .warning
+    case .refactoring: severity = .warning
+    case .convention: severity = .warning
     }
     return Diagnostic(
       severity: severity,
