@@ -569,12 +569,12 @@ public class PrettyPrinter {
           print("warning: startLineNumber: \(startLineNumber) != openCloseBreakCompensatingLineNumber: \(openCloseBreakCompensatingLineNumber) && !\(isSingleElement)")
           diagnose(.removeTrailingComma, category: .trailingComma)
         }
-      }
 
-      let shouldWriteComma = whitespaceOnly ? hasTrailingComma : shouldHaveTrailingComma
-      if shouldWriteComma {
-        write(",")
-        spaceRemaining -= 1
+        let shouldWriteComma = whitespaceOnly ? hasTrailingComma : shouldHaveTrailingComma
+        if shouldWriteComma {
+          write(",")
+          spaceRemaining -= 1
+        }
       }
     }
   }
