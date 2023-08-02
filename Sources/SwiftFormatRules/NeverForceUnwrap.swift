@@ -32,7 +32,7 @@ public final class NeverForceUnwrap: SyntaxLintRule {
     return .visitChildren
   }
 
-  public override func visit(_ node: ForcedValueExprSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: ForceUnwrapExprSyntax) -> SyntaxVisitorContinueKind {
     guard context.importsXCTest == .doesNotImportXCTest else { return .skipChildren }
     diagnose(.doNotForceUnwrap(name: node.expression.with(\.leadingTrivia, []).with(\.trailingTrivia, []).description), on: node)
     return .skipChildren

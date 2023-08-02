@@ -39,7 +39,7 @@ class LintPipeline: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: AssociatedtypeDeclSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: AssociatedTypeDeclSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)
     return .visitChildren
@@ -119,12 +119,12 @@ class LintPipeline: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: ForInStmtSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ForStmtSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(UseWhereClausesInForLoops.visit, for: node)
     return .visitChildren
   }
 
-  override func visit(_ node: ForcedValueExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: ForceUnwrapExprSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(NeverForceUnwrap.visit, for: node)
     return .visitChildren
   }
@@ -194,12 +194,12 @@ class LintPipeline: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: MemberDeclBlockSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: MemberBlockSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AmbiguousTrailingClosureOverload.visit, for: node)
     return .visitChildren
   }
 
-  override func visit(_ node: MemberDeclListSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: MemberBlockItemListSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(DoNotUseSemicolons.visit, for: node)
     return .visitChildren
   }
@@ -228,12 +228,12 @@ class LintPipeline: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: RepeatWhileStmtSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: RepeatStmtSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(NoParensAroundConditions.visit, for: node)
     return .visitChildren
   }
 
-  override func visit(_ node: SimpleTypeIdentifierSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: IdentifierTypeSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(UseShorthandTypeNames.visit, for: node)
     return .visitChildren
   }
@@ -249,7 +249,7 @@ class LintPipeline: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: SpecializeExprSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: GenericSpecializationExprSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(UseShorthandTypeNames.visit, for: node)
     return .visitChildren
   }
@@ -296,7 +296,7 @@ class LintPipeline: SyntaxVisitor {
     return .visitChildren
   }
 
-  override func visit(_ node: TypealiasDeclSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: TypeAliasDeclSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)

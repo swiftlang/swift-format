@@ -71,7 +71,7 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
 
   public override func visit(_ node: ClosureSignatureSyntax) -> SyntaxVisitorContinueKind {
     if let input = node.parameterClause {
-      if let closureParamList = input.as(ClosureParamListSyntax.self) {
+      if let closureParamList = input.as(ClosureShorthandParameterListSyntax.self) {
         for param in closureParamList {
           diagnoseLowerCamelCaseViolations(
             param.name, allowUnderscores: false, description: identifierDescription(for: node))
@@ -96,7 +96,7 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
               secondName, allowUnderscores: false, description: identifierDescription(for: node))
           }
         }
-      } else if let parameterClause = input.as(ParameterClauseSyntax.self) {
+      } else if let parameterClause = input.as(FunctionParameterClauseSyntax.self) {
         for param in parameterClause.parameters {
           diagnoseLowerCamelCaseViolations(
             param.firstName, allowUnderscores: false, description: identifierDescription(for: node))
@@ -146,14 +146,14 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
   /// Collects methods that look like XCTest test case methods from the given member list, inserting
   /// them into the given set.
   private func collectTestMethods(
-    from members: MemberDeclListSyntax,
+    from members: MemberBlockItemListSyntax,
     into set: inout Set<FunctionDeclSyntax>
   ) {
     for member in members {
       if let ifConfigDecl = member.decl.as(IfConfigDeclSyntax.self) {
         // Recurse into any conditional member lists and collect their test methods as well.
         for clause in ifConfigDecl.clauses {
-          if let clauseMembers = clause.elements?.as(MemberDeclListSyntax.self) {
+          if let clauseMembers = clause.elements?.as(MemberBlockItemListSyntax.self) {
             collectTestMethods(from: clauseMembers, into: &set)
           }
         }
@@ -203,7 +203,7 @@ fileprivate func identifierDescription<NodeType: SyntaxProtocol>(for node: NodeT
 extension ReturnClauseSyntax {
   /// Whether this return clause specifies an explicit `Void` return type.
   fileprivate var isVoid: Bool {
-    if let returnTypeIdentifier = type.as(SimpleTypeIdentifierSyntax.self) {
+    if let returnTypeIdentifier = type.as(IdentifierTypeSyntax.self) {
       return returnTypeIdentifier.name.text == "Void"
     }
     if let returnTypeTuple = type.as(TupleTypeSyntax.self) {

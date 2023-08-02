@@ -126,7 +126,7 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
 
     // When there are any additional or non-fallthrough statements, it isn't only a fallthrough.
     guard let onlyStatement = switchCase.statements.firstAndOnly,
-      onlyStatement.item.is(FallthroughStmtSyntax.self)
+      onlyStatement.item.is(FallThroughStmtSyntax.self)
     else {
       return false
     }
@@ -168,7 +168,7 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
       return cases.first!
     }
 
-    var newCaseItems: [CaseItemSyntax] = []
+    var newCaseItems: [SwitchCaseItemSyntax] = []
     let labels = cases.lazy.compactMap({ $0.label.as(SwitchCaseLabelSyntax.self) })
     for label in labels.dropLast() {
       // We can blindly append all but the last case item because they must already have a trailing
@@ -188,7 +188,7 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
     newCaseItems.append(contentsOf: labels.last!.caseItems)
 
     let newCase = cases.last!.with(\.label, .case(
-      labels.last!.with(\.caseItems, CaseItemListSyntax(newCaseItems))))
+      labels.last!.with(\.caseItems, SwitchCaseItemListSyntax(newCaseItems))))
 
     // Only the first violation case can have displaced trivia, because any non-whitespace
     // trivia in the other violation cases would've prevented collapsing.

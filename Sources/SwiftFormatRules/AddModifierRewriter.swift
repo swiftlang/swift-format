@@ -49,7 +49,7 @@ fileprivate final class AddModifierRewriter: SyntaxRewriter {
     return DeclSyntax(node.with(\.modifiers, newModifiers))
   }
 
-  override func visit(_ node: AssociatedtypeDeclSyntax) -> DeclSyntax {
+  override func visit(_ node: AssociatedTypeDeclSyntax) -> DeclSyntax {
     // Check for modifiers, and, if none, insert the modifier and relocate trivia from the displaced
     // token.
     guard let modifiers = node.modifiers else {
@@ -114,7 +114,7 @@ fileprivate final class AddModifierRewriter: SyntaxRewriter {
     return DeclSyntax(node.with(\.modifiers, newModifiers))
   }
 
-  override func visit(_ node: TypealiasDeclSyntax) -> DeclSyntax {
+  override func visit(_ node: TypeAliasDeclSyntax) -> DeclSyntax {
     // Check for modifiers, and, if none, insert the modifier and relocate trivia from the displaced
     // token.
     guard let modifiers = node.modifiers else {
@@ -163,7 +163,7 @@ fileprivate final class AddModifierRewriter: SyntaxRewriter {
   /// - Parameter modifiersProvider: A closure that returns all modifiers for the given node.
   private func nodeByRelocatingTrivia<NodeType: DeclSyntaxProtocol>(
     in node: NodeType,
-    for modifiersProvider: (NodeType) -> ModifierListSyntax?
+    for modifiersProvider: (NodeType) -> DeclModifierListSyntax?
   ) -> NodeType {
     guard let modifier = modifiersProvider(node)?.firstAndOnly,
       let movingLeadingTrivia = modifier.nextToken(viewMode: .sourceAccurate)?.leadingTrivia

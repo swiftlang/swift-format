@@ -40,7 +40,7 @@ public final class UseLetInEveryBoundCaseVariable: SyntaxLintRule {
     while true {
       if let optionalExpr = expression.as(OptionalChainingExprSyntax.self) {
         expression = optionalExpr.expression
-      } else if let forcedExpr = expression.as(ForcedValueExprSyntax.self) {
+      } else if let forcedExpr = expression.as(ForceUnwrapExprSyntax.self) {
         expression = forcedExpr.expression
       } else {
         break

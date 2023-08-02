@@ -24,7 +24,7 @@ import SwiftSyntax
 /// Format: Redundant labels in case patterns are removed.
 public final class NoLabelsInCasePatterns: SyntaxFormatRule {
   public override func visit(_ node: SwitchCaseLabelSyntax) -> SwitchCaseLabelSyntax {
-    var newCaseItems: [CaseItemSyntax] = []
+    var newCaseItems: [SwitchCaseItemSyntax] = []
     for item in node.caseItems {
       guard let expPat = item.pattern.as(ExpressionPatternSyntax.self) else {
         newCaseItems.append(item)
@@ -36,13 +36,13 @@ public final class NoLabelsInCasePatterns: SyntaxFormatRule {
       }
 
       // Search function call argument list for violations
-      var newArgs: [TupleExprElementSyntax] = []
+      var newArgs: [LabeledExprSyntax] = []
       for argument in funcCall.arguments {
         guard let label = argument.label else {
           newArgs.append(argument)
           continue
         }
-        guard let unresolvedPat = argument.expression.as(UnresolvedPatternExprSyntax.self),
+        guard let unresolvedPat = argument.expression.as(PatternExprSyntax.self),
           let valueBinding = unresolvedPat.pattern.as(ValueBindingPatternSyntax.self)
         else {
           newArgs.append(argument)
@@ -59,13 +59,13 @@ public final class NoLabelsInCasePatterns: SyntaxFormatRule {
         newArgs.append(argument.with(\.label, nil).with(\.colon, nil))
       }
 
-      let newArgList = TupleExprElementListSyntax(newArgs)
+      let newArgList = LabeledExprListSyntax(newArgs)
       let newFuncCall = funcCall.with(\.arguments, newArgList)
       let newExpPat = expPat.with(\.expression, ExprSyntax(newFuncCall))
       let newItem = item.with(\.pattern, PatternSyntax(newExpPat))
       newCaseItems.append(newItem)
     }
-    let newCaseItemList = CaseItemListSyntax(newCaseItems)
+    let newCaseItemList = SwitchCaseItemListSyntax(newCaseItems)
     return node.with(\.caseItems, newCaseItemList)
   }
 }

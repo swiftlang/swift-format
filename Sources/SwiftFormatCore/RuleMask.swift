@@ -165,7 +165,7 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
     return appendRuleStatusDirectives(from: firstToken, of: Syntax(node))
   }
 
-  override func visit(_ node: MemberDeclListItemSyntax) -> SyntaxVisitorContinueKind {
+  override func visit(_ node: MemberBlockItemSyntax) -> SyntaxVisitorContinueKind {
     guard let firstToken = node.firstToken(viewMode: .sourceAccurate) else {
       return .visitChildren
     }
