@@ -17,7 +17,7 @@ protocol SemicolonSyntaxProtocol: SyntaxProtocol {
   var semicolon: TokenSyntax? { get set }
 }
 
-extension MemberDeclListItemSyntax: SemicolonSyntaxProtocol {}
+extension MemberBlockItemSyntax: SemicolonSyntaxProtocol {}
 extension CodeBlockItemSyntax: SemicolonSyntaxProtocol {}
 
 extension Syntax {

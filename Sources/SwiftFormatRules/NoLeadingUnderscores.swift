@@ -31,7 +31,7 @@ public final class NoLeadingUnderscores: SyntaxLintRule {
   /// doesn't intend for arbitrary usage.
   public override class var isOptIn: Bool { return true }
 
-  public override func visit(_ node: AssociatedtypeDeclSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: AssociatedTypeDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseIfNameStartsWithUnderscore(node.name)
     return .visitChildren
   }
@@ -107,7 +107,7 @@ public final class NoLeadingUnderscores: SyntaxLintRule {
     return .visitChildren
   }
 
-  public override func visit(_ node: TypealiasDeclSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: TypeAliasDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseIfNameStartsWithUnderscore(node.name)
     return .visitChildren
   }

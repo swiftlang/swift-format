@@ -12,7 +12,7 @@
 
 import SwiftSyntax
 
-extension ModifierListSyntax {
+extension DeclModifierListSyntax {
 
   func has(modifier: String) -> Bool {
     return contains { $0.name.text == modifier }
@@ -36,9 +36,9 @@ extension ModifierListSyntax {
   }
 
   /// Returns modifier list without the given modifier.
-  func remove(name: String) -> ModifierListSyntax {
+  func remove(name: String) -> DeclModifierListSyntax {
     let newModifiers = filter { $0.name.text != name }
-    return ModifierListSyntax(newModifiers)
+    return DeclModifierListSyntax(newModifiers)
   }
 
   /// Returns a formatted declaration modifier token with the given name.
@@ -53,7 +53,7 @@ extension ModifierListSyntax {
   func insert(
     modifier: DeclModifierSyntax, at index: Int,
     formatTrivia: Bool = true
-  ) -> ModifierListSyntax {
+  ) -> DeclModifierListSyntax {
     guard index >= 0, index <= count else { return self }
 
     var newModifiers: [DeclModifierSyntax] = []
@@ -68,11 +68,11 @@ extension ModifierListSyntax {
     if index == 0 {
       guard formatTrivia else {
         newModifiers.insert(modifier, at: index)
-        return ModifierListSyntax(newModifiers)
+        return DeclModifierListSyntax(newModifiers)
       }
       guard let firstMod = first, let firstTok = firstMod.firstToken(viewMode: .sourceAccurate) else {
         newModifiers.insert(modifier, at: index)
-        return ModifierListSyntax(newModifiers)
+        return DeclModifierListSyntax(newModifiers)
       }
       let formattedMod = replaceTrivia(
         on: modifier,
@@ -84,22 +84,22 @@ extension ModifierListSyntax {
         leadingTrivia: [],
         trailingTrivia: .spaces(1))
       newModifiers.insert(formattedMod, at: 0)
-      return ModifierListSyntax(newModifiers)
+      return DeclModifierListSyntax(newModifiers)
     } else {
       newModifiers.insert(modifier, at: index)
-      return ModifierListSyntax(newModifiers)
+      return DeclModifierListSyntax(newModifiers)
     }
   }
 
   /// Returns modifier list with the given modifier at the end.
   /// Trivia manipulation optional by 'formatTrivia'
-  func append(modifier: DeclModifierSyntax, formatTrivia: Bool = true) -> ModifierListSyntax {
+  func append(modifier: DeclModifierSyntax, formatTrivia: Bool = true) -> DeclModifierListSyntax {
     return insert(modifier: modifier, at: count, formatTrivia: formatTrivia)
   }
 
   /// Returns modifier list with the given modifier at the beginning.
   /// Trivia manipulation optional by 'formatTrivia'
-  func prepend(modifier: DeclModifierSyntax, formatTrivia: Bool = true) -> ModifierListSyntax {
+  func prepend(modifier: DeclModifierSyntax, formatTrivia: Bool = true) -> DeclModifierListSyntax {
     return insert(modifier: modifier, at: 0, formatTrivia: formatTrivia)
   }
 }

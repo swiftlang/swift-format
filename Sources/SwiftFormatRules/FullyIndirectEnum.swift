@@ -35,7 +35,7 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
 
     // Removes 'indirect' keyword from cases, reformats
     let newMembers = enumMembers.map {
-      (member: MemberDeclListItemSyntax) -> MemberDeclListItemSyntax in
+      (member: MemberBlockItemSyntax) -> MemberBlockItemSyntax in
       guard let caseMember = member.decl.as(EnumCaseDeclSyntax.self),
         let modifiers = caseMember.modifiers,
         modifiers.has(modifier: "indirect"),
@@ -70,14 +70,14 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
       name: TokenSyntax.identifier(
         "indirect", leadingTrivia: leadingTrivia, trailingTrivia: .spaces(1)), detail: nil)
 
-    let newMemberBlock = node.memberBlock.with(\.members, MemberDeclListSyntax(newMembers))
+    let newMemberBlock = node.memberBlock.with(\.members, MemberBlockItemListSyntax(newMembers))
     return DeclSyntax(newEnumDecl.addModifier(newModifier).with(\.memberBlock, newMemberBlock))
   }
 
   /// Returns a value indicating whether all enum cases in the given list are indirect.
   ///
   /// Note that if the enum has no cases, this returns false.
-  private func allCasesAreIndirect(in members: MemberDeclListSyntax) -> Bool {
+  private func allCasesAreIndirect(in members: MemberBlockItemListSyntax) -> Bool {
     var hadCases = false
     for member in members {
       if let caseMember = member.decl.as(EnumCaseDeclSyntax.self) {

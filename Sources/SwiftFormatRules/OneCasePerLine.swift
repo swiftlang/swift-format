@@ -85,7 +85,7 @@ public final class OneCasePerLine: SyntaxFormatRule {
   }
 
   public override func visit(_ node: EnumDeclSyntax) -> DeclSyntax {
-    var newMembers: [MemberDeclListItemSyntax] = []
+    var newMembers: [MemberBlockItemSyntax] = []
 
     for member in node.memberBlock.members {
       // If it's not a case declaration, or it's a case declaration with only one element, leave it
@@ -100,7 +100,7 @@ public final class OneCasePerLine: SyntaxFormatRule {
       // Collect the elements of the case declaration until we see one that has either an associated
       // value or a raw value.
       for element in caseDecl.elements {
-        if element.associatedValue != nil || element.rawValue != nil {
+        if element.parameterClause != nil || element.rawValue != nil {
           // Once we reach one of these, we need to write out the ones we've collected so far, then
           // emit a separate case declaration with the associated/raw value element.
           diagnose(.moveAssociatedOrRawValueCase(name: element.name.text), on: element)
@@ -123,7 +123,7 @@ public final class OneCasePerLine: SyntaxFormatRule {
       }
     }
 
-    let newMemberBlock = node.memberBlock.with(\.members, MemberDeclListSyntax(newMembers))
+    let newMemberBlock = node.memberBlock.with(\.members, MemberBlockItemListSyntax(newMembers))
     return DeclSyntax(node.with(\.memberBlock, newMemberBlock))
   }
 }

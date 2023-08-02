@@ -22,7 +22,7 @@ import SwiftSyntax
 ///         converted to `[Element]`.
 public final class UseShorthandTypeNames: SyntaxFormatRule {
 
-  public override func visit(_ node: SimpleTypeIdentifierSyntax) -> TypeSyntax {
+  public override func visit(_ node: IdentifierTypeSyntax) -> TypeSyntax {
     // Ignore types that don't have generic arguments.
     guard let genericArgumentClause = node.genericArgumentClause else {
       return super.visit(node)
@@ -34,7 +34,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     // `Foo<Array<Int>>.Bar` can still be transformed to `Foo<[Int]>.Bar` because the member
     // reference is not directly attached to the type that will be transformed, but we need to visit
     // the children so that we don't skip this).
-    guard let parent = node.parent, !parent.is(MemberTypeIdentifierSyntax.self) else {
+    guard let parent = node.parent, !parent.is(MemberTypeSyntax.self) else {
       return super.visit(node)
     }
 
@@ -98,7 +98,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     return TypeSyntax(result)
   }
 
-  public override func visit(_ node: SpecializeExprSyntax) -> ExprSyntax {
+  public override func visit(_ node: GenericSpecializationExprSyntax) -> ExprSyntax {
     // `SpecializeExpr`s are found in the syntax tree when a generic type is encountered in an
     // expression context, such as `Array<Int>()`. In these situations, the corresponding array and
     // dictionary shorthand nodes will be expression nodes, not type nodes, so we may need to
@@ -106,7 +106,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     // appropriate equivalent.
 
     // Ignore nodes where the expression being specialized isn't a simple identifier.
-    guard let expression = node.expression.as(IdentifierExprSyntax.self) else {
+    guard let expression = node.expression.as(DeclReferenceExprSyntax.self) else {
       return super.visit(node)
     }
 
@@ -130,7 +130,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     let (leadingTrivia, trailingTrivia) = boundaryTrivia(around: Syntax(node))
     let newNode: ExprSyntax?
 
-    switch expression.identifier.text {
+    switch expression.baseName.text {
     case "Array":
       guard let typeArgument = genericArgumentList.firstAndOnly else {
         newNode = nil
@@ -172,7 +172,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     }
 
     if let newNode = newNode {
-      diagnose(.useTypeShorthand(type: expression.identifier.text), on: expression)
+      diagnose(.useTypeShorthand(type: expression.baseName.text), on: expression)
       return newNode
     }
 
@@ -329,9 +329,9 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       // otherwise the "?" applies to the return type instead of the function type. Attach the
       // leading trivia to the left-paren that we're adding in this case.
       let tupleExprElement =
-        TupleExprElementSyntax(
+        LabeledExprSyntax(
           label: nil, colon: nil, expression: wrappedTypeExpr, trailingComma: nil)
-      let tupleExprElementList = TupleExprElementListSyntax([tupleExprElement])
+      let tupleExprElementList = LabeledExprListSyntax([tupleExprElement])
       let tupleExpr = TupleExprSyntax(
         leftParen: TokenSyntax.leftParenToken(leadingTrivia: leadingTrivia ?? []),
         elementList: tupleExprElementList,
@@ -362,16 +362,16 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
   private func expressionRepresentation(of type: TypeSyntax) -> ExprSyntax? {
     switch Syntax(type).as(SyntaxEnum.self) {
     case .identifierType(let simpleTypeIdentifier):
-      let identifierExpr = IdentifierExprSyntax(
-        identifier: simpleTypeIdentifier.name,
-        declNameArguments: nil)
+      let identifierExpr = DeclReferenceExprSyntax(
+        baseName: simpleTypeIdentifier.name,
+        argumentNames: nil)
 
       // If the type has a generic argument clause, we need to construct a `SpecializeExpr` to wrap
       // the identifier and the generic arguments. Otherwise, we can return just the
       // `IdentifierExpr` itself.
       if let genericArgumentClause = simpleTypeIdentifier.genericArgumentClause {
         let newGenericArgumentClause = visit(genericArgumentClause)
-        let result = SpecializeExprSyntax(
+        let result = GenericSpecializationExprSyntax(
           expression: ExprSyntax(identifierExpr),
           genericArgumentClause: newGenericArgumentClause)
         return ExprSyntax(result)
@@ -438,21 +438,21 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
   }
 
   private func expressionRepresentation(of tupleTypeElements: TupleTypeElementListSyntax)
-    -> TupleExprElementListSyntax?
+    -> LabeledExprListSyntax?
   {
     guard !tupleTypeElements.isEmpty else { return nil }
 
-    var exprElements = [TupleExprElementSyntax]()
+    var exprElements = [LabeledExprSyntax]()
     for typeElement in tupleTypeElements {
       guard let elementExpr = expressionRepresentation(of: typeElement.type) else { return nil }
       exprElements.append(
-        TupleExprElementSyntax(
-          label: typeElement.name,
+        LabeledExprSyntax(
+          label: typeElement.firstName,
           colon: typeElement.colon,
           expression: elementExpr,
           trailingComma: typeElement.trailingComma))
     }
-    return TupleExprElementListSyntax(exprElements)
+    return LabeledExprListSyntax(exprElements)
   }
 
   private func makeFunctionTypeExpression(
@@ -534,7 +534,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 
   /// Returns true if the given type identifier node represents the type of a mutable variable or
   /// stored property that does not have an initializer clause.
-  private func isTypeOfUninitializedStoredVar(_ node: SimpleTypeIdentifierSyntax) -> Bool {
+  private func isTypeOfUninitializedStoredVar(_ node: IdentifierTypeSyntax) -> Bool {
     if let typeAnnotation = node.parent?.as(TypeAnnotationSyntax.self),
       let patternBinding = nearestAncestor(of: typeAnnotation, type: PatternBindingSyntax.self),
       isStoredProperty(patternBinding),

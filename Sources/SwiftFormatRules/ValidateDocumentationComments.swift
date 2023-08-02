@@ -106,7 +106,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
     if returnClause == nil && returnsDescription != nil {
       diagnose(.removeReturnComment(funcName: name), on: node)
     } else if let returnClause = returnClause, returnsDescription == nil {
-      if let returnTypeIdentifier = returnClause.type.as(SimpleTypeIdentifierSyntax.self),
+      if let returnTypeIdentifier = returnClause.type.as(IdentifierTypeSyntax.self),
          returnTypeIdentifier.name.text == "Never"
       {
         return

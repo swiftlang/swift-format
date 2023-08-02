@@ -25,7 +25,7 @@ public final class UseWhereClausesInForLoops: SyntaxFormatRule {
   /// be enabled by default.
   public override class var isOptIn: Bool { return true }
 
-  public override func visit(_ node: ForInStmtSyntax) -> StmtSyntax {
+  public override func visit(_ node: ForStmtSyntax) -> StmtSyntax {
     // Extract IfStmt node if it's the only node in the function's body.
     guard !node.body.statements.isEmpty else { return StmtSyntax(node) }
     let firstStatement = node.body.statements.first!
@@ -49,8 +49,8 @@ public final class UseWhereClausesInForLoops: SyntaxFormatRule {
 
   private func diagnoseAndUpdateForInStatement(
     firstStmt: StmtSyntax,
-    forInStmt: ForInStmtSyntax
-  ) -> ForInStmtSyntax {
+    forInStmt: ForStmtSyntax
+  ) -> ForStmtSyntax {
     switch Syntax(firstStmt).as(SyntaxEnum.self) {
     case .expressionStmt(let exprStmt):
       switch Syntax(exprStmt.expression).as(SyntaxEnum.self) {
@@ -95,10 +95,10 @@ public final class UseWhereClausesInForLoops: SyntaxFormatRule {
 }
 
 fileprivate func updateWithWhereCondition(
-  node: ForInStmtSyntax,
+  node: ForStmtSyntax,
   condition: ExprSyntax,
   statements: CodeBlockItemListSyntax
-) -> ForInStmtSyntax {
+) -> ForStmtSyntax {
   // Construct a new `where` clause with the condition.
   let lastToken = node.sequence.lastToken(viewMode: .sourceAccurate)
   var whereLeadingTrivia = Trivia()
@@ -111,7 +111,7 @@ fileprivate func updateWithWhereCondition(
   )
   let whereClause = WhereClauseSyntax(
     whereKeyword: whereKeyword,
-    guardResult: condition
+    condition: condition
   )
 
   // Replace the where clause and extract the body from the IfStmt.

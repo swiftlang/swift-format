@@ -65,7 +65,7 @@ public final class DontRepeatTypeInStaticProperties: SyntaxLintRule {
   /// Iterates over the static/class properties in the given member list and diagnoses any where the
   /// name has the containing type name (excluding possible namespace prefixes, like `NS` or `UI`)
   /// as a suffix.
-  private func diagnoseStaticMembers(_ members: MemberDeclListSyntax, endingWith typeName: String) {
+  private func diagnoseStaticMembers(_ members: MemberBlockItemListSyntax, endingWith typeName: String) {
     for member in members {
       guard
         let varDecl = member.decl.as(VariableDeclSyntax.self),
