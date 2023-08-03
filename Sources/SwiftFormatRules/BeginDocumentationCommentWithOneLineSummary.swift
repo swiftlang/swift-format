@@ -75,12 +75,12 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
     return .skipChildren
   }
 
-  public override func visit(_ node: TypealiasDeclSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: TypeAliasDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseDocComments(in: DeclSyntax(node))
     return .skipChildren
   }
 
-  public override func visit(_ node: AssociatedtypeDeclSyntax) -> SyntaxVisitorContinueKind {
+  public override func visit(_ node: AssociatedTypeDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseDocComments(in: DeclSyntax(node))
     return .skipChildren
   }

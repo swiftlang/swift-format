@@ -24,7 +24,7 @@ public final class NoVoidReturnOnFunctionSignature: SyntaxFormatRule {
   /// it for closure signatures, because that may introduce an ambiguity when closure signatures
   /// are inferred.
   public override func visit(_ node: FunctionSignatureSyntax) -> FunctionSignatureSyntax {
-    if let returnType = node.returnClause?.type.as(SimpleTypeIdentifierSyntax.self), returnType.name.text == "Void" {
+    if let returnType = node.returnClause?.type.as(IdentifierTypeSyntax.self), returnType.name.text == "Void" {
       diagnose(.removeRedundantReturn("Void"), on: returnType)
       return node.with(\.returnClause, nil)
     }

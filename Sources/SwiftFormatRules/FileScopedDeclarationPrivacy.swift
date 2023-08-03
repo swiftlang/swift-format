@@ -135,8 +135,8 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
   /// - Returns: A new node if the modifiers were rewritten, or the original node if not.
   private func rewrittenDecl<DeclType: DeclSyntaxProtocol>(
     _ decl: DeclType,
-    modifiers: ModifierListSyntax?,
-    factory: (ModifierListSyntax?) -> DeclType
+    modifiers: DeclModifierListSyntax?,
+    factory: (DeclModifierListSyntax?) -> DeclType
   ) -> DeclType {
     let invalidAccess: TokenKind
     let validAccess: TokenKind
@@ -165,7 +165,7 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
       }
       return modifier
     }
-    return factory(ModifierListSyntax(newModifiers))
+    return factory(DeclModifierListSyntax(newModifiers))
   }
 }
 

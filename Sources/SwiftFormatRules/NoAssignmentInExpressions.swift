@@ -102,10 +102,10 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
   /// expression (either simple assignment with `=` or compound assignment with an operator like
   /// `+=`).
   private func isAssignmentExpression(_ expr: InfixOperatorExprSyntax) -> Bool {
-    if expr.operatorOperand.is(AssignmentExprSyntax.self) {
+    if expr.operator.is(AssignmentExprSyntax.self) {
       return true
     }
-    guard let binaryOp = expr.operatorOperand.as(BinaryOperatorExprSyntax.self) else {
+    guard let binaryOp = expr.operator.as(BinaryOperatorExprSyntax.self) else {
       return false
     }
     return context.operatorTable.infixOperator(named: binaryOp.operator.text)?.precedenceGroup

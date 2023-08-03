@@ -60,7 +60,7 @@ public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
     return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 
-  public override func visit(_ node: TypealiasDeclSyntax) -> DeclSyntax {
+  public override func visit(_ node: TypeAliasDeclSyntax) -> DeclSyntax {
     return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 

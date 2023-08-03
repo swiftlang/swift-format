@@ -27,7 +27,7 @@ import SwiftSyntax
 /// TODO: Handle floating point literals.
 public final class GroupNumericLiterals: SyntaxFormatRule {
   public override func visit(_ node: IntegerLiteralExprSyntax) -> ExprSyntax {
-    var originalDigits = node.digits.text
+    var originalDigits = node.literal.text
     guard !originalDigits.contains("_") else { return ExprSyntax(node) }
 
     let isNegative = originalDigits.first == "-"
@@ -59,11 +59,11 @@ public final class GroupNumericLiterals: SyntaxFormatRule {
     }
 
     newDigits = isNegative ? "-" + newDigits : newDigits
-    let result = node.with(\.digits,
+    let result = node.with(\.literal,
       TokenSyntax.integerLiteral(
         newDigits,
-        leadingTrivia: node.digits.leadingTrivia,
-        trailingTrivia: node.digits.trailingTrivia))
+        leadingTrivia: node.literal.leadingTrivia,
+        trailingTrivia: node.literal.trailingTrivia))
     return ExprSyntax(result)
   }
 

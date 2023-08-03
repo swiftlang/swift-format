@@ -80,16 +80,16 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
 
   /// FIXME(hbh): Parsing for SwitchExprSyntax is not implemented.
   public override func visit(_ node: SwitchExprSyntax) -> ExprSyntax {
-    guard let tup = node.expression.as(TupleExprSyntax.self),
+    guard let tup = node.subject.as(TupleExprSyntax.self),
       tup.elements.firstAndOnly != nil
     else {
       return super.visit(node)
     }
     return ExprSyntax(
-      node.with(\.expression, extractExpr(tup)).with(\.cases, visit(node.cases)))
+      node.with(\.subject, extractExpr(tup)).with(\.cases, visit(node.cases)))
   }
 
-  public override func visit(_ node: RepeatWhileStmtSyntax) -> StmtSyntax {
+  public override func visit(_ node: RepeatStmtSyntax) -> StmtSyntax {
     guard let tup = node.condition.as(TupleExprSyntax.self),
       tup.elements.firstAndOnly != nil
     else {
