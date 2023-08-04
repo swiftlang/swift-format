@@ -90,7 +90,7 @@ final class AttributeTests: PrettyPrintTestCase {
 
       """
 
-    var configuration = Configuration()
+    var configuration = Configuration.forTesting
     configuration.lineBreakBeforeEachArgument = true
     assertPrettyPrintEqual(
       input: input, expected: expected, linelength: 32, configuration: configuration)
@@ -166,7 +166,7 @@ final class AttributeTests: PrettyPrintTestCase {
 
       """
 
-    var configuration = Configuration()
+    var configuration = Configuration.forTesting
     configuration.lineBreakBeforeEachArgument = true
     assertPrettyPrintEqual(
       input: input, expected: expected, linelength: 40, configuration: configuration)
@@ -238,7 +238,7 @@ final class AttributeTests: PrettyPrintTestCase {
 
        """
 
-     var configuration = Configuration()
+     var configuration = Configuration.forTesting
      configuration.lineBreakBeforeEachArgument = true
      assertPrettyPrintEqual(
        input: input, expected: expected, linelength: 40, configuration: configuration)

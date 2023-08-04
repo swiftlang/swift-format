@@ -112,7 +112,7 @@ final class IfConfigTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.indentConditionalCompilationBlocks = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45, configuration: config)
   }

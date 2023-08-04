@@ -105,7 +105,7 @@ final class TryCatchTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.lineBreakBeforeControlFlowKeywords = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: config)
   }
@@ -156,7 +156,7 @@ final class TryCatchTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.lineBreakBeforeControlFlowKeywords = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 42, configuration: config)
   }

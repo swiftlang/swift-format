@@ -25,7 +25,7 @@ class PrettyPrintTestCase: DiagnosingTestCase {
     input: String,
     expected: String,
     linelength: Int,
-    configuration: Configuration = Configuration(),
+    configuration: Configuration = Configuration.forTesting,
     whitespaceOnly: Bool = false,
     file: StaticString = #file,
     line: UInt = #line

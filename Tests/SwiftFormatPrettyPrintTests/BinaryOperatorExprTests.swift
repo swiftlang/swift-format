@@ -50,7 +50,7 @@ final class BinaryOperatorExprTests: PrettyPrintTestCase {
 
       """
 
-    var configuration = Configuration()
+    var configuration = Configuration.forTesting
     configuration.spacesAroundRangeFormationOperators = false
     assertPrettyPrintEqual(
       input: input, expected: expected, linelength: 80, configuration: configuration)
@@ -78,7 +78,7 @@ final class BinaryOperatorExprTests: PrettyPrintTestCase {
 
       """
 
-    var configuration = Configuration()
+    var configuration = Configuration.forTesting
     configuration.spacesAroundRangeFormationOperators = true
     assertPrettyPrintEqual(
       input: input, expected: expected, linelength: 80, configuration: configuration)
