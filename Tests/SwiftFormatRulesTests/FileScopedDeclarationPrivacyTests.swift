@@ -203,7 +203,7 @@ final class FileScopedDeclarationPrivacyTests: LintOrFormatRuleTestCase {
     completion: ((Int, Int) -> Void) -> Void
   ) {
     for testConfig in testConfigurations {
-      var configuration = Configuration()
+      var configuration = Configuration.forTesting
       configuration.fileScopedDeclarationPrivacy.accessLevel = testConfig.desired
 
       let substitutedInput = source.replacingOccurrences(of: "$access$", with: testConfig.original)

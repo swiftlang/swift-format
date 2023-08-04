@@ -25,7 +25,7 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
         .as(SourceFileSyntax.self)!)
 
     // Force the rule to be enabled while we test it.
-    var configuration = Configuration()
+    var configuration = Configuration.forTesting
     configuration.rules[type.ruleName] = true
     let context = makeContext(sourceFileSyntax: sourceFileSyntax, configuration: configuration)
 
@@ -64,7 +64,7 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
         .as(SourceFileSyntax.self)!)
 
     // Force the rule to be enabled while we test it.
-    var configuration = configuration ?? Configuration()
+    var configuration = configuration ?? Configuration.forTesting
     configuration.rules[formatType.ruleName] = true
     let context = makeContext(sourceFileSyntax: sourceFileSyntax, configuration: configuration)
 

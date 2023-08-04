@@ -41,7 +41,7 @@ final class DeclNameArgumentTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.lineBreakBeforeEachArgument = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: config)
   }
@@ -114,7 +114,7 @@ final class DeclNameArgumentTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.lineBreakBeforeEachArgument = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: config)
   }

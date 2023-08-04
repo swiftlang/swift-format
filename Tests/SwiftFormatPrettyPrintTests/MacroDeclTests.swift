@@ -22,7 +22,7 @@ final class MacroDeclTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.lineBreakBeforeEachArgument = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 58, configuration: config)
   }
@@ -46,7 +46,7 @@ final class MacroDeclTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.lineBreakBeforeEachArgument = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 58, configuration: config)
   }
@@ -83,7 +83,7 @@ final class MacroDeclTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.lineBreakBeforeEachArgument = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 58, configuration: config)
   }
@@ -113,7 +113,7 @@ final class MacroDeclTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.lineBreakBeforeEachArgument = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 44, configuration: config)
   }
@@ -141,7 +141,7 @@ final class MacroDeclTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.lineBreakBeforeEachArgument = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 44, configuration: config)
   }
@@ -191,7 +191,7 @@ final class MacroDeclTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.lineBreakBeforeEachArgument = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 51, configuration: config)
   }
@@ -243,7 +243,7 @@ final class MacroDeclTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.lineBreakBeforeEachArgument = false
     config.lineBreakBeforeEachGenericRequirement = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
@@ -330,7 +330,7 @@ final class MacroDeclTests: PrettyPrintTestCase {
       ) -> R
 
       """
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.prioritizeKeepingFunctionOutputTogether = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 23, configuration: config)
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 24, configuration: config)
@@ -371,7 +371,7 @@ final class MacroDeclTests: PrettyPrintTestCase {
       ) -> R
 
       """
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.prioritizeKeepingFunctionOutputTogether = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 26, configuration: config)
   }

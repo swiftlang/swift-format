@@ -78,7 +78,7 @@ final class SubscriptDeclTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.lineBreakBeforeEachArgument = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
@@ -120,7 +120,7 @@ final class SubscriptDeclTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.lineBreakBeforeEachArgument = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
@@ -159,7 +159,7 @@ final class SubscriptDeclTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.lineBreakBeforeEachArgument = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
@@ -199,7 +199,7 @@ final class SubscriptDeclTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.lineBreakBeforeEachArgument = false
     config.lineBreakBeforeEachGenericRequirement = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
@@ -348,7 +348,7 @@ final class SubscriptDeclTests: PrettyPrintTestCase {
       }
 
       """
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.prioritizeKeepingFunctionOutputTogether = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 26, configuration: config)
 
@@ -472,7 +472,7 @@ final class SubscriptDeclTests: PrettyPrintTestCase {
 
     """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.lineBreakBeforeEachGenericRequirement = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 34, configuration: config)
   }

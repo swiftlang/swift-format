@@ -54,7 +54,7 @@ final class FunctionCallTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.lineBreakBeforeEachArgument = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45, configuration: config)
   }
@@ -92,7 +92,7 @@ final class FunctionCallTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.lineBreakBeforeEachArgument = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45, configuration: config)
   }
@@ -127,7 +127,7 @@ final class FunctionCallTests: PrettyPrintTestCase {
       )
 
       """
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.lineBreakBeforeEachArgument = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45, configuration: config)
   }

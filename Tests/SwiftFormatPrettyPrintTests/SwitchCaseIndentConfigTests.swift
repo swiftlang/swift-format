@@ -31,7 +31,7 @@ final class SwitchCaseIndentConfigTests: PrettyPrintTestCase {
 
     let expected = input
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.indentSwitchCaseLabels = false
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 35, configuration: config)
@@ -86,7 +86,7 @@ final class SwitchCaseIndentConfigTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.indentSwitchCaseLabels = false
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 35, configuration: config)
@@ -141,7 +141,7 @@ final class SwitchCaseIndentConfigTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.indentSwitchCaseLabels = true
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 35, configuration: config)
@@ -175,7 +175,7 @@ final class SwitchCaseIndentConfigTests: PrettyPrintTestCase {
 
     let expected = input
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.indentSwitchCaseLabels = true
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 35, configuration: config)
@@ -230,7 +230,7 @@ final class SwitchCaseIndentConfigTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.indentSwitchCaseLabels = false
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 35, configuration: config)
@@ -285,7 +285,7 @@ final class SwitchCaseIndentConfigTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.indentSwitchCaseLabels = true
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 35, configuration: config)
@@ -340,7 +340,7 @@ final class SwitchCaseIndentConfigTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.indentSwitchCaseLabels = true
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 35, configuration: config)
@@ -371,7 +371,7 @@ final class SwitchCaseIndentConfigTests: PrettyPrintTestCase {
 
     let expected = input
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.indentSwitchCaseLabels = true
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 80, configuration: config)
