@@ -82,7 +82,7 @@ public struct DocumentationComment {
   ///
   /// - Parameter node: The syntax node from which the documentation comment should be extracted.
   public init?<Node: SyntaxProtocol>(extractedFrom node: Node) {
-    guard let commentInfo = documentationCommentText(extractedFrom: node.leadingTrivia) else {
+    guard let commentInfo = DocumentationCommentText(extractedFrom: node.leadingTrivia) else {
       return nil
     }
 
