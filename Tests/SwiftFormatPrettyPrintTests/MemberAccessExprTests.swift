@@ -118,7 +118,7 @@ final class MemberAccessExprTests: PrettyPrintTestCase {
 
       """
 
-    var configuration = Configuration()
+    var configuration = Configuration.forTesting
     configuration.lineBreakAroundMultilineExpressionChainComponents = true
     assertPrettyPrintEqual(
       input: input, expected: expectedWithForcedBreaks, linelength: 20,
@@ -235,7 +235,7 @@ final class MemberAccessExprTests: PrettyPrintTestCase {
 
       """
 
-    var configuration = Configuration()
+    var configuration = Configuration.forTesting
     configuration.lineBreakAroundMultilineExpressionChainComponents = true
     assertPrettyPrintEqual(
       input: input, expected: expectedWithForcedBreaking, linelength: 35,
@@ -329,7 +329,7 @@ final class MemberAccessExprTests: PrettyPrintTestCase {
 
       """
 
-    var configuration = Configuration()
+    var configuration = Configuration.forTesting
     configuration.lineBreakAroundMultilineExpressionChainComponents = true
     assertPrettyPrintEqual(
       input: input, expected: expectedWithForcedBreaks, linelength: 50,
@@ -422,7 +422,7 @@ final class MemberAccessExprTests: PrettyPrintTestCase {
 
       """
 
-    var configuration = Configuration()
+    var configuration = Configuration.forTesting
     configuration.lineBreakAroundMultilineExpressionChainComponents = true
     assertPrettyPrintEqual(
       input: input, expected: expectedWithForcedBreaks, linelength: 50,
@@ -511,7 +511,7 @@ final class MemberAccessExprTests: PrettyPrintTestCase {
 
       """
 
-    var configuration = Configuration()
+    var configuration = Configuration.forTesting
     configuration.lineBreakAroundMultilineExpressionChainComponents = true
     assertPrettyPrintEqual(
       input: input, expected: expectedWithForcedBreaks, linelength: 50,

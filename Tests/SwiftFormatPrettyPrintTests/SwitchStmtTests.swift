@@ -552,7 +552,7 @@ final class SwitchStmtTests: PrettyPrintTestCase {
 
       """
 
-    var configuration = Configuration()
+    var configuration = Configuration.forTesting
     configuration.indentSwitchCaseLabels = true
     assertPrettyPrintEqual(
       input: input, expected: expected, linelength: 40, configuration: configuration)

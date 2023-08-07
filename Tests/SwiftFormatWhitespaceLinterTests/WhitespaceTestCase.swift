@@ -21,7 +21,7 @@ class WhitespaceTestCase: DiagnosingTestCase {
   ///   - linelength: The maximum allowed line length of the output.
   final func performWhitespaceLint(input: String, expected: String, linelength: Int? = nil) {
     let sourceFileSyntax = Parser.parse(source: input)
-    var configuration = Configuration()
+    var configuration = Configuration.forTesting
     if let linelength = linelength {
       configuration.lineLength = linelength
     }

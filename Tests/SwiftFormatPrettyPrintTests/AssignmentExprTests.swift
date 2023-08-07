@@ -84,7 +84,7 @@ final class AssignmentExprTests: PrettyPrintTestCase {
 
         """
 
-      var config = Configuration()
+      var config = Configuration.forTesting
       config.lineBreakBeforeEachArgument = false
       assertPrettyPrintEqual(
         input: input, expected: expectedWithArgBinPacking, linelength: 35, configuration: config)
@@ -166,7 +166,7 @@ final class AssignmentExprTests: PrettyPrintTestCase {
 
       """
 
-    var config = Configuration()
+    var config = Configuration.forTesting
     config.lineBreakBeforeEachArgument = false
     assertPrettyPrintEqual(
       input: input, expected: expectedWithArgBinPacking, linelength: 35, configuration: config)
