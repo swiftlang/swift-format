@@ -9,8 +9,10 @@ final class DocumentationCommentTextTests: XCTestCase {
       /// A simple doc comment.
       func f() {}
       """
+    let commentText = try XCTUnwrap(DocumentationCommentText(extractedFrom: decl.leadingTrivia))
+    XCTAssertEqual(commentText.introducer, .line)
     XCTAssertEqual(
-      documentationCommentText(extractedFrom: decl.leadingTrivia)?.text,
+      commentText.text,
       """
       A simple doc comment.
       
@@ -23,8 +25,10 @@ final class DocumentationCommentTextTests: XCTestCase {
       /** A simple doc comment. */
       func f() {}
       """
+    let commentText = try XCTUnwrap(DocumentationCommentText(extractedFrom: decl.leadingTrivia))
+    XCTAssertEqual(commentText.introducer, .block)
     XCTAssertEqual(
-      documentationCommentText(extractedFrom: decl.leadingTrivia)?.text,
+      commentText.text,
       """
       A simple doc comment.\u{0020}
       
@@ -39,8 +43,10 @@ final class DocumentationCommentTextTests: XCTestCase {
        */
       func f() {}
       """
+    let commentText = try XCTUnwrap(DocumentationCommentText(extractedFrom: decl.leadingTrivia))
+    XCTAssertEqual(commentText.introducer, .block)
     XCTAssertEqual(
-      documentationCommentText(extractedFrom: decl.leadingTrivia)?.text,
+      commentText.text,
       """
       A simple doc comment.
       
@@ -55,8 +61,10 @@ final class DocumentationCommentTextTests: XCTestCase {
        */
       func f() {}
       """
+    let commentText = try XCTUnwrap(DocumentationCommentText(extractedFrom: decl.leadingTrivia))
+    XCTAssertEqual(commentText.introducer, .block)
     XCTAssertEqual(
-      documentationCommentText(extractedFrom: decl.leadingTrivia)?.text,
+      commentText.text,
       """
       A simple doc comment.
       
@@ -75,8 +83,10 @@ final class DocumentationCommentTextTests: XCTestCase {
       /// - Returns: A value.
       func f(x: Int) -> Int {}
       """
+    let commentText = try XCTUnwrap(DocumentationCommentText(extractedFrom: decl.leadingTrivia))
+    XCTAssertEqual(commentText.introducer, .line)
     XCTAssertEqual(
-      documentationCommentText(extractedFrom: decl.leadingTrivia)?.text,
+      commentText.text,
       """
       A doc comment.
       
@@ -97,8 +107,10 @@ final class DocumentationCommentTextTests: XCTestCase {
       /// A doc comment.
       func f(x: Int) -> Int {}
       """
+    let commentText = try XCTUnwrap(DocumentationCommentText(extractedFrom: decl.leadingTrivia))
+    XCTAssertEqual(commentText.introducer, .line)
     XCTAssertEqual(
-      documentationCommentText(extractedFrom: decl.leadingTrivia)?.text,
+      commentText.text,
       """
       A doc comment.
       
@@ -116,8 +128,10 @@ final class DocumentationCommentTextTests: XCTestCase {
       /** so is this */
       func f(x: Int) -> Int {}
       """
+    let commentText = try XCTUnwrap(DocumentationCommentText(extractedFrom: decl.leadingTrivia))
+    XCTAssertEqual(commentText.introducer, .block)
     XCTAssertEqual(
-      documentationCommentText(extractedFrom: decl.leadingTrivia)?.text,
+      commentText.text,
       """
       This is part of the comment.
        so is this\u{0020}
@@ -126,10 +140,28 @@ final class DocumentationCommentTextTests: XCTestCase {
     )
   }
 
+  func testDocCommentHasMixedIntroducers() throws {
+    let decl: DeclSyntax = """
+      /// This is part of the comment.
+      /** This is too. */
+      func f(x: Int) -> Int {}
+      """
+    let commentText = try XCTUnwrap(DocumentationCommentText(extractedFrom: decl.leadingTrivia))
+    XCTAssertEqual(commentText.introducer, .mixed)
+    XCTAssertEqual(
+      commentText.text,
+      """
+      This is part of the comment.
+      This is too.\u{0020}
+
+      """
+    )
+  }
+
   func testNilIfNoComment() throws {
     let decl: DeclSyntax = """
       func f(x: Int) -> Int {}
       """
-    XCTAssertNil(documentationCommentText(extractedFrom: decl.leadingTrivia))
+    XCTAssertNil(DocumentationCommentText(extractedFrom: decl.leadingTrivia))
   }
 }
