@@ -148,4 +148,27 @@ final class UseTripleSlashForDocumentationCommentsTests: LintOrFormatRuleTestCas
                 }
                 """)
   }
+
+  func testDocLineCommentsAreNotNormalized() {
+    XCTAssertFormatting(
+      UseTripleSlashForDocumentationComments.self,
+      input: """
+        ///
+        ///   Normally that initial blank line and these leading spaces
+        ///   would be removed by DocumentationCommentText. But we don't
+        ///   touch the comment if it's already a doc line comment.
+        ///
+        public class AClazz {
+        }
+        """,
+      expected: """
+        ///
+        ///   Normally that initial blank line and these leading spaces
+        ///   would be removed by DocumentationCommentText. But we don't
+        ///   touch the comment if it's already a doc line comment.
+        ///
+        public class AClazz {
+        }
+        """)
+  }
 }
