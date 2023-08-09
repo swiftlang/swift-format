@@ -168,31 +168,31 @@ fileprivate func parametersAreEqual(
 
 extension Finding.Message {
   public static func documentReturnValue(funcName: String) -> Finding.Message {
-    "document the return value of \(funcName)"
+    "add a 'Returns:' section to document the return value of '\(funcName)'"
   }
 
   public static func removeReturnComment(funcName: String) -> Finding.Message {
-    "remove the return comment of \(funcName), it doesn't return a value"
+    "remove the 'Returns:' section of '\(funcName)'; it does not return a value"
   }
 
   public static func parametersDontMatch(funcName: String) -> Finding.Message {
-    "change the parameters of \(funcName)'s documentation to match its parameters"
+    "change the parameters of the documentation of '\(funcName)' to match its parameters"
   }
 
   public static let useSingularParameter: Finding.Message =
-    "replace the plural form of 'Parameters' with a singular inline form of the 'Parameter' tag"
+    "replace the plural 'Parameters:' section with a singular inline 'Parameter' section"
 
   public static let usePluralParameters: Finding.Message =
     """
-    replace the singular inline form of 'Parameter' tag with a plural 'Parameters' tag \
-    and group each parameter as a nested list
+    replace the singular inline 'Parameter' section with a plural 'Parameters:' section \
+    that has the parameters nested inside it
     """
 
   public static func removeThrowsComment(funcName: String) -> Finding.Message {
-    "remove the 'Throws' tag for non-throwing function \(funcName)"
+    "remove the 'Throws:' sections of '\(funcName)'; it does not throw any errors"
   }
 
   public static func documentErrorsThrown(funcName: String) -> Finding.Message {
-    "add a 'Throws' tag describing the errors thrown by \(funcName)"
+    "add a 'Throws:' section to document the errors thrown by '\(funcName)'"
   }
 }

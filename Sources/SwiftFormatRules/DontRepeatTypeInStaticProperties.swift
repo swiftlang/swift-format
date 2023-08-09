@@ -104,6 +104,6 @@ public final class DontRepeatTypeInStaticProperties: SyntaxLintRule {
 
 extension Finding.Message {
   public static func removeTypeFromName(name: String, type: Substring) -> Finding.Message {
-    "remove '\(type)' from '\(name)'"
+    "remove the suffix '\(type)' from the name of the variable '\(name)'"
   }
 }

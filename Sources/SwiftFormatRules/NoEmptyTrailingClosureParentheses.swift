@@ -53,6 +53,6 @@ public final class NoEmptyTrailingClosureParentheses: SyntaxFormatRule {
 
 extension Finding.Message {
   public static func removeEmptyTrailingParentheses(name: String) -> Finding.Message {
-    "remove '()' after \(name)"
+    "remove the empty parentheses following '\(name)'"
   }
 }

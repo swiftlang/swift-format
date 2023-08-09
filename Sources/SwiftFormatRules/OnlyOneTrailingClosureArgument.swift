@@ -31,5 +31,5 @@ public final class OnlyOneTrailingClosureArgument: SyntaxLintRule {
 
 extension Finding.Message {
   public static let removeTrailingClosure: Finding.Message =
-    "revise function call to avoid using both closure arguments and a trailing closure"
+    "revise this function call to avoid using both closure arguments and a trailing closure"
 }

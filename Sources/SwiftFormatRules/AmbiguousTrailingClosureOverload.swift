@@ -74,7 +74,7 @@ public final class AmbiguousTrailingClosureOverload: SyntaxLintRule {
 
 extension Finding.Message {
   public static func ambiguousTrailingClosureOverload(_ decl: String) -> Finding.Message {
-    "rename '\(decl)' so it is no longer ambiguous with a trailing closure"
+    "rename '\(decl)' so it is no longer ambiguous when called with a trailing closure"
   }
 
   public static func otherAmbiguousOverloadHere(_ decl: String) -> Finding.Message {

@@ -186,7 +186,7 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
 
 extension Finding.Message {
   public static let removeRedundantInitializer: Finding.Message =
-    "remove initializer and use the synthesized initializer"
+    "remove this explicit initializer, which is identical to the compiler-synthesized initializer"
 }
 
 /// Defines the access levels which may be assigned to a synthesized memberwise initializer.

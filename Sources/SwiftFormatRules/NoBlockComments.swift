@@ -30,5 +30,5 @@ public final class NoBlockComments: SyntaxLintRule {
 
 extension Finding.Message {
   public static let avoidBlockComment: Finding.Message =
-    "replace block comment with line comments"
+    "replace this block comment with line comments"
 }

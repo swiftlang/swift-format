@@ -126,6 +126,6 @@ public final class NoLeadingUnderscores: SyntaxLintRule {
 
 extension Finding.Message {
   public static func doNotStartWithUnderscore(identifier: String) -> Finding.Message {
-    "remove leading '_' from identifier '\(identifier)'"
+    "remove the leading '_' from the name '\(identifier)'"
   }
 }

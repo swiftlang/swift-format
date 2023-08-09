@@ -579,7 +579,7 @@ extension Finding.Message {
     "place \(before) imports before \(after) imports"
   }
 
-  public static let removeDuplicateImport: Finding.Message = "remove duplicate import"
+  public static let removeDuplicateImport: Finding.Message = "remove this duplicate import"
 
   public static let sortImports: Finding.Message = "sort import statements lexicographically"
 }
