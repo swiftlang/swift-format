@@ -12,7 +12,7 @@ final class RuleMaskTests: XCTestCase {
   private func createMask(sourceText: String) -> RuleMask {
     let fileURL = URL(fileURLWithPath: "/tmp/test.swift")
     let syntax = Parser.parse(source: sourceText)
-    converter = SourceLocationConverter(file: fileURL.path, tree: syntax)
+    converter = SourceLocationConverter(fileName: fileURL.path, tree: syntax)
     return RuleMask(syntaxNode: Syntax(syntax), sourceLocationConverter: converter)
   }
 

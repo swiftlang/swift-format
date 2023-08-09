@@ -71,7 +71,10 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
         "indirect", leadingTrivia: leadingTrivia, trailingTrivia: .spaces(1)), detail: nil)
 
     let newMemberBlock = node.memberBlock.with(\.members, MemberBlockItemListSyntax(newMembers))
-    return DeclSyntax(newEnumDecl.addModifier(newModifier).with(\.memberBlock, newMemberBlock))
+    return DeclSyntax(
+      newEnumDecl
+        .with(\.modifiers, (newEnumDecl.modifiers ?? DeclModifierListSyntax([])) + [newModifier])
+        .with(\.memberBlock, newMemberBlock))
   }
 
   /// Returns a value indicating whether all enum cases in the given list are indirect.

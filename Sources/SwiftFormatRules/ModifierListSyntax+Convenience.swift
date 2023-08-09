@@ -37,8 +37,7 @@ extension DeclModifierListSyntax {
 
   /// Returns modifier list without the given modifier.
   func remove(name: String) -> DeclModifierListSyntax {
-    let newModifiers = filter { $0.name.text != name }
-    return DeclModifierListSyntax(newModifiers)
+    return filter { $0.name.text != name }
   }
 
   /// Returns a formatted declaration modifier token with the given name.
@@ -48,58 +47,36 @@ extension DeclModifierListSyntax {
     return newModifier
   }
 
-  /// Returns modifiers with the given modifier inserted at the given index.
-  /// Preserves existing trivia and formats new trivia, given true for 'formatTrivia.'
-  func insert(
-    modifier: DeclModifierSyntax, at index: Int,
-    formatTrivia: Bool = true
-  ) -> DeclModifierListSyntax {
-    guard index >= 0, index <= count else { return self }
+  /// Inserts the given modifier into the list at a specific index.
+  ///
+  /// If the modifier is being inserted at the front of the list, the current front element's
+  /// leading trivia will be moved to the new element to preserve any leading comments and newlines.
+  mutating func triviaPreservingInsert(
+    _ modifier: DeclModifierSyntax, at index: SyntaxChildrenIndex
+  ) {
+    let modifier = replaceTrivia(
+      on: modifier,
+      token: modifier.name,
+      trailingTrivia: .spaces(1))
 
-    var newModifiers: [DeclModifierSyntax] = []
-    newModifiers.append(contentsOf: self)
-
-    let modifier = formatTrivia
-      ? replaceTrivia(
-        on: modifier,
-        token: modifier.name,
-        trailingTrivia: .spaces(1)) : modifier
-
-    if index == 0 {
-      guard formatTrivia else {
-        newModifiers.insert(modifier, at: index)
-        return DeclModifierListSyntax(newModifiers)
-      }
-      guard let firstMod = first, let firstTok = firstMod.firstToken(viewMode: .sourceAccurate) else {
-        newModifiers.insert(modifier, at: index)
-        return DeclModifierListSyntax(newModifiers)
-      }
-      let formattedMod = replaceTrivia(
-        on: modifier,
-        token: modifier.firstToken(viewMode: .sourceAccurate),
-        leadingTrivia: firstTok.leadingTrivia)
-      newModifiers[0] = replaceTrivia(
-        on: firstMod,
-        token: firstTok,
-        leadingTrivia: [],
-        trailingTrivia: .spaces(1))
-      newModifiers.insert(formattedMod, at: 0)
-      return DeclModifierListSyntax(newModifiers)
-    } else {
-      newModifiers.insert(modifier, at: index)
-      return DeclModifierListSyntax(newModifiers)
+    guard index == self.startIndex else {
+      self.insert(modifier, at: index)
+      return
     }
-  }
+    guard let firstMod = first, let firstTok = firstMod.firstToken(viewMode: .sourceAccurate) else {
+      self.insert(modifier, at: index)
+      return
+    }
 
-  /// Returns modifier list with the given modifier at the end.
-  /// Trivia manipulation optional by 'formatTrivia'
-  func append(modifier: DeclModifierSyntax, formatTrivia: Bool = true) -> DeclModifierListSyntax {
-    return insert(modifier: modifier, at: count, formatTrivia: formatTrivia)
-  }
-
-  /// Returns modifier list with the given modifier at the beginning.
-  /// Trivia manipulation optional by 'formatTrivia'
-  func prepend(modifier: DeclModifierSyntax, formatTrivia: Bool = true) -> DeclModifierListSyntax {
-    return insert(modifier: modifier, at: 0, formatTrivia: formatTrivia)
+    let formattedMod = replaceTrivia(
+      on: modifier,
+      token: modifier.firstToken(viewMode: .sourceAccurate),
+      leadingTrivia: firstTok.leadingTrivia)
+    self[self.startIndex] = replaceTrivia(
+      on: firstMod,
+      token: firstTok,
+      leadingTrivia: [],
+      trailingTrivia: .spaces(1))
+    self.insert(formattedMod, at: self.startIndex)
   }
 }
