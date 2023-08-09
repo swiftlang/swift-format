@@ -31,11 +31,7 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
       let member = memberItem.decl
       // Collect all stored variables into a list
       if let varDecl = member.as(VariableDeclSyntax.self) {
-        guard let modifiers = varDecl.modifiers else {
-          storedProperties.append(varDecl)
-          continue
-        }
-        guard !modifiers.has(modifier: "static") else { continue }
+        guard !varDecl.modifiers.has(modifier: "static") else { continue }
         storedProperties.append(varDecl)
         // Collect any possible redundant initializers into a list
       } else if let initDecl = member.as(InitializerDeclSyntax.self) {
@@ -208,13 +204,11 @@ fileprivate enum AccessLevel {
 fileprivate func synthesizedInitAccessLevel(using properties: [VariableDeclSyntax]) -> AccessLevel {
   var hasFileprivate = false
   for property in properties {
-    guard let modifiers = property.modifiers else { continue }
-
     // Private takes precedence, so finding 1 private property defines the access level.
-    if modifiers.contains(where: {$0.name.tokenKind == .keyword(.private) && $0.detail == nil}) {
+    if property.modifiers.contains(where: {$0.name.tokenKind == .keyword(.private) && $0.detail == nil}) {
       return .private
     }
-    if modifiers.contains(where: {$0.name.tokenKind == .keyword(.fileprivate) && $0.detail == nil}) {
+    if property.modifiers.contains(where: {$0.name.tokenKind == .keyword(.fileprivate) && $0.detail == nil}) {
       hasFileprivate = true
       // Can't break here because a later property might be private.
     }

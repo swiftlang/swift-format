@@ -23,124 +23,136 @@ fileprivate final class AddModifierRewriter: SyntaxRewriter {
   override func visit(_ node: VariableDeclSyntax) -> DeclSyntax {
     // Check for modifiers, and, if none, insert the modifier and relocate trivia from the displaced
     // token.
-    guard var modifiers = node.modifiers else {
+    guard !node.modifiers.isEmpty else {
       let result = setOnlyModifier(in: node, keywordKeypath: \.bindingSpecifier)
       return DeclSyntax(result)
     }
+    var node = node
+
     // If variable already has an accessor keyword, skip (do not overwrite)
-    guard modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
+    guard node.modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
 
     // Put accessor keyword before the first modifier keyword in the declaration
-    modifiers.triviaPreservingInsert(modifierKeyword, at: modifiers.startIndex)
-    return DeclSyntax(node.with(\.modifiers, modifiers))
+    node.modifiers.triviaPreservingInsert(modifierKeyword, at: node.modifiers.startIndex)
+    return DeclSyntax(node)
   }
 
   override func visit(_ node: FunctionDeclSyntax) -> DeclSyntax {
     // Check for modifiers, and, if none, insert the modifier and relocate trivia from the displaced
     // token.
-    guard var modifiers = node.modifiers else {
+    guard !node.modifiers.isEmpty else {
       let result = setOnlyModifier(in: node, keywordKeypath: \.funcKeyword)
       return DeclSyntax(result)
     }
-    guard modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
-    modifiers.triviaPreservingInsert(modifierKeyword, at: modifiers.startIndex)
-    return DeclSyntax(node.with(\.modifiers, modifiers))
+    guard node.modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
+    var node = node
+    node.modifiers.triviaPreservingInsert(modifierKeyword, at: node.modifiers.startIndex)
+    return DeclSyntax(node)
   }
 
   override func visit(_ node: AssociatedTypeDeclSyntax) -> DeclSyntax {
     // Check for modifiers, and, if none, insert the modifier and relocate trivia from the displaced
     // token.
-    guard var modifiers = node.modifiers else {
+    guard !node.modifiers.isEmpty else {
       let result = setOnlyModifier(in: node, keywordKeypath: \.associatedtypeKeyword)
       return DeclSyntax(result)
     }
-    guard modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
-    modifiers.triviaPreservingInsert(modifierKeyword, at: modifiers.startIndex)
-    return DeclSyntax(node.with(\.modifiers, modifiers))
+    guard node.modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
+    var node = node
+    node.modifiers.triviaPreservingInsert(modifierKeyword, at: node.modifiers.startIndex)
+    return DeclSyntax(node)
   }
 
   override func visit(_ node: ClassDeclSyntax) -> DeclSyntax {
     // Check for modifiers, and, if none, insert the modifier and relocate trivia from the displaced
     // token.
-    guard var modifiers = node.modifiers else {
+    guard !node.modifiers.isEmpty else {
       let result = setOnlyModifier(in: node, keywordKeypath: \.classKeyword)
       return DeclSyntax(result)
     }
-    guard modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
-    modifiers.triviaPreservingInsert(modifierKeyword, at: modifiers.startIndex)
-    return DeclSyntax(node.with(\.modifiers, modifiers))
+    guard node.modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
+    var node = node
+    node.modifiers.triviaPreservingInsert(modifierKeyword, at: node.modifiers.startIndex)
+    return DeclSyntax(node)
   }
 
   override func visit(_ node: EnumDeclSyntax) -> DeclSyntax {
     // Check for modifiers, and, if none, insert the modifier and relocate trivia from the displaced
     // token.
-    guard var modifiers = node.modifiers else {
+    guard !node.modifiers.isEmpty else {
       let result = setOnlyModifier(in: node, keywordKeypath: \.enumKeyword)
       return DeclSyntax(result)
     }
-    guard modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
-    modifiers.triviaPreservingInsert(modifierKeyword, at: modifiers.startIndex)
-    return DeclSyntax(node.with(\.modifiers, modifiers))
+    guard node.modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
+    var node = node
+    node.modifiers.triviaPreservingInsert(modifierKeyword, at: node.modifiers.startIndex)
+    return DeclSyntax(node)
   }
 
   override func visit(_ node: ProtocolDeclSyntax) -> DeclSyntax {
     // Check for modifiers, and, if none, insert the modifier and relocate trivia from the displaced
     // token.
-    guard var modifiers = node.modifiers else {
+
+    guard !node.modifiers.isEmpty else {
       let result = setOnlyModifier(in: node, keywordKeypath: \.protocolKeyword)
       return DeclSyntax(result)
     }
-    guard modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
-    modifiers.triviaPreservingInsert(modifierKeyword, at: modifiers.startIndex)
-    return DeclSyntax(node.with(\.modifiers, modifiers))
+    guard node.modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
+    var node = node
+    node.modifiers.triviaPreservingInsert(modifierKeyword, at: node.modifiers.startIndex)
+    return DeclSyntax(node)
   }
 
   override func visit(_ node: StructDeclSyntax) -> DeclSyntax {
     // Check for modifiers, and, if none, insert the modifier and relocate trivia from the displaced
     // token.
-    guard var modifiers = node.modifiers else {
+    guard !node.modifiers.isEmpty else {
       let result = setOnlyModifier(in: node, keywordKeypath: \.structKeyword)
       return DeclSyntax(result)
     }
-    guard modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
-    modifiers.triviaPreservingInsert(modifierKeyword, at: modifiers.startIndex)
-    return DeclSyntax(node.with(\.modifiers, modifiers))
+    guard node.modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
+    var node = node
+    node.modifiers.triviaPreservingInsert(modifierKeyword, at: node.modifiers.startIndex)
+    return DeclSyntax(node)
   }
 
   override func visit(_ node: TypeAliasDeclSyntax) -> DeclSyntax {
     // Check for modifiers, and, if none, insert the modifier and relocate trivia from the displaced
     // token.
-    guard var modifiers = node.modifiers else {
+    guard !node.modifiers.isEmpty else {
       let result = setOnlyModifier(in: node, keywordKeypath: \.typealiasKeyword)
       return DeclSyntax(result)
     }
-    guard modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
-    modifiers.triviaPreservingInsert(modifierKeyword, at: modifiers.startIndex)
-    return DeclSyntax(node.with(\.modifiers, modifiers))
+    guard node.modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
+    var node = node
+    node.modifiers.triviaPreservingInsert(modifierKeyword, at: node.modifiers.startIndex)
+    return DeclSyntax(node)
   }
 
   override func visit(_ node: InitializerDeclSyntax) -> DeclSyntax {
     // Check for modifiers, and, if none, insert the modifier and relocate trivia from the displaced
     // token.
-    guard var modifiers = node.modifiers else {
+    guard !node.modifiers.isEmpty else {
       let result = setOnlyModifier(in: node, keywordKeypath: \.initKeyword)
       return DeclSyntax(result)
     }
-    guard modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
-    modifiers.triviaPreservingInsert(modifierKeyword, at: modifiers.startIndex)
-    return DeclSyntax(node.with(\.modifiers, modifiers))
+    guard node.modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
+    var node = node
+    node.modifiers.triviaPreservingInsert(modifierKeyword, at: node.modifiers.startIndex)
+    return DeclSyntax(node)
   }
 
   override func visit(_ node: SubscriptDeclSyntax) -> DeclSyntax {
     // Check for modifiers, and, if none, insert the modifier and relocate trivia from the displaced
     // token.
-    guard var modifiers = node.modifiers else {
+    guard !node.modifiers.isEmpty else {
       let result = setOnlyModifier(in: node, keywordKeypath: \.subscriptKeyword)
       return DeclSyntax(result)
     }
-    guard modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
-    modifiers.triviaPreservingInsert(modifierKeyword, at: modifiers.startIndex)
-    return DeclSyntax(node.with(\.modifiers, modifiers))
+    guard node.modifiers.accessLevelModifier == nil else { return DeclSyntax(node) }
+    var node = node
+    node.modifiers.triviaPreservingInsert(modifierKeyword, at: node.modifiers.startIndex)
+    return DeclSyntax(node)
   }
 
   /// Moves trivia in the given node to correct the placement of potentially displaced trivia in the

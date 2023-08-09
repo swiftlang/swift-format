@@ -274,7 +274,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // Prioritize keeping "<modifiers> macro <name>(" together. Also include the ")" if the
     // parameter list is empty.
     let firstTokenAfterAttributes =
-      node.modifiers?.firstToken(viewMode: .sourceAccurate) ?? node.macroKeyword
+      node.modifiers.firstToken(viewMode: .sourceAccurate) ?? node.macroKeyword
     before(firstTokenAfterAttributes, tokens: .open)
     after(node.macroKeyword, tokens: .break)
     if hasArguments || node.genericParameterClause != nil {
@@ -352,7 +352,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
     // Prioritize keeping "<modifiers> func <name>(" together. Also include the ")" if the parameter
     // list is empty.
-    let firstTokenAfterAttributes = node.modifiers?.firstToken(viewMode: .sourceAccurate) ?? node.funcKeyword
+    let firstTokenAfterAttributes = node.modifiers.firstToken(viewMode: .sourceAccurate) ?? node.funcKeyword
     before(firstTokenAfterAttributes, tokens: .open)
     after(node.funcKeyword, tokens: .break)
     if hasArguments || node.genericParameterClause != nil {
@@ -392,7 +392,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     arrangeParameterClause(node.signature.parameterClause, forcesBreakBeforeRightParen: node.body != nil)
 
     // Prioritize keeping "<modifiers> init<punctuation>" together.
-    let firstTokenAfterAttributes = node.modifiers?.firstToken(viewMode: .sourceAccurate) ?? node.initKeyword
+    let firstTokenAfterAttributes = node.modifiers.firstToken(viewMode: .sourceAccurate) ?? node.initKeyword
     before(firstTokenAfterAttributes, tokens: .open)
 
     if hasArguments || node.genericParameterClause != nil {
@@ -427,7 +427,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     before(node.firstToken(viewMode: .sourceAccurate), tokens: .open)
 
     // Prioritize keeping "<modifiers> subscript" together.
-    if let firstModifierToken = node.modifiers?.firstToken(viewMode: .sourceAccurate) {
+    if let firstModifierToken = node.modifiers.firstToken(viewMode: .sourceAccurate) {
       before(firstModifierToken, tokens: .open)
 
       if hasArguments || node.genericParameterClause != nil {
@@ -700,18 +700,16 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       ? Token.break(.same, newlines: .soft) : Token.space
     before(node.catchKeyword, tokens: catchPrecedingBreak)
 
-    if let catchItems = node.catchItems {
-      // If there are multiple items in the `catch` clause, wrap each in open/close breaks so that
-      // their internal breaks stack correctly. Otherwise, if there is only a single clause, use the
-      // old (pre-SE-0276) behavior (a fixed space after the `catch` keyword).
-      if catchItems.count > 1 {
-        for catchItem in catchItems {
-          before(catchItem.firstToken(viewMode: .sourceAccurate), tokens: .break(.open(kind: .continuation)))
-          after(catchItem.lastToken(viewMode: .sourceAccurate), tokens: .break(.close(mustBreak: false), size: 0))
-        }
-      } else {
-        before(node.catchItems?.firstToken(viewMode: .sourceAccurate), tokens: .space)
+    // If there are multiple items in the `catch` clause, wrap each in open/close breaks so that
+    // their internal breaks stack correctly. Otherwise, if there is only a single clause, use the
+    // old (pre-SE-0276) behavior (a fixed space after the `catch` keyword).
+    if node.catchItems.count > 1 {
+      for catchItem in node.catchItems {
+        before(catchItem.firstToken(viewMode: .sourceAccurate), tokens: .break(.open(kind: .continuation)))
+        after(catchItem.lastToken(viewMode: .sourceAccurate), tokens: .break(.close(mustBreak: false), size: 0))
       }
+    } else {
+      before(node.catchItems.firstToken(viewMode: .sourceAccurate), tokens: .space)
     }
 
     arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
@@ -1023,11 +1021,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     preVisitInsertingContextualBreaks(node)
 
     // If there are multiple trailing closures, force all the closures in the call to break.
-    if let additionalTrailingClosures = node.additionalTrailingClosures {
+    if !node.additionalTrailingClosures.isEmpty {
       if let closure = node.trailingClosure {
         forcedBreakingClosures.insert(closure.id)
       }
-      for additionalTrailingClosure in additionalTrailingClosures {
+      for additionalTrailingClosure in node.additionalTrailingClosures {
         forcedBreakingClosures.insert(additionalTrailingClosure.closure.id)
       }
     }

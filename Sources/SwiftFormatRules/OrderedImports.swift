@@ -514,7 +514,7 @@ fileprivate class Line {
 
   /// Returns a `LineType` the represents the type of import from the given import decl.
   private func importType(of importDecl: ImportDeclSyntax) -> LineType {
-    if let attr = importDecl.attributes?.firstToken(viewMode: .sourceAccurate),
+    if let attr = importDecl.attributes.firstToken(viewMode: .sourceAccurate),
       attr.tokenKind == .atSign,
       attr.nextToken(viewMode: .sourceAccurate)?.text == "testable"
     {

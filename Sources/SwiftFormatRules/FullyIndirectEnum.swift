@@ -24,8 +24,7 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
 
   public override func visit(_ node: EnumDeclSyntax) -> DeclSyntax {
     let enumMembers = node.memberBlock.members
-    guard let enumModifiers = node.modifiers,
-      !enumModifiers.has(modifier: "indirect"),
+    guard !node.modifiers.has(modifier: "indirect"),
       allCasesAreIndirect(in: enumMembers)
     else {
       return DeclSyntax(node)
@@ -37,14 +36,13 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
     let newMembers = enumMembers.map {
       (member: MemberBlockItemSyntax) -> MemberBlockItemSyntax in
       guard let caseMember = member.decl.as(EnumCaseDeclSyntax.self),
-        let modifiers = caseMember.modifiers,
-        modifiers.has(modifier: "indirect"),
-        let firstModifier = modifiers.first
+        caseMember.modifiers.has(modifier: "indirect"),
+        let firstModifier = caseMember.modifiers.first
       else {
         return member
       }
 
-      let newCase = caseMember.with(\.modifiers, modifiers.remove(name: "indirect"))
+      let newCase = caseMember.with(\.modifiers, caseMember.modifiers.remove(name: "indirect"))
       let formattedCase = rearrangeLeadingTrivia(firstModifier.leadingTrivia, on: newCase)
       return member.with(\.decl, DeclSyntax(formattedCase))
     }
@@ -70,7 +68,7 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
     let newMemberBlock = node.memberBlock.with(\.members, MemberBlockItemListSyntax(newMembers))
     return DeclSyntax(
       newEnumDecl
-        .with(\.modifiers, (newEnumDecl.modifiers ?? DeclModifierListSyntax([])) + [newModifier])
+        .with(\.modifiers, newEnumDecl.modifiers + [newModifier])
         .with(\.memberBlock, newMemberBlock))
   }
 
@@ -82,7 +80,7 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
     for member in members {
       if let caseMember = member.decl.as(EnumCaseDeclSyntax.self) {
         hadCases = true
-        guard let modifiers = caseMember.modifiers, modifiers.has(modifier: "indirect") else {
+        guard caseMember.modifiers.has(modifier: "indirect") else {
           return false
         }
       }
@@ -97,11 +95,11 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
   ) -> EnumCaseDeclSyntax {
     var formattedCase = enumCaseDecl
 
-    if var modifiers = formattedCase.modifiers, var firstModifier = modifiers.first {
+    if var firstModifier = formattedCase.modifiers.first {
       // If the case has modifiers, attach the leading trivia to the first one.
       firstModifier.leadingTrivia = leadingTrivia
-      modifiers[modifiers.startIndex] = firstModifier
-      formattedCase.modifiers = modifiers
+      formattedCase.modifiers[formattedCase.modifiers.startIndex] = firstModifier
+      formattedCase.modifiers = formattedCase.modifiers
     } else {
       // Otherwise, attach the trivia to the `case` keyword itself.
       formattedCase.caseKeyword.leadingTrivia = leadingTrivia
