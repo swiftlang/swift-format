@@ -104,5 +104,5 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
 
 extension Finding.Message {
   public static let removeParensAroundExpression: Finding.Message =
-    "remove parentheses around this expression"
+    "remove the parentheses around this expression"
 }

@@ -163,5 +163,5 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
 
 extension Finding.Message {
   public static let moveAssignmentToOwnStatement: Finding.Message =
-    "move assignment expression into its own statement"
+    "move this assignment expression into its own statement"
 }

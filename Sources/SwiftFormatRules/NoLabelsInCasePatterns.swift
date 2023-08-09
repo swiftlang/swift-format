@@ -72,6 +72,6 @@ public final class NoLabelsInCasePatterns: SyntaxFormatRule {
 
 extension Finding.Message {
   public static func removeRedundantLabel(name: String) -> Finding.Message {
-    "remove \(name) label from case argument"
+    "remove the label '\(name)' from this 'case' pattern"
   }
 }

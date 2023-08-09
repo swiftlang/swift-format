@@ -565,6 +565,6 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 
 extension Finding.Message {
   public static func useTypeShorthand(type: String) -> Finding.Message {
-    "use \(type) type shorthand form"
+    "use shorthand syntax for this '\(type)' type"
   }
 }
