@@ -183,7 +183,7 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
       // Diagnose the cases being collapsed. We do this for all but the last one in the array; the
       // last one isn't diagnosed because it will contain the body that applies to all the previous
       // cases.
-      diagnose(.collapseCase(name: label.caseItems.with(\.leadingTrivia, []).with(\.trailingTrivia, []).description), on: label)
+      diagnose(.collapseCase, on: label)
     }
     newCaseItems.append(contentsOf: labels.last!.caseItems)
 
@@ -219,7 +219,7 @@ extension TriviaPiece {
 }
 
 extension Finding.Message {
-  public static func collapseCase(name: String) -> Finding.Message {
-    "combine fallthrough-only case \(name) with a following case"
+  public static var collapseCase: Finding.Message {
+    "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"
   }
 }

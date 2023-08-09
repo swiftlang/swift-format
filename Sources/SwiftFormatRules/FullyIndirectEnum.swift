@@ -109,6 +109,6 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
 
 extension Finding.Message {
   public static func moveIndirectKeywordToEnumDecl(name: String) -> Finding.Message {
-    "move 'indirect' to \(name) enum declaration when all cases are indirect"
+    "move 'indirect' before the enum declaration '\(name)' when all cases are indirect"
   }
 }

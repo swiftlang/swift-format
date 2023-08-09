@@ -217,6 +217,6 @@ extension Finding.Message {
   public static func nameMustBeLowerCamelCase(
     _ name: String, description: String
   ) -> Finding.Message {
-    "rename \(description) '\(name)' using lower-camel-case"
+    "rename the \(description) '\(name)' using lowerCamelCase"
   }
 }

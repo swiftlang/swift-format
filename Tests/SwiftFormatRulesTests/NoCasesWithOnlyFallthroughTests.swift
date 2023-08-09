@@ -56,14 +56,14 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         """,
       checkForUnassertedDiagnostics: true)
 
-    XCTAssertDiagnosed(.collapseCase(name: "2"), line: 3, column: 1)
-    XCTAssertDiagnosed(.collapseCase(name: "3"), line: 4, column: 1)
-    XCTAssertDiagnosed(.collapseCase(name: "5"), line: 6, column: 1)
-    XCTAssertDiagnosed(.collapseCase(name: "\"a\""), line: 11, column: 1)
-    XCTAssertDiagnosed(.collapseCase(name: "\"b\", \"c\""), line: 12, column: 1)
-    XCTAssertDiagnosed(.collapseCase(name: "\"f\""), line: 15, column: 1)
-    XCTAssertDiagnosed(.collapseCase(name: ".rightBrace"), line: 21, column: 1)
-    XCTAssertDiagnosed(.collapseCase(name: ".leftBrace"), line: 22, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 3, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 4, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 6, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 11, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 12, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 15, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 21, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 22, column: 1)
   }
 
   func testFallthroughCasesWithCommentsAreNotCombined() {
@@ -104,8 +104,8 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         """,
       checkForUnassertedDiagnostics: true)
 
-    XCTAssertDiagnosed(.collapseCase(name: "2"), line: 4, column: 1)
-    XCTAssertDiagnosed(.collapseCase(name: "6"), line: 12, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 4, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 12, column: 1)
   }
 
   func testCommentsAroundCombinedCasesStayInPlace() {
@@ -137,8 +137,8 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         """,
       checkForUnassertedDiagnostics: true)
 
-    XCTAssertDiagnosed(.collapseCase(name: "6"), line: 4, column: 1)
-    XCTAssertDiagnosed(.collapseCase(name: "8"), line: 7, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 4, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 7, column: 1)
   }
 
   func testNestedSwitches() {
@@ -174,11 +174,11 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         """,
       checkForUnassertedDiagnostics: true)
 
-    XCTAssertDiagnosed(.collapseCase(name: "1"), line: 2, column: 1)
-    XCTAssertDiagnosed(.collapseCase(name: "2"), line: 3, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 2, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 3, column: 1)
     // TODO: Column 9 seems wrong here; it should be 3. Look into this.
-    XCTAssertDiagnosed(.collapseCase(name: "1"), line: 6, column: 9)
-    XCTAssertDiagnosed(.collapseCase(name: "1"), line: 11, column: 3)
+    XCTAssertDiagnosed(.collapseCase, line: 6, column: 9)
+    XCTAssertDiagnosed(.collapseCase, line: 11, column: 3)
   }
 
   func testCasesInsideConditionalCompilationBlock() {
@@ -224,8 +224,8 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         """,
       checkForUnassertedDiagnostics: true)
 
-    XCTAssertDiagnosed(.collapseCase(name: "2"), line: 4, column: 1)
-    XCTAssertDiagnosed(.collapseCase(name: "5"), line: 8, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 4, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 8, column: 1)
   }
 
   func testCasesWithWhereClauses() {
@@ -258,14 +258,14 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         """,
       checkForUnassertedDiagnostics: true)
 
-    XCTAssertDiagnosed(.collapseCase(name: "1 where y < 0"), line: 2, column: 1)
-    XCTAssertDiagnosed(.collapseCase(name: "2 where y == 0"), line: 3, column: 1)
-    XCTAssertDiagnosed(.collapseCase(name: "3 where y < 0"), line: 4, column: 1)
-    XCTAssertDiagnosed(.collapseCase(name: "5"), line: 6, column: 1)
-    XCTAssertDiagnosed(.collapseCase(name: "6"), line: 7, column: 1)
-    XCTAssertDiagnosed(.collapseCase(name: "7"), line: 8, column: 1)
-    XCTAssertDiagnosed(.collapseCase(name: "8"), line: 9, column: 1)
-    XCTAssertDiagnosed(.collapseCase(name: "9"), line: 10, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 2, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 3, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 4, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 6, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 7, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 8, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 9, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 10, column: 1)
   }
 
   func testCasesWithValueBindingsAreNotMerged() {
@@ -300,9 +300,9 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         """,
       checkForUnassertedDiagnostics: true)
 
-    XCTAssertDiagnosed(.collapseCase(name: ".a"), line: 2, column: 1)
-    XCTAssertDiagnosed(.collapseCase(name: ".e"), line: 6, column: 1)
-    XCTAssertDiagnosed(.collapseCase(name: ".i"), line: 9, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 2, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 6, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 9, column: 1)
   }
 
   func testFallthroughOnlyCasesAreNotMergedWithDefault() {
@@ -323,7 +323,7 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         """,
       checkForUnassertedDiagnostics: true)
 
-    XCTAssertDiagnosed(.collapseCase(name: ".a"), line: 2, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 2, column: 1)
   }
 
   func testFallthroughOnlyCasesAreNotMergedWithUnknownDefault() {
@@ -344,6 +344,6 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         """,
       checkForUnassertedDiagnostics: true)
 
-    XCTAssertDiagnosed(.collapseCase(name: ".a"), line: 2, column: 1)
+    XCTAssertDiagnosed(.collapseCase, line: 2, column: 1)
   }
 }

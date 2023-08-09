@@ -30,10 +30,10 @@ final class OneVariableDeclarationPerLineTests: LintOrFormatRuleTestCase {
         """,
       checkForUnassertedDiagnostics: true
     )
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration, line: 1, column: 1)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration, line: 2, column: 1)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration, line: 4, column: 1)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration, line: 5, column: 1)
+    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "var"), line: 1, column: 1)
+    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 2, column: 1)
+    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 4, column: 1)
+    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "var"), line: 5, column: 1)
   }
 
   func testNestedVariableBindings() {
@@ -112,13 +112,13 @@ final class OneVariableDeclarationPerLineTests: LintOrFormatRuleTestCase {
         """,
       checkForUnassertedDiagnostics: true
     )
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration, line: 2, column: 3)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration, line: 7, column: 3)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration, line: 11, column: 3)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration, line: 17, column: 5)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration, line: 21, column: 1)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration, line: 23, column: 5)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration, line: 27, column: 5)
+    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 2, column: 3)
+    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 7, column: 3)
+    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 11, column: 3)
+    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 17, column: 5)
+    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 21, column: 1)
+    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 23, column: 5)
+    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "var"), line: 27, column: 5)
   }
 
   func testMixedInitializedAndTypedBindings() {
@@ -140,8 +140,8 @@ final class OneVariableDeclarationPerLineTests: LintOrFormatRuleTestCase {
         """,
       checkForUnassertedDiagnostics: true
     )
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration, line: 1, column: 1)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration, line: 2, column: 1)
+    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "var"), line: 1, column: 1)
+    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 2, column: 1)
   }
 
   func testCommentPrecedingDeclIsNotRepeated() {
@@ -161,7 +161,7 @@ final class OneVariableDeclarationPerLineTests: LintOrFormatRuleTestCase {
         """,
       checkForUnassertedDiagnostics: true
     )
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration, line: 2, column: 1)
+    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 2, column: 1)
   }
 
   func testCommentsPrecedingBindingsAreKept() {
@@ -179,7 +179,7 @@ final class OneVariableDeclarationPerLineTests: LintOrFormatRuleTestCase {
         """,
       checkForUnassertedDiagnostics: true
     )
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration, line: 1, column: 1)
+    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 1, column: 1)
   }
 
   func testInvalidBindingsAreNotDestroyed() {
@@ -204,10 +204,10 @@ final class OneVariableDeclarationPerLineTests: LintOrFormatRuleTestCase {
         """,
       checkForUnassertedDiagnostics: true
     )
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration, line: 1, column: 1)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration, line: 2, column: 1)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration, line: 3, column: 1)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration, line: 4, column: 1)
+    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 1, column: 1)
+    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 2, column: 1)
+    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 3, column: 1)
+    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 4, column: 1)
   }
 
   func testMultipleBindingsWithAccessorsAreCorrected() {
@@ -227,6 +227,6 @@ final class OneVariableDeclarationPerLineTests: LintOrFormatRuleTestCase {
         """,
       checkForUnassertedDiagnostics: true
     )
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration, line: 1, column: 1)
+    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "var"), line: 1, column: 1)
   }
 }

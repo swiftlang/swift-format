@@ -130,6 +130,6 @@ public final class OneCasePerLine: SyntaxFormatRule {
 
 extension Finding.Message {
   public static func moveAssociatedOrRawValueCase(name: String) -> Finding.Message {
-    "move '\(name)' to its own case declaration"
+    "move '\(name)' to its own 'case' declaration"
   }
 }

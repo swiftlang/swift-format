@@ -67,5 +67,5 @@ public final class UseLetInEveryBoundCaseVariable: SyntaxLintRule {
 
 extension Finding.Message {
   public static let useLetInBoundCaseVariables: Finding.Message =
-    "move 'let' keyword to precede each variable bound in the `case` pattern"
+    "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
 }

@@ -41,7 +41,7 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
         continue
       }
 
-      diagnose(.onlyOneVariableDeclaration, on: varDecl)
+      diagnose(.onlyOneVariableDeclaration(specifier: varDecl.bindingSpecifier.text), on: varDecl)
 
       // Visit the decl recursively to make sure nested code block items in the
       // bindings (for example, an initializer expression that contains a
@@ -74,8 +74,9 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
 }
 
 extension Finding.Message {
-  public static let onlyOneVariableDeclaration: Finding.Message =
-    "split this variable declaration to have one variable per declaration"
+  public static func onlyOneVariableDeclaration(specifier: String) -> Finding.Message {
+    "split this variable declaration to introduce only one variable per '\(specifier)'"
+  }
 }
 
 /// Splits a variable declaration with multiple bindings into individual
