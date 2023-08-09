@@ -136,7 +136,7 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
   private func rewrittenDecl<DeclType: DeclSyntaxProtocol>(
     _ decl: DeclType,
     modifiers: DeclModifierListSyntax?,
-    factory: (DeclModifierListSyntax?) -> DeclType
+    factory: (DeclModifierListSyntax) -> DeclType
   ) -> DeclType {
     let invalidAccess: TokenKind
     let validAccess: TokenKind
