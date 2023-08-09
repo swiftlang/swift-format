@@ -46,7 +46,7 @@ func parseAndEmitDiagnostics(
   var hasErrors = false
   if let parsingDiagnosticHandler = parsingDiagnosticHandler {
     let expectedConverter =
-      SourceLocationConverter(file: url?.path ?? "<unknown>", tree: sourceFile)
+      SourceLocationConverter(fileName: url?.path ?? "<unknown>", tree: sourceFile)
     for diagnostic in diagnostics {
       let location = diagnostic.location(converter: expectedConverter)
 

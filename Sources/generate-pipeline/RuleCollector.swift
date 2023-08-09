@@ -83,8 +83,8 @@ final class RuleCollector {
   /// Determine the rule kind for the declaration in the given statement, if any.
   private func detectedRule(at statement: CodeBlockItemSyntax) -> DetectedRule? {
     let typeName: String
-    let members: MemberDeclListSyntax
-    let maybeInheritanceClause: TypeInheritanceClauseSyntax?
+    let members: MemberBlockItemListSyntax
+    let maybeInheritanceClause: InheritanceClauseSyntax?
 
     if let classDecl = statement.item.as(ClassDeclSyntax.self) {
       typeName = classDecl.name.text
@@ -105,7 +105,7 @@ final class RuleCollector {
 
     // Scan through the inheritance clause to find one of the protocols/types we're interested in.
     for inheritance in inheritanceClause.inheritedTypes {
-      guard let identifier = inheritance.type.as(SimpleTypeIdentifierSyntax.self) else {
+      guard let identifier = inheritance.type.as(IdentifierTypeSyntax.self) else {
         continue
       }
 
@@ -126,7 +126,7 @@ final class RuleCollector {
         guard let function = member.decl.as(FunctionDeclSyntax.self) else { continue }
         guard function.name.text == "visit" else { continue }
         let params = function.signature.parameterClause.parameters
-        guard let firstType = params.firstAndOnly?.type.as(SimpleTypeIdentifierSyntax.self) else {
+        guard let firstType = params.firstAndOnly?.type.as(IdentifierTypeSyntax.self) else {
           continue
         }
         visitedNodes.append(firstType.name.text)

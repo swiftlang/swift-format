@@ -76,7 +76,8 @@ public final class Context {
     self.fileURL = fileURL
     self.importsXCTest = .notDetermined
     let tree = source.map { Parser.parse(source: $0) } ?? sourceFileSyntax
-    self.sourceLocationConverter = SourceLocationConverter(file: fileURL.relativePath, tree: tree)
+    self.sourceLocationConverter =
+      SourceLocationConverter(fileName: fileURL.relativePath, tree: tree)
     self.ruleMask = RuleMask(
       syntaxNode: Syntax(sourceFileSyntax),
       sourceLocationConverter: sourceLocationConverter
