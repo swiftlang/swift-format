@@ -48,10 +48,8 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
         leftBrace: node.memberBlock.leftBrace,
         members: addMemberAccessKeywords(memDeclBlock: node.memberBlock, keyword: accessKeywordToAdd),
         rightBrace: node.memberBlock.rightBrace)
-      let newKeyword = replaceTrivia(
-        on: node.extensionKeyword,
-        token: node.extensionKeyword,
-        leadingTrivia: accessKeyword.leadingTrivia)
+      var newKeyword = node.extensionKeyword
+      newKeyword.leadingTrivia = accessKeyword.leadingTrivia
       let result = node.with(\.memberBlock, newMembers)
         .with(\.modifiers, modifiers.remove(name: accessKeyword.name.text))
         .with(\.extensionKeyword, newKeyword)
@@ -62,10 +60,8 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
       diagnose(
         .removeRedundantAccessKeyword(name: node.extendedType.description),
         on: accessKeyword)
-      let newKeyword = replaceTrivia(
-        on: node.extensionKeyword,
-        token: node.extensionKeyword,
-        leadingTrivia: accessKeyword.leadingTrivia)
+      var newKeyword = node.extensionKeyword
+      newKeyword.leadingTrivia = accessKeyword.leadingTrivia
       let result = node.with(\.modifiers, modifiers.remove(name: accessKeyword.name.text))
         .with(\.extensionKeyword, newKeyword)
       return DeclSyntax(result)
@@ -82,10 +78,9 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
     keyword: DeclModifierSyntax
   ) -> MemberBlockItemListSyntax {
     var newMembers: [MemberBlockItemSyntax] = []
-    let formattedKeyword = replaceTrivia(
-      on: keyword,
-      token: keyword.name,
-      leadingTrivia: [])
+
+    var formattedKeyword = keyword
+    formattedKeyword.leadingTrivia = []
 
     for memberItem in memDeclBlock.members {
       let member = memberItem.decl

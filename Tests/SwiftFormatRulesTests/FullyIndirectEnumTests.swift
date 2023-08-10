@@ -26,6 +26,31 @@ class FullyIndirectEnumTests: LintOrFormatRuleTestCase {
         """)
   }
 
+  func testAllIndirectCasesWithAttributes() {
+    XCTAssertFormatting(
+      FullyIndirectEnum.self,
+      input: """
+        // Comment 1
+        public enum DependencyGraphNode {
+          @someAttr internal indirect case userDefined(dependencies: [DependencyGraphNode])
+          // Comment 2
+          @someAttr indirect case synthesized(dependencies: [DependencyGraphNode])
+          @someAttr indirect case other(dependencies: [DependencyGraphNode])
+          var x: Int
+        }
+        """,
+      expected: """
+        // Comment 1
+        public indirect enum DependencyGraphNode {
+          @someAttr internal case userDefined(dependencies: [DependencyGraphNode])
+          // Comment 2
+          @someAttr case synthesized(dependencies: [DependencyGraphNode])
+          @someAttr case other(dependencies: [DependencyGraphNode])
+          var x: Int
+        }
+        """)
+  }
+
   func testNotAllIndirectCases() {
     let input = """
       public enum CompassPoint {

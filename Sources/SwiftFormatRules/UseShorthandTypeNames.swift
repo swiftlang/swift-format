@@ -255,9 +255,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       // we need to transfer the leading trivia from the original `Optional` token over to it.
       // By doing so, something like `/* comment */ Optional<Foo>` will become `/* comment */ Foo?`
       // instead of discarding the comment.
-      wrappedType =
-        replaceTrivia(
-          on: wrappedType, token: wrappedType.firstToken(viewMode: .sourceAccurate), leadingTrivia: leadingTrivia)
+      wrappedType.leadingTrivia = leadingTrivia
     }
 
     let optionalType = OptionalTypeSyntax(
@@ -343,9 +341,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       // converting a long-form to short-form), we need to transfer it over. By doing so, something
       // like `/* comment */ Optional<Foo>` will become `/* comment */ Foo?` instead of discarding
       // the comment.
-      wrappedTypeExpr =
-        replaceTrivia(
-          on: wrappedTypeExpr, token: wrappedTypeExpr.firstToken(viewMode: .sourceAccurate), leadingTrivia: leadingTrivia)
+      wrappedTypeExpr.leadingTrivia = leadingTrivia ?? []
     }
 
     return OptionalChainingExprSyntax(
