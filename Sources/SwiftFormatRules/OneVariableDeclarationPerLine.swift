@@ -163,8 +163,7 @@ private struct VariableDeclSplitter<Node: SyntaxProtocol> {
     // We intentionally don't try to infer the indentation for subsequent
     // lines because the pretty printer will re-indent them correctly; we just
     // need to ensure that a newline is inserted before new decls.
-    varDecl = replaceTrivia(
-      on: varDecl, token: varDecl.firstToken(viewMode: .sourceAccurate), leadingTrivia: .newlines(1))
+    varDecl.leadingTrivia = [.newlines(1)]
     fixedUpTrivia = true
   }
 

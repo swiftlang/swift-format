@@ -100,11 +100,9 @@ public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
       pieces.append(.newlines(1))
     }
 
-    return replaceTrivia(
-      on: decl,
-      token: decl.firstToken(viewMode: .sourceAccurate),
-      leadingTrivia: Trivia(pieces: pieces)
-    )
+    var decl = decl
+    decl.leadingTrivia = Trivia(pieces: pieces)
+    return decl
   }
 }
 

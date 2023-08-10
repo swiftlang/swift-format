@@ -45,8 +45,7 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
       }
 
       let newCase = caseMember.with(\.modifiers, modifiers.remove(name: "indirect"))
-      let formattedCase = formatCase(
-        unformattedCase: newCase, leadingTrivia: firstModifier.leadingTrivia)
+      let formattedCase = rearrangeLeadingTrivia(firstModifier.leadingTrivia, on: newCase)
       return member.with(\.decl, DeclSyntax(formattedCase))
     }
 
@@ -55,15 +54,13 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
     // line breaks/comments/indentation.
     let firstTok = node.firstToken(viewMode: .sourceAccurate)!
     let leadingTrivia: Trivia
-    let newEnumDecl: EnumDeclSyntax
+    var newEnumDecl = node
 
     if firstTok.tokenKind == .keyword(.enum) {
       leadingTrivia = firstTok.leadingTrivia
-      newEnumDecl = replaceTrivia(
-        on: node, token: node.firstToken(viewMode: .sourceAccurate), leadingTrivia: [])
+      newEnumDecl.leadingTrivia = []
     } else {
       leadingTrivia = []
-      newEnumDecl = node
     }
 
     let newModifier = DeclModifierSyntax(
@@ -94,19 +91,23 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
   }
 
   /// Transfers given leading trivia to the first token in the case declaration.
-  private func formatCase(
-    unformattedCase: EnumCaseDeclSyntax,
-    leadingTrivia: Trivia?
+  private func rearrangeLeadingTrivia(
+    _ leadingTrivia: Trivia,
+    on enumCaseDecl: EnumCaseDeclSyntax
   ) -> EnumCaseDeclSyntax {
-    if let modifiers = unformattedCase.modifiers, let first = modifiers.first {
-      return replaceTrivia(
-        on: unformattedCase, token: first.firstToken(viewMode: .sourceAccurate), leadingTrivia: leadingTrivia
-      )
+    var formattedCase = enumCaseDecl
+
+    if var modifiers = formattedCase.modifiers, var firstModifier = modifiers.first {
+      // If the case has modifiers, attach the leading trivia to the first one.
+      firstModifier.leadingTrivia = leadingTrivia
+      modifiers[modifiers.startIndex] = firstModifier
+      formattedCase.modifiers = modifiers
     } else {
-      return replaceTrivia(
-        on: unformattedCase, token: unformattedCase.caseKeyword, leadingTrivia: leadingTrivia
-      )
+      // Otherwise, attach the trivia to the `case` keyword itself.
+      formattedCase.caseKeyword.leadingTrivia = leadingTrivia
     }
+
+    return formattedCase
   }
 }
 

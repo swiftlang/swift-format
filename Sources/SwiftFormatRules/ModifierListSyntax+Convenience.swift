@@ -54,29 +54,22 @@ extension DeclModifierListSyntax {
   mutating func triviaPreservingInsert(
     _ modifier: DeclModifierSyntax, at index: SyntaxChildrenIndex
   ) {
-    let modifier = replaceTrivia(
-      on: modifier,
-      token: modifier.name,
-      trailingTrivia: .spaces(1))
+    var modifier = modifier
+    modifier.trailingTrivia = [.spaces(1)]
 
     guard index == self.startIndex else {
       self.insert(modifier, at: index)
       return
     }
-    guard let firstMod = first, let firstTok = firstMod.firstToken(viewMode: .sourceAccurate) else {
+    guard var firstMod = first, let firstTok = firstMod.firstToken(viewMode: .sourceAccurate) else {
       self.insert(modifier, at: index)
       return
     }
 
-    let formattedMod = replaceTrivia(
-      on: modifier,
-      token: modifier.firstToken(viewMode: .sourceAccurate),
-      leadingTrivia: firstTok.leadingTrivia)
-    self[self.startIndex] = replaceTrivia(
-      on: firstMod,
-      token: firstTok,
-      leadingTrivia: [],
-      trailingTrivia: .spaces(1))
-    self.insert(formattedMod, at: self.startIndex)
+    modifier.leadingTrivia = firstTok.leadingTrivia
+    firstMod.leadingTrivia = []
+    firstMod.trailingTrivia = [.spaces(1)]
+    self[self.startIndex] = firstMod
+    self.insert(modifier, at: self.startIndex)
   }
 }
