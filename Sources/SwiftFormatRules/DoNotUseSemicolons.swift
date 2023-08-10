@@ -59,17 +59,11 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
       if previousHadSemicolon, let firstToken = newItem.firstToken(viewMode: .sourceAccurate),
         !firstToken.leadingTrivia.containsNewlines
       {
-        let leadingTrivia = .newlines(1) + firstToken.leadingTrivia
-        newItem = replaceTrivia(
-          on: newItem,
-          token: firstToken,
-          leadingTrivia: leadingTrivia
-        )
+        newItem.leadingTrivia = .newlines(1) + firstToken.leadingTrivia
       }
 
       // If there's a semicolon, diagnose and remove it.
       if let semicolon = item.semicolon {
-
         // Exception: do not remove the semicolon if it is separating a 'do' statement from a
         // 'while' statement.
         if Syntax(item).as(CodeBlockItemSyntax.self)?

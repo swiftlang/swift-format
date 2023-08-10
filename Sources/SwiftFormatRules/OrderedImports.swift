@@ -359,13 +359,10 @@ fileprivate func convertToCodeBlockItems(lines: [Line]) -> [CodeBlockItemSyntax]
     func append(codeBlockItem: CodeBlockItemSyntax) {
       // Comments and newlines are always located in the leading trivia of an AST node, so we need
       // not deal with trailing trivia.
-      output.append(
-        replaceTrivia(
-          on: codeBlockItem,
-          token: codeBlockItem.firstToken(viewMode: .sourceAccurate),
-          leadingTrivia: Trivia(pieces: triviaBuffer)
-        )
-      )
+      var codeBlockItem = codeBlockItem
+      codeBlockItem.leadingTrivia = Trivia(pieces: triviaBuffer)
+      output.append(codeBlockItem)
+
       triviaBuffer = []
       triviaBuffer += line.trailingTrivia
     }

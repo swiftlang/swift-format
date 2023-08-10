@@ -29,24 +29,24 @@ public final class NoEmptyTrailingClosureParentheses: SyntaxFormatRule {
     {
       return super.visit(node)
     }
-    guard let name = node.calledExpression.lastToken(viewMode: .sourceAccurate)?.with(\.leadingTrivia, []).with(\.trailingTrivia, []) else {
+    guard let name = node.calledExpression.lastToken(viewMode: .sourceAccurate) else {
       return super.visit(node)
     }
 
-    diagnose(.removeEmptyTrailingParentheses(name: "\(name)"), on: node)
+    diagnose(.removeEmptyTrailingParentheses(name: "\(name.trimmedDescription)"), on: node)
 
     // Need to visit `calledExpression` before creating a new node so that the location data (column
     // and line numbers) is available.
-    guard let rewrittenCalledExpr = ExprSyntax(rewrite(Syntax(node.calledExpression))) else {
+    guard var rewrittenCalledExpr = ExprSyntax(rewrite(Syntax(node.calledExpression))) else {
       return super.visit(node)
     }
-    let formattedExp = replaceTrivia(
-      on: rewrittenCalledExpr,
-      token: rewrittenCalledExpr.lastToken(viewMode: .sourceAccurate),
-      trailingTrivia: .spaces(1))
-    let formattedClosure = visit(trailingClosure).as(ClosureExprSyntax.self)
-    let result = node.with(\.leftParen, nil).with(\.rightParen, nil).with(\.calledExpression, formattedExp)
-      .with(\.trailingClosure, formattedClosure)
+    rewrittenCalledExpr.trailingTrivia = [.spaces(1)]
+
+    var result = node
+    result.leftParen = nil
+    result.rightParen = nil
+    result.calledExpression = rewrittenCalledExpr
+    result.trailingClosure = rewrite(trailingClosure).as(ClosureExprSyntax.self)
     return ExprSyntax(result)
   }
 }

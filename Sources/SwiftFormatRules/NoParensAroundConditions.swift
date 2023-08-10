@@ -46,16 +46,13 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
 
     guard
       let visitedTuple = visit(tuple).as(TupleExprSyntax.self),
-      let visitedExpr = visitedTuple.elements.first?.expression
+      var visitedExpr = visitedTuple.elements.first?.expression
     else {
       return expr
     }
-    return replaceTrivia(
-      on: visitedExpr,
-      token: visitedExpr.lastToken(viewMode: .sourceAccurate),
-      leadingTrivia: visitedTuple.leftParen.leadingTrivia,
-      trailingTrivia: visitedTuple.rightParen.trailingTrivia
-    )
+    visitedExpr.leadingTrivia = visitedTuple.leftParen.leadingTrivia
+    visitedExpr.trailingTrivia = visitedTuple.rightParen.trailingTrivia
+    return visitedExpr
   }
 
   public override func visit(_ node: IfExprSyntax) -> ExprSyntax {
