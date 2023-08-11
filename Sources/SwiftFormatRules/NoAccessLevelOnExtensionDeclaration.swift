@@ -25,8 +25,8 @@ import SwiftSyntax
 public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
 
   public override func visit(_ node: ExtensionDeclSyntax) -> DeclSyntax {
-    guard let modifiers = node.modifiers, modifiers.count != 0 else { return DeclSyntax(node) }
-    guard let accessKeyword = modifiers.accessLevelModifier else { return DeclSyntax(node) }
+    guard !node.modifiers.isEmpty else { return DeclSyntax(node) }
+    guard let accessKeyword = node.modifiers.accessLevelModifier else { return DeclSyntax(node) }
 
     let keywordKind = accessKeyword.name.tokenKind
     switch keywordKind {
@@ -51,7 +51,7 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
       var newKeyword = node.extensionKeyword
       newKeyword.leadingTrivia = accessKeyword.leadingTrivia
       let result = node.with(\.memberBlock, newMembers)
-        .with(\.modifiers, modifiers.remove(name: accessKeyword.name.text))
+        .with(\.modifiers, node.modifiers.remove(name: accessKeyword.name.text))
         .with(\.extensionKeyword, newKeyword)
       return DeclSyntax(result)
 
@@ -62,7 +62,7 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
         on: accessKeyword)
       var newKeyword = node.extensionKeyword
       newKeyword.leadingTrivia = accessKeyword.leadingTrivia
-      let result = node.with(\.modifiers, modifiers.remove(name: accessKeyword.name.text))
+      let result = node.with(\.modifiers, node.modifiers.remove(name: accessKeyword.name.text))
         .with(\.extensionKeyword, newKeyword)
       return DeclSyntax(result)
 
