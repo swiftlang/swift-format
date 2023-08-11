@@ -237,20 +237,16 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
   ) -> TypeSyntax {
     var wrappedType = wrappedType
 
-    if let functionType = wrappedType.as(FunctionTypeSyntax.self) {
-      // Function types must be wrapped as a tuple before using shorthand optional syntax,
-      // otherwise the "?" applies to the return type instead of the function type. Attach the
-      // leading trivia to the left-paren that we're adding in this case.
-      let tupleTypeElement = TupleTypeElementSyntax(
-        inoutKeyword: nil, firstName: nil, secondName: nil, colon: nil, type: TypeSyntax(functionType),
-        ellipsis: nil, trailingComma: nil)
-      let tupleTypeElementList = TupleTypeElementListSyntax([tupleTypeElement])
-      let tupleType = TupleTypeSyntax(
-        leftParen: TokenSyntax.leftParenToken(leadingTrivia: leadingTrivia),
-        elements: tupleTypeElementList,
-        rightParen: TokenSyntax.rightParenToken())
-      wrappedType = TypeSyntax(tupleType)
-    } else {
+    // Function types and some-or-any types must be wrapped in parentheses before using shorthand
+    // optional syntax, otherwise the "?" will bind incorrectly (in the function case it binds to
+    // only the result, and in the some-or-any case it only binds to the child protocol). Attach the
+    // leading trivia to the left-paren that we're adding in these cases.
+    switch Syntax(wrappedType).as(SyntaxEnum.self) {
+    case .functionType(let functionType):
+      wrappedType = parenthesizedType(functionType, leadingTrivia: leadingTrivia)
+    case .someOrAnyType(let someOrAnyType):
+      wrappedType = parenthesizedType(someOrAnyType, leadingTrivia: leadingTrivia)
+    default:
       // Otherwise, the argument type can safely become an optional by simply appending a "?", but
       // we need to transfer the leading trivia from the original `Optional` token over to it.
       // By doing so, something like `/* comment */ Optional<Foo>` will become `/* comment */ Foo?`
@@ -317,36 +313,56 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
   /// key type or value type does not have a valid expression representation.
   private func makeOptionalTypeExpression(
     wrapping wrappedType: TypeSyntax,
-    leadingTrivia: Trivia? = nil,
+    leadingTrivia: Trivia = [],
     questionMark: TokenSyntax
   ) -> OptionalChainingExprSyntax? {
     guard var wrappedTypeExpr = expressionRepresentation(of: wrappedType) else { return nil }
 
-    if wrappedType.is(FunctionTypeSyntax.self) {
-      // Function types must be wrapped as a tuple before using shorthand optional syntax,
-      // otherwise the "?" applies to the return type instead of the function type. Attach the
-      // leading trivia to the left-paren that we're adding in this case.
-      let tupleExprElement =
-        LabeledExprSyntax(
-          label: nil, colon: nil, expression: wrappedTypeExpr, trailingComma: nil)
-      let tupleExprElementList = LabeledExprListSyntax([tupleExprElement])
-      let tupleExpr = TupleExprSyntax(
-        leftParen: TokenSyntax.leftParenToken(leadingTrivia: leadingTrivia ?? []),
-        elementList: tupleExprElementList,
-        rightParen: TokenSyntax.rightParenToken())
-      wrappedTypeExpr = ExprSyntax(tupleExpr)
-    } else {
+    // Function types and some-or-any types must be wrapped in parentheses before using shorthand
+    // optional syntax, otherwise the "?" will bind incorrectly (in the function case it binds to
+    // only the result, and in the some-or-any case it only binds to the child protocol). Attach the
+    // leading trivia to the left-paren that we're adding in these cases.
+    switch Syntax(wrappedType).as(SyntaxEnum.self) {
+    case .functionType, .someOrAnyType:
+      wrappedTypeExpr = parenthesizedExpr(wrappedTypeExpr, leadingTrivia: leadingTrivia)
+    default:
       // Otherwise, the argument type can safely become an optional by simply appending a "?". If
       // we were given leading trivia from another node (for example, from `Optional` when
       // converting a long-form to short-form), we need to transfer it over. By doing so, something
       // like `/* comment */ Optional<Foo>` will become `/* comment */ Foo?` instead of discarding
       // the comment.
-      wrappedTypeExpr.leadingTrivia = leadingTrivia ?? []
+      wrappedTypeExpr.leadingTrivia = leadingTrivia
     }
 
     return OptionalChainingExprSyntax(
       expression: wrappedTypeExpr,
       questionMark: questionMark)
+  }
+
+  /// Returns the given type wrapped in parentheses.
+  private func parenthesizedType<TypeNode: TypeSyntaxProtocol>(
+    _ typeToWrap: TypeNode,
+    leadingTrivia: Trivia
+  ) -> TypeSyntax {
+    let tupleTypeElement = TupleTypeElementSyntax(type: TypeSyntax(typeToWrap))
+    let tupleType = TupleTypeSyntax(
+      leftParen: .leftParenToken(leadingTrivia: leadingTrivia),
+      elements: TupleTypeElementListSyntax([tupleTypeElement]),
+      rightParen: .rightParenToken())
+    return TypeSyntax(tupleType)
+  }
+
+  /// Returns the given expression wrapped in parentheses.
+  private func parenthesizedExpr<ExprNode: ExprSyntaxProtocol>(
+    _ exprToWrap: ExprNode,
+    leadingTrivia: Trivia
+  ) -> ExprSyntax {
+    let tupleExprElement = LabeledExprSyntax(expression: exprToWrap)
+    let tupleExpr = TupleExprSyntax(
+      leftParen: .leftParenToken(leadingTrivia: leadingTrivia),
+      elements: LabeledExprListSyntax([tupleExprElement]),
+      rightParen: .rightParenToken())
+    return ExprSyntax(tupleExpr)
   }
 
   /// Returns an `ExprSyntax` that is syntactically equivalent to the given `TypeSyntax`, or nil if
@@ -405,7 +421,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     case .optionalType(let optionalType):
       let result = makeOptionalTypeExpression(
         wrapping: optionalType.wrappedType,
-        leadingTrivia: optionalType.firstToken(viewMode: .sourceAccurate)?.leadingTrivia,
+        leadingTrivia: optionalType.firstToken(viewMode: .sourceAccurate)?.leadingTrivia ?? [],
         questionMark: optionalType.questionMark)
       return ExprSyntax(result)
 
@@ -427,6 +443,9 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         elementList: elementExprs,
         rightParen: tupleType.rightParen)
       return ExprSyntax(result)
+
+    case .someOrAnyType(let someOrAnyType):
+      return ExprSyntax(TypeExprSyntax(type: someOrAnyType))
 
     default:
       return nil
