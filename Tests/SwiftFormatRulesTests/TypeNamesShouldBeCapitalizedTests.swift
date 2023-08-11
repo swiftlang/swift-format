@@ -71,4 +71,58 @@ final class TypeNamesShouldBeCapitalizedTests: LintOrFormatRuleTestCase {
     XCTAssertDiagnosed(.capitalizeTypeName(name: "data"))
     XCTAssertNotDiagnosed(.capitalizeTypeName(name: "Value"))
   }
+
+  func testThatUnderscoredNamesAreDiagnosed() {
+    let input =
+      """
+      protocol _p {
+        associatedtype _value
+        associatedtype __Value
+      }
+
+      protocol ___Q {
+      }
+
+      struct _data {
+        typealias _x = Int
+      }
+
+      struct _Data {}
+
+      actor _internalActor {}
+
+      enum __e {
+      }
+
+      enum _OtherE {
+      }
+
+      func test() {
+        class _myClass {}
+        do {
+          class _MyClass {}
+        }
+      }
+
+      distributed actor __greeter {}
+      distributed actor __InternalGreeter {}
+      """
+
+    performLint(TypeNamesShouldBeCapitalized.self, input: input)
+
+    XCTAssertDiagnosed(.capitalizeTypeName(name: "_p"))
+    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "___Q"))
+    XCTAssertDiagnosed(.capitalizeTypeName(name: "_value"))
+    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "__Value"))
+    XCTAssertDiagnosed(.capitalizeTypeName(name: "_data"))
+    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "_Data"))
+    XCTAssertDiagnosed(.capitalizeTypeName(name: "_x"))
+    XCTAssertDiagnosed(.capitalizeTypeName(name: "_internalActor"))
+    XCTAssertDiagnosed(.capitalizeTypeName(name: "__e"))
+    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "__OtherE"))
+    XCTAssertDiagnosed(.capitalizeTypeName(name: "_myClass"))
+    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "_MyClass"))
+    XCTAssertDiagnosed(.capitalizeTypeName(name: "__greeter"))
+    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "__InternalGreeter"))
+  }
 }

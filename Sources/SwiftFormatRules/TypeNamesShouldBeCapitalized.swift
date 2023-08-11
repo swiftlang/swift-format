@@ -53,7 +53,9 @@ public final class TypeNamesShouldBeCapitalized : SyntaxLintRule {
   }
 
   private func diagnoseNameConventionMismatch<T: DeclSyntaxProtocol>(_ type: T, name: TokenSyntax) {
-    if let firstChar = name.text.first, !firstChar.isUppercase {
+    let leadingUnderscores = name.text.prefix { $0 == "_" }
+    if let firstChar = name.text[leadingUnderscores.endIndex...].first,
+       firstChar.uppercased() != String(firstChar) {
       diagnose(.capitalizeTypeName(name: name.text), on: type, severity: .convention)
     }
   }
@@ -61,7 +63,10 @@ public final class TypeNamesShouldBeCapitalized : SyntaxLintRule {
 
 extension Finding.Message {
   public static func capitalizeTypeName(name: String) -> Finding.Message {
-    let capitalized = name.prefix(1).uppercased() + name.dropFirst()
+    var capitalized = name
+    let leadingUnderscores = capitalized.prefix { $0 == "_" }
+    let charAt = leadingUnderscores.endIndex
+    capitalized.replaceSubrange(charAt...charAt, with: capitalized[charAt].uppercased())
     return "type names should be capitalized: \(name) -> \(capitalized)"
   }
 }
