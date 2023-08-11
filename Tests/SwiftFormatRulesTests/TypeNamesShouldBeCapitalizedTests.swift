@@ -24,4 +24,51 @@ final class TypeNamesShouldBeCapitalizedTests: LintOrFormatRuleTestCase {
     XCTAssertNotDiagnosed(.capitalizeTypeName(name: "myType"))
     XCTAssertDiagnosed(.capitalizeTypeName(name: "innerType"))
   }
+
+  func testActors() {
+    let input =
+      """
+      actor myActor {}
+      actor OtherActor {}
+      distributed actor greeter {}
+      distributed actor DistGreeter {}
+      """
+
+    performLint(TypeNamesShouldBeCapitalized.self, input: input)
+
+    XCTAssertDiagnosed(.capitalizeTypeName(name: "myActor"))
+    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "OtherActor"))
+    XCTAssertDiagnosed(.capitalizeTypeName(name: "greeter"))
+    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "DistGreeter"))
+  }
+
+  func testAssociatedTypeandTypeAlias() {
+    let input =
+      """
+      protocol P {
+        associatedtype kind
+        associatedtype OtherKind
+      }
+
+      typealias x = Int
+      typealias Y = String
+
+      struct MyType {
+        typealias data<T> = Y
+
+        func test() {
+          typealias Value<T> = Y
+        }
+      }
+      """
+
+    performLint(TypeNamesShouldBeCapitalized.self, input: input)
+
+    XCTAssertDiagnosed(.capitalizeTypeName(name: "kind"))
+    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "OtherKind"))
+    XCTAssertDiagnosed(.capitalizeTypeName(name: "x"))
+    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "Y"))
+    XCTAssertDiagnosed(.capitalizeTypeName(name: "data"))
+    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "Value"))
+  }
 }

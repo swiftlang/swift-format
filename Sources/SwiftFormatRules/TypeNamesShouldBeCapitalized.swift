@@ -37,6 +37,21 @@ public final class TypeNamesShouldBeCapitalized : SyntaxLintRule {
     return .visitChildren
   }
 
+  public override func visit(_ node: ActorDeclSyntax) -> SyntaxVisitorContinueKind {
+    diagnoseNameConventionMismatch(node, name: node.name)
+    return .visitChildren
+  }
+
+  public override func visit(_ node: AssociatedTypeDeclSyntax) -> SyntaxVisitorContinueKind {
+    diagnoseNameConventionMismatch(node, name: node.name)
+    return .visitChildren
+  }
+
+  public override func visit(_ node: TypeAliasDeclSyntax) -> SyntaxVisitorContinueKind {
+    diagnoseNameConventionMismatch(node, name: node.name)
+    return .visitChildren
+  }
+
   private func diagnoseNameConventionMismatch<T: DeclSyntaxProtocol>(_ type: T, name: TokenSyntax) {
     if let firstChar = name.text.first, !firstChar.isUppercase {
       diagnose(.capitalizeTypeName(name: name.text), on: type, severity: .convention)
