@@ -413,4 +413,39 @@ final class UseShorthandTypeNamesTests: LintOrFormatRuleTestCase {
         var e: [String: Int?]
         """)
   }
+
+  func testSomeAnyTypesInOptionalsAreParenthesized() {
+    // If we need to insert parentheses, verify that we do, but also verify that we don't insert
+    // them unnecessarily.
+    XCTAssertFormatting(
+      UseShorthandTypeNames.self,
+      input:
+        """
+        func f(_: Optional<some P>) {}
+        func g(_: Optional<any P>) {}
+        var x: Optional<some P> = S()
+        var y: Optional<any P> = S()
+        var z = [Optional<any P>]([S()])
+
+        func f(_: Optional<(some P)>) {}
+        func g(_: Optional<(any P)>) {}
+        var x: Optional<(some P)> = S()
+        var y: Optional<(any P)> = S()
+        var z = [Optional<(any P)>]([S()])
+        """,
+      expected:
+        """
+        func f(_: (some P)?) {}
+        func g(_: (any P)?) {}
+        var x: (some P)? = S()
+        var y: (any P)? = S()
+        var z = [(any P)?]([S()])
+
+        func f(_: (some P)?) {}
+        func g(_: (any P)?) {}
+        var x: (some P)? = S()
+        var y: (any P)? = S()
+        var z = [(any P)?]([S()])
+        """)
+  }
 }
