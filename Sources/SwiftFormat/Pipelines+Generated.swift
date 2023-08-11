@@ -34,6 +34,11 @@ class LintPipeline: SyntaxVisitor {
     super.init(viewMode: .sourceAccurate)
   }
 
+  override func visit(_ node: ActorDeclSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(TypeNamesShouldBeCapitalized.visit, for: node)
+    return .visitChildren
+  }
+
   override func visit(_ node: AsExprSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(NeverForceUnwrap.visit, for: node)
     return .visitChildren
@@ -42,6 +47,7 @@ class LintPipeline: SyntaxVisitor {
   override func visit(_ node: AssociatedTypeDeclSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)
+    visitIfEnabled(TypeNamesShouldBeCapitalized.visit, for: node)
     return .visitChildren
   }
 
@@ -304,6 +310,7 @@ class LintPipeline: SyntaxVisitor {
     visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)
+    visitIfEnabled(TypeNamesShouldBeCapitalized.visit, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     return .visitChildren
   }
