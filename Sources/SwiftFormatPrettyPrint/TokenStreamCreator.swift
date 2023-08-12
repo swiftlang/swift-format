@@ -1519,6 +1519,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       appendFormatterIgnored(node: Syntax(node))
       return .skipChildren
     }
+    after(node.shebang, tokens: .break(.same, newlines: .soft))
     after(node.endOfFileToken, tokens: .break(.same, newlines: .soft))
     return .visitChildren
   }
@@ -2673,7 +2674,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     var verbatimText = ""
     for piece in trailingTrivia[...lastIndex] {
       switch piece {
-      case .shebang, .unexpectedText, .spaces, .tabs, .formfeeds, .verticalTabs:
+      case .unexpectedText, .spaces, .tabs, .formfeeds, .verticalTabs:
         piece.write(to: &verbatimText)
       default:
         // The implementation of the lexer today ensures that newlines, carriage returns, and
@@ -3160,7 +3161,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
           }
         }
 
-      case .shebang(let text), .unexpectedText(let text):
+      case .unexpectedText(let text):
         // Garbage text in leading trivia might be something meaningful that would be disruptive to
         // throw away when formatting the file, like a hashbang line or Unicode byte-order marker at
         // the beginning of a file, or source control conflict markers. Keep it as verbatim text so
