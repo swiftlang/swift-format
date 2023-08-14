@@ -404,4 +404,22 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
     XCTAssertDiagnosed(.removeRedundantInitializer, line: 15)
     XCTAssertDiagnosed(.removeRedundantInitializer, line: 25)
   }
+
+  func testMemberwiseInitializerWithAttributeIsNotDiagnosed() {
+    let input =
+      """
+      public struct Person {
+        let phoneNumber: String
+        let address: String
+
+        @inlinable init(phoneNumber: String, address: String) {
+          self.address = address
+          self.phoneNumber = phoneNumber
+        }
+      }
+      """
+
+    performLint(UseSynthesizedInitializer.self, input: input)
+    XCTAssertNotDiagnosed(.removeRedundantInitializer)
+  }
 }
