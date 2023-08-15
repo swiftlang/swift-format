@@ -156,17 +156,6 @@ let package = Package(
       dependencies: ["SwiftFormatConfiguration"]
     ),
     .testTarget(
-      name: "SwiftFormatCoreTests",
-      dependencies: [
-        "SwiftFormatConfiguration",
-        "SwiftFormatCore",
-        .product(name: "Markdown", package: "swift-markdown"),
-        .product(name: "SwiftSyntax", package: "swift-syntax"),
-        .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
-        .product(name: "SwiftParser", package: "swift-syntax"),
-      ]
-    ),
-    .testTarget(
       name: "SwiftFormatPerformanceTests",
       dependencies: [
         "SwiftFormatTestSupport",
@@ -176,39 +165,19 @@ let package = Package(
       ]
     ),
     .testTarget(
-      name: "SwiftFormatPrettyPrintTests",
+      name: "SwiftFormatTests",
       dependencies: [
         "SwiftFormatConfiguration",
         "SwiftFormatCore",
         "SwiftFormatPrettyPrint",
         "SwiftFormatRules",
-        "SwiftFormatTestSupport",
-        .product(name: "SwiftSyntax", package: "swift-syntax"),
-        .product(name: "SwiftOperators", package: "swift-syntax"),
-        .product(name: "SwiftParser", package: "swift-syntax"),
-      ]
-    ),
-    .testTarget(
-      name: "SwiftFormatRulesTests",
-      dependencies: [
-        "SwiftFormatConfiguration",
-        "SwiftFormatCore",
-        "SwiftFormatPrettyPrint",
-        "SwiftFormatRules",
-        "SwiftFormatTestSupport",
-        .product(name: "SwiftSyntax", package: "swift-syntax"),
-        .product(name: "SwiftParser", package: "swift-syntax"),
-      ]
-    ),
-    .testTarget(
-      name: "SwiftFormatWhitespaceLinterTests",
-      dependencies: [
-        "SwiftFormatConfiguration",
-        "SwiftFormatCore",
         "SwiftFormatTestSupport",
         "SwiftFormatWhitespaceLinter",
-        .product(name: "SwiftSyntax", package: "swift-syntax"),
+        .product(name: "Markdown", package: "swift-markdown"),
+        .product(name: "SwiftOperators", package: "swift-syntax"),
         .product(name: "SwiftParser", package: "swift-syntax"),
+        .product(name: "SwiftSyntax", package: "swift-syntax"),
+        .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
       ]
     ),
   ]
