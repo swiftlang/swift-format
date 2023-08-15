@@ -19,6 +19,7 @@ import SwiftSyntax
 ///
 /// Format: Enums where all cases are `indirect` will be rewritten such that the enum is marked
 ///         `indirect`, and each case is not.
+@_spi(Rules)
 public final class FullyIndirectEnum: SyntaxFormatRule {
 
   public override func visit(_ node: EnumDeclSyntax) -> DeclSyntax {
@@ -109,6 +110,7 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static func moveIndirectKeywordToEnumDecl(name: String) -> Finding.Message {
     "move 'indirect' before the enum declaration '\(name)' when all cases are indirect"
   }

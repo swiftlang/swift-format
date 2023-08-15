@@ -20,6 +20,7 @@ import SwiftSyntax
 /// Lint: Returning `()` in a signature yields a lint error.
 ///
 /// Format: `-> ()` is replaced with `-> Void`
+@_spi(Rules)
 public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
   public override func visit(_ node: FunctionTypeSyntax) -> TypeSyntax {
     guard let returnType = node.returnClause.type.as(TupleTypeSyntax.self),
@@ -110,5 +111,6 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static let returnVoid: Finding.Message = "replace '()' with 'Void'"
 }

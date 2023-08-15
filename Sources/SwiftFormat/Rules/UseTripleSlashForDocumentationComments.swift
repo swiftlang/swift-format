@@ -22,6 +22,7 @@ import SwiftSyntax
 /// Format: If a doc block comment appears on its own on a line, or if a doc block comment spans
 ///         multiple lines without appearing on the same line as code, it will be replaced with
 ///         multiple doc line comments.
+@_spi(Rules)
 public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
   public override func visit(_ node: FunctionDeclSyntax) -> DeclSyntax {
     return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
@@ -106,6 +107,7 @@ public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static let avoidDocBlockComment: Finding.Message =
     "replace documentation block comments with documentation line comments"
 }

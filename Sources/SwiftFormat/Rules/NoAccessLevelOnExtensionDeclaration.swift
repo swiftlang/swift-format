@@ -21,6 +21,7 @@ import SwiftSyntax
 ///         `internal`, as that is the default access level) have the explicit access level removed.
 ///
 /// TODO: Find a better way to access modifiers and keyword tokens besides casting each declaration
+@_spi(Rules)
 public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
 
   public override func visit(_ node: ExtensionDeclSyntax) -> DeclSyntax {
@@ -95,10 +96,12 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static func removeRedundantAccessKeyword(name: String) -> Finding.Message {
     "remove redundant 'internal' access keyword from '\(name)'"
   }
 
+  @_spi(Rules)
   public static func moveAccessKeyword(keyword: String) -> Finding.Message {
     "move the '\(keyword)' access keyword to precede each member inside the extension"
   }

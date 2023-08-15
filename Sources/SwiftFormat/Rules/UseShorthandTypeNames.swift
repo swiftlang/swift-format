@@ -19,6 +19,7 @@ import SwiftSyntax
 ///
 /// Format: Where possible, shorthand types replace long form types; e.g. `Array<Element>` is
 ///         converted to `[Element]`.
+@_spi(Rules)
 public final class UseShorthandTypeNames: SyntaxFormatRule {
 
   public override func visit(_ node: IdentifierTypeSyntax) -> TypeSyntax {
@@ -578,6 +579,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static func useTypeShorthand(type: String) -> Finding.Message {
     "use shorthand syntax for this '\(type)' type"
   }

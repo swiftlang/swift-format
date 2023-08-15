@@ -18,6 +18,7 @@ import SwiftSyntax
 /// `case .identifier(let x, let y)` instead.
 ///
 /// Lint: `case let .identifier(...)` will yield a lint error.
+@_spi(Rules)
 public final class UseLetInEveryBoundCaseVariable: SyntaxLintRule {
 
   public override func visit(_ node: ValueBindingPatternSyntax) -> SyntaxVisitorContinueKind {
@@ -65,6 +66,7 @@ public final class UseLetInEveryBoundCaseVariable: SyntaxLintRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static let useLetInBoundCaseVariables: Finding.Message =
     "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
 }

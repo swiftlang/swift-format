@@ -15,6 +15,7 @@ import SwiftSyntax
 /// Block comments should be avoided in favor of line comments.
 ///
 /// Lint: If a block comment appears, a lint error is raised.
+@_spi(Rules)
 public final class NoBlockComments: SyntaxLintRule {
   public override func visit(_ token: TokenSyntax) -> SyntaxVisitorContinueKind {
     for triviaIndex in token.leadingTrivia.indices {
@@ -28,6 +29,7 @@ public final class NoBlockComments: SyntaxLintRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static let avoidBlockComment: Finding.Message =
     "replace this block comment with line comments"
 }

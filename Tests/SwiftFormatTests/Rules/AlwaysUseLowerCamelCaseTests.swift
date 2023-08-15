@@ -1,4 +1,4 @@
-import SwiftFormat
+@_spi(Rules) import SwiftFormat
 
 final class AlwaysUseLowerCamelCaseTests: LintOrFormatRuleTestCase {
   override func setUp() {

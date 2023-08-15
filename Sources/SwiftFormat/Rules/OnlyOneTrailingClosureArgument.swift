@@ -16,6 +16,7 @@ import SwiftSyntax
 ///
 /// Lint: If a function call with a trailing closure also contains a non-trailing closure argument,
 ///       a lint error is raised.
+@_spi(Rules)
 public final class OnlyOneTrailingClosureArgument: SyntaxLintRule {
 
   public override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
@@ -29,6 +30,7 @@ public final class OnlyOneTrailingClosureArgument: SyntaxLintRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static let removeTrailingClosure: Finding.Message =
     "revise this function call to avoid using both closure arguments and a trailing closure"
 }

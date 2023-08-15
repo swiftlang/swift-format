@@ -24,6 +24,7 @@ import SwiftSyntax
 /// TODO: Minimum numeric literal length bounds and numeric groupings have been selected arbitrarily;
 /// these could be reevaluated.
 /// TODO: Handle floating point literals.
+@_spi(Rules)
 public final class GroupNumericLiterals: SyntaxFormatRule {
   public override func visit(_ node: IntegerLiteralExprSyntax) -> ExprSyntax {
     var originalDigits = node.literal.text
@@ -82,6 +83,7 @@ public final class GroupNumericLiterals: SyntaxFormatRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static func groupNumericLiteral(every stride: Int) -> Finding.Message {
     let ending = stride == 3 ? "rd" : "th"
     return "group numeric literal using '_' every \(stride)\(ending) number"

@@ -23,6 +23,7 @@ import SwiftSyntax
 ///
 /// Format: A `return` statement containing an assignment expression is expanded into two separate
 ///         statements.
+@_spi(Rules)
 public final class NoAssignmentInExpressions: SyntaxFormatRule {
   public override func visit(_ node: InfixOperatorExprSyntax) -> ExprSyntax {
     // Diagnose any assignment that isn't directly a child of a `CodeBlockItem` (which would be the
@@ -161,6 +162,7 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static let moveAssignmentToOwnStatement: Finding.Message =
     "move this assignment expression into its own statement"
 }

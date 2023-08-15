@@ -21,6 +21,7 @@ import SwiftSyntax
 /// Format: If a variable declaration declares multiple variables, it will be
 /// split into multiple declarations, each declaring one of the variables, as
 /// long as the result would still be syntactically valid.
+@_spi(Rules)
 public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
   public override func visit(_ node: CodeBlockItemListSyntax) -> CodeBlockItemListSyntax {
     guard node.contains(where: codeBlockItemHasMultipleVariableBindings) else {
@@ -73,6 +74,7 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static func onlyOneVariableDeclaration(specifier: String) -> Finding.Message {
     "split this variable declaration to introduce only one variable per '\(specifier)'"
   }

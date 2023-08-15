@@ -1,4 +1,4 @@
-import SwiftFormat
+@_spi(Rules) import SwiftFormat
 
 final class NoAssignmentInExpressionsTests: LintOrFormatRuleTestCase {
   func testAssignmentInExpressionContextIsDiagnosed() {

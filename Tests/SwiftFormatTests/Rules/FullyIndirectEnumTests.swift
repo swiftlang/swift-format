@@ -1,4 +1,4 @@
-import SwiftFormat
+@_spi(Rules) import SwiftFormat
 
 class FullyIndirectEnumTests: LintOrFormatRuleTestCase {
   func testAllIndirectCases() {

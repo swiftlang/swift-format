@@ -15,6 +15,7 @@ import SwiftSyntax
 /// `struct`, `class`, `enum` and `protocol` declarations should have a capitalized name.
 ///
 /// Lint:  Types with un-capitalized names will yield a lint error.
+@_spi(Rules)
 public final class TypeNamesShouldBeCapitalized : SyntaxLintRule {
   public override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseNameConventionMismatch(node, name: node.name)
@@ -61,6 +62,7 @@ public final class TypeNamesShouldBeCapitalized : SyntaxLintRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static func capitalizeTypeName(name: String) -> Finding.Message {
     var capitalized = name
     let leadingUnderscores = capitalized.prefix { $0 == "_" }

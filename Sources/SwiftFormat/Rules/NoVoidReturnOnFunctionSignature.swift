@@ -18,6 +18,7 @@ import SwiftSyntax
 ///
 /// Format: Function declarations with explicit returns of `()` or `Void` will have their return
 ///         signature stripped.
+@_spi(Rules)
 public final class NoVoidReturnOnFunctionSignature: SyntaxFormatRule {
   /// Remove the `-> Void` return type for function signatures. Do not remove
   /// it for closure signatures, because that may introduce an ambiguity when closure signatures
@@ -36,6 +37,7 @@ public final class NoVoidReturnOnFunctionSignature: SyntaxFormatRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static func removeRedundantReturn(_ type: String) -> Finding.Message {
     "remove the explicit return type '\(type)' from this function"
   }

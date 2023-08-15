@@ -1,4 +1,4 @@
-import SwiftFormat
+@_spi(Rules) import SwiftFormat
 
 final class UseLetInEveryBoundCaseVariableTests: LintOrFormatRuleTestCase {
   override func setUp() {

@@ -24,6 +24,7 @@ import SwiftSyntax
 /// Format: Parentheses around such expressions are removed, if they do not cause a parse ambiguity.
 ///         Specifically, parentheses are allowed if and only if the expression contains a function
 ///         call with a trailing closure.
+@_spi(Rules)
 public final class NoParensAroundConditions: SyntaxFormatRule {
   private func extractExpr(_ tuple: TupleExprSyntax) -> ExprSyntax {
     assert(tuple.elementList.count == 1)
@@ -99,6 +100,7 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static let removeParensAroundExpression: Finding.Message =
     "remove the parentheses around this expression"
 }

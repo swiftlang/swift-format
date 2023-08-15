@@ -1,6 +1,7 @@
-import SwiftFormat
 import SwiftFormatConfiguration
 import SwiftSyntax
+
+@_spi(Rules) import SwiftFormat
 
 private typealias TestConfiguration = (
   original: String,
