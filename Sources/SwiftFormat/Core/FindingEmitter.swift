@@ -19,7 +19,7 @@
 /// If the consumer function is nil, then the `emit` function is a no-op. This allows callers, such
 /// as lint/format rules and the pretty-printer, to emit findings unconditionally, without wrapping
 /// each call in a check about whether the client is interested in receiving those findings or not.
-public final class FindingEmitter {
+final class FindingEmitter {
   /// An optional function that will be called and passed a finding each time one is emitted.
   private let consumer: ((Finding) -> Void)?
 
