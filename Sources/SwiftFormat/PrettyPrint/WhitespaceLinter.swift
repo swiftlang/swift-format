@@ -18,6 +18,7 @@ private let utf8Tab = UTF8.CodeUnit(ascii: "\t")
 
 /// Emits linter errors for whitespace style violations by comparing the raw text of the input Swift
 /// code with formatted text.
+@_spi(Testing)
 public class WhitespaceLinter {
 
   /// The text of the input source code to be linted.

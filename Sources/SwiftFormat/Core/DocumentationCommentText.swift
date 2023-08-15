@@ -17,6 +17,7 @@ import SwiftSyntax
 /// This type should be used when only the text of the comment is important, not the Markdown
 /// structural organization. It automatically handles trimming leading indentation from comments as
 /// well as "ASCII art" in block comments (i.e., leading asterisks on each line).
+@_spi(Testing)
 public struct DocumentationCommentText {
   /// Denotes the kind of punctuation used to introduce the comment.
   public enum Introducer {

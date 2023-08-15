@@ -12,6 +12,7 @@
 
 /// The enablement of a lint/format rule based on the presence or absence of comment directives in
 /// the source file.
+@_spi(Testing)
 public enum RuleState {
 
   /// There is no explicit information in the source file about whether the rule should be enabled

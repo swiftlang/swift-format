@@ -14,6 +14,7 @@ import Foundation
 import SwiftSyntax
 
 /// A Rule is a linting or formatting pass that executes in a given context.
+@_spi(Rules)
 public protocol Rule {
   /// The context in which the rule is executed.
   var context: Context { get }

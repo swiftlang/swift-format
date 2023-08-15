@@ -37,6 +37,7 @@ import SwiftSyntax
 ///
 /// The rules themselves reference RuleMask to see if it is disabled for the line it is currently
 /// examining.
+@_spi(Testing)
 public class RuleMask {
   /// Stores the source ranges in which all rules are ignored.
   private var allRulesIgnoredRanges: [SourceRange] = []

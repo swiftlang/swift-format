@@ -11,9 +11,10 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import SwiftFormat
 import SwiftSyntax
 import SwiftParser
+
+@_spi(Rules) import SwiftFormat
 
 /// Collects information about rules in the formatter code base.
 final class RuleCollector {
