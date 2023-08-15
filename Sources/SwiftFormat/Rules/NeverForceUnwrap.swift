@@ -18,6 +18,7 @@ import SwiftSyntax
 ///   * Contains the line `import XCTest`
 ///
 /// Lint: If a force unwrap is used, a lint warning is raised.
+@_spi(Rules)
 public final class NeverForceUnwrap: SyntaxLintRule {
 
   /// Identifies this rule as being opt-in. While force unwrap is an unsafe pattern (i.e. it can
@@ -49,10 +50,12 @@ public final class NeverForceUnwrap: SyntaxLintRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static func doNotForceUnwrap(name: String) -> Finding.Message {
     "do not force unwrap '\(name)'"
   }
 
+  @_spi(Rules)
   public static func doNotForceCast(name: String) -> Finding.Message {
     "do not force cast to '\(name)'"
   }

@@ -19,6 +19,7 @@ import SwiftSyntax
 ///
 /// Format: All case declarations with associated values or raw values will be moved to their own
 ///         case declarations.
+@_spi(Rules)
 public final class OneCasePerLine: SyntaxFormatRule {
 
   /// A state machine that collects case elements encountered during visitation and allows new case
@@ -128,6 +129,7 @@ public final class OneCasePerLine: SyntaxFormatRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static func moveAssociatedOrRawValueCase(name: String) -> Finding.Message {
     "move '\(name)' to its own 'case' declaration"
   }

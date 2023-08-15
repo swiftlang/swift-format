@@ -16,6 +16,7 @@ import SwiftSyntax
 /// All documentation comments must begin with a one-line summary of the declaration.
 ///
 /// Lint: If a comment does not begin with a single-line summary, a lint error is raised.
+@_spi(Rules)
 public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
 
   /// Unit tests can testably import this module and set this to true in order to force the rule
@@ -194,12 +195,14 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static func terminateSentenceWithPeriod<Sentence: StringProtocol>(_ text: Sentence)
     -> Finding.Message
   {
     "terminate this sentence with a period: \"\(text)\""
   }
 
+  @_spi(Rules)
   public static func addBlankLineAfterFirstSentence<Sentence: StringProtocol>(_ text: Sentence)
     -> Finding.Message
   {

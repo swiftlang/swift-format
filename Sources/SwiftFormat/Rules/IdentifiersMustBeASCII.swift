@@ -15,6 +15,7 @@ import SwiftSyntax
 /// All identifiers must be ASCII.
 ///
 /// Lint: If an identifier contains non-ASCII characters, a lint error is raised.
+@_spi(Rules)
 public final class IdentifiersMustBeASCII: SyntaxLintRule {
 
   public override func visit(_ node: IdentifierPatternSyntax) -> SyntaxVisitorContinueKind {
@@ -30,6 +31,7 @@ public final class IdentifiersMustBeASCII: SyntaxLintRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static func nonASCIICharsNotAllowed(
     _ invalidCharacters: [String], _ identifierName: String
   ) -> Finding.Message {

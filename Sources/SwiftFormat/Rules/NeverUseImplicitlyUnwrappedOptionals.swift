@@ -22,6 +22,7 @@ import SwiftSyntax
 /// TODO: Create exceptions for other UI elements (ex: viewDidLoad)
 ///
 /// Lint: Declaring a property with an implicitly unwrapped type yields a lint error.
+@_spi(Rules)
 public final class NeverUseImplicitlyUnwrappedOptionals: SyntaxLintRule {
 
   /// Identifies this rule as being opt-in. While accessing implicitly unwrapped optionals is an
@@ -61,6 +62,7 @@ public final class NeverUseImplicitlyUnwrappedOptionals: SyntaxLintRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static func doNotUseImplicitUnwrapping(identifier: String) -> Finding.Message {
     "use '\(identifier)' or '\(identifier)?' instead of '\(identifier)!'"
   }

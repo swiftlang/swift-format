@@ -15,6 +15,7 @@ import SwiftSyntax
 /// All public or open declarations must have a top-level documentation comment.
 ///
 /// Lint: If a public declaration is missing a documentation comment, a lint error is raised.
+@_spi(Rules)
 public final class AllPublicDeclarationsHaveDocumentation: SyntaxLintRule {
 
   /// Identifies this rule as being opt-in. While docs on most public declarations are beneficial,
@@ -86,6 +87,7 @@ public final class AllPublicDeclarationsHaveDocumentation: SyntaxLintRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static func declRequiresComment(_ name: String) -> Finding.Message {
     "add a documentation comment for '\(name)'"
   }

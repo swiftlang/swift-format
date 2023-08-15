@@ -41,6 +41,7 @@ import SwiftSyntax
 ///
 /// Format: `if ... else { return/throw/break/continue }` constructs will be replaced with
 ///         equivalent `guard ... else { return/throw/break/continue }` constructs.
+@_spi(Rules)
 public final class UseEarlyExits: SyntaxFormatRule {
 
   /// Identifies this rule as being opt-in. This rule is experimental and not yet stable enough to
@@ -106,6 +107,7 @@ public final class UseEarlyExits: SyntaxFormatRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static let useGuardStatement: Finding.Message =
     "replace the 'if/else' block with a 'guard' statement containing the early exit"
 }

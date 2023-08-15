@@ -20,6 +20,7 @@ import SwiftSyntax
 ///
 /// Lint: If an identifier contains underscores or begins with a capital letter, a lint error is
 ///       raised.
+@_spi(Rules)
 public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
   /// Stores function decls that are test cases.
   private var testCaseFuncs = Set<FunctionDeclSyntax>()
@@ -213,6 +214,7 @@ extension ReturnClauseSyntax {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static func nameMustBeLowerCamelCase(
     _ name: String, description: String
   ) -> Finding.Message {

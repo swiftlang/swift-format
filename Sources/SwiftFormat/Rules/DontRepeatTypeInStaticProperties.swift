@@ -19,6 +19,7 @@ import SwiftSyntax
 /// `public class var redColor: UIColor` would trigger this rule.
 ///
 /// Lint: Static properties of a type that return that type will yield a lint error.
+@_spi(Rules)
 public final class DontRepeatTypeInStaticProperties: SyntaxLintRule {
 
   public override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
@@ -101,6 +102,7 @@ public final class DontRepeatTypeInStaticProperties: SyntaxLintRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static func removeTypeFromName(name: String, type: Substring) -> Finding.Message {
     "remove the suffix '\(type)' from the name of the variable '\(name)'"
   }

@@ -17,6 +17,7 @@ import SwiftSyntax
 /// Lint: Read-only computed properties with explicit `get` blocks yield a lint error.
 ///
 /// Format: Explicit `get` blocks are rendered implicit by removing the `get`.
+@_spi(Rules)
 public final class UseSingleLinePropertyGetter: SyntaxFormatRule {
 
   public override func visit(_ node: PatternBindingSyntax) -> PatternBindingSyntax {
@@ -40,6 +41,7 @@ public final class UseSingleLinePropertyGetter: SyntaxFormatRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static let removeExtraneousGetBlock: Finding.Message =
     "remove 'get {...}' around the accessor and move its body directly into the computed property"
 }

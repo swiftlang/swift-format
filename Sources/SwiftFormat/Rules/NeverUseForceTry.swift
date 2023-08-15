@@ -20,6 +20,7 @@ import SwiftSyntax
 /// Lint: Using `try!` results in a lint error.
 ///
 /// TODO: Create exception for NSRegularExpression
+@_spi(Rules)
 public final class NeverUseForceTry: SyntaxLintRule {
 
   /// Identifies this rule as being opt-in. While force try is an unsafe pattern (i.e. it can
@@ -43,5 +44,6 @@ public final class NeverUseForceTry: SyntaxLintRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static let doNotForceTry: Finding.Message = "do not use force try"
 }

@@ -18,6 +18,7 @@ import SwiftSyntax
 ///       a lint error is raised.
 ///
 /// Format: Empty parentheses in function calls with trailing closures will be removed.
+@_spi(Rules)
 public final class NoEmptyTrailingClosureParentheses: SyntaxFormatRule {
 
   public override func visit(_ node: FunctionCallExprSyntax) -> ExprSyntax {
@@ -51,6 +52,7 @@ public final class NoEmptyTrailingClosureParentheses: SyntaxFormatRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static func removeEmptyTrailingParentheses(name: String) -> Finding.Message {
     "remove the empty parentheses following '\(name)'"
   }

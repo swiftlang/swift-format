@@ -20,6 +20,7 @@ import SwiftSyntax
 ///
 /// Format: File-scoped declarations that have formal access opposite to the desired access level in
 ///         the formatter's configuration will have their access level changed.
+@_spi(Rules)
 public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
   public override func visit(_ node: SourceFileSyntax) -> SourceFileSyntax {
     let newStatements = rewrittenCodeBlockItems(node.statements)
@@ -169,9 +170,11 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static let replacePrivateWithFileprivate: Finding.Message =
     "replace 'private' with 'fileprivate' on file-scoped declarations"
 
+  @_spi(Rules)
   public static let replaceFileprivateWithPrivate: Finding.Message =
     "replace 'fileprivate' with 'private' on file-scoped declarations"
 }

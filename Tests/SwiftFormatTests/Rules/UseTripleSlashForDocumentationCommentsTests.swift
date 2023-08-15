@@ -1,4 +1,4 @@
-import SwiftFormat
+@_spi(Rules) import SwiftFormat
 
 final class UseTripleSlashForDocumentationCommentsTests: LintOrFormatRuleTestCase {
   func testRemoveDocBlockComments() {

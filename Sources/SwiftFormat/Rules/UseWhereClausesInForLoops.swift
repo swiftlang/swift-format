@@ -18,6 +18,7 @@ import SwiftSyntax
 ///
 /// Format: `for` loops that consist of a single `if` statement have the conditional of that
 ///         statement factored out to a `where` clause.
+@_spi(Rules)
 public final class UseWhereClausesInForLoops: SyntaxFormatRule {
 
   /// Identifies this rule as being opt-in. This rule is experimental and not yet stable enough to
@@ -119,9 +120,11 @@ fileprivate func updateWithWhereCondition(
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static let useWhereInsteadOfIf: Finding.Message =
     "replace this 'if' statement with a 'where' clause"
 
+  @_spi(Rules)
   public static let useWhereInsteadOfGuard: Finding.Message =
     "replace this 'guard' statement with a 'where' clause"
 }

@@ -21,6 +21,7 @@ import SwiftSyntax
 ///       binding identifier.
 ///
 /// Format: Redundant labels in case patterns are removed.
+@_spi(Rules)
 public final class NoLabelsInCasePatterns: SyntaxFormatRule {
   public override func visit(_ node: SwitchCaseLabelSyntax) -> SwitchCaseLabelSyntax {
     var newCaseItems: [SwitchCaseItemSyntax] = []
@@ -70,6 +71,7 @@ public final class NoLabelsInCasePatterns: SyntaxFormatRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static func removeRedundantLabel(name: String) -> Finding.Message {
     "remove the label '\(name)' from this 'case' pattern"
   }

@@ -22,6 +22,7 @@ import SwiftSyntax
 ///       raised.
 ///
 /// Format: Imports will be reordered and grouped at the top of the file.
+@_spi(Rules)
 public final class OrderedImports: SyntaxFormatRule {
 
   public override func visit(_ node: SourceFileSyntax) -> SourceFileSyntax {
@@ -569,13 +570,17 @@ extension Line: CustomDebugStringConvertible {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static let placeAtTopOfFile: Finding.Message = "place imports at the top of the file"
 
+  @_spi(Rules)
   public static func groupImports(before: LineType, after: LineType) -> Finding.Message {
     "place \(before) imports before \(after) imports"
   }
 
+  @_spi(Rules)
   public static let removeDuplicateImport: Finding.Message = "remove this duplicate import"
 
+  @_spi(Rules)
   public static let sortImports: Finding.Message = "sort import statements lexicographically"
 }

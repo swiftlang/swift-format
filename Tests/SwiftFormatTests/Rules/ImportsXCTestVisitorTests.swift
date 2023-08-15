@@ -1,7 +1,8 @@
-import SwiftFormat
 import SwiftParser
 import XCTest
 import _SwiftFormatTestSupport
+
+@_spi(Rules) import SwiftFormat
 
 class ImportsXCTestVisitorTests: DiagnosingTestCase {
   func testDoesNotImportXCTest() throws {

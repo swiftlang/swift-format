@@ -17,6 +17,7 @@ import SwiftSyntax
 /// Lint: If a semicolon appears anywhere, a lint error is raised.
 ///
 /// Format: All semicolons will be replaced with line breaks.
+@_spi(Rules)
 public final class DoNotUseSemicolons: SyntaxFormatRule {
 
   /// Creates a new version of the given node which doesn't contain any semicolons. The node's
@@ -102,8 +103,10 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static let removeSemicolon: Finding.Message = "remove ';'"
 
+  @_spi(Rules)
   public static let removeSemicolonAndMove: Finding.Message =
     "remove ';' and move the next statement to a new line"
 }

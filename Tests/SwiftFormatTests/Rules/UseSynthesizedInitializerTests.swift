@@ -1,4 +1,4 @@
-import SwiftFormat
+@_spi(Rules) import SwiftFormat
 
 final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
   override func setUp() {

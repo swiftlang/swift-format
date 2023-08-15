@@ -22,6 +22,7 @@ import SwiftSyntax
 /// sites.
 ///
 /// Lint: Declaring an identifier with a leading underscore yields a lint error.
+@_spi(Rules)
 public final class NoLeadingUnderscores: SyntaxLintRule {
 
   /// Identifies this rule as being opt-in. While leading underscores aren't meant to be used in
@@ -124,6 +125,7 @@ public final class NoLeadingUnderscores: SyntaxLintRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static func doNotStartWithUnderscore(identifier: String) -> Finding.Message {
     "remove the leading '_' from the name '\(identifier)'"
   }

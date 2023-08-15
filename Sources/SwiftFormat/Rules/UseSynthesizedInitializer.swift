@@ -20,6 +20,7 @@ import SwiftSyntax
 ///
 /// Lint: (Non-public) memberwise initializers with the same structure as the synthesized
 ///       initializer will yield a lint error.
+@_spi(Rules)
 public final class UseSynthesizedInitializer: SyntaxLintRule {
 
   public override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
@@ -184,6 +185,7 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
 }
 
 extension Finding.Message {
+  @_spi(Rules)
   public static let removeRedundantInitializer: Finding.Message =
     "remove this explicit initializer, which is identical to the compiler-synthesized initializer"
 }
