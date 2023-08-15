@@ -46,17 +46,21 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
     var extraneousInitializers = [InitializerDeclSyntax]()
     for initializer in initializers {
       guard
+        // Attributes signify intent that isn't automatically synthesized by the compiler.
+        initializer.attributes.isEmpty,
         matchesPropertyList(
           parameters: initializer.signature.parameterClause.parameters,
-          properties: storedProperties)
-      else { continue }
-      guard
+          properties: storedProperties),
         matchesAssignmentBody(
           variables: storedProperties,
-          initBody: initializer.body)
-      else { continue }
-      guard matchesAccessLevel(modifiers: initializer.modifiers, properties: storedProperties)
-      else { continue }
+          initBody: initializer.body),
+        matchesAccessLevel(
+          modifiers: initializer.modifiers,
+          properties: storedProperties)
+      else {
+        continue
+      }
+
       extraneousInitializers.append(initializer)
     }
 
