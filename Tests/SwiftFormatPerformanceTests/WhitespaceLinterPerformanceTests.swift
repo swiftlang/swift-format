@@ -1,8 +1,8 @@
-import SwiftFormatTestSupport
 import SwiftFormatWhitespaceLinter
 import SwiftSyntax
 import SwiftParser
 import XCTest
+import _SwiftFormatTestSupport
 
 final class WhitespaceLinterPerformanceTests: DiagnosingTestCase {
   func testWhitespaceLinterPerformance() {
