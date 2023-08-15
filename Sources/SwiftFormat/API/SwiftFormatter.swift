@@ -13,9 +13,6 @@
 import Foundation
 import SwiftDiagnostics
 import SwiftFormatConfiguration
-import SwiftFormatCore
-import SwiftFormatPrettyPrint
-import SwiftFormatRules
 import SwiftOperators
 import SwiftSyntax
 

@@ -11,7 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import SwiftFormatCore
+import SwiftFormat
 import SwiftSyntax
 import SwiftParser
 

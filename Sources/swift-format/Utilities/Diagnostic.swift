@@ -10,7 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SwiftFormatCore
+import SwiftFormat
 import SwiftSyntax
 
 /// Diagnostic data that retains the separation of a finding category (if present) from the rest of

@@ -1,4 +1,4 @@
-import SwiftFormatRules
+import SwiftFormat
 
 final class OrderedImportsTests: LintOrFormatRuleTestCase {
   func testInvalidImportsOrder() {
@@ -12,7 +12,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       // Comment with new lines
       import UIKit
 
-      @testable import SwiftFormatRules
+      @testable import SwiftFormat
       import enum Darwin.D.isatty
       // Starts Test
       @testable import MyModuleUnderTest
@@ -38,7 +38,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
 
       // Starts Test
       @testable import MyModuleUnderTest
-      @testable import SwiftFormatRules
+      @testable import SwiftFormat
 
       let a = 3
       """
@@ -66,7 +66,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
   func testImportsOrderWithoutModuleType() {
     let input =
       """
-      @testable import SwiftFormatRules
+      @testable import SwiftFormat
       import func Darwin.D.isatty
       @testable import MyModuleUnderTest
       import func Darwin.C.isatty
@@ -80,7 +80,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       import func Darwin.D.isatty
 
       @testable import MyModuleUnderTest
-      @testable import SwiftFormatRules
+      @testable import SwiftFormat
 
       let a = 3
       """

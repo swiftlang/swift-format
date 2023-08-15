@@ -1,5 +1,5 @@
+import SwiftFormat
 import SwiftFormatConfiguration
-import SwiftFormatWhitespaceLinter
 
 final class WhitespaceLintTests: WhitespaceTestCase {
   func testSpacing() {
