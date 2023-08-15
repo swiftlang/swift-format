@@ -24,7 +24,7 @@ extension SyntaxProtocol {
   /// - Parameter index: The index of the trivia piece in the leading trivia whose position should
   ///   be returned.
   /// - Returns: The absolute position of the trivia piece.
-  public func position(ofLeadingTriviaAt index: Trivia.Index) -> AbsolutePosition {
+  func position(ofLeadingTriviaAt index: Trivia.Index) -> AbsolutePosition {
     guard leadingTrivia.indices.contains(index) else {
       preconditionFailure("Index was out of bounds in the node's leading trivia.")
     }
@@ -50,7 +50,7 @@ extension SyntaxProtocol {
   ///   - converter: The `SourceLocationConverter` that was previously initialized using the root
   ///     tree of this node.
   /// - Returns: The source location of the trivia piece.
-  public func startLocation(
+  func startLocation(
     ofLeadingTriviaAt index: Trivia.Index,
     converter: SourceLocationConverter
   ) -> SourceLocation {
@@ -60,7 +60,7 @@ extension SyntaxProtocol {
 
 extension SyntaxCollection {
   /// The first element in the syntax collection if it is the *only* element, or nil otherwise.
-  public var firstAndOnly: Element? {
+  var firstAndOnly: Element? {
     var iterator = makeIterator()
     guard let first = iterator.next() else { return nil }
     guard iterator.next() == nil else { return nil }

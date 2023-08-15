@@ -13,7 +13,7 @@
 import SwiftSyntax
 
 extension Trivia {
-  public var numberOfComments: Int {
+  var numberOfComments: Int {
     var count = 0
     for piece in self {
       switch piece {
@@ -27,7 +27,7 @@ extension Trivia {
   }
 
   /// Returns whether the trivia contains at least 1 `lineComment`.
-  public var hasLineComment: Bool {
+  var hasLineComment: Bool {
     return self.contains {
       if case .lineComment = $0 { return true }
       return false
@@ -35,7 +35,7 @@ extension Trivia {
   }
 
   /// Returns this set of trivia, without any whitespace characters.
-  public func withoutSpaces() -> Trivia {
+  func withoutSpaces() -> Trivia {
     return Trivia(
       pieces: filter {
         if case .spaces = $0 { return false }
@@ -45,7 +45,7 @@ extension Trivia {
   }
 
   /// Returns this set of trivia, without any leading spaces.
-  public func withoutLeadingSpaces() -> Trivia {
+  func withoutLeadingSpaces() -> Trivia {
     return Trivia(
       pieces: Array(drop {
         if case .spaces = $0 { return false }
@@ -55,7 +55,7 @@ extension Trivia {
   }
 
   /// Returns this set of trivia, without any newlines.
-  public func withoutNewlines() -> Trivia {
+  func withoutNewlines() -> Trivia {
     return Trivia(
       pieces: filter {
         if case .newlines = $0 { return false }
@@ -66,7 +66,7 @@ extension Trivia {
   /// Returns this trivia, excluding the last newline and anything following it.
   ///
   /// If there is no newline in the trivia, it is returned unmodified.
-  public func withoutLastLine() -> Trivia {
+  func withoutLastLine() -> Trivia {
     var maybeLastNewlineOffset: Int? = nil
     for (offset, piece) in self.enumerated() {
       switch piece {
@@ -82,30 +82,30 @@ extension Trivia {
 
   /// Returns this set of trivia, with all spaces removed except for one at the
   /// end.
-  public func withOneTrailingSpace() -> Trivia {
+  func withOneTrailingSpace() -> Trivia {
     return withoutSpaces() + .spaces(1)
   }
 
   /// Returns this set of trivia, with all spaces removed except for one at the
   /// beginning.
-  public func withOneLeadingSpace() -> Trivia {
+  func withOneLeadingSpace() -> Trivia {
     return .spaces(1) + withoutSpaces()
   }
 
   /// Returns this set of trivia, with all newlines removed except for one.
-  public func withOneLeadingNewline() -> Trivia {
+  func withOneLeadingNewline() -> Trivia {
     return .newlines(1) + withoutNewlines()
   }
 
   /// Returns this set of trivia, with all newlines removed except for one.
-  public func withOneTrailingNewline() -> Trivia {
+  func withOneTrailingNewline() -> Trivia {
     return withoutNewlines() + .newlines(1)
   }
 
   /// Walks through trivia looking for multiple separate trivia entities with
   /// the same base kind, and condenses them.
   /// `[.spaces(1), .spaces(2)]` becomes `[.spaces(3)]`.
-  public func condensed() -> Trivia {
+  func condensed() -> Trivia {
     guard var prev = first else { return self }
     var pieces = [TriviaPiece]()
     for piece in dropFirst() {
@@ -136,7 +136,7 @@ extension Trivia {
   }
 
   /// Returns `true` if this trivia contains any newlines.
-  public var containsNewlines: Bool {
+  var containsNewlines: Bool {
     return contains(
       where: {
         if case .newlines = $0 { return true }
@@ -145,7 +145,7 @@ extension Trivia {
   }
 
   /// Returns `true` if this trivia contains any spaces.
-  public var containsSpaces: Bool {
+  var containsSpaces: Bool {
     return contains(
       where: {
         if case .spaces = $0 { return true }
@@ -156,7 +156,7 @@ extension Trivia {
 
   /// Returns `true` if this trivia contains any backslahes (used for multiline string newline
   /// suppression).
-  public var containsBackslashes: Bool {
+  var containsBackslashes: Bool {
     return contains(
       where: {
         if case .backslashes = $0 { return true }

@@ -37,28 +37,28 @@ public final class Context {
   }
 
   /// The configuration for this run of the pipeline, provided by a configuration JSON file.
-  public let configuration: Configuration
+  let configuration: Configuration
 
   /// Defines the operators and their precedence relationships that were used during parsing.
-  public let operatorTable: OperatorTable
+  let operatorTable: OperatorTable
 
   /// Emits findings to the finding consumer.
-  public let findingEmitter: FindingEmitter
+  let findingEmitter: FindingEmitter
 
   /// The URL of the file being linted or formatted.
-  public let fileURL: URL
+  let fileURL: URL
 
   /// Indicates whether the file is known to import XCTest.
   public var importsXCTest: XCTestImportState
 
   /// An object that converts `AbsolutePosition` values to `SourceLocation` values.
-  public let sourceLocationConverter: SourceLocationConverter
+  let sourceLocationConverter: SourceLocationConverter
 
   /// Contains the rules have been disabled by comments for certain line numbers.
-  public let ruleMask: RuleMask
+  let ruleMask: RuleMask
 
   /// Contains all the available rules' names associated to their types' object identifiers.
-  public let ruleNameCache: [ObjectIdentifier: String]
+  let ruleNameCache: [ObjectIdentifier: String]
 
   /// Creates a new Context with the provided configuration, diagnostic engine, and file URL.
   public init(
@@ -87,7 +87,7 @@ public final class Context {
 
   /// Given a rule's name and the node it is examining, determine if the rule is disabled at this
   /// location or not.
-  public func isRuleEnabled<R: Rule>(_ rule: R.Type, node: Syntax) -> Bool {
+  func isRuleEnabled<R: Rule>(_ rule: R.Type, node: Syntax) -> Bool {
     let loc = node.startLocation(converter: self.sourceLocationConverter)
 
     assert(
