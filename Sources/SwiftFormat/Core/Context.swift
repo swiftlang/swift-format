@@ -20,6 +20,7 @@ import SwiftParser
 ///
 /// Specifically, it is the container for the shared configuration, diagnostic consumer, and URL of
 /// the current file.
+@_spi(Rules)
 public final class Context {
 
   /// Tracks whether `XCTest` has been imported so that certain logic can be modified for files that

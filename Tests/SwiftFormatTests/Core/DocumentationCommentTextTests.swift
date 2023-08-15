@@ -1,7 +1,8 @@
-import SwiftFormat
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import XCTest
+
+@_spi(Testing) import SwiftFormat
 
 final class DocumentationCommentTextTests: XCTestCase {
   func testSimpleDocLineComment() throws {

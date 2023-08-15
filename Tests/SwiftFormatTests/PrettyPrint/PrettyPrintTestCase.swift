@@ -1,10 +1,11 @@
-import SwiftFormat
 import SwiftFormatConfiguration
 import SwiftOperators
 import SwiftSyntax
 import SwiftParser
 import XCTest
-import _SwiftFormatTestSupport
+
+@_spi(Testing) import SwiftFormat
+@_spi(Testing) import _SwiftFormatTestSupport
 
 class PrettyPrintTestCase: DiagnosingTestCase {
   /// Asserts that the input string, when pretty printed, is equal to the expected string.

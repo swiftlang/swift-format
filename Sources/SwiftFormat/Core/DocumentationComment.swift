@@ -19,6 +19,7 @@ import SwiftSyntax
 /// also the nested information that can be provided on a parameter. For example, when a parameter
 /// is a function type, it can provide not only a brief summary but also its own parameter and
 /// return value descriptions.
+@_spi(Testing)
 public struct DocumentationComment {
   /// A description of a parameter in a documentation comment.
   public struct Parameter {

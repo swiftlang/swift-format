@@ -1,7 +1,8 @@
-import SwiftFormat
 import SwiftFormatConfiguration
 import SwiftSyntax
 import XCTest
+
+@_spi(Rules) @_spi(Testing) import SwiftFormat
 
 /// DiagnosingTestCase is an XCTestCase subclass meant to inject diagnostic-specific testing
 /// routines into specific formatting test cases.
@@ -32,6 +33,7 @@ open class DiagnosingTestCase: XCTestCase {
   /// The returned context is configured with a diagnostic consumer that records diagnostics emitted
   /// during the tests, which can then be asserted using the `XCTAssertDiagnosed` and
   /// `XCTAssertNotDiagnosed` methods.
+  @_spi(Testing)
   public func makeContext(sourceFileSyntax: SourceFileSyntax, configuration: Configuration? = nil)
     -> Context
   {

@@ -52,6 +52,7 @@ private class ImportsXCTestVisitor: SyntaxVisitor {
 /// - Parameters:
 ///   - context: The context information of the target source file.
 ///   - sourceFile: The file to be visited.
+@_spi(Testing)
 public func setImportsXCTest(context: Context, sourceFile: SourceFileSyntax) {
   guard context.importsXCTest == .notDetermined else { return }
   let visitor = ImportsXCTestVisitor(context: context)

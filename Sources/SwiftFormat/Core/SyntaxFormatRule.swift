@@ -13,10 +13,11 @@
 import SwiftSyntax
 
 /// A rule that both formats and lints a given file.
-open class SyntaxFormatRule: SyntaxRewriter, Rule {
+@_spi(Rules)
+public class SyntaxFormatRule: SyntaxRewriter, Rule {
   /// Whether this rule is opt-in, meaning it's disabled by default. Rules are opt-out unless they
   /// override this property.
-  open class var isOptIn: Bool {
+  public class var isOptIn: Bool {
     return false
   }
 
@@ -28,7 +29,7 @@ open class SyntaxFormatRule: SyntaxRewriter, Rule {
     self.context = context
   }
 
-  open override func visitAny(_ node: Syntax) -> Syntax? {
+  public override func visitAny(_ node: Syntax) -> Syntax? {
     // If the rule is not enabled, then return the node unmodified; otherwise, returning nil tells
     // SwiftSyntax to continue with the standard dispatch.
     guard context.isRuleEnabled(type(of: self), node: node) else { return node }

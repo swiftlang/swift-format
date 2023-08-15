@@ -14,10 +14,11 @@ import Foundation
 import SwiftSyntax
 
 /// A rule that lints a given file.
-open class SyntaxLintRule: SyntaxVisitor, Rule {
+@_spi(Rules)
+public class SyntaxLintRule: SyntaxVisitor, Rule {
   /// Whether this rule is opt-in, meaning it's disabled by default. Rules are opt-out unless they
   /// override this property.
-  open class var isOptIn: Bool {
+  public class var isOptIn: Bool {
     return false
   }
 

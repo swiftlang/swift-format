@@ -1,8 +1,9 @@
 import Markdown
-import SwiftFormat
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import XCTest
+
+@_spi(Testing) import SwiftFormat
 
 final class DocumentationCommentTests: XCTestCase {
   func testBriefSummaryOnly() throws {

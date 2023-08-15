@@ -1,10 +1,11 @@
-import SwiftFormat
 import SwiftFormatConfiguration
 import SwiftOperators
 import SwiftParser
 import SwiftSyntax
 import XCTest
-import _SwiftFormatTestSupport
+
+@_spi(Rules) @_spi(Testing) import SwiftFormat
+@_spi(Testing) import _SwiftFormatTestSupport
 
 class LintOrFormatRuleTestCase: DiagnosingTestCase {
   /// Performs a lint using the provided linter rule on the provided input.

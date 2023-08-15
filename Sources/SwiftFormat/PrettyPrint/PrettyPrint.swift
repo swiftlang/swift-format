@@ -15,6 +15,7 @@ import SwiftSyntax
 
 /// PrettyPrinter takes a Syntax node and outputs a well-formatted, re-indented reproduction of the
 /// code as a String.
+@_spi(Testing)
 public class PrettyPrinter {
 
   /// Information about an open break that has not yet been closed during the printing stage.
