@@ -16,16 +16,20 @@ import SwiftSyntax
 let sourcesDirectory = URL(fileURLWithPath: #file)
   .deletingLastPathComponent()
   .deletingLastPathComponent()
-let rulesDirectory = sourcesDirectory.appendingPathComponent("SwiftFormatRules")
+let rulesDirectory = sourcesDirectory
+  .appendingPathComponent("SwiftFormat")
+  .appendingPathComponent("Rules")
 let pipelineFile = sourcesDirectory
   .appendingPathComponent("SwiftFormat")
+  .appendingPathComponent("Core")
   .appendingPathComponent("Pipelines+Generated.swift")
 let ruleRegistryFile = sourcesDirectory
   .appendingPathComponent("SwiftFormatConfiguration")
   .appendingPathComponent("RuleRegistry+Generated.swift")
 
 let ruleNameCacheFile = sourcesDirectory
-  .appendingPathComponent("SwiftFormatRules")
+  .appendingPathComponent("SwiftFormat")
+  .appendingPathComponent("Core")
   .appendingPathComponent("RuleNameCache+Generated.swift")
 
 var ruleCollector = RuleCollector()
