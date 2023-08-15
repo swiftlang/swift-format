@@ -1,10 +1,10 @@
 import SwiftFormatConfiguration
 import SwiftFormatCore
-import SwiftFormatTestSupport
 import SwiftFormatWhitespaceLinter
 import SwiftSyntax
 import SwiftParser
 import XCTest
+import _SwiftFormatTestSupport
 
 class WhitespaceTestCase: DiagnosingTestCase {
   override func setUp() {
