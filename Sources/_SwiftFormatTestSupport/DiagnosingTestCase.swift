@@ -1,6 +1,5 @@
+import SwiftFormat
 import SwiftFormatConfiguration
-import SwiftFormatCore
-import SwiftFormatRules
 import SwiftSyntax
 import XCTest
 

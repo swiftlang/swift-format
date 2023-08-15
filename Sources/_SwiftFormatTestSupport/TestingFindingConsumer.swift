@@ -10,7 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SwiftFormatCore
+import SwiftFormat
 
 /// Information about a finding tracked by `TestingFindingConsumer`.
 ///

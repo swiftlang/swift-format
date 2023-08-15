@@ -1,4 +1,4 @@
-import SwiftFormatWhitespaceLinter
+import SwiftFormat
 import SwiftSyntax
 import SwiftParser
 import XCTest

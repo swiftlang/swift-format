@@ -1,4 +1,4 @@
-import SwiftFormatPrettyPrint
+import SwiftFormat
 import SwiftSyntax
 
 final class DictionaryDeclTests: PrettyPrintTestCase {

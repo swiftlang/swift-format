@@ -10,8 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SwiftFormatCore
-
 /// A type that invokes individual format rules.
 ///
 /// Note that this type is not a `SyntaxVisitor` or `SyntaxRewriter`. That is because, at this time,

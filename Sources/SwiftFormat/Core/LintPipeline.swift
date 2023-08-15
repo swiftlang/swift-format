@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SwiftFormatCore
 import SwiftSyntax
 
 /// A syntax visitor that delegates to individual rules for linting.

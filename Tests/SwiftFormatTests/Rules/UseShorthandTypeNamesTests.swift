@@ -1,4 +1,4 @@
-import SwiftFormatRules
+import SwiftFormat
 
 final class UseShorthandTypeNamesTests: LintOrFormatRuleTestCase {
   func testNamesInTypeContextsAreShortened() {

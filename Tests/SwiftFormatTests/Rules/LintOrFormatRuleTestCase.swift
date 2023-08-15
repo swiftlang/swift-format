@@ -1,5 +1,5 @@
+import SwiftFormat
 import SwiftFormatConfiguration
-import SwiftFormatCore
 import SwiftOperators
 import SwiftParser
 import SwiftSyntax

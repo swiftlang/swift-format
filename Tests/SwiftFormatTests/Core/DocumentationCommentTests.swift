@@ -1,5 +1,5 @@
 import Markdown
-import SwiftFormatCore
+import SwiftFormat
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import XCTest

@@ -1,4 +1,4 @@
-import SwiftFormatRules
+import SwiftFormat
 
 final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
   override func setUp() {

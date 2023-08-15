@@ -1,6 +1,5 @@
+import SwiftFormat
 import SwiftFormatConfiguration
-import SwiftFormatCore
-import SwiftFormatPrettyPrint
 import SwiftOperators
 import SwiftSyntax
 import SwiftParser
