@@ -50,10 +50,7 @@ let package = Package(
       name: "SwiftFormat",
       dependencies: [
         "SwiftFormatConfiguration",
-        "SwiftFormatCore",
-        "SwiftFormatPrettyPrint",
-        "SwiftFormatRules",
-        "SwiftFormatWhitespaceLinter",
+        .product(name: "Markdown", package: "swift-markdown"),
         .product(name: "SwiftSyntax", package: "swift-syntax"),
         .product(name: "SwiftOperators", package: "swift-syntax"),
         .product(name: "SwiftParser", package: "swift-syntax"),
@@ -64,44 +61,11 @@ let package = Package(
       name: "SwiftFormatConfiguration"
     ),
     .target(
-      name: "SwiftFormatCore",
+      name: "_SwiftFormatTestSupport",
       dependencies: [
-        "SwiftFormatConfiguration",
-        .product(name: "Markdown", package: "swift-markdown"),
-        .product(name: "SwiftOperators", package: "swift-syntax"),
-        .product(name: "SwiftSyntax", package: "swift-syntax"),
-      ]
-    ),
-    .target(
-      name: "SwiftFormatRules",
-      dependencies: [
-        "SwiftFormatCore",
-        "SwiftFormatConfiguration",
-        .product(name: "Markdown", package: "swift-markdown"),
-      ]
-    ),
-    .target(
-      name: "SwiftFormatPrettyPrint",
-      dependencies: [
-        "SwiftFormatCore",
+        "SwiftFormat",
         "SwiftFormatConfiguration",
         .product(name: "SwiftOperators", package: "swift-syntax"),
-      ]
-    ),
-    .target(
-      name: "SwiftFormatTestSupport",
-      dependencies: [
-        "SwiftFormatCore",
-        "SwiftFormatRules",
-        "SwiftFormatConfiguration",
-        .product(name: "SwiftOperators", package: "swift-syntax"),
-      ]
-    ),
-    .target(
-      name: "SwiftFormatWhitespaceLinter",
-      dependencies: [
-        "SwiftFormatCore",
-        .product(name: "SwiftSyntax", package: "swift-syntax"),
       ]
     ),
     .plugin(
@@ -133,8 +97,7 @@ let package = Package(
     .executableTarget(
       name: "generate-pipeline",
       dependencies: [
-        "SwiftFormatCore",
-        "SwiftFormatRules",
+        "SwiftFormat",
         .product(name: "SwiftSyntax", package: "swift-syntax"),
         .product(name: "SwiftParser", package: "swift-syntax"),
       ]
@@ -144,7 +107,6 @@ let package = Package(
       dependencies: [
         "SwiftFormat",
         "SwiftFormatConfiguration",
-        "SwiftFormatCore",
         .product(name: "ArgumentParser", package: "swift-argument-parser"),
         .product(name: "SwiftSyntax", package: "swift-syntax"),
         .product(name: "SwiftParser", package: "swift-syntax"),
@@ -156,59 +118,25 @@ let package = Package(
       dependencies: ["SwiftFormatConfiguration"]
     ),
     .testTarget(
-      name: "SwiftFormatCoreTests",
-      dependencies: [
-        "SwiftFormatConfiguration",
-        "SwiftFormatCore",
-        .product(name: "Markdown", package: "swift-markdown"),
-        .product(name: "SwiftSyntax", package: "swift-syntax"),
-        .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
-        .product(name: "SwiftParser", package: "swift-syntax"),
-      ]
-    ),
-    .testTarget(
       name: "SwiftFormatPerformanceTests",
       dependencies: [
-        "SwiftFormatTestSupport",
-        "SwiftFormatWhitespaceLinter",
+        "SwiftFormat",
+        "_SwiftFormatTestSupport",
         .product(name: "SwiftSyntax", package: "swift-syntax"),
         .product(name: "SwiftParser", package: "swift-syntax"),
       ]
     ),
     .testTarget(
-      name: "SwiftFormatPrettyPrintTests",
+      name: "SwiftFormatTests",
       dependencies: [
+        "SwiftFormat",
         "SwiftFormatConfiguration",
-        "SwiftFormatCore",
-        "SwiftFormatPrettyPrint",
-        "SwiftFormatRules",
-        "SwiftFormatTestSupport",
-        .product(name: "SwiftSyntax", package: "swift-syntax"),
+        "_SwiftFormatTestSupport",
+        .product(name: "Markdown", package: "swift-markdown"),
         .product(name: "SwiftOperators", package: "swift-syntax"),
         .product(name: "SwiftParser", package: "swift-syntax"),
-      ]
-    ),
-    .testTarget(
-      name: "SwiftFormatRulesTests",
-      dependencies: [
-        "SwiftFormatConfiguration",
-        "SwiftFormatCore",
-        "SwiftFormatPrettyPrint",
-        "SwiftFormatRules",
-        "SwiftFormatTestSupport",
         .product(name: "SwiftSyntax", package: "swift-syntax"),
-        .product(name: "SwiftParser", package: "swift-syntax"),
-      ]
-    ),
-    .testTarget(
-      name: "SwiftFormatWhitespaceLinterTests",
-      dependencies: [
-        "SwiftFormatConfiguration",
-        "SwiftFormatCore",
-        "SwiftFormatTestSupport",
-        "SwiftFormatWhitespaceLinter",
-        .product(name: "SwiftSyntax", package: "swift-syntax"),
-        .product(name: "SwiftParser", package: "swift-syntax"),
+        .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
       ]
     ),
   ]
