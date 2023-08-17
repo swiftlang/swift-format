@@ -1,0 +1,64 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Swift.org open source project
+//
+// Copyright (c) 2014 - 2023 Apple Inc. and the Swift project authors
+// Licensed under Apache License v2.0 with Runtime Library Exception
+//
+// See https://swift.org/LICENSE.txt for license information
+// See https://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
+//
+//===----------------------------------------------------------------------===//
+
+import SwiftSyntax
+
+/// Single-expression functions, closures, subscripts can omit `return` statement.
+///
+/// Lint: `func <name>() { return ... }` and similar single expression constructs will yield a lint error.
+///
+/// Format: `func <name>() { return ... }` constructs will be replaced with
+///         equivalent `func <name>() { ... }` constructs.
+@_spi(Rules)
+public final class OmitReturns: SyntaxFormatRule {
+  public override class var isOptIn: Bool { return true }
+
+  public override func visit(_ node: FunctionDeclSyntax) -> DeclSyntax {
+    let decl = super.visit(node)
+
+    // func <name>() -> <Type> { return ... }
+    if var funcDecl = decl.as(FunctionDeclSyntax.self),
+       let body = funcDecl.body,
+       let `return` = containsSingleReturn(body.statements) {
+      funcDecl.body?.statements = unwrapReturnStmt(`return`)
+      diagnose(.omitReturnStatement, on: `return`, severity: .refactoring)
+      return DeclSyntax(funcDecl)
+    }
+
+    return decl
+  }
+
+  private func containsSingleReturn(_ body: CodeBlockItemListSyntax) -> ReturnStmtSyntax? {
+    if let element = body.firstAndOnly?.as(CodeBlockItemSyntax.self),
+       let ret = element.item.as(ReturnStmtSyntax.self),
+       !ret.children(viewMode: .all).isEmpty, ret.expression != nil {
+      return ret
+    }
+
+    return nil
+  }
+
+  private func unwrapReturnStmt(_ `return`: ReturnStmtSyntax) -> CodeBlockItemListSyntax {
+    CodeBlockItemListSyntax([
+      CodeBlockItemSyntax(
+        leadingTrivia: `return`.leadingTrivia,
+        item: .expr(`return`.expression!),
+        semicolon: nil,
+        trailingTrivia: `return`.trailingTrivia)
+    ])
+  }
+}
+
+extension Finding.Message {
+  public static let omitReturnStatement: Finding.Message =
+    "`return` can be omitted because body consists of a single expression"
+}
