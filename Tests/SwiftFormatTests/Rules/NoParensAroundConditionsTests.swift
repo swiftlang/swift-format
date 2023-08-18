@@ -1,176 +1,239 @@
+import _SwiftFormatTestSupport
+
 @_spi(Rules) import SwiftFormat
 
+// FIXME: Emit
 final class NoParensAroundConditionsTests: LintOrFormatRuleTestCase {
   func testParensAroundConditions() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoParensAroundConditions.self,
       input: """
-             if (x) {}
-             while (x) {}
-             guard (x), (y), (x == 3) else {}
-             if (foo { x }) {}
-             repeat {} while(x)
-             switch (4) { default: break }
-             """,
+        if (1️⃣x) {}
+        while (2️⃣x) {}
+        guard (3️⃣x), (4️⃣y), (5️⃣x == 3) else {}
+        if (foo { x }) {}
+        repeat {} while(6️⃣x)
+        switch (7️⃣4) { default: break }
+        """,
       expected: """
-                if x {}
-                while x {}
-                guard x, y, x == 3 else {}
-                if (foo { x }) {}
-                repeat {} while x
-                switch 4 { default: break }
-                """)
+        if x {}
+        while x {}
+        guard x, y, x == 3 else {}
+        if (foo { x }) {}
+        repeat {} while x
+        switch 4 { default: break }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("2️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("3️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("4️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("5️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("6️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("7️⃣", message: "remove the parentheses around this expression"),
+      ]
+    )
   }
 
   func testParensAroundNestedParenthesizedStatements() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoParensAroundConditions.self,
       input: """
-             switch (a) {
-               case 1:
-                 switch (b) {
-                   default: break
-                 }
-             }
-             if (x) {
-               if (y) {
-               } else if (z) {
-               } else {
-               }
-             } else if (w) {
-             }
-             while (x) {
-               while (y) {}
-             }
-             guard (x), (y), (x == 3) else {
-               guard (a), (b), (c == x) else {
-                 return
-               }
-               return
-             }
-             repeat {
-               repeat {
-               } while (y)
-             } while(x)
-             if (foo.someCall({ if (x) {} })) {}
-             """,
+        switch (1️⃣a) {
+          case 1:
+            switch (2️⃣b) {
+              default: break
+            }
+        }
+        if (3️⃣x) {
+          if (4️⃣y) {
+          } else if (5️⃣z) {
+          } else {
+          }
+        } else if (6️⃣w) {
+        }
+        """,
       expected: """
-                switch a {
-                  case 1:
-                    switch b {
-                      default: break
-                    }
-                }
-                if x {
-                  if y {
-                  } else if z {
-                  } else {
-                  }
-                } else if w {
-                }
-                while x {
-                  while y {}
-                }
-                guard x, y, x == 3 else {
-                  guard a, b, c == x else {
-                    return
-                  }
-                  return
-                }
-                repeat {
-                  repeat {
-                  } while y
-                } while x
-                if foo.someCall({ if x {} }) {}
-                """)
+        switch a {
+          case 1:
+            switch b {
+              default: break
+            }
+        }
+        if x {
+          if y {
+          } else if z {
+          } else {
+          }
+        } else if w {
+        }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("2️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("3️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("4️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("5️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("6️⃣", message: "remove the parentheses around this expression"),
+      ]
+    )
+
+    assertFormatting(
+      NoParensAroundConditions.self,
+      input: """
+        while (1️⃣x) {
+          while (2️⃣y) {}
+        }
+        guard (3️⃣x), (4️⃣y), (5️⃣x == 3) else {
+          guard (6️⃣a), (7️⃣b), (8️⃣c == x) else {
+            return
+          }
+          return
+        }
+        repeat {
+          repeat {
+          } while (9️⃣y)
+        } while(🔟x)
+        if (0️⃣foo.someCall({ if (ℹ️x) {} })) {}
+        """,
+      expected: """
+        while x {
+          while y {}
+        }
+        guard x, y, x == 3 else {
+          guard a, b, c == x else {
+            return
+          }
+          return
+        }
+        repeat {
+          repeat {
+          } while y
+        } while x
+        if foo.someCall({ if x {} }) {}
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("2️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("3️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("4️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("5️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("6️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("7️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("8️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("9️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("🔟", message: "remove the parentheses around this expression"),
+        FindingSpec("0️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("ℹ️", message: "remove the parentheses around this expression"),
+      ]
+    )
   }
 
   func testParensAroundNestedUnparenthesizedStatements() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoParensAroundConditions.self,
       input: """
-             switch b {
-               case 2:
-                 switch (d) {
-                   default: break
-                 }
-             }
-             if x {
-               if (y) {
-               } else if (z) {
-               } else {
-               }
-             } else if (w) {
-             }
-             while x {
-               while (y) {}
-             }
-             repeat {
-               repeat {
-               } while (y)
-             } while x
-             if foo.someCall({ if (x) {} }) {}
-             """,
+        switch b {
+          case 2:
+            switch (1️⃣d) {
+              default: break
+            }
+        }
+        if x {
+          if (2️⃣y) {
+          } else if (3️⃣z) {
+          } else {
+          }
+        } else if (4️⃣w) {
+        }
+        while x {
+          while (5️⃣y) {}
+        }
+        repeat {
+          repeat {
+          } while (6️⃣y)
+        } while x
+        if foo.someCall({ if (7️⃣x) {} }) {}
+        """,
       expected: """
-                switch b {
-                  case 2:
-                    switch d {
-                      default: break
-                    }
-                }
-                if x {
-                  if y {
-                  } else if z {
-                  } else {
-                  }
-                } else if w {
-                }
-                while x {
-                  while y {}
-                }
-                repeat {
-                  repeat {
-                  } while y
-                } while x
-                if foo.someCall({ if x {} }) {}
-                """)
+        switch b {
+          case 2:
+            switch d {
+              default: break
+            }
+        }
+        if x {
+          if y {
+          } else if z {
+          } else {
+          }
+        } else if w {
+        }
+        while x {
+          while y {}
+        }
+        repeat {
+          repeat {
+          } while y
+        } while x
+        if foo.someCall({ if x {} }) {}
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("2️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("3️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("4️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("5️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("6️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("7️⃣", message: "remove the parentheses around this expression"),
+      ]
+    )
   }
 
   func testParensAroundIfAndSwitchExprs() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoParensAroundConditions.self,
       input: """
-             let x = if (x) {}
-             let y = switch (4) { default: break }
-             func foo() {
-               return if (x) {}
-             }
-             func bar() {
-               return switch (4) { default: break }
-             }
-             """,
+        let x = if (1️⃣x) {}
+        let y = switch (2️⃣4) { default: break }
+        func foo() {
+          return if (3️⃣x) {}
+        }
+        func bar() {
+          return switch (4️⃣4) { default: break }
+        }
+        """,
       expected: """
-                let x = if x {}
-                let y = switch 4 { default: break }
-                func foo() {
-                  return if x {}
-                }
-                func bar() {
-                  return switch 4 { default: break }
-                }
-                """)
+        let x = if x {}
+        let y = switch 4 { default: break }
+        func foo() {
+          return if x {}
+        }
+        func bar() {
+          return switch 4 { default: break }
+        }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("2️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("3️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("4️⃣", message: "remove the parentheses around this expression"),
+      ]
+    )
   }
 
   func testParensAroundAmbiguousConditions() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoParensAroundConditions.self,
       input: """
-             if ({ true }()) {}
-             if (functionWithTrailingClosure { 5 }) {}
-             """,
+        if ({ true }()) {}
+        if (functionWithTrailingClosure { 5 }) {}
+        """,
       expected: """
-                if ({ true }()) {}
-                if (functionWithTrailingClosure { 5 }) {}
-                """)
+        if ({ true }()) {}
+        if (functionWithTrailingClosure { 5 }) {}
+        """,
+      findings: []
+    )
   }
 }

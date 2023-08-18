@@ -1,23 +1,25 @@
+import _SwiftFormatTestSupport
+
 @_spi(Rules) import SwiftFormat
 
 final class NoAssignmentInExpressionsTests: LintOrFormatRuleTestCase {
   func testAssignmentInExpressionContextIsDiagnosed() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoAssignmentInExpressions.self,
       input: """
-        foo(bar, baz = quux, a + b)
+        foo(bar, 1️⃣baz = quux, a + b)
         """,
       expected: """
         foo(bar, baz = quux, a + b)
-        """
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "move this assignment expression into its own statement"),
+      ]
     )
-    XCTAssertDiagnosed(.moveAssignmentToOwnStatement, line: 1, column: 10)
-    // Make sure no other expressions were diagnosed.
-    XCTAssertNotDiagnosed(.moveAssignmentToOwnStatement)
   }
 
   func testReturnStatementWithoutExpressionIsUnchanged() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoAssignmentInExpressions.self,
       input: """
         func foo() {
@@ -28,13 +30,13 @@ final class NoAssignmentInExpressionsTests: LintOrFormatRuleTestCase {
         func foo() {
           return
         }
-        """
+        """,
+      findings: []
     )
-    XCTAssertNotDiagnosed(.moveAssignmentToOwnStatement)
   }
 
   func testReturnStatementWithNonAssignmentExpressionIsUnchanged() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoAssignmentInExpressions.self,
       input: """
         func foo() {
@@ -45,19 +47,19 @@ final class NoAssignmentInExpressionsTests: LintOrFormatRuleTestCase {
         func foo() {
           return a + b
         }
-        """
+        """,
+      findings: []
     )
-    XCTAssertNotDiagnosed(.moveAssignmentToOwnStatement)
   }
 
   func testReturnStatementWithSimpleAssignmentExpressionIsExpanded() {
     // For this and similar tests below, we don't try to match the leading indentation in the new
     // `return` statement; the pretty-printer will fix it up.
-    XCTAssertFormatting(
+    assertFormatting(
       NoAssignmentInExpressions.self,
       input: """
         func foo() {
-          return a = b
+          return 1️⃣a = b
         }
         """,
       expected: """
@@ -65,17 +67,19 @@ final class NoAssignmentInExpressionsTests: LintOrFormatRuleTestCase {
           a = b
         return
         }
-        """
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "move this assignment expression into its own statement"),
+      ]
     )
-    XCTAssertDiagnosed(.moveAssignmentToOwnStatement, line: 2, column: 10)
   }
 
   func testReturnStatementWithCompoundAssignmentExpressionIsExpanded() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoAssignmentInExpressions.self,
       input: """
         func foo() {
-          return a += b
+          return 1️⃣a += b
         }
         """,
       expected: """
@@ -83,18 +87,20 @@ final class NoAssignmentInExpressionsTests: LintOrFormatRuleTestCase {
           a += b
         return
         }
-        """
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "move this assignment expression into its own statement"),
+      ]
     )
-    XCTAssertDiagnosed(.moveAssignmentToOwnStatement, line: 2, column: 10)
   }
 
   func testReturnStatementWithAssignmentDealsWithLeadingLineCommentSensibly() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoAssignmentInExpressions.self,
       input: """
         func foo() {
           // some comment
-          return a = b
+          return 1️⃣a = b
         }
         """,
       expected: """
@@ -103,17 +109,19 @@ final class NoAssignmentInExpressionsTests: LintOrFormatRuleTestCase {
           a = b
         return
         }
-        """
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "move this assignment expression into its own statement"),
+      ]
     )
-    XCTAssertDiagnosed(.moveAssignmentToOwnStatement, line: 3, column: 10)
   }
 
   func testReturnStatementWithAssignmentDealsWithTrailingLineCommentSensibly() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoAssignmentInExpressions.self,
       input: """
         func foo() {
-          return a = b  // some comment
+          return 1️⃣a = b  // some comment
         }
         """,
       expected: """
@@ -121,17 +129,19 @@ final class NoAssignmentInExpressionsTests: LintOrFormatRuleTestCase {
           a = b
         return  // some comment
         }
-        """
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "move this assignment expression into its own statement"),
+      ]
     )
-    XCTAssertDiagnosed(.moveAssignmentToOwnStatement, line: 2, column: 10)
   }
 
   func testReturnStatementWithAssignmentDealsWithTrailingBlockCommentSensibly() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoAssignmentInExpressions.self,
       input: """
         func foo() {
-          return a = b  /* some comment */
+          return 1️⃣a = b  /* some comment */
         }
         """,
       expected: """
@@ -139,17 +149,19 @@ final class NoAssignmentInExpressionsTests: LintOrFormatRuleTestCase {
           a = b
         return  /* some comment */
         }
-        """
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "move this assignment expression into its own statement"),
+      ]
     )
-    XCTAssertDiagnosed(.moveAssignmentToOwnStatement, line: 2, column: 10)
   }
 
   func testReturnStatementWithAssignmentDealsWithNestedBlockCommentSensibly() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoAssignmentInExpressions.self,
       input: """
         func foo() {
-          return /* some comment */ a = b
+          return /* some comment */ 1️⃣a = b
         }
         """,
       expected: """
@@ -157,13 +169,15 @@ final class NoAssignmentInExpressionsTests: LintOrFormatRuleTestCase {
           /* some comment */ a = b
         return
         }
-        """
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "move this assignment expression into its own statement"),
+      ]
     )
-    XCTAssertDiagnosed(.moveAssignmentToOwnStatement, line: 2, column: 29)
   }
 
   func testTryAndAwaitAssignmentExpressionsAreUnchanged() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoAssignmentInExpressions.self,
       input: """
         func foo() {
@@ -176,13 +190,13 @@ final class NoAssignmentInExpressionsTests: LintOrFormatRuleTestCase {
           try a.b = c
           await a.b = c
         }
-        """
+        """,
+      findings: []
     )
-    XCTAssertNotDiagnosed(.moveAssignmentToOwnStatement)
   }
 
   func testAssignmentExpressionsInAllowedFunctions() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoAssignmentInExpressions.self,
       input: """
         // These should not diagnose.
@@ -193,7 +207,7 @@ final class NoAssignmentInExpressionsTests: LintOrFormatRuleTestCase {
         someRegularFunction { a = b }
 
         // This should be diagnosed.
-        someRegularFunction(a = b)
+        someRegularFunction(1️⃣a = b)
         """,
       expected: """
         // These should not diagnose.
@@ -205,10 +219,10 @@ final class NoAssignmentInExpressionsTests: LintOrFormatRuleTestCase {
 
         // This should be diagnosed.
         someRegularFunction(a = b)
-        """
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "move this assignment expression into its own statement"),
+      ]
     )
-    XCTAssertDiagnosed(.moveAssignmentToOwnStatement, line: 9, column: 21)
-    // Make sure no other expressions were diagnosed.
-    XCTAssertNotDiagnosed(.moveAssignmentToOwnStatement)
   }
 }

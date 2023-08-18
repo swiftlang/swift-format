@@ -1,36 +1,41 @@
+import _SwiftFormatTestSupport
+
 @_spi(Rules) import SwiftFormat
 
 final class NeverUseForceTryTests: LintOrFormatRuleTestCase {
   func testInvalidTryExpression() {
-    let input =
+    assertLint(
+      NeverUseForceTry.self,
       """
-      let document = try! Document(path: "important.data")
+      let document = 1️⃣try! Document(path: "important.data")
       let document = try Document(path: "important.data")
-      let x = try! someThrowingFunction()
+      let x = 2️⃣try! someThrowingFunction()
       let x = try? someThrowingFunction(
-        try! someThrowingFunction()
+        3️⃣try! someThrowingFunction()
       )
       let x = try someThrowingFunction(
-        try! someThrowingFunction()
+        4️⃣try! someThrowingFunction()
       )
       if let data = try? fetchDataFromDisk() { return data }
-      """
-    performLint(NeverUseForceTry.self, input: input)
-    XCTAssertDiagnosed(.doNotForceTry)
-    XCTAssertDiagnosed(.doNotForceTry)
-    XCTAssertDiagnosed(.doNotForceTry)
-    XCTAssertDiagnosed(.doNotForceTry)
-    XCTAssertNotDiagnosed(.doNotForceTry)
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "do not use force try"),
+        FindingSpec("2️⃣", message: "do not use force try"),
+        FindingSpec("3️⃣", message: "do not use force try"),
+        FindingSpec("4️⃣", message: "do not use force try"),
+      ]
+    )
   }
 
   func testAllowForceTryInTestCode() {
-    let input =
+    assertLint(
+      NeverUseForceTry.self,
       """
       import XCTest
 
       let document = try! Document(path: "important.data")
-      """
-    performLint(NeverUseForceTry.self, input: input)
-    XCTAssertNotDiagnosed(.doNotForceTry)
+      """,
+      findings: []
+    )
   }
 }

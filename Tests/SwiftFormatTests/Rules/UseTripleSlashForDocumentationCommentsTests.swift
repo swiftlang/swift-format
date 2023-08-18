@@ -1,156 +1,169 @@
+import _SwiftFormatTestSupport
+
 @_spi(Rules) import SwiftFormat
 
+// FIXME: Findings aren't actually being emitted by this rule!
 final class UseTripleSlashForDocumentationCommentsTests: LintOrFormatRuleTestCase {
   func testRemoveDocBlockComments() {
-    XCTAssertFormatting(
+    assertFormatting(
       UseTripleSlashForDocumentationComments.self,
       input: """
-             /**
-              * This comment should not be converted.
-              */
-             
-             /**
-              * Returns a docLineComment.
-              *
-              * - Parameters:
-              *   - withOutStar: Indicates if the comment start with a star.
-              * - Returns: docLineComment.
-              */
-             func foo(withOutStar: Bool) {}
-             """,
+        /**
+         * This comment should not be converted.
+         */
+
+        /**
+         * Returns a docLineComment.
+         *
+         * - Parameters:
+         *   - withOutStar: Indicates if the comment start with a star.
+         * - Returns: docLineComment.
+         */
+        func foo(withOutStar: Bool) {}
+        """,
       expected: """
-                /**
-                 * This comment should not be converted.
-                 */
-                
-                /// Returns a docLineComment.
-                ///
-                /// - Parameters:
-                ///   - withOutStar: Indicates if the comment start with a star.
-                /// - Returns: docLineComment.
-                func foo(withOutStar: Bool) {}
-                """)
+        /**
+         * This comment should not be converted.
+         */
+
+        /// Returns a docLineComment.
+        ///
+        /// - Parameters:
+        ///   - withOutStar: Indicates if the comment start with a star.
+        /// - Returns: docLineComment.
+        func foo(withOutStar: Bool) {}
+        """,
+      findings: []
+    )
   }
   
   func testRemoveDocBlockCommentsWithoutStars() {
-    XCTAssertFormatting(
+    assertFormatting(
       UseTripleSlashForDocumentationComments.self,
       input: """
-             /**
-              Returns a docLineComment.
-             
-              - Parameters:
-                - withStar: Indicates if the comment start with a star.
-              - Returns: docLineComment.
-              */
-             public var test = 1
-             """,
+        /**
+         Returns a docLineComment.
+
+         - Parameters:
+           - withStar: Indicates if the comment start with a star.
+         - Returns: docLineComment.
+         */
+        public var test = 1
+        """,
       expected: """
-                /// Returns a docLineComment.
-                ///
-                /// - Parameters:
-                ///   - withStar: Indicates if the comment start with a star.
-                /// - Returns: docLineComment.
-                public var test = 1
-                """)
+        /// Returns a docLineComment.
+        ///
+        /// - Parameters:
+        ///   - withStar: Indicates if the comment start with a star.
+        /// - Returns: docLineComment.
+        public var test = 1
+        """,
+      findings: []
+    )
   }
 
   func testMultipleTypesOfDocComments() {
-    XCTAssertFormatting(
+    assertFormatting(
       UseTripleSlashForDocumentationComments.self,
       input: """
-             /**
-              * This is my preamble. It could be important.
-              * This comment stays as-is.
-              */
+        /**
+         * This is my preamble. It could be important.
+         * This comment stays as-is.
+         */
 
-             /// This decl has a comment.
-             /// The comment is multiple lines long.
-             public class AClazz {
-             }
-             """,
+        /// This decl has a comment.
+        /// The comment is multiple lines long.
+        public class AClazz {
+        }
+        """,
       expected: """
-                /**
-                 * This is my preamble. It could be important.
-                 * This comment stays as-is.
-                 */
+        /**
+         * This is my preamble. It could be important.
+         * This comment stays as-is.
+         */
 
-                /// This decl has a comment.
-                /// The comment is multiple lines long.
-                public class AClazz {
-                }
-                """)
+        /// This decl has a comment.
+        /// The comment is multiple lines long.
+        public class AClazz {
+        }
+        """,
+      findings: []
+    )
   }
 
   func testMultipleDocLineComments() {
-    XCTAssertFormatting(
+    assertFormatting(
       UseTripleSlashForDocumentationComments.self,
       input: """
-             /// This is my preamble. It could be important.
-             /// This comment stays as-is.
-             ///
+        /// This is my preamble. It could be important.
+        /// This comment stays as-is.
+        ///
 
-             /// This decl has a comment.
-             /// The comment is multiple lines long.
-             public class AClazz {
-             }
-             """,
+        /// This decl has a comment.
+        /// The comment is multiple lines long.
+        public class AClazz {
+        }
+        """,
       expected: """
-                /// This is my preamble. It could be important.
-                /// This comment stays as-is.
-                ///
+        /// This is my preamble. It could be important.
+        /// This comment stays as-is.
+        ///
 
-                /// This decl has a comment.
-                /// The comment is multiple lines long.
-                public class AClazz {
-                }
-                """)
+        /// This decl has a comment.
+        /// The comment is multiple lines long.
+        public class AClazz {
+        }
+        """,
+      findings: []
+    )
   }
 
   func testManyDocComments() {
     // Note that this retains the trailing space at the end of a single-line doc block comment
     // (i.e., the space in `name. */`). It's fine to leave it here; the pretty printer will remove
     // it later.
-    XCTAssertFormatting(
+    assertFormatting(
       UseTripleSlashForDocumentationComments.self,
       input: """
-             /**
-              * This is my preamble. It could be important.
-              * This comment stays as-is.
-              */
+        /**
+         * This is my preamble. It could be important.
+         * This comment stays as-is.
+         */
 
-             /// This is a doc-line comment!
+        /// This is a doc-line comment!
 
-             /** This is a fairly short doc-block comment. */
+        /** This is a fairly short doc-block comment. */
 
-             /// Why are there so many comments?
-             /// Who knows! But there are loads.
+        /// Why are there so many comments?
+        /// Who knows! But there are loads.
 
-             /** AClazz is a class with good name. */
-             public class AClazz {
-             }
-             """,
+        /** AClazz is a class with good name. */
+        public class AClazz {
+        }
+        """,
       expected: """
-                /**
-                 * This is my preamble. It could be important.
-                 * This comment stays as-is.
-                 */
+        /**
+         * This is my preamble. It could be important.
+         * This comment stays as-is.
+         */
 
-                /// This is a doc-line comment!
+        /// This is a doc-line comment!
 
-                /** This is a fairly short doc-block comment. */
+        /** This is a fairly short doc-block comment. */
 
-                /// Why are there so many comments?
-                /// Who knows! But there are loads.
+        /// Why are there so many comments?
+        /// Who knows! But there are loads.
 
-                /// AClazz is a class with good name.\u{0020}
-                public class AClazz {
-                }
-                """)
+        /// AClazz is a class with good name.\u{0020}
+        public class AClazz {
+        }
+        """,
+      findings: []
+    )
   }
 
   func testDocLineCommentsAreNotNormalized() {
-    XCTAssertFormatting(
+    assertFormatting(
       UseTripleSlashForDocumentationComments.self,
       input: """
         ///
@@ -169,6 +182,8 @@ final class UseTripleSlashForDocumentationCommentsTests: LintOrFormatRuleTestCas
         ///
         public class AClazz {
         }
-        """)
+        """,
+      findings: []
+    )
   }
 }

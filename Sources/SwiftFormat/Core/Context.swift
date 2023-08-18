@@ -53,7 +53,7 @@ public final class Context {
   public var importsXCTest: XCTestImportState
 
   /// An object that converts `AbsolutePosition` values to `SourceLocation` values.
-  let sourceLocationConverter: SourceLocationConverter
+  public let sourceLocationConverter: SourceLocationConverter
 
   /// Contains the rules have been disabled by comments for certain line numbers.
   let ruleMask: RuleMask

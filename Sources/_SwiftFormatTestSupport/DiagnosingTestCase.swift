@@ -7,100 +7,183 @@ import XCTest
 /// DiagnosingTestCase is an XCTestCase subclass meant to inject diagnostic-specific testing
 /// routines into specific formatting test cases.
 open class DiagnosingTestCase: XCTestCase {
-  /// Set during lint tests to indicate that we should check for unasserted diagnostics when the
-  /// test is torn down and fail if there were any.
-  public var shouldCheckForUnassertedDiagnostics = false
-
-  /// A helper that will keep track of the findings that were emitted.
-  private var consumer = TestingFindingConsumer()
-
-  override open func setUp() {
-    shouldCheckForUnassertedDiagnostics = false
-  }
-
-  override open func tearDown() {
-    guard shouldCheckForUnassertedDiagnostics else { return }
-
-    // This will emit a test failure if a diagnostic is thrown but we don't explicitly call
-    // XCTAssertDiagnosed for it.
-    for finding in consumer.emittedFindings {
-      XCTFail("unexpected finding '\(finding)' emitted")
-    }
-  }
-
   /// Creates and returns a new `Context` from the given syntax tree and configuration.
   ///
-  /// The returned context is configured with a diagnostic consumer that records diagnostics emitted
-  /// during the tests, which can then be asserted using the `XCTAssertDiagnosed` and
-  /// `XCTAssertNotDiagnosed` methods.
+  /// The returned context is configured with the given finding consumer to record findings emitted
+  /// during the tests, so that they can be asserted later using the `assertFindings` method.
   @_spi(Testing)
-  public func makeContext(sourceFileSyntax: SourceFileSyntax, configuration: Configuration? = nil)
-    -> Context
-  {
-    consumer = TestingFindingConsumer()
+  public func makeContext(
+    sourceFileSyntax: SourceFileSyntax,
+    configuration: Configuration? = nil,
+    findingConsumer: @escaping (Finding) -> Void
+  ) -> Context {
     let context = Context(
       configuration: configuration ?? Configuration(),
       operatorTable: .standardOperators,
-      findingConsumer: consumer.consume,
+      findingConsumer: findingConsumer,
       fileURL: URL(fileURLWithPath: "/tmp/test.swift"),
       sourceFileSyntax: sourceFileSyntax,
       ruleNameCache: ruleNameCache)
     return context
   }
 
-  /// Stops tracking diagnostics emitted during formatting/linting.
-  ///
-  /// This used by the pretty-printer tests to suppress any diagnostics that might be emitted during
-  /// the second format pass (which checks for idempotence).
-  public func stopTrackingDiagnostics() {
-    consumer.stopTrackingFindings()
-  }
-
-  /// Asserts that a specific diagnostic message was emitted.
-  ///
-  /// - Parameters:
-  ///   - message: The diagnostic message expected to be emitted.
-  ///   - file: The file in which failure occurred. Defaults to the file name of the test case in
-  ///     which this function was called.
-  ///   - line: The line number on which failure occurred. Defaults to the line number on which this
-  ///     function was called.
-  public final func XCTAssertDiagnosed(
-    _ message: Finding.Message,
-    line diagnosticLine: Int? = nil,
-    column diagnosticColumn: Int? = nil,
+  /// Asserts that the given list of findings matches a set of specs.
+  @_spi(Testing)
+  public final func assertFindings(
+    expected specs: [FindingSpec],
+    markerLocations: [String: Int],
+    emittedFindings: [Finding],
+    context: Context,
     file: StaticString = #file,
     line: UInt = #line
   ) {
-    let wasEmitted: Bool
-    if let diagnosticLine = diagnosticLine, let diagnosticColumn = diagnosticColumn {
-      wasEmitted = consumer.popFinding(
-        containing: message.text, atLine: diagnosticLine, column: diagnosticColumn)
-    } else {
-      wasEmitted = consumer.popFinding(containing: message.text)
+    var emittedFindings = emittedFindings
+
+    // Check for a finding that matches each spec, removing it from the array if found.
+    for spec in specs {
+      assertAndRemoveFinding(
+        findingSpec: spec,
+        markerLocations: markerLocations,
+        emittedFindings: &emittedFindings,
+        context: context,
+        file: file,
+        line: line)
     }
-    if !wasEmitted {
-      XCTFail("diagnostic '\(message.text)' not emitted", file: file, line: line)
+
+    // Emit test failures for any findings that did not have matches.
+    for finding in emittedFindings {
+      let locationString: String
+      if let location = finding.location {
+        locationString = "line:col \(location.line):\(location.column)"
+      } else {
+        locationString = "no location provided"
+      }
+      XCTFail(
+        "Unexpected finding '\(finding.message)' was emitted (\(locationString))",
+        file: file,
+        line: line)
     }
   }
 
-  /// Asserts that a specific diagnostic message was not emitted.
-  ///
-  /// - Parameters:
-  ///   - message: The diagnostic message expected to not be emitted.
-  ///   - file: The file in which failure occurred. Defaults to the file name of the test case in
-  ///     which this function was called.
-  ///   - line: The line number on which failure occurred. Defaults to the line number on which this
-  ///     function was called.
-  public final func XCTAssertNotDiagnosed(
-    _ message: Finding.Message,
+  private func assertAndRemoveFinding(
+    findingSpec: FindingSpec,
+    markerLocations: [String: Int],
+    emittedFindings: inout [Finding],
+    context: Context,
     file: StaticString = #file,
     line: UInt = #line
   ) {
-    let wasEmitted = consumer.popFinding(containing: message.text)
-    XCTAssertFalse(
-      wasEmitted,
-      "diagnostic '\(message.text)' should not have been emitted",
-      file: file, line: line)
+    guard let utf8Offset = markerLocations[findingSpec.marker] else {
+      XCTFail("Marker '\(findingSpec.marker)' was not found in the input", file: file, line: line)
+      return
+    }
+
+    let markerLocation =
+      context.sourceLocationConverter.location(for: AbsolutePosition(utf8Offset: utf8Offset))
+
+    // Find a finding that has the expected line/column location, ignoring the text.
+    // FIXME: We do this to provide a better error message if the finding is in the right place but
+    // doesn't have the right message, but this also introduces an order-sensitivity among the
+    // specs. Fix this if it becomes an issue.
+    let maybeIndex = emittedFindings.firstIndex {
+      markerLocation.line == $0.location?.line && markerLocation.column == $0.location?.column
+    }
+    guard let index = maybeIndex else {
+      XCTFail(
+        """
+        Finding '\(findingSpec.message)' was not emitted at marker '\(findingSpec.marker)' \
+        (line:col \(markerLocation.line):\(markerLocation.column), offset \(utf8Offset))
+        """,
+        file: file,
+        line: line)
+      return
+    }
+
+    // Verify that the finding text also matches what we expect.
+    let matchedFinding = emittedFindings.remove(at: index)
+    XCTAssertEqual(
+      matchedFinding.message.text,
+      findingSpec.message,
+      """
+      Finding emitted at marker '\(findingSpec.marker)' \
+      (line:col \(markerLocation.line):\(markerLocation.column), offset \(utf8Offset)) \
+      had the wrong message
+      """,
+      file: file,
+      line: line)
+
+    // Assert that a note exists for each of the expected nodes in the finding.
+    var emittedNotes = matchedFinding.notes
+    for noteSpec in findingSpec.notes {
+      assertAndRemoveNote(
+        noteSpec: noteSpec,
+        markerLocations: markerLocations,
+        emittedNotes: &emittedNotes,
+        context: context,
+        file: file,
+        line: line)
+    }
+
+    // Emit test failures for any notes that weren't specified.
+    for note in emittedNotes {
+      let locationString: String
+      if let location = note.location {
+        locationString = "line:col \(location.line):\(location.column)"
+      } else {
+        locationString = "no location provided"
+      }
+      XCTFail(
+        "Unexpected note '\(note.message)' was emitted (\(locationString))",
+        file: file,
+        line: line)
+    }
+  }
+
+  private func assertAndRemoveNote(
+    noteSpec: NoteSpec,
+    markerLocations: [String: Int],
+    emittedNotes: inout [Finding.Note],
+    context: Context,
+    file: StaticString = #file,
+    line: UInt = #line
+  ) {
+    guard let utf8Offset = markerLocations[noteSpec.marker] else {
+      XCTFail("Marker '\(noteSpec.marker)' was not found in the input", file: file, line: line)
+      return
+    }
+
+    let markerLocation =
+      context.sourceLocationConverter.location(for: AbsolutePosition(utf8Offset: utf8Offset))
+
+    // FIXME: We do this to provide a better error message if the note is in the right place but
+    // doesn't have the right message, but this also introduces an order-sensitivity among the
+    // specs. Fix this if it becomes an issue.
+    let maybeIndex = emittedNotes.firstIndex {
+      markerLocation.line == $0.location?.line && markerLocation.column == $0.location?.column
+    }
+    guard let index = maybeIndex else {
+      XCTFail(
+        """
+        Note '\(noteSpec.message)' was not emitted at marker '\(noteSpec.marker)' \
+        (line:col \(markerLocation.line):\(markerLocation.column), offset \(utf8Offset))
+        """,
+        file: file,
+        line: line)
+      return
+    }
+
+    // Verify that the note text also matches what we expect.
+    let matchedNote = emittedNotes.remove(at: index)
+    XCTAssertEqual(
+      matchedNote.message.text,
+      noteSpec.message,
+      """
+      Note emitted at marker '\(noteSpec.marker)' \
+      (line:col \(markerLocation.line):\(markerLocation.column), offset \(utf8Offset)) \
+      had the wrong message
+      """,
+      file: file,
+      line: line)
   }
 
   /// Asserts that the two strings are equal, providing Unix `diff`-style output if they are not.
@@ -113,7 +196,7 @@ open class DiagnosingTestCase: XCTestCase {
   ///     which this function was called.
   ///   - line: The line number on which failure occurred. Defaults to the line number on which this
   ///     function was called.
-  public final func XCTAssertStringsEqualWithDiff(
+  public final func assertStringsEqualWithDiff(
     _ actual: String,
     _ expected: String,
     _ message: String = "",

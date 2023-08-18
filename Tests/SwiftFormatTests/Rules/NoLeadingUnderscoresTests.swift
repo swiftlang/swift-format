@@ -1,164 +1,166 @@
+import _SwiftFormatTestSupport
+
 @_spi(Rules) import SwiftFormat
 
 final class NoLeadingUnderscoresTests: LintOrFormatRuleTestCase {
   func testVars() {
-    let input = """
-      let _foo = foo
-      var good_name = 20
-      var _badName, okayName, _wor_sEName = 20
+    assertLint(
+      NoLeadingUnderscores.self,
       """
-    performLint(NoLeadingUnderscores.self, input: input)
-
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_foo"))
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "good_name"))
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_badName"))
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "okayName"))
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_wor_sEName"))
+      let 1️⃣_foo = foo
+      var good_name = 20
+      var 2️⃣_badName, okayName, 3️⃣_wor_sEName = 20
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the leading '_' from the name '_foo'"),
+        FindingSpec("2️⃣", message: "remove the leading '_' from the name '_badName'"),
+        FindingSpec("3️⃣", message: "remove the leading '_' from the name '_wor_sEName'"),
+      ]
+    )
   }
 
   func testClasses() {
-    let input = """
-      class Foo { let _foo = foo }
-      class _Bar {}
+    assertLint(
+      NoLeadingUnderscores.self,
       """
-    performLint(NoLeadingUnderscores.self, input: input)
-
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "Foo"))
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_foo"))
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_Bar"))
+      class Foo { let 1️⃣_foo = foo }
+      class 2️⃣_Bar {}
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the leading '_' from the name '_foo'"),
+        FindingSpec("2️⃣", message: "remove the leading '_' from the name '_Bar'"),
+      ]
+    )
   }
 
   func testEnums() {
-    let input = """
-      enum Foo {
-        case _case1
-        case case2, _case3
-        case caseWithAssociatedValues(_value: Int, otherValue: String)
-        let _foo = foo
-      }
-      enum _Bar {}
+    assertLint(
+      NoLeadingUnderscores.self,
       """
-    performLint(NoLeadingUnderscores.self, input: input)
-
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "Foo"))
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_case1"))
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "case2"))
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_case3"))
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "caseWithAssociatedValues"))
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_value"))
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "otherValue"))
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_foo"))
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_Bar"))
+      enum Foo {
+        case 1️⃣_case1
+        case case2, 2️⃣_case3
+        case caseWithAssociatedValues(3️⃣_value: Int, otherValue: String)
+        let 4️⃣_foo = foo
+      }
+      enum 5️⃣_Bar {}
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the leading '_' from the name '_case1'"),
+        FindingSpec("2️⃣", message: "remove the leading '_' from the name '_case3'"),
+        FindingSpec("3️⃣", message: "remove the leading '_' from the name '_value'"),
+        FindingSpec("4️⃣", message: "remove the leading '_' from the name '_foo'"),
+        FindingSpec("5️⃣", message: "remove the leading '_' from the name '_Bar'"),
+      ]
+    )
   }
 
   func testProtocols() {
-    let input = """
-      protocol Foo {
-        associatedtype _Quux
-        associatedtype Florb
-        var _foo: Int { get set }
-      }
-      protocol _Bar {}
+    assertLint(
+      NoLeadingUnderscores.self,
       """
-    performLint(NoLeadingUnderscores.self, input: input)
-
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "Foo"))
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_foo"))
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_Bar"))
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_Quux"))
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "Florb"))
+      protocol Foo {
+        associatedtype 1️⃣_Quux
+        associatedtype Florb
+        var 2️⃣_foo: Int { get set }
+      }
+      protocol 3️⃣_Bar {}
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the leading '_' from the name '_Quux'"),
+        FindingSpec("2️⃣", message: "remove the leading '_' from the name '_foo'"),
+        FindingSpec("3️⃣", message: "remove the leading '_' from the name '_Bar'"),
+      ]
+    )
   }
 
   func testStructs() {
-    let input = """
-      struct Foo { let _foo = foo }
-      struct _Bar {}
+    assertLint(
+      NoLeadingUnderscores.self,
       """
-    performLint(NoLeadingUnderscores.self, input: input)
-
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "Foo"))
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_foo"))
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_Bar"))
+      struct Foo { let 1️⃣_foo = foo }
+      struct 2️⃣_Bar {}
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the leading '_' from the name '_foo'"),
+        FindingSpec("2️⃣", message: "remove the leading '_' from the name '_Bar'"),
+      ]
+    )
   }
 
   func testFunctions() {
-    let input = """
-      func _foo<T1, _T2: Equatable>(_ ok: Int, _notOK: Int, _ok _butNotThisOne: Int) {}
-      func bar() {}
+    assertLint(
+      NoLeadingUnderscores.self,
       """
-    performLint(NoLeadingUnderscores.self, input: input)
-
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_foo"))
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "T1"))
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_T2"))
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "_"))
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "ok"))
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_notOK"))
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "_ok"))
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_butNotThisOne"))
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "bar"))
+      func 1️⃣_foo<T1, 2️⃣_T2: Equatable>(_ ok: Int, 3️⃣_notOK: Int, _ok 4️⃣_butNotThisOne: Int) {}
+      func bar() {}
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the leading '_' from the name '_foo'"),
+        FindingSpec("2️⃣", message: "remove the leading '_' from the name '_T2'"),
+        FindingSpec("3️⃣", message: "remove the leading '_' from the name '_notOK'"),
+        FindingSpec("4️⃣", message: "remove the leading '_' from the name '_butNotThisOne'"),
+      ]
+    )
   }
 
   func testInitializerArguments() {
-    let input = """
-      struct X {
-        init<T1, _T2: Equatable>(_ ok: Int, _notOK: Int, _ok _butNotThisOne: Int) {}
-      }
+    assertLint(
+      NoLeadingUnderscores.self,
       """
-    performLint(NoLeadingUnderscores.self, input: input)
-
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "T1"))
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_T2"))
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "_"))
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "ok"))
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_notOK"))
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "_ok"))
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_butNotThisOne"))
+      struct X {
+        init<T1, 1️⃣_T2: Equatable>(_ ok: Int, 2️⃣_notOK: Int, _ok 3️⃣_butNotThisOne: Int) {}
+      }
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the leading '_' from the name '_T2'"),
+        FindingSpec("2️⃣", message: "remove the leading '_' from the name '_notOK'"),
+        FindingSpec("3️⃣", message: "remove the leading '_' from the name '_butNotThisOne'"),
+      ]
+    )
   }
 
   func testPrecedenceGroups() {
-    let input = """
+    assertLint(
+      NoLeadingUnderscores.self,
+      """
       precedencegroup FooPrecedence {
         associativity: left
         higherThan: BarPrecedence
       }
-      precedencegroup _FooPrecedence {
+      precedencegroup 1️⃣_FooPrecedence {
         associativity: left
         higherThan: BarPrecedence
       }
       infix operator <> : _BazPrecedence
-      """
-    performLint(NoLeadingUnderscores.self, input: input)
-
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "FooPrecedence"))
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "BarPrecedence"))
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_FooPrecedence"))
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "_BazPrecedence"))
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the leading '_' from the name '_FooPrecedence'"),
+      ]
+    )
   }
 
   func testTypealiases() {
-    let input = """
-      typealias Foo = _Foo
-      typealias _Bar = Bar
+    assertLint(
+      NoLeadingUnderscores.self,
       """
-    performLint(NoLeadingUnderscores.self, input: input)
-
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "Foo"))
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "_Foo"))
-    XCTAssertDiagnosed(.doNotStartWithUnderscore(identifier: "_Bar"))
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "Bar"))
+      typealias Foo = _Foo
+      typealias 1️⃣_Bar = Bar
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the leading '_' from the name '_Bar'"),
+      ]
+    )
   }
 
   func testIdentifiersAreIgnoredAtUsage() {
-    let input = """
+    assertLint(
+      NoLeadingUnderscores.self,
+      """
       let x = _y + _z
       _foo(_bar)
-      """
-    performLint(NoLeadingUnderscores.self, input: input)
-
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "_y"))
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "_z"))
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "_foo"))
-    XCTAssertNotDiagnosed(.doNotStartWithUnderscore(identifier: "_bar"))
+      """,
+      findings: []
+    )
   }
 }

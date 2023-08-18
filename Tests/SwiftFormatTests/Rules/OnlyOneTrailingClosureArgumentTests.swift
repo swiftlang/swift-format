@@ -1,20 +1,23 @@
+import _SwiftFormatTestSupport
+
 @_spi(Rules) import SwiftFormat
 
 final class OnlyOneTrailingClosureArgumentTests: LintOrFormatRuleTestCase {
   func testInvalidTrailingClosureCall() {
-    let input =
+    assertLint(
+      OnlyOneTrailingClosureArgument.self,
       """
-      callWithBoth(someClosure: {}) {
+      1️⃣callWithBoth(someClosure: {}) {
         // ...
       }
       callWithClosure(someClosure: {})
       callWithTrailingClosure {
         // ...
       }
-      """
-    performLint(OnlyOneTrailingClosureArgument.self, input: input)
-    XCTAssertDiagnosed(.removeTrailingClosure)
-    XCTAssertNotDiagnosed(.removeTrailingClosure)
-    XCTAssertNotDiagnosed(.removeTrailingClosure)
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "revise this function call to avoid using both closure arguments and a trailing closure"),
+      ]
+    )
   }
 }

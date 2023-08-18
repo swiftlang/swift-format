@@ -1,16 +1,21 @@
+import _SwiftFormatTestSupport
+
 @_spi(Rules) import SwiftFormat
 
+// FIXME: The findings are emitted in odd places; the last test is especially wrong. Their locations
+// may be getting computed from the tree post-transformation, so they no longer map to the right
+// locations in the original tree.
 final class UseEarlyExitsTests: LintOrFormatRuleTestCase {
   func testBasicIfElse() {
     // In this and other tests, the indentation of the true block in the expected output is
     // explicitly incorrect because this formatting rule does not fix it up with the assumption that
     // the pretty-printer will handle it.
-    XCTAssertFormatting(
+    assertFormatting(
       UseEarlyExits.self,
       input: """
         if condition {
           trueBlock()
-        } else {
+        } 1️⃣else {
           falseBlock()
           return
         }
@@ -21,17 +26,21 @@ final class UseEarlyExitsTests: LintOrFormatRuleTestCase {
           return
         }
           trueBlock()
-        """)
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "replace the 'if/else' block with a 'guard' statement containing the early exit"),
+      ]
+    )
   }
 
   func testIfElseWithBothEarlyExiting() {
-    XCTAssertFormatting(
+    assertFormatting(
       UseEarlyExits.self,
       input: """
         if condition {
           trueBlock()
           return
-        } else {
+        } 1️⃣else {
           falseBlock()
           return
         }
@@ -43,7 +52,11 @@ final class UseEarlyExitsTests: LintOrFormatRuleTestCase {
         }
           trueBlock()
           return
-        """)
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "replace the 'if/else' block with a 'guard' statement containing the early exit"),
+      ]
+    )
   }
 
   func testElseIfsDoNotChange() {
@@ -55,7 +68,7 @@ final class UseEarlyExitsTests: LintOrFormatRuleTestCase {
         return
       }
       """
-    XCTAssertFormatting(UseEarlyExits.self, input: input, expected: input)
+    assertFormatting(UseEarlyExits.self, input: input, expected: input, findings: [])
   }
 
   func testElsesAtEndOfElseIfsDoNotChange() {
@@ -70,11 +83,11 @@ final class UseEarlyExitsTests: LintOrFormatRuleTestCase {
         return
       }
       """
-    XCTAssertFormatting(UseEarlyExits.self, input: input, expected: input)
+    assertFormatting(UseEarlyExits.self, input: input, expected: input, findings: [])
   }
 
   func testComplex() {
-    XCTAssertFormatting(
+    assertFormatting(
       UseEarlyExits.self,
       input: """
         func discombobulate(_ values: [Int]) throws -> Int {
@@ -88,13 +101,13 @@ final class UseEarlyExitsTests: LintOrFormatRuleTestCase {
             if first >= 0 {
               // Comment 4
               var result = 0
-              for value in values {
+           2️⃣   for value in values {
                 result += invertedCombobulatorFactor(of: value)
               }
               return result
             } else {
               print("Can't have negative energy")
-              throw DiscombobulationError.negativeEnergy
+          1️⃣    throw DiscombobulationError.negativeEnergy
             }
           } else {
             print("The array was empty")
@@ -125,6 +138,11 @@ final class UseEarlyExitsTests: LintOrFormatRuleTestCase {
               }
               return result
         }
-        """)
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "replace the 'if/else' block with a 'guard' statement containing the early exit"),
+        FindingSpec("2️⃣", message: "replace the 'if/else' block with a 'guard' statement containing the early exit"),
+      ]
+    )
   }
 }
