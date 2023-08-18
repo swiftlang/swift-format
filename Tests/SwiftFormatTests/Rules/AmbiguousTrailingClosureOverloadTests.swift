@@ -1,47 +1,60 @@
+import _SwiftFormatTestSupport
+
 @_spi(Rules) import SwiftFormat
 
 final class AmbiguousTrailingClosureOverloadTests: LintOrFormatRuleTestCase {
   func testAmbiguousOverloads() {
-    performLint(
+    assertLint(
       AmbiguousTrailingClosureOverload.self,
-      input: """
-             func strong(mad: () -> Int) {}
-             func strong(bad: (Bool) -> Bool) {}
-             func strong(sad: (String) -> Bool) {}
+      """
+      func 1️⃣strong(mad: () -> Int) {}
+      func 2️⃣strong(bad: (Bool) -> Bool) {}
+      func 3️⃣strong(sad: (String) -> Bool) {}
 
-             class A {
-               static func the(cheat: (Int) -> Void) {}
-               class func the(sneak: (Int) -> Void) {}
-               func the(kingOfTown: () -> Void) {}
-               func the(cheatCommandos: (Bool) -> Void) {}
-               func the(brothersStrong: (String) -> Void) {}
-             }
+      class A {
+        static func 4️⃣the(cheat: (Int) -> Void) {}
+        class func 5️⃣the(sneak: (Int) -> Void) {}
+        func 6️⃣the(kingOfTown: () -> Void) {}
+        func 7️⃣the(cheatCommandos: (Bool) -> Void) {}
+        func 8️⃣the(brothersStrong: (String) -> Void) {}
+      }
 
-             struct B {
-               func hom(estar: () -> Int) {}
-               func hom(sar: () -> Bool) {}
+      struct B {
+        func 9️⃣hom(estar: () -> Int) {}
+        func 🔟hom(sar: () -> Bool) {}
 
-               static func baleeted(_ f: () -> Void) {}
-               func baleeted(_ f: () -> Void) {}
-             }
-             """
+        static func baleeted(_ f: () -> Void) {}
+        func baleeted(_ f: () -> Void) {}
+      }
+      """,
+      findings: [
+        FindingSpec(
+          "1️⃣", message: "rename 'strong(mad:)' so it is no longer ambiguous when called with a trailing closure",
+          notes: [
+            NoteSpec("2️⃣", message: "ambiguous overload 'strong(bad:)' is here"),
+            NoteSpec("3️⃣", message: "ambiguous overload 'strong(sad:)' is here"),
+          ]
+        ),
+        FindingSpec(
+          "4️⃣", message: "rename 'the(cheat:)' so it is no longer ambiguous when called with a trailing closure",
+          notes: [
+            NoteSpec("5️⃣", message: "ambiguous overload 'the(sneak:)' is here"),
+          ]
+        ),
+        FindingSpec(
+          "6️⃣", message: "rename 'the(kingOfTown:)' so it is no longer ambiguous when called with a trailing closure",
+          notes: [
+            NoteSpec("7️⃣", message: "ambiguous overload 'the(cheatCommandos:)' is here"),
+            NoteSpec("8️⃣", message: "ambiguous overload 'the(brothersStrong:)' is here"),
+          ]
+        ),
+        FindingSpec(
+          "9️⃣", message: "rename 'hom(estar:)' so it is no longer ambiguous when called with a trailing closure",
+          notes: [
+            NoteSpec("🔟", message: "ambiguous overload 'hom(sar:)' is here"),
+          ]
+        ),
+      ]
     )
-
-    XCTAssertDiagnosed(.ambiguousTrailingClosureOverload("strong(mad:)"))
-    XCTAssertDiagnosed(.otherAmbiguousOverloadHere("strong(bad:)"))
-    XCTAssertDiagnosed(.otherAmbiguousOverloadHere("strong(sad:)"))
-
-    XCTAssertDiagnosed(.ambiguousTrailingClosureOverload("the(cheat:)"))
-    XCTAssertDiagnosed(.otherAmbiguousOverloadHere("the(sneak:)"))
-
-    XCTAssertDiagnosed(.ambiguousTrailingClosureOverload("the(kingOfTown:)"))
-    XCTAssertDiagnosed(.otherAmbiguousOverloadHere("the(cheatCommandos:)"))
-    XCTAssertDiagnosed(.otherAmbiguousOverloadHere("the(brothersStrong:)"))
-
-    XCTAssertDiagnosed(.ambiguousTrailingClosureOverload("hom(estar:)"))
-    XCTAssertDiagnosed(.otherAmbiguousOverloadHere("hom(sar:)"))
-
-    XCTAssertNotDiagnosed(.ambiguousTrailingClosureOverload("baleeted(_:)"))
-    XCTAssertNotDiagnosed(.otherAmbiguousOverloadHere("baleeted(_:)"))
   }
 }

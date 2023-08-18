@@ -1,79 +1,75 @@
+import _SwiftFormatTestSupport
+
 @_spi(Rules) import SwiftFormat
 
+// FIXME: These diagnostics should be on the variable name, not at the beginning of the declaration.
 final class DontRepeatTypeInStaticPropertiesTests: LintOrFormatRuleTestCase {
   func testRepetitiveProperties() {
-    let input =
+    assertLint(
+      DontRepeatTypeInStaticProperties.self,
       """
       public class UIColor {
-        static let redColor: UIColor
-        public class var blueColor: UIColor
+        1️⃣static let redColor: UIColor
+        2️⃣public class var blueColor: UIColor
         var yellowColor: UIColor
         static let green: UIColor
         public class var purple: UIColor
       }
       enum Sandwich {
-        static let bolognaSandwich: Sandwich
-        static var hamSandwich: Sandwich
+        3️⃣static let bolognaSandwich: Sandwich
+        4️⃣static var hamSandwich: Sandwich
         static var turkey: Sandwich
       }
       protocol RANDPerson {
         var oldPerson: Person
-        static let youngPerson: Person
+        5️⃣static let youngPerson: Person
       }
       struct TVGame {
-        static var basketballGame: TVGame
-        static var baseballGame: TVGame
+        6️⃣static var basketballGame: TVGame
+        7️⃣static var baseballGame: TVGame
         static let soccer: TVGame
         let hockey: TVGame
       }
       extension URLSession {
-        class var sharedSession: URLSession
+        8️⃣class var sharedSession: URLSession
       }
-      """
-
-    performLint(DontRepeatTypeInStaticProperties.self, input: input)
-    XCTAssertDiagnosed(.removeTypeFromName(name: "redColor", type: "Color"))
-    XCTAssertDiagnosed(.removeTypeFromName(name: "blueColor", type: "Color"))
-    XCTAssertNotDiagnosed(.removeTypeFromName(name: "yellowColor", type: "Color"))
-    XCTAssertNotDiagnosed(.removeTypeFromName(name: "green", type: "Color"))
-    XCTAssertNotDiagnosed(.removeTypeFromName(name: "purple", type: "Color"))
-    
-    XCTAssertDiagnosed(.removeTypeFromName(name: "bolognaSandwich", type: "Sandwich"))
-    XCTAssertDiagnosed(.removeTypeFromName(name: "hamSandwich", type: "Sandwich"))
-    XCTAssertNotDiagnosed(.removeTypeFromName(name: "turkey", type: "Sandwich"))
-    
-    XCTAssertNotDiagnosed(.removeTypeFromName(name: "oldPerson", type: "Person"))
-    XCTAssertDiagnosed(.removeTypeFromName(name: "youngPerson", type: "Person"))
-    
-    XCTAssertDiagnosed(.removeTypeFromName(name: "basketballGame", type: "Game"))
-    XCTAssertDiagnosed(.removeTypeFromName(name: "baseballGame", type: "Game"))
-    XCTAssertNotDiagnosed(.removeTypeFromName(name: "soccer", type: "Game"))
-    XCTAssertNotDiagnosed(.removeTypeFromName(name: "hockey", type: "Game"))
-    
-    XCTAssertDiagnosed(.removeTypeFromName(name: "sharedSession", type: "Session"))
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the suffix 'Color' from the name of the variable 'redColor'"),
+        FindingSpec("2️⃣", message: "remove the suffix 'Color' from the name of the variable 'blueColor'"),
+        FindingSpec("3️⃣", message: "remove the suffix 'Sandwich' from the name of the variable 'bolognaSandwich'"),
+        FindingSpec("4️⃣", message: "remove the suffix 'Sandwich' from the name of the variable 'hamSandwich'"),
+        FindingSpec("5️⃣", message: "remove the suffix 'Person' from the name of the variable 'youngPerson'"),
+        FindingSpec("6️⃣", message: "remove the suffix 'Game' from the name of the variable 'basketballGame'"),
+        FindingSpec("7️⃣", message: "remove the suffix 'Game' from the name of the variable 'baseballGame'"),
+        FindingSpec("8️⃣", message: "remove the suffix 'Session' from the name of the variable 'sharedSession'"),
+      ]
+    )
   }
 
-  func testSR11123() {
-    let input =
+  func testDoNotDiagnoseUnrelatedType() {
+    assertLint(
+      DontRepeatTypeInStaticProperties.self,
       """
       extension A {
         static let b = C()
       }
-      """
-
-    performLint(DontRepeatTypeInStaticProperties.self, input: input)
-    XCTAssertNotDiagnosed(.removeTypeFromName(name: "b", type: "A"))
+      """,
+      findings: []
+    )
   }
 
   func testDottedExtendedType() {
-    let input =
+    assertLint(
+      DontRepeatTypeInStaticProperties.self,
       """
       extension Dotted.Thing {
-        static let defaultThing: Dotted.Thing
+        1️⃣static let defaultThing: Dotted.Thing
       }
-      """
-
-    performLint(DontRepeatTypeInStaticProperties.self, input: input)
-    XCTAssertDiagnosed(.removeTypeFromName(name: "defaultThing", type: "Thing"))
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the suffix 'Thing' from the name of the variable 'defaultThing'"),
+      ]
+    )
   }
 }

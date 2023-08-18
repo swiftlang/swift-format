@@ -1,3 +1,5 @@
+import _SwiftFormatTestSupport
+
 @_spi(Rules) import SwiftFormat
 
 final class OneCasePerLineTests: LintOrFormatRuleTestCase {
@@ -7,22 +9,20 @@ final class OneCasePerLineTests: LintOrFormatRuleTestCase {
   // running the full formatter.
 
   func testInvalidCasesOnLine() {
-    XCTAssertFormatting(
+    assertFormatting(
       OneCasePerLine.self,
-      input:
-        """
+      input: """
         public enum Token {
           case arrow
-          case comma, identifier(String), semicolon, stringSegment(String)
+          case comma, 1️⃣identifier(String), semicolon, 2️⃣stringSegment(String)
           case period
-          case ifKeyword(String), forKeyword(String)
-          indirect case guardKeyword, elseKeyword, contextualKeyword(String)
+          case 3️⃣ifKeyword(String), 4️⃣forKeyword(String)
+          indirect case guardKeyword, elseKeyword, 5️⃣contextualKeyword(String)
           var x: Bool
-          case leftParen, rightParen = ")", leftBrace, rightBrace = "}"
+          case leftParen, 6️⃣rightParen = ")", leftBrace, 7️⃣rightBrace = "}"
         }
         """,
-      expected:
-        """
+      expected: """
         public enum Token {
           case arrow
           case comma
@@ -40,41 +40,51 @@ final class OneCasePerLineTests: LintOrFormatRuleTestCase {
         case leftBrace
         case rightBrace = "}"
         }
-        """)
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "move 'identifier' to its own 'case' declaration"),
+        FindingSpec("2️⃣", message: "move 'stringSegment' to its own 'case' declaration"),
+        FindingSpec("3️⃣", message: "move 'ifKeyword' to its own 'case' declaration"),
+        FindingSpec("4️⃣", message: "move 'forKeyword' to its own 'case' declaration"),
+        FindingSpec("5️⃣", message: "move 'contextualKeyword' to its own 'case' declaration"),
+        FindingSpec("6️⃣", message: "move 'rightParen' to its own 'case' declaration"),
+        FindingSpec("7️⃣", message: "move 'rightBrace' to its own 'case' declaration"),
+      ]
+    )
   }
 
   func testElementOrderIsPreserved() {
-    XCTAssertFormatting(
+    assertFormatting(
       OneCasePerLine.self,
-      input:
-        """
+      input: """
         enum Foo: Int {
-          case a = 0, b, c, d
+          case 1️⃣a = 0, b, c, d
         }
         """,
-      expected:
-        """
+      expected: """
         enum Foo: Int {
           case a = 0
         case b, c, d
         }
-        """)
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "move 'a' to its own 'case' declaration"),
+      ]
+    )
   }
 
   func testCommentsAreNotRepeated() {
-    XCTAssertFormatting(
+    assertFormatting(
       OneCasePerLine.self,
-      input:
-        """
+      input: """
         enum Foo: Int {
           /// This should only be above `a`.
-          case a = 0, b, c, d
+          case 1️⃣a = 0, b, c, d
           // This should only be above `e`.
-          case e, f = 100
+          case e, 2️⃣f = 100
         }
         """,
-      expected:
-        """
+      expected: """
         enum Foo: Int {
           /// This should only be above `a`.
           case a = 0
@@ -83,22 +93,25 @@ final class OneCasePerLineTests: LintOrFormatRuleTestCase {
           case e
         case f = 100
         }
-        """)
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "move 'a' to its own 'case' declaration"),
+        FindingSpec("2️⃣", message: "move 'f' to its own 'case' declaration"),
+      ]
+    )
   }
 
   func testAttributesArePropagated() {
-    XCTAssertFormatting(
+    assertFormatting(
       OneCasePerLine.self,
-      input:
-        """
+      input: """
         enum Foo {
-          @someAttr case a(String), b, c, d
-          case e, f(Int)
-          @anotherAttr case g, h(Float)
+          @someAttr case 1️⃣a(String), b, c, d
+          case e, 2️⃣f(Int)
+          @anotherAttr case g, 3️⃣h(Float)
         }
         """,
-      expected:
-        """
+      expected: """
         enum Foo {
           @someAttr case a(String)
         @someAttr case b, c, d
@@ -107,6 +120,12 @@ final class OneCasePerLineTests: LintOrFormatRuleTestCase {
           @anotherAttr case g
         @anotherAttr case h(Float)
         }
-        """)
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "move 'a' to its own 'case' declaration"),
+        FindingSpec("2️⃣", message: "move 'f' to its own 'case' declaration"),
+        FindingSpec("3️⃣", message: "move 'h' to its own 'case' declaration"),
+      ]
+    )
   }
 }

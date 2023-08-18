@@ -1,10 +1,10 @@
+import SwiftFormatConfiguration
 import SwiftParser
 import XCTest
 
 @_spi(Rules) @_spi(Testing) import SwiftFormat
-@_spi(Testing) import _SwiftFormatTestSupport
 
-class ImportsXCTestVisitorTests: DiagnosingTestCase {
+class ImportsXCTestVisitorTests: XCTestCase {
   func testDoesNotImportXCTest() throws {
     XCTAssertEqual(
       try makeContextAndSetImportsXCTest(source: """
@@ -50,7 +50,13 @@ class ImportsXCTestVisitorTests: DiagnosingTestCase {
   /// import state.
   private func makeContextAndSetImportsXCTest(source: String) throws -> Context.XCTestImportState {
     let sourceFile = Parser.parse(source: source)
-    let context = makeContext(sourceFileSyntax: sourceFile)
+    let context = Context(
+      configuration: Configuration(),
+      operatorTable: .standardOperators,
+      findingConsumer: { _ in },
+      fileURL: URL(fileURLWithPath: "/tmp/test.swift"),
+      sourceFileSyntax: sourceFile,
+      ruleNameCache: ruleNameCache)
     setImportsXCTest(context: context, sourceFile: sourceFile)
     return context.importsXCTest
   }

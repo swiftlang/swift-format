@@ -4,7 +4,7 @@ import SwiftSyntax
 import SwiftParser
 import XCTest
 
-@_spi(Testing) import SwiftFormat
+@_spi(Rules) @_spi(Testing) import SwiftFormat
 @_spi(Testing) import _SwiftFormatTestSupport
 
 class PrettyPrintTestCase: DiagnosingTestCase {
@@ -17,6 +17,8 @@ class PrettyPrintTestCase: DiagnosingTestCase {
   ///   - configuration: The formatter configuration.
   ///   - whitespaceOnly: If true, the pretty printer should only apply whitespace changes and omit
   ///     changes that insert or remove non-whitespace characters (like trailing commas).
+  ///   - findings: A list of `FindingSpec` values that describe the findings that are expected to
+  ///     be emitted. These are currently only checked if `whitespaceOnly` is true.
   ///   - file: The file in which failure occurred. Defaults to the file name of the test case in
   ///     which this function was called.
   ///   - line: The line number on which failure occurred. Defaults to the line number on which this
@@ -27,31 +29,49 @@ class PrettyPrintTestCase: DiagnosingTestCase {
     linelength: Int,
     configuration: Configuration = Configuration.forTesting,
     whitespaceOnly: Bool = false,
+    findings: [FindingSpec] = [],
     file: StaticString = #file,
     line: UInt = #line
   ) {
     var configuration = configuration
     configuration.lineLength = linelength
 
-    // Assert that the input, when formatted, is what we expected.
-    if let formatted = prettyPrintedSource(
-      input, configuration: configuration, whitespaceOnly: whitespaceOnly)
-    {
-      XCTAssertStringsEqualWithDiff(
-        formatted, expected,
-        "Pretty-printed result was not what was expected",
-        file: file, line: line)
+    let markedInput = MarkedText(textWithMarkers: input)
+    var emittedFindings = [Finding]()
 
-      // Idempotency check: Running the formatter multiple times should not change the outcome.
-      // Assert that running the formatter again on the previous result keeps it the same.
-      stopTrackingDiagnostics()
-      if let reformatted = prettyPrintedSource(
-        formatted, configuration: configuration, whitespaceOnly: whitespaceOnly)
-      {
-        XCTAssertStringsEqualWithDiff(
-          reformatted, formatted, "Pretty printer is not idempotent", file: file, line: line)
-      }
+    // Assert that the input, when formatted, is what we expected.
+    let (formatted, context) = prettyPrintedSource(
+      markedInput.textWithoutMarkers,
+      configuration: configuration,
+      whitespaceOnly: whitespaceOnly,
+      findingConsumer: { emittedFindings.append($0) })
+    assertStringsEqualWithDiff(
+      formatted, expected,
+      "Pretty-printed result was not what was expected",
+      file: file, line: line)
+
+    // FIXME: It would be nice to check findings when whitespaceOnly == false, but their locations
+    // are wrong.
+    if whitespaceOnly {
+      assertFindings(
+        expected: findings,
+        markerLocations: markedInput.markers,
+        emittedFindings: emittedFindings,
+        context: context,
+        file: file,
+        line: line)
     }
+
+    // Idempotency check: Running the formatter multiple times should not change the outcome.
+    // Assert that running the formatter again on the previous result keeps it the same.
+    let (reformatted, _) = prettyPrintedSource(
+      formatted,
+      configuration: configuration,
+      whitespaceOnly: whitespaceOnly,
+      findingConsumer: { _ in }  // Ignore findings during the idempotence check.
+    )
+    assertStringsEqualWithDiff(
+      reformatted, formatted, "Pretty printer is not idempotent", file: file, line: line)
   }
 
   /// Returns the given source code reformatted with the pretty printer.
@@ -61,21 +81,28 @@ class PrettyPrintTestCase: DiagnosingTestCase {
   ///   - configuration: The formatter configuration.
   ///   - whitespaceOnly: If true, the pretty printer should only apply whitespace changes and omit
   ///     changes that insert or remove non-whitespace characters (like trailing commas).
+  ///   - findingConsumer: A function called for each finding that is emitted by the pretty printer.
   /// - Returns: The pretty-printed text, or nil if an error occurred and a test failure was logged.
   private func prettyPrintedSource(
-    _ source: String, configuration: Configuration, whitespaceOnly: Bool
-  ) -> String? {
+    _ source: String,
+    configuration: Configuration,
+    whitespaceOnly: Bool,
+    findingConsumer: @escaping (Finding) -> Void
+  ) -> (String, Context) {
     // Ignore folding errors for unrecognized operators so that we fallback to a reasonable default.
     let sourceFileSyntax =
       restoringLegacyTriviaBehavior(
         OperatorTable.standardOperators.foldAll(Parser.parse(source: source)) { _ in }
           .as(SourceFileSyntax.self)!)
-    let context = makeContext(sourceFileSyntax: sourceFileSyntax, configuration: configuration)
+    let context = makeContext(
+      sourceFileSyntax: sourceFileSyntax,
+      configuration: configuration,
+      findingConsumer: findingConsumer)
     let printer = PrettyPrinter(
       context: context,
       node: Syntax(sourceFileSyntax),
       printTokenStream: false,
       whitespaceOnly: whitespaceOnly)
-    return printer.prettyPrint()
+    return (printer.prettyPrint(), context)
   }
 }

@@ -1,5 +1,6 @@
 import SwiftFormat
 import SwiftSyntax
+import _SwiftFormatTestSupport
 
 final class DictionaryDeclTests: PrettyPrintTestCase {
   func testBasicDictionaries() {
@@ -90,37 +91,62 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
   }
 
   func testWhitespaceOnlyDoesNotChangeTrailingComma() {
-    let input =
-      """
-      let a = [
-        1: "a",
-      ]
-      let a = [1: "a", 2: "b", 3: "c",]
-      let a: [Int: String] = [
-        1: "a", 2: "b", 3: "c", 4: "d", 5: "e", 6: "f",
-        7: "g", 8: "i"
-      ]
-      """
-
     assertPrettyPrintEqual(
-      input: input, expected: input + "\n", linelength: 50, whitespaceOnly: true)
+      input: """
+        let a = [
+          1: "a"1️⃣,
+        ]
+        let a = [1: "a", 2: "b", 3: "c"2️⃣,]
+        let a: [Int: String] = [
+          1: "a", 2: "b", 3: "c", 4: "d", 5: "e", 6: "f",
+          7: "g", 8: "i"3️⃣
+        ]
+        """,
+      expected: """
+        let a = [
+          1: "a",
+        ]
+        let a = [1: "a", 2: "b", 3: "c",]
+        let a: [Int: String] = [
+          1: "a", 2: "b", 3: "c", 4: "d", 5: "e", 6: "f",
+          7: "g", 8: "i"
+        ]
+
+        """,
+      linelength: 50,
+      whitespaceOnly: true,
+      findings: [
+        FindingSpec("1️⃣", message: "remove trailing comma from the last element in single line collection literal"),
+        FindingSpec("2️⃣", message: "remove trailing comma from the last element in single line collection literal"),
+        FindingSpec("3️⃣", message: "add trailing comma to the last element in multiline collection literal"),
+      ]
+    )
   }
 
   func testTrailingCommaDiagnostics() {
-    let input =
-      """
-      let a = [1: "a", 2: "b", 3: "c",]
-      let a: [Int: String] = [
-        1: "a", 2: "b", 3: "c", 4: "d", 5: "e", 6: "f",
-        7: "g", 8: "i"
-      ]
-      """
-
     assertPrettyPrintEqual(
-      input: input, expected: input + "\n", linelength: 50, whitespaceOnly: true)
+      input: """
+        let a = [1: "a", 2: "b", 3: "c"1️⃣,]
+        let a: [Int: String] = [
+          1: "a", 2: "b", 3: "c", 4: "d", 5: "e", 6: "f",
+          7: "g", 8: "i"2️⃣
+        ]
+        """,
+      expected: """
+        let a = [1: "a", 2: "b", 3: "c",]
+        let a: [Int: String] = [
+          1: "a", 2: "b", 3: "c", 4: "d", 5: "e", 6: "f",
+          7: "g", 8: "i"
+        ]
 
-    XCTAssertDiagnosed(.removeTrailingComma, line: 1, column: 32)
-    XCTAssertDiagnosed(.addTrailingComma, line: 4, column: 17)
+        """,
+      linelength: 50,
+      whitespaceOnly: true,
+      findings: [
+        FindingSpec("1️⃣", message: "remove trailing comma from the last element in single line collection literal"),
+        FindingSpec("2️⃣", message: "add trailing comma to the last element in multiline collection literal"),
+      ]
+    )
   }
 
   func testDiscretionaryNewlineAfterColon() {

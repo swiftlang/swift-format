@@ -1,34 +1,41 @@
+import _SwiftFormatTestSupport
+
 @_spi(Rules) import SwiftFormat
 
 final class NoVoidReturnOnFunctionSignatureTests: LintOrFormatRuleTestCase {
   func testVoidReturns() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoVoidReturnOnFunctionSignature.self,
       input: """
-             func foo() -> () {
-             }
+        func foo() -> 1️⃣() {
+        }
 
-             func test() -> Void{
-             }
+        func test() -> 2️⃣Void{
+        }
 
-             func x() -> Int { return 2 }
+        func x() -> Int { return 2 }
 
-             let x = { () -> Void in
-               print("Hello, world!")
-             }
-             """,
+        let x = { () -> Void in
+          print("Hello, world!")
+        }
+        """,
       expected: """
-                func foo() {
-                }
+        func foo() {
+        }
 
-                func test() {
-                }
+        func test() {
+        }
 
-                func x() -> Int { return 2 }
+        func x() -> Int { return 2 }
 
-                let x = { () -> Void in
-                  print("Hello, world!")
-                }
-                """)
+        let x = { () -> Void in
+          print("Hello, world!")
+        }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the explicit return type '()' from this function"),
+        FindingSpec("2️⃣", message: "remove the explicit return type 'Void' from this function"),
+      ]
+    )
   }
 }

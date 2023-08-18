@@ -1,5 +1,6 @@
 import SwiftFormatConfiguration
 import SwiftSyntax
+import _SwiftFormatTestSupport
 
 @_spi(Rules) import SwiftFormat
 
@@ -31,23 +32,25 @@ final class FileScopedDeclarationPrivacyTests: LintOrFormatRuleTestCase {
   func testFileScopeDecls() {
     runWithMultipleConfigurations(
       source: """
-        $access$ class Foo {}
-        $access$ struct Foo {}
-        $access$ enum Foo {}
-        $access$ protocol Foo {}
-        $access$ typealias Foo = Bar
-        $access$ func foo() {}
-        $access$ var foo: Bar
+        1️⃣$access$ class Foo {}
+        2️⃣$access$ struct Foo {}
+        3️⃣$access$ enum Foo {}
+        4️⃣$access$ protocol Foo {}
+        5️⃣$access$ typealias Foo = Bar
+        6️⃣$access$ func foo() {}
+        7️⃣$access$ var foo: Bar
         """,
       testConfigurations: changingTestConfigurations
-    ) { assertDiagnosticWasEmittedOrNot in
-      assertDiagnosticWasEmittedOrNot(1, 1)
-      assertDiagnosticWasEmittedOrNot(2, 1)
-      assertDiagnosticWasEmittedOrNot(3, 1)
-      assertDiagnosticWasEmittedOrNot(4, 1)
-      assertDiagnosticWasEmittedOrNot(5, 1)
-      assertDiagnosticWasEmittedOrNot(6, 1)
-      assertDiagnosticWasEmittedOrNot(7, 1)
+    ) { original, expected in
+      [
+        FindingSpec("1️⃣", message: "replace '\(original)' with '\(expected)' on file-scoped declarations"),
+        FindingSpec("2️⃣", message: "replace '\(original)' with '\(expected)' on file-scoped declarations"),
+        FindingSpec("3️⃣", message: "replace '\(original)' with '\(expected)' on file-scoped declarations"),
+        FindingSpec("4️⃣", message: "replace '\(original)' with '\(expected)' on file-scoped declarations"),
+        FindingSpec("5️⃣", message: "replace '\(original)' with '\(expected)' on file-scoped declarations"),
+        FindingSpec("6️⃣", message: "replace '\(original)' with '\(expected)' on file-scoped declarations"),
+        FindingSpec("7️⃣", message: "replace '\(original)' with '\(expected)' on file-scoped declarations"),
+      ]
     }
   }
 
@@ -57,9 +60,7 @@ final class FileScopedDeclarationPrivacyTests: LintOrFormatRuleTestCase {
         $access$ extension Foo {}
         """,
       testConfigurations: unchangingTestConfigurations
-    ) { assertDiagnosticWasEmittedOrNot in
-      assertDiagnosticWasEmittedOrNot(1, 1)
-    }
+    ) { _, _ in [] }
   }
 
   func testNonFileScopeDeclsAreNotChanged() {
@@ -75,69 +76,27 @@ final class FileScopedDeclarationPrivacyTests: LintOrFormatRuleTestCase {
         }
         """,
       testConfigurations: unchangingTestConfigurations
-    ) { assertDiagnosticWasEmittedOrNot in
-      assertDiagnosticWasEmittedOrNot(1, 1)
-      assertDiagnosticWasEmittedOrNot(2, 1)
-      assertDiagnosticWasEmittedOrNot(3, 1)
-      assertDiagnosticWasEmittedOrNot(4, 1)
-      assertDiagnosticWasEmittedOrNot(5, 1)
-      assertDiagnosticWasEmittedOrNot(6, 1)
-      assertDiagnosticWasEmittedOrNot(7, 1)
-    }
+    ) { _, _ in [] }
   }
 
   func testFileScopeDeclsInsideConditionals() {
     runWithMultipleConfigurations(
       source: """
         #if FOO
-          $access$ class Foo {}
-          $access$ struct Foo {}
-          $access$ enum Foo {}
-          $access$ protocol Foo {}
-          $access$ typealias Foo = Bar
-          $access$ func foo() {}
-          $access$ var foo: Bar
+          1️⃣$access$ class Foo {}
         #elseif BAR
-          $access$ class Foo {}
-          $access$ struct Foo {}
-          $access$ enum Foo {}
-          $access$ protocol Foo {}
-          $access$ typealias Foo = Bar
-          $access$ func foo() {}
-          $access$ var foo: Bar
+          2️⃣$access$ class Foo {}
         #else
-          $access$ class Foo {}
-          $access$ struct Foo {}
-          $access$ enum Foo {}
-          $access$ protocol Foo {}
-          $access$ typealias Foo = Bar
-          $access$ func foo() {}
-          $access$ var foo: Bar
+          3️⃣$access$ class Foo {}
         #endif
         """,
       testConfigurations: changingTestConfigurations
-    ) { assertDiagnosticWasEmittedOrNot in
-      assertDiagnosticWasEmittedOrNot(2, 3)
-      assertDiagnosticWasEmittedOrNot(3, 3)
-      assertDiagnosticWasEmittedOrNot(4, 3)
-      assertDiagnosticWasEmittedOrNot(5, 3)
-      assertDiagnosticWasEmittedOrNot(6, 3)
-      assertDiagnosticWasEmittedOrNot(7, 3)
-      assertDiagnosticWasEmittedOrNot(8, 3)
-      assertDiagnosticWasEmittedOrNot(10, 3)
-      assertDiagnosticWasEmittedOrNot(11, 3)
-      assertDiagnosticWasEmittedOrNot(12, 3)
-      assertDiagnosticWasEmittedOrNot(13, 3)
-      assertDiagnosticWasEmittedOrNot(14, 3)
-      assertDiagnosticWasEmittedOrNot(15, 3)
-      assertDiagnosticWasEmittedOrNot(16, 3)
-      assertDiagnosticWasEmittedOrNot(18, 3)
-      assertDiagnosticWasEmittedOrNot(19, 3)
-      assertDiagnosticWasEmittedOrNot(20, 3)
-      assertDiagnosticWasEmittedOrNot(21, 3)
-      assertDiagnosticWasEmittedOrNot(22, 3)
-      assertDiagnosticWasEmittedOrNot(23, 3)
-      assertDiagnosticWasEmittedOrNot(24, 3)
+    ) { original, expected in
+      [
+        FindingSpec("1️⃣", message: "replace '\(original)' with '\(expected)' on file-scoped declarations"),
+        FindingSpec("2️⃣", message: "replace '\(original)' with '\(expected)' on file-scoped declarations"),
+        FindingSpec("3️⃣", message: "replace '\(original)' with '\(expected)' on file-scoped declarations"),
+      ]
     }
   }
 
@@ -146,25 +105,27 @@ final class FileScopedDeclarationPrivacyTests: LintOrFormatRuleTestCase {
       source: """
         #if FOO
           #if BAR
-            $access$ class Foo {}
-            $access$ struct Foo {}
-            $access$ enum Foo {}
-            $access$ protocol Foo {}
-            $access$ typealias Foo = Bar
-            $access$ func foo() {}
-            $access$ var foo: Bar
+            1️⃣$access$ class Foo {}
+            2️⃣$access$ struct Foo {}
+            3️⃣$access$ enum Foo {}
+            4️⃣$access$ protocol Foo {}
+            5️⃣$access$ typealias Foo = Bar
+            6️⃣$access$ func foo() {}
+            7️⃣$access$ var foo: Bar
           #endif
         #endif
         """,
       testConfigurations: changingTestConfigurations
-    ) { assertDiagnosticWasEmittedOrNot in
-      assertDiagnosticWasEmittedOrNot(3, 5)
-      assertDiagnosticWasEmittedOrNot(4, 5)
-      assertDiagnosticWasEmittedOrNot(5, 5)
-      assertDiagnosticWasEmittedOrNot(6, 5)
-      assertDiagnosticWasEmittedOrNot(7, 5)
-      assertDiagnosticWasEmittedOrNot(8, 5)
-      assertDiagnosticWasEmittedOrNot(9, 5)
+    ) { original, expected in
+      [
+        FindingSpec("1️⃣", message: "replace '\(original)' with '\(expected)' on file-scoped declarations"),
+        FindingSpec("2️⃣", message: "replace '\(original)' with '\(expected)' on file-scoped declarations"),
+        FindingSpec("3️⃣", message: "replace '\(original)' with '\(expected)' on file-scoped declarations"),
+        FindingSpec("4️⃣", message: "replace '\(original)' with '\(expected)' on file-scoped declarations"),
+        FindingSpec("5️⃣", message: "replace '\(original)' with '\(expected)' on file-scoped declarations"),
+        FindingSpec("6️⃣", message: "replace '\(original)' with '\(expected)' on file-scoped declarations"),
+        FindingSpec("7️⃣", message: "replace '\(original)' with '\(expected)' on file-scoped declarations"),
+      ]
     }
   }
 
@@ -172,25 +133,29 @@ final class FileScopedDeclarationPrivacyTests: LintOrFormatRuleTestCase {
     runWithMultipleConfigurations(
       source: """
         /// Some doc comment
-        $access$ class Foo {}
+        1️⃣$access$ class Foo {}
 
-        @objc /* comment */ $access$ class Bar {}
+        @objc /* comment */ 2️⃣$access$ class Bar {}
         """,
       testConfigurations: changingTestConfigurations
-    ) { assertDiagnosticWasEmittedOrNot in
-      assertDiagnosticWasEmittedOrNot(2, 1)
-      assertDiagnosticWasEmittedOrNot(4, 21)
+    ) { original, expected in
+      [
+        FindingSpec("1️⃣", message: "replace '\(original)' with '\(expected)' on file-scoped declarations"),
+        FindingSpec("2️⃣", message: "replace '\(original)' with '\(expected)' on file-scoped declarations"),
+      ]
     }
   }
 
   func testModifierDetailIsPreserved() {
     runWithMultipleConfigurations(
       source: """
-        public $access$(set) var foo: Int
+        public 1️⃣$access$(set) var foo: Int
         """,
       testConfigurations: changingTestConfigurations
-    ) { assertDiagnosticWasEmittedOrNot in
-      assertDiagnosticWasEmittedOrNot(1, 8)
+    ) { original, expected in
+      [
+        FindingSpec("1️⃣", message: "replace '\(original)' with '\(expected)' on file-scoped declarations"),
+      ]
     }
   }
 
@@ -200,40 +165,35 @@ final class FileScopedDeclarationPrivacyTests: LintOrFormatRuleTestCase {
     testConfigurations: [TestConfiguration],
     file: StaticString = #file,
     line: UInt = #line,
-    completion: ((Int, Int) -> Void) -> Void
+    findingsProvider: (String, String) -> [FindingSpec]
   ) {
     for testConfig in testConfigurations {
       var configuration = Configuration.forTesting
       configuration.fileScopedDeclarationPrivacy.accessLevel = testConfig.desired
 
       let substitutedInput = source.replacingOccurrences(of: "$access$", with: testConfig.original)
-      let substitutedExpected =
-        source.replacingOccurrences(of: "$access$", with: testConfig.expected)
 
-      XCTAssertFormatting(
+      let markedSource = MarkedText(textWithMarkers: source)
+      let substitutedExpected = markedSource.textWithoutMarkers.replacingOccurrences(
+        of: "$access$", with: testConfig.expected)
+
+      // Only use the findings if the output was expected to change. If it didn't change, then the
+      // rule wouldn't have emitted anything.
+      let findingSpecs: [FindingSpec]
+      if testConfig.original == testConfig.expected {
+        findingSpecs = []
+      } else {
+        findingSpecs = findingsProvider(testConfig.original, testConfig.expected)
+      }
+
+      assertFormatting(
         FileScopedDeclarationPrivacy.self,
         input: substitutedInput,
         expected: substitutedExpected,
-        checkForUnassertedDiagnostics: true,
+        findings: findingSpecs,
         configuration: configuration,
         file: file,
         line: line)
-
-      let message: Finding.Message =
-        testConfig.desired == .private
-        ? .replaceFileprivateWithPrivate
-        : .replacePrivateWithFileprivate
-
-      if testConfig.original == testConfig.expected {
-        completion { _, _ in
-          XCTAssertNotDiagnosed(message, file: file, line: line)
-        }
-      } else {
-        completion { diagnosticLine, diagnosticColumn in
-          XCTAssertDiagnosed(
-            message, line: diagnosticLine, column: diagnosticColumn, file: file, line: line)
-        }
-      }
     }
   }
 }

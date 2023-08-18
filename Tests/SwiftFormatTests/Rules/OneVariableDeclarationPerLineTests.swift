@@ -1,19 +1,19 @@
+import _SwiftFormatTestSupport
+
 @_spi(Rules) import SwiftFormat
 
 final class OneVariableDeclarationPerLineTests: LintOrFormatRuleTestCase {
   func testMultipleVariableBindings() {
-    XCTAssertFormatting(
+    assertFormatting(
       OneVariableDeclarationPerLine.self,
-      input:
-        """
-        var a = 0, b = 2, (c, d) = (0, "h")
-        let e = 0, f = 2, (g, h) = (0, "h")
+      input: """
+        1️⃣var a = 0, b = 2, (c, d) = (0, "h")
+        2️⃣let e = 0, f = 2, (g, h) = (0, "h")
         var x: Int { return 3 }
-        let a, b, c: Int
-        var j: Int, k: String, l: Float
+        3️⃣let a, b, c: Int
+        4️⃣var j: Int, k: String, l: Float
         """,
-      expected:
-        """
+      expected: """
         var a = 0
         var b = 2
         var (c, d) = (0, "h")
@@ -28,51 +28,50 @@ final class OneVariableDeclarationPerLineTests: LintOrFormatRuleTestCase {
         var k: String
         var l: Float
         """,
-      checkForUnassertedDiagnostics: true
+      findings: [
+        FindingSpec("1️⃣", message: "split this variable declaration to introduce only one variable per 'var'"),
+        FindingSpec("2️⃣", message: "split this variable declaration to introduce only one variable per 'let'"),
+        FindingSpec("3️⃣", message: "split this variable declaration to introduce only one variable per 'let'"),
+        FindingSpec("4️⃣", message: "split this variable declaration to introduce only one variable per 'var'"),
+      ]
     )
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "var"), line: 1, column: 1)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 2, column: 1)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 4, column: 1)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "var"), line: 5, column: 1)
   }
 
   func testNestedVariableBindings() {
-    XCTAssertFormatting(
+    assertFormatting(
       OneVariableDeclarationPerLine.self,
-      input:
-        """
+      input: """
         var x: Int = {
-          let y = 5, z = 10
+          1️⃣let y = 5, z = 10
           return z
         }()
 
         func foo() {
-          let x = 4, y = 10
+          2️⃣let x = 4, y = 10
         }
 
         var x: Int {
-          let y = 5, z = 10
+          3️⃣let y = 5, z = 10
           return z
         }
 
         var a: String = "foo" {
           didSet {
-            let b, c: Bool
+            4️⃣let b, c: Bool
           }
         }
 
-        let
+        5️⃣let
           a: Int = {
-            let p = 10, q = 20
+            6️⃣let p = 10, q = 20
             return p * q
           }(),
           b: Int = {
-            var s: Int, t: Double
+            7️⃣var s: Int, t: Double
             return 20
           }()
         """,
-      expected:
-        """
+      expected: """
         var x: Int = {
           let y = 5
         let z = 10
@@ -110,27 +109,26 @@ final class OneVariableDeclarationPerLineTests: LintOrFormatRuleTestCase {
             return 20
           }()
         """,
-      checkForUnassertedDiagnostics: true
+      findings: [
+        FindingSpec("1️⃣", message: "split this variable declaration to introduce only one variable per 'let'"),
+        FindingSpec("2️⃣", message: "split this variable declaration to introduce only one variable per 'let'"),
+        FindingSpec("3️⃣", message: "split this variable declaration to introduce only one variable per 'let'"),
+        FindingSpec("4️⃣", message: "split this variable declaration to introduce only one variable per 'let'"),
+        FindingSpec("5️⃣", message: "split this variable declaration to introduce only one variable per 'let'"),
+        FindingSpec("6️⃣", message: "split this variable declaration to introduce only one variable per 'let'"),
+        FindingSpec("7️⃣", message: "split this variable declaration to introduce only one variable per 'var'"),
+      ]
     )
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 2, column: 3)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 7, column: 3)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 11, column: 3)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 17, column: 5)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 21, column: 1)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 23, column: 5)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "var"), line: 27, column: 5)
   }
 
   func testMixedInitializedAndTypedBindings() {
-    XCTAssertFormatting(
+    assertFormatting(
       OneVariableDeclarationPerLine.self,
-      input:
-        """
-        var a = 5, b: String
-        let c: Int, d = "d", e = "e", f: Double
+      input: """
+        1️⃣var a = 5, b: String
+        2️⃣let c: Int, d = "d", e = "e", f: Double
         """,
-      expected:
-        """
+      expected: """
         var a = 5
         var b: String
         let c: Int
@@ -138,62 +136,59 @@ final class OneVariableDeclarationPerLineTests: LintOrFormatRuleTestCase {
         let e = "e"
         let f: Double
         """,
-      checkForUnassertedDiagnostics: true
+      findings: [
+        FindingSpec("1️⃣", message: "split this variable declaration to introduce only one variable per 'var'"),
+        FindingSpec("2️⃣", message: "split this variable declaration to introduce only one variable per 'let'"),
+      ]
     )
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "var"), line: 1, column: 1)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 2, column: 1)
   }
 
   func testCommentPrecedingDeclIsNotRepeated() {
-    XCTAssertFormatting(
+    assertFormatting(
       OneVariableDeclarationPerLine.self,
-      input:
-        """
+      input: """
         // Comment
-        let a, b, c: Int
+        1️⃣let a, b, c: Int
         """,
-      expected:
-        """
+      expected: """
         // Comment
         let a: Int
         let b: Int
         let c: Int
         """,
-      checkForUnassertedDiagnostics: true
+      findings: [
+        FindingSpec("1️⃣", message: "split this variable declaration to introduce only one variable per 'let'"),
+      ]
     )
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 2, column: 1)
   }
 
   func testCommentsPrecedingBindingsAreKept() {
-    XCTAssertFormatting(
+    assertFormatting(
       OneVariableDeclarationPerLine.self,
-      input:
-        """
-        let /* a */ a, /* b */ b, /* c */ c: Int
+      input: """
+        1️⃣let /* a */ a, /* b */ b, /* c */ c: Int
         """,
-      expected:
-        """
+      expected: """
         let /* a */ a: Int
         let /* b */ b: Int
         let /* c */ c: Int
         """,
-      checkForUnassertedDiagnostics: true
+      findings: [
+        FindingSpec("1️⃣", message: "split this variable declaration to introduce only one variable per 'let'"),
+      ]
     )
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 1, column: 1)
   }
 
   func testInvalidBindingsAreNotDestroyed() {
-    XCTAssertFormatting(
+    assertFormatting(
       OneVariableDeclarationPerLine.self,
-      input:
-        """
-        let a, b, c = 5
-        let d, e
-        let f, g, h: Int = 5
-        let a: Int, b, c = 5, d, e: Int
+      input: """
+        1️⃣let a, b, c = 5
+        2️⃣let d, e
+        3️⃣let f, g, h: Int = 5
+        4️⃣let a: Int, b, c = 5, d, e: Int
         """,
-      expected:
-        """
+      expected: """
         let a, b, c = 5
         let d, e
         let f, g, h: Int = 5
@@ -202,31 +197,31 @@ final class OneVariableDeclarationPerLineTests: LintOrFormatRuleTestCase {
         let d: Int
         let e: Int
         """,
-      checkForUnassertedDiagnostics: true
+      findings: [
+        FindingSpec("1️⃣", message: "split this variable declaration to introduce only one variable per 'let'"),
+        FindingSpec("2️⃣", message: "split this variable declaration to introduce only one variable per 'let'"),
+        FindingSpec("3️⃣", message: "split this variable declaration to introduce only one variable per 'let'"),
+        FindingSpec("4️⃣", message: "split this variable declaration to introduce only one variable per 'let'"),
+      ]
     )
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 1, column: 1)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 2, column: 1)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 3, column: 1)
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "let"), line: 4, column: 1)
   }
 
   func testMultipleBindingsWithAccessorsAreCorrected() {
     // Swift parses multiple bindings with accessors but forbids them at a later
     // stage. That means that if the individual bindings would be correct in
     // isolation then we can correct them, which is kind of nice.
-    XCTAssertFormatting(
+    assertFormatting(
       OneVariableDeclarationPerLine.self,
-      input:
-        """
-        var x: Int { return 10 }, y = "foo" { didSet { print("changed") } }
+      input: """
+        1️⃣var x: Int { return 10 }, y = "foo" { didSet { print("changed") } }
         """,
-      expected:
-        """
+      expected: """
         var x: Int { return 10 }
         var y = "foo" { didSet { print("changed") } }
         """,
-      checkForUnassertedDiagnostics: true
+      findings: [
+        FindingSpec("1️⃣", message: "split this variable declaration to introduce only one variable per 'var'"),
+      ]
     )
-    XCTAssertDiagnosed(.onlyOneVariableDeclaration(specifier: "var"), line: 1, column: 1)
   }
 }
