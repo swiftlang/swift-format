@@ -60,6 +60,11 @@ class LintPipeline: SyntaxVisitor {
     return .visitChildren
   }
 
+  override func visit(_ node: ClosureExprSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(OmitReturns.visit, for: node)
+    return .visitChildren
+  }
+
   override func visit(_ node: ClosureParameterSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)
     return .visitChildren

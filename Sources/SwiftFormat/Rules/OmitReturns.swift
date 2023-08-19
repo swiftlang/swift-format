@@ -37,6 +37,20 @@ public final class OmitReturns: SyntaxFormatRule {
     return decl
   }
 
+  public override func visit(_ node: ClosureExprSyntax) -> ExprSyntax {
+    let expr = super.visit(node)
+
+    // test { return ... }
+    if var closure = expr.as(ClosureExprSyntax.self),
+       let `return` = containsSingleReturn(closure.statements) {
+       closure.statements = unwrapReturnStmt(`return`)
+       diagnose(.omitReturnStatement, on: `return`, severity: .refactoring)
+       return ExprSyntax(closure)
+    }
+
+    return expr
+  }
+
   private func containsSingleReturn(_ body: CodeBlockItemListSyntax) -> ReturnStmtSyntax? {
     if let element = body.firstAndOnly?.as(CodeBlockItemSyntax.self),
        let ret = element.item.as(ReturnStmtSyntax.self),
