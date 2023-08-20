@@ -1,115 +1,122 @@
+import _SwiftFormatTestSupport
+
 @_spi(Rules) import SwiftFormat
 
 final class UseLetInEveryBoundCaseVariableTests: LintOrFormatRuleTestCase {
-  override func setUp() {
-    super.setUp()
-    self.shouldCheckForUnassertedDiagnostics = true
-  }
-
   func testSwitchCase() {
-    let input =
+    assertLint(
+      UseLetInEveryBoundCaseVariable.self,
       """
       switch DataPoint.labeled("hello", 100) {
-      case let .labeled(label, value): break
+      case 1️⃣let .labeled(label, value): break
       case .labeled(label, let value): break
       case .labeled(let label, let value): break
-      case let .labeled(label, value)?: break
-      case let .labeled(label, value)!: break
-      case let .labeled(label, value)??: break
-      case let (label, value): break
+      case 2️⃣let .labeled(label, value)?: break
+      case 3️⃣let .labeled(label, value)!: break
+      case 4️⃣let .labeled(label, value)??: break
+      case 5️⃣let (label, value): break
       case let x as SomeType: break
       }
-      """
-    performLint(UseLetInEveryBoundCaseVariable.self, input: input)
-
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 2, column: 6)
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 5, column: 6)
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 6, column: 6)
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 7, column: 6)
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 8, column: 6)
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec("2️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec("3️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec("4️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec("5️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+      ]
+    )
   }
 
   func testIfCase() {
-    let input =
+    assertLint(
+      UseLetInEveryBoundCaseVariable.self,
       """
-      if case let .labeled(label, value) = DataPoint.labeled("hello", 100) {}
+      if case 1️⃣let .labeled(label, value) = DataPoint.labeled("hello", 100) {}
       if case .labeled(label, let value) = DataPoint.labeled("hello", 100) {}
       if case .labeled(let label, let value) = DataPoint.labeled("hello", 100) {}
-      if case let .labeled(label, value)? = DataPoint.labeled("hello", 100) {}
-      if case let .labeled(label, value)! = DataPoint.labeled("hello", 100) {}
-      if case let .labeled(label, value)?? = DataPoint.labeled("hello", 100) {}
-      if case let (label, value) = DataPoint.labeled("hello", 100) {}
+      if case 2️⃣let .labeled(label, value)? = DataPoint.labeled("hello", 100) {}
+      if case 3️⃣let .labeled(label, value)! = DataPoint.labeled("hello", 100) {}
+      if case 4️⃣let .labeled(label, value)?? = DataPoint.labeled("hello", 100) {}
+      if case 5️⃣let (label, value) = DataPoint.labeled("hello", 100) {}
       if case let x as SomeType = someValue {}
-      """
-    performLint(UseLetInEveryBoundCaseVariable.self, input: input)
-
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 1, column: 9)
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 4, column: 9)
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 5, column: 9)
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 6, column: 9)
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 7, column: 9)
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec("2️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec("3️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec("4️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec("5️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+      ]
+    )
   }
 
   func testGuardCase() {
-    let input =
+    assertLint(
+      UseLetInEveryBoundCaseVariable.self,
       """
-      guard case let .labeled(label, value) = DataPoint.labeled("hello", 100) else {}
+      guard case 1️⃣let .labeled(label, value) = DataPoint.labeled("hello", 100) else {}
       guard case .labeled(label, let value) = DataPoint.labeled("hello", 100) else {}
       guard case .labeled(let label, let value) = DataPoint.labeled("hello", 100) else {}
-      guard case let .labeled(label, value)? = DataPoint.labeled("hello", 100) else {}
-      guard case let .labeled(label, value)! = DataPoint.labeled("hello", 100) else {}
-      guard case let .labeled(label, value)?? = DataPoint.labeled("hello", 100) else {}
-      guard case let (label, value) = DataPoint.labeled("hello", 100) else {}
+      guard case 2️⃣let .labeled(label, value)? = DataPoint.labeled("hello", 100) else {}
+      guard case 3️⃣let .labeled(label, value)! = DataPoint.labeled("hello", 100) else {}
+      guard case 4️⃣let .labeled(label, value)?? = DataPoint.labeled("hello", 100) else {}
+      guard case 5️⃣let (label, value) = DataPoint.labeled("hello", 100) else {}
       guard case let x as SomeType = someValue else {}
-      """
-    performLint(UseLetInEveryBoundCaseVariable.self, input: input)
-
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 1, column: 12)
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 4, column: 12)
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 5, column: 12)
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 6, column: 12)
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 7, column: 12)
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec("2️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec("3️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec("4️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec("5️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+      ]
+    )
   }
 
   func testForCase() {
-    let input =
+    assertLint(
+      UseLetInEveryBoundCaseVariable.self,
       """
-      for case let .labeled(label, value) in dataPoints {}
+      for case 1️⃣let .labeled(label, value) in dataPoints {}
       for case .labeled(label, let value) in dataPoints {}
       for case .labeled(let label, let value) in dataPoints {}
-      for case let .labeled(label, value)? in dataPoints {}
-      for case let .labeled(label, value)! in dataPoints {}
-      for case let .labeled(label, value)?? in dataPoints {}
-      for case let (label, value) in dataPoints {}
+      for case 2️⃣let .labeled(label, value)? in dataPoints {}
+      for case 3️⃣let .labeled(label, value)! in dataPoints {}
+      for case 4️⃣let .labeled(label, value)?? in dataPoints {}
+      for case 5️⃣let (label, value) in dataPoints {}
       for case let x as SomeType in {}
-      """
-    performLint(UseLetInEveryBoundCaseVariable.self, input: input)
-
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 1, column: 10)
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 4, column: 10)
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 5, column: 10)
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 6, column: 10)
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 7, column: 10)
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec("2️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec("3️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec("4️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec("5️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+      ]
+    )
   }
 
   func testWhileCase() {
-    let input =
+    assertLint(
+      UseLetInEveryBoundCaseVariable.self,
       """
-      while case let .labeled(label, value) = iter.next() {}
+      while case 1️⃣let .labeled(label, value) = iter.next() {}
       while case .labeled(label, let value) = iter.next() {}
       while case .labeled(let label, let value) = iter.next() {}
-      while case let .labeled(label, value)? = iter.next() {}
-      while case let .labeled(label, value)! = iter.next() {}
-      while case let .labeled(label, value)?? = iter.next() {}
-      while case let (label, value) = iter.next() {}
+      while case 2️⃣let .labeled(label, value)? = iter.next() {}
+      while case 3️⃣let .labeled(label, value)! = iter.next() {}
+      while case 4️⃣let .labeled(label, value)?? = iter.next() {}
+      while case 5️⃣let (label, value) = iter.next() {}
       while case let x as SomeType = iter.next() {}
-      """
-    performLint(UseLetInEveryBoundCaseVariable.self, input: input)
-
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 1, column: 12)
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 4, column: 12)
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 5, column: 12)
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 6, column: 12)
-    XCTAssertDiagnosed(.useLetInBoundCaseVariables, line: 7, column: 12)
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec("2️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec("3️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec("4️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec("5️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+      ]
+    )
   }
 }

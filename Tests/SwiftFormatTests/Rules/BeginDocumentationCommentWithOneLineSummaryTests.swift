@@ -1,5 +1,8 @@
+import _SwiftFormatTestSupport
+
 @_spi(Rules) import SwiftFormat
 
+// FIXME: We should place the diagnostic somewhere in the comment, not on the declaration.
 final class BeginDocumentationCommentWithOneLineSummaryTests: LintOrFormatRuleTestCase {
   override func setUp() {
     // Reset this to false by default. Specific tests may override it.
@@ -8,7 +11,8 @@ final class BeginDocumentationCommentWithOneLineSummaryTests: LintOrFormatRuleTe
   }
 
   func testDocLineCommentsWithoutOneSentenceSummary() {
-    let input =
+    assertLint(
+      BeginDocumentationCommentWithOneLineSummary.self,
       """
       /// Returns a bottle of Dr Pepper from the vending machine.
       public func drPepper(from vendingMachine: VendingMachine) -> Soda {}
@@ -30,30 +34,26 @@ final class BeginDocumentationCommentWithOneLineSummaryTests: LintOrFormatRuleTe
 
       /// This docline should not succeed.
       /// There are two sentences without a blank line between them.
-      struct Test {}
+      1️⃣struct Test {}
 
       /// This docline should not succeed. There are two sentences.
-      public enum Token { case comma, semicolon, identifier }
+      2️⃣public enum Token { case comma, semicolon, identifier }
 
       /// Should fail because it doesn't have a period
-      public class testNoPeriod {}
-      """
-    performLint(BeginDocumentationCommentWithOneLineSummary.self, input: input)
-    XCTAssertDiagnosed(.addBlankLineAfterFirstSentence("This docline should not succeed."))
-    XCTAssertDiagnosed(.addBlankLineAfterFirstSentence("This docline should not succeed."))
-    XCTAssertDiagnosed(.terminateSentenceWithPeriod("Should fail because it doesn't have a period"))
-
-    XCTAssertNotDiagnosed(.addBlankLineAfterFirstSentence(
-      "Returns a bottle of Dr Pepper from the vending machine."))
-    XCTAssertNotDiagnosed(.addBlankLineAfterFirstSentence(
-      "Contains a comment as description that needs a sentence of two lines of code."))
-    XCTAssertNotDiagnosed(.addBlankLineAfterFirstSentence("The background color of the view."))
-    XCTAssertNotDiagnosed(.addBlankLineAfterFirstSentence("Returns the sum of the numbers."))
+      3️⃣public class testNoPeriod {}
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: #"add a blank comment line after this sentence: "This docline should not succeed.""#),
+        FindingSpec("2️⃣", message: #"add a blank comment line after this sentence: "This docline should not succeed.""#),
+        FindingSpec("3️⃣", message: #"terminate this sentence with a period: "Should fail because it doesn't have a period""#),
+      ]
+    )
   }
 
   func testBlockLineCommentsWithoutOneSentenceSummary() {
-    let input =
-    """
+    assertLint(
+      BeginDocumentationCommentWithOneLineSummary.self,
+      """
       /**
        * Returns the numeric value.
        *
@@ -73,76 +73,70 @@ final class BeginDocumentationCommentWithOneLineSummaryTests: LintOrFormatRuleTe
        * This block comment should not succeed, struct.
        * There are two sentences without a blank line between them.
        */
-      struct TestStruct {}
+      1️⃣struct TestStruct {}
 
       /**
       This block comment should not succeed, class.
       Add a blank comment after the first line.
       */
-      public class TestClass {}
+      2️⃣public class TestClass {}
       /** This block comment should not succeed, enum. There are two sentences. */
-      public enum testEnum {}
+      3️⃣public enum testEnum {}
       /** Should fail because it doesn't have a period */
-      public class testNoPeriod {}
-      """
-    performLint(BeginDocumentationCommentWithOneLineSummary.self, input: input)
-    XCTAssertDiagnosed(.addBlankLineAfterFirstSentence("This block comment should not succeed, struct."))
-    XCTAssertDiagnosed(.addBlankLineAfterFirstSentence("This block comment should not succeed, class."))
-    XCTAssertDiagnosed(.addBlankLineAfterFirstSentence("This block comment should not succeed, enum."))
-    XCTAssertDiagnosed(.terminateSentenceWithPeriod("Should fail because it doesn't have a period"))
-
-    XCTAssertNotDiagnosed(.addBlankLineAfterFirstSentence("Returns the numeric value."))
-    XCTAssertNotDiagnosed(.addBlankLineAfterFirstSentence(
-      "This block comment contains a sentence summary of two lines of code."))
+      4️⃣public class testNoPeriod {}
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: #"add a blank comment line after this sentence: "This block comment should not succeed, struct.""#),
+        FindingSpec("2️⃣", message: #"add a blank comment line after this sentence: "This block comment should not succeed, class.""#),
+        FindingSpec("3️⃣", message: #"add a blank comment line after this sentence: "This block comment should not succeed, enum.""#),
+        FindingSpec("4️⃣", message: #"terminate this sentence with a period: "Should fail because it doesn't have a period""#),
+      ]
+    )
   }
 
   func testApproximationsOnMacOS() {
     #if os(macOS)
-    // Let macOS also verify that the fallback mode works, which gives us signal about whether it
-    // will also succeed on Linux (where the linguistic APIs are not currently available).
-    BeginDocumentationCommentWithOneLineSummary._forcesFallbackModeForTesting = true
+      // Let macOS also verify that the fallback mode works, which gives us signal about whether it
+      // will also succeed on Linux (where the linguistic APIs are not currently available).
+      BeginDocumentationCommentWithOneLineSummary._forcesFallbackModeForTesting = true
 
-    let input =
-    """
-      /// Returns a bottle of Dr Pepper from the vending machine.
-      public func drPepper(from vendingMachine: VendingMachine) -> Soda {}
+      assertLint(
+        BeginDocumentationCommentWithOneLineSummary.self,
+        """
+        /// Returns a bottle of Dr Pepper from the vending machine.
+        public func drPepper(from vendingMachine: VendingMachine) -> Soda {}
 
-      /// Contains a comment as description that needs a sentence
-      /// of two lines of code.
-      public var twoLinesForOneSentence = "test"
+        /// Contains a comment as description that needs a sentence
+        /// of two lines of code.
+        public var twoLinesForOneSentence = "test"
 
-      /// The background color of the view.
-      var backgroundColor: UIColor
+        /// The background color of the view.
+        var backgroundColor: UIColor
 
-      /// Returns the sum of the numbers.
-      ///
-      /// - Parameter numbers: The numbers to sum.
-      /// - Returns: The sum of the numbers.
-      func sum(_ numbers: [Int]) -> Int {
-      // ...
-      }
+        /// Returns the sum of the numbers.
+        ///
+        /// - Parameter numbers: The numbers to sum.
+        /// - Returns: The sum of the numbers.
+        func sum(_ numbers: [Int]) -> Int {
+        // ...
+        }
 
-      /// This docline should not succeed.
-      /// There are two sentences without a blank line between them.
-      struct Test {}
+        /// This docline should not succeed.
+        /// There are two sentences without a blank line between them.
+        1️⃣struct Test {}
 
-      /// This docline should not succeed. There are two sentences.
-      public enum Token { case comma, semicolon, identifier }
+        /// This docline should not succeed. There are two sentences.
+        2️⃣public enum Token { case comma, semicolon, identifier }
 
-      /// Should fail because it doesn't have a period
-      public class testNoPeriod {}
-      """
-    performLint(BeginDocumentationCommentWithOneLineSummary.self, input: input)
-    XCTAssertDiagnosed(.addBlankLineAfterFirstSentence("This docline should not succeed."))
-    XCTAssertDiagnosed(.addBlankLineAfterFirstSentence("This docline should not succeed."))
-    XCTAssertDiagnosed(.terminateSentenceWithPeriod("Should fail because it doesn't have a period"))
-
-    XCTAssertNotDiagnosed(.addBlankLineAfterFirstSentence(
-      "Returns a bottle of Dr Pepper from the vending machine."))
-    XCTAssertNotDiagnosed(.addBlankLineAfterFirstSentence(
-      "Contains a comment as description that needs a sentence of two lines of code."))
-    XCTAssertNotDiagnosed(.addBlankLineAfterFirstSentence("The background color of the view."))
-    XCTAssertNotDiagnosed(.addBlankLineAfterFirstSentence("Returns the sum of the numbers."))
+        /// Should fail because it doesn't have a period
+        3️⃣public class testNoPeriod {}
+        """,
+        findings: [
+          FindingSpec("1️⃣", message: #"add a blank comment line after this sentence: "This docline should not succeed.""#),
+          FindingSpec("2️⃣", message: #"add a blank comment line after this sentence: "This docline should not succeed.""#),
+          FindingSpec("3️⃣", message: #"terminate this sentence with a period: "Should fail because it doesn't have a period""#),
+        ]
+      )
     #endif
   }
 }

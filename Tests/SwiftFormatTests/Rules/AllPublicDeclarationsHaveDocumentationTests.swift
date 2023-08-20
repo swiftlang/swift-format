@@ -1,13 +1,16 @@
+import _SwiftFormatTestSupport
+
 @_spi(Rules) import SwiftFormat
 
 final class AllPublicDeclarationsHaveDocumentationTests: LintOrFormatRuleTestCase {
   func testPublicDeclsWithoutDocs() {
-    let input =
+    assertLint(
+      AllPublicDeclarationsHaveDocumentation.self,
       """
-      public func lightswitchRave() {
+      1️⃣public func lightswitchRave() {
       }
 
-      public var isSblounskched: Int {
+      2️⃣public var isSblounskched: Int {
         return 0
       }
 
@@ -21,11 +24,11 @@ final class AllPublicDeclarationsHaveDocumentationTests: LintOrFormatRuleTestCas
       public var isDelorted: Bool {
         return false
       }
-      """
-    performLint(AllPublicDeclarationsHaveDocumentation.self, input: input)
-    XCTAssertDiagnosed(.declRequiresComment("lightswitchRave()"))
-    XCTAssertDiagnosed(.declRequiresComment("isSblounskched"))
-    XCTAssertNotDiagnosed(.declRequiresComment("fhqwhgads()"))
-    XCTAssertNotDiagnosed(.declRequiresComment("isDelorted"))
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "add a documentation comment for 'lightswitchRave()'"),
+        FindingSpec("2️⃣", message: "add a documentation comment for 'isSblounskched'"),
+      ]
+    )
   }
 }

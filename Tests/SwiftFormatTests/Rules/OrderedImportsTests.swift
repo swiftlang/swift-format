@@ -1,223 +1,193 @@
+import _SwiftFormatTestSupport
+
 @_spi(Rules) import SwiftFormat
 
 final class OrderedImportsTests: LintOrFormatRuleTestCase {
   func testInvalidImportsOrder() {
-    let input =
-      """
-      import Foundation
-      // Starts Imports
-      import Core
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import Foundation
+        // Starts Imports
+        1️⃣import Core
 
 
-      // Comment with new lines
-      import UIKit
+        // Comment with new lines
+        import UIKit
 
-      @testable import SwiftFormat
-      import enum Darwin.D.isatty
-      // Starts Test
-      @testable import MyModuleUnderTest
-      // Starts Ind
-      import func Darwin.C.isatty
+        @testable import SwiftFormat
+        8️⃣import enum Darwin.D.isatty
+        // Starts Test
+        3️⃣@testable import MyModuleUnderTest
+        // Starts Ind
+        2️⃣7️⃣import func Darwin.C.isatty
 
-      let a = 3
-      import SwiftSyntax
-      """
+        let a = 3
+        4️⃣5️⃣6️⃣import SwiftSyntax
+        """,
+      expected: """
+        // Starts Imports
+        import Core
+        import Foundation
+        import SwiftSyntax
+        // Comment with new lines
+        import UIKit
 
-    let expected =
-      """
-      // Starts Imports
-      import Core
-      import Foundation
-      import SwiftSyntax
-      // Comment with new lines
-      import UIKit
+        // Starts Ind
+        import func Darwin.C.isatty
+        import enum Darwin.D.isatty
 
-      // Starts Ind
-      import func Darwin.C.isatty
-      import enum Darwin.D.isatty
+        // Starts Test
+        @testable import MyModuleUnderTest
+        @testable import SwiftFormat
 
-      // Starts Test
-      @testable import MyModuleUnderTest
-      @testable import SwiftFormat
-
-      let a = 3
-      """
-
-    XCTAssertFormatting(
-      OrderedImports.self, input: input, expected: expected, checkForUnassertedDiagnostics: true
+        let a = 3
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("2️⃣", message: "place declaration imports before testable imports"),
+        FindingSpec("3️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("4️⃣", message: "place imports at the top of the file"),
+        FindingSpec("5️⃣", message: "place regular imports before testable imports"),
+        FindingSpec("6️⃣", message: "place regular imports before declaration imports"),
+        FindingSpec("7️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("8️⃣", message: "place declaration imports before testable imports"),
+      ]
     )
-
-    XCTAssertDiagnosed(.sortImports)  // import Core
-    XCTAssertDiagnosed(.sortImports)  // import func Darwin.C.isatty
-    XCTAssertDiagnosed(.sortImports)  // @testable import MyModuleUnderTest
-
-    // import SwiftSyntax
-    XCTAssertDiagnosed(.placeAtTopOfFile)
-    XCTAssertDiagnosed(.groupImports(before: .regularImport, after: .declImport))
-    XCTAssertDiagnosed(.groupImports(before: .regularImport, after: .testableImport))
-
-    // import func Darwin.C.isatty
-    XCTAssertDiagnosed(.groupImports(before: .declImport, after: .testableImport))
-
-    // import enum Darwin.D.isatty
-    XCTAssertDiagnosed(.groupImports(before: .declImport, after: .testableImport))
   }
   
   func testImportsOrderWithoutModuleType() {
-    let input =
-      """
-      @testable import SwiftFormat
-      import func Darwin.D.isatty
-      @testable import MyModuleUnderTest
-      import func Darwin.C.isatty
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        @testable import SwiftFormat
+        1️⃣import func Darwin.D.isatty
+        4️⃣@testable import MyModuleUnderTest
+        2️⃣3️⃣import func Darwin.C.isatty
 
-      let a = 3
-      """
+        let a = 3
+        """,
+      expected: """
+        import func Darwin.C.isatty
+        import func Darwin.D.isatty
 
-    let expected =
-      """
-      import func Darwin.C.isatty
-      import func Darwin.D.isatty
+        @testable import MyModuleUnderTest
+        @testable import SwiftFormat
 
-      @testable import MyModuleUnderTest
-      @testable import SwiftFormat
-
-      let a = 3
-      """
-
-    XCTAssertFormatting(
-      OrderedImports.self, input: input, expected: expected, checkForUnassertedDiagnostics: true
+        let a = 3
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "place declaration imports before testable imports"),
+        FindingSpec("2️⃣", message: "place declaration imports before testable imports"),
+        FindingSpec("3️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("4️⃣", message: "sort import statements lexicographically"),
+      ]
     )
-
-    // import func Darwin.D.isatty
-    XCTAssertDiagnosed(.groupImports(before: .declImport, after: .testableImport))
-
-    // import func Darwin.C.isatty
-    XCTAssertDiagnosed(.groupImports(before: .declImport, after: .testableImport))
-    XCTAssertDiagnosed(.sortImports)
-
-    // @testable import MyModuleUnderTest
-    XCTAssertDiagnosed(.sortImports)
   }
   
   func testImportsOrderWithDocComment() {
-    let input =
-      """
-      /// Test imports with comments.
-      ///
-      /// Comments at the top of the file
-      /// should be preserved.
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        /// Test imports with comments.
+        ///
+        /// Comments at the top of the file
+        /// should be preserved.
 
-      // Line comment for import
-      // Foundation.
-      import Foundation
-      // Line comment for Core
-      import Core
-      import UIKit
+        // Line comment for import
+        // Foundation.
+        import Foundation
+        // Line comment for Core
+        1️⃣import Core
+        import UIKit
 
-      let a = 3
-      """
+        let a = 3
+        """,
+      expected: """
+        /// Test imports with comments.
+        ///
+        /// Comments at the top of the file
+        /// should be preserved.
 
-    let expected =
-      """
-      /// Test imports with comments.
-      ///
-      /// Comments at the top of the file
-      /// should be preserved.
+        // Line comment for Core
+        import Core
+        // Line comment for import
+        // Foundation.
+        import Foundation
+        import UIKit
 
-      // Line comment for Core
-      import Core
-      // Line comment for import
-      // Foundation.
-      import Foundation
-      import UIKit
-
-      let a = 3
-      """
-
-    XCTAssertFormatting(
-      OrderedImports.self, input: input, expected: expected, checkForUnassertedDiagnostics: true
+        let a = 3
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+      ]
     )
-
-    // import Core
-    XCTAssertDiagnosed(.sortImports)
   }
   
   func testValidOrderedImport() {
-    let input =
-      """
-      import CoreLocation
-      import MyThirdPartyModule
-      import SpriteKit
-      import UIKit
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import CoreLocation
+        import MyThirdPartyModule
+        import SpriteKit
+        import UIKit
 
-      import func Darwin.C.isatty
+        import func Darwin.C.isatty
 
-      @testable import MyModuleUnderTest
-      """
+        @testable import MyModuleUnderTest
+        """,
+      expected: """
+        import CoreLocation
+        import MyThirdPartyModule
+        import SpriteKit
+        import UIKit
 
-    let expected =
-      """
-      import CoreLocation
-      import MyThirdPartyModule
-      import SpriteKit
-      import UIKit
+        import func Darwin.C.isatty
 
-      import func Darwin.C.isatty
-
-      @testable import MyModuleUnderTest
-      """
-
-    XCTAssertFormatting(
-      OrderedImports.self, input: input, expected: expected, checkForUnassertedDiagnostics: true
+        @testable import MyModuleUnderTest
+        """,
+      findings: []
     )
-
-    // Should not raise any linter errors.
   }
 
   func testSeparatedFileHeader() {
-    let input =
-      """
-      // This is part of the file header.
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        // This is part of the file header.
 
-      // So is this.
+        // So is this.
 
-      // Top comment
-      import Bimport
-      import Aimport
+        // Top comment
+        import Bimport
+        1️⃣import Aimport
 
-      struct MyStruct {
-        // do stuff
-      }
+        struct MyStruct {
+          // do stuff
+        }
 
-      import HoistMe
-      """
+        2️⃣import HoistMe
+        """,
+      expected: """
+        // This is part of the file header.
 
-    let expected =
-      """
-      // This is part of the file header.
+        // So is this.
 
-      // So is this.
+        import Aimport
+        // Top comment
+        import Bimport
+        import HoistMe
 
-      import Aimport
-      // Top comment
-      import Bimport
-      import HoistMe
-
-      struct MyStruct {
-        // do stuff
-      }
-      """
-
-    XCTAssertFormatting(
-      OrderedImports.self, input: input, expected: expected, checkForUnassertedDiagnostics: true
+        struct MyStruct {
+          // do stuff
+        }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("2️⃣", message: "place imports at the top of the file"),
+      ]
     )
-
-    // import Aimport
-    XCTAssertDiagnosed(.sortImports)
-
-    // import HoistMe
-    XCTAssertDiagnosed(.placeAtTopOfFile)
   }
 
   func testNonHeaderComment() {
@@ -225,7 +195,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       """
       // Top comment
       import Bimport
-      import Aimport
+      1️⃣import Aimport
 
       let A = 123
       """
@@ -239,406 +209,413 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       let A = 123
       """
 
-    XCTAssertFormatting(
-      OrderedImports.self, input: input, expected: expected, checkForUnassertedDiagnostics: true
+    assertFormatting(
+      OrderedImports.self,
+      input: input,
+      expected: expected,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+      ]
     )
-
-    // import Aimport
-    XCTAssertDiagnosed(.sortImports)
   }
 
   func testMultipleCodeBlocksPerLine() {
-    let input =
-      """
-      import A;import Z;import D;import C;
-      foo();bar();baz();quxxe();
-      """
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import A;import Z;1️⃣import D;import C;
+        foo();bar();baz();quxxe();
+        """,
+      expected: """
+        import A;
+        import C;
+        import D;
+        import Z;
 
-    let expected =
-      """
-      import A;
-      import C;
-      import D;
-      import Z;
-
-      foo();bar();baz();quxxe();
-      """
-
-    XCTAssertFormatting(OrderedImports.self, input: input, expected: expected)
+        foo();bar();baz();quxxe();
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+      ]
+    )
   }
 
   func testMultipleCodeBlocksWithImportsPerLine() {
-    let input =
-      """
-      import A;import Z;import D;import C;foo();bar();baz();quxxe();
-      """
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import A;import Z;1️⃣import D;import C;foo();bar();baz();quxxe();
+        """,
+      expected: """
+        import A;
+        import C;
+        import D;
+        import Z;
 
-    let expected =
-      """
-      import A;
-      import C;
-      import D;
-      import Z;
-
-      foo();bar();baz();quxxe();
-      """
-
-    XCTAssertFormatting(OrderedImports.self, input: input, expected: expected)
+        foo();bar();baz();quxxe();
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+      ]
+    )
   }
 
   func testDisableOrderedImports() {
-    let input =
-      """
-      import C
-      import B
-      // swift-format-ignore: OrderedImports
-      import A
-      let a = 123
-      import func Darwin.C.isatty
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import C
+        1️⃣import B
+        // swift-format-ignore: OrderedImports
+        import A
+        let a = 123
+        2️⃣import func Darwin.C.isatty
 
-      // swift-format-ignore
-      import a
-      """
+        // swift-format-ignore
+        import a
+        """,
+      expected: """
+        import B
+        import C
 
-    let expected =
-      """
-      import B
-      import C
+        // swift-format-ignore: OrderedImports
+        import A
 
-      // swift-format-ignore: OrderedImports
-      import A
+        import func Darwin.C.isatty
 
-      import func Darwin.C.isatty
+        let a = 123
 
-      let a = 123
-
-      // swift-format-ignore
-      import a
-      """
-
-    XCTAssertFormatting(
-      OrderedImports.self, input: input, expected: expected, checkForUnassertedDiagnostics: true
+        // swift-format-ignore
+        import a
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("2️⃣", message: "place imports at the top of the file"),
+      ]
     )
-
-    XCTAssertDiagnosed(.sortImports, line: 2, column: 1)
-    XCTAssertDiagnosed(.placeAtTopOfFile, line: 6, column: 1)
   }
 
   func testDisableOrderedImportsMovingComments() {
-    let input =
-      """
-      import C  // Trailing comment about C
-      import B
-      // Comment about ignored A
-      // swift-format-ignore: OrderedImports
-      import A  // trailing comment about ignored A
-      // Comment about Z
-      import Z
-      import D
-      // swift-format-ignore
-      // Comment about testable testA
-      @testable import testA
-      @testable import testZ  // trailing comment about testZ
-      @testable import testC
-      // swift-format-ignore
-      @testable import testB
-      // Comment about Bar
-      import enum Bar
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import C  // Trailing comment about C
+        1️⃣import B
+        // Comment about ignored A
+        // swift-format-ignore: OrderedImports
+        import A  // trailing comment about ignored A
+        // Comment about Z
+        import Z
+        2️⃣import D
+        // swift-format-ignore
+        // Comment about testable testA
+        @testable import testA
+        @testable import testZ  // trailing comment about testZ
+        3️⃣@testable import testC
+        // swift-format-ignore
+        @testable import testB
+        // Comment about Bar
+        import enum Bar
 
-      let a = 2
-      """
+        let a = 2
+        """,
+      expected: """
+        import B
+        import C  // Trailing comment about C
 
-    let expected =
-      """
-      import B
-      import C  // Trailing comment about C
+        // Comment about ignored A
+        // swift-format-ignore: OrderedImports
+        import A  // trailing comment about ignored A
 
-      // Comment about ignored A
-      // swift-format-ignore: OrderedImports
-      import A  // trailing comment about ignored A
+        import D
+        // Comment about Z
+        import Z
 
-      import D
-      // Comment about Z
-      import Z
+        // swift-format-ignore
+        // Comment about testable testA
+        @testable import testA
 
-      // swift-format-ignore
-      // Comment about testable testA
-      @testable import testA
+        @testable import testC
+        @testable import testZ  // trailing comment about testZ
 
-      @testable import testC
-      @testable import testZ  // trailing comment about testZ
+        // swift-format-ignore
+        @testable import testB
 
-      // swift-format-ignore
-      @testable import testB
+        // Comment about Bar
+        import enum Bar
 
-      // Comment about Bar
-      import enum Bar
-
-      let a = 2
-      """
-
-    XCTAssertFormatting(
-      OrderedImports.self, input: input, expected: expected, checkForUnassertedDiagnostics: true
+        let a = 2
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("2️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("3️⃣", message: "sort import statements lexicographically"),
+      ]
     )
-
-    XCTAssertDiagnosed(.sortImports, line: 2, column: 1)
-    XCTAssertDiagnosed(.sortImports, line: 8, column:  1)
-    XCTAssertDiagnosed(.sortImports, line: 13, column: 1)
   }
 
   func testEmptyFile() {
-    XCTAssertFormatting(
-      OrderedImports.self, input: "", expected: "", checkForUnassertedDiagnostics: true
+    assertFormatting(
+      OrderedImports.self,
+      input: "",
+      expected: "",
+      findings: []
     )
-    XCTAssertFormatting(
-      OrderedImports.self, input: "// test", expected: "// test",
-      checkForUnassertedDiagnostics: true
+
+    assertFormatting(
+      OrderedImports.self,
+      input: "// test",
+      expected: "// test",
+      findings: []
     )
   }
 
   func testImportsContainingNewlines() {
-    let input =
-      """
-      import
-        zeta
-      import Zeta
-      import
-        Alpha
-      import Beta
-      """
-
-    let expected =
-      """
-      import
-        Alpha
-      import Beta
-      import Zeta
-      import
-        zeta
-      """
-
-    XCTAssertFormatting(OrderedImports.self, input: input, expected: expected)
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import
+          zeta
+        1️⃣import Zeta
+        import
+          Alpha
+        import Beta
+        """,
+      expected: """
+        import
+          Alpha
+        import Beta
+        import Zeta
+        import
+          zeta
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+      ]
+    )
   }
 
   func testRemovesDuplicateImports() {
-    let input =
-      """
-      import CoreLocation
-      import UIKit
-      import CoreLocation
-      import ZeeFramework
-      bar()
-      """
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import CoreLocation
+        import UIKit
+        1️⃣import CoreLocation
+        import ZeeFramework
+        bar()
+        """,
+      expected: """
+        import CoreLocation
+        import UIKit
+        import ZeeFramework
 
-    let expected =
-      """
-      import CoreLocation
-      import UIKit
-      import ZeeFramework
-
-      bar()
-      """
-
-    XCTAssertFormatting(
-      OrderedImports.self, input: input, expected: expected, checkForUnassertedDiagnostics: true)
-    XCTAssertDiagnosed(.removeDuplicateImport, line: 3, column: 1)
+        bar()
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove this duplicate import"),
+      ]
+    )
   }
 
   func testDuplicateCommentedImports() {
-    let input =
-      """
-      import AppKit
-      // CoreLocation is necessary to get location stuff.
-      import CoreLocation  // This import must stay.
-      // UIKit does UI Stuff?
-      import UIKit
-      // This is the second CoreLocation import.
-      import CoreLocation  // The 2nd CL import has a comment here too.
-      // Comment about ZeeFramework.
-      import ZeeFramework
-      import foo
-      // Second comment about ZeeFramework.
-      import ZeeFramework  // This one has a trailing comment too.
-      foo()
-      """
+    // Verify that we diagnose redundant imports if they have comments, but don't remove them.
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import AppKit
+        // CoreLocation is necessary to get location stuff.
+        import CoreLocation  // This import must stay.
+        // UIKit does UI Stuff?
+        import UIKit
+        // This is the second CoreLocation import.
+        1️⃣import CoreLocation  // The 2nd CL import has a comment here too.
+        // Comment about ZeeFramework.
+        import ZeeFramework
+        import foo
+        // Second comment about ZeeFramework.
+        2️⃣import ZeeFramework  // This one has a trailing comment too.
+        foo()
+        """,
+      expected: """
+        import AppKit
+        // CoreLocation is necessary to get location stuff.
+        import CoreLocation  // This import must stay.
+        // This is the second CoreLocation import.
+        import CoreLocation  // The 2nd CL import has a comment here too.
+        // UIKit does UI Stuff?
+        import UIKit
+        // Comment about ZeeFramework.
+        // Second comment about ZeeFramework.
+        import ZeeFramework  // This one has a trailing comment too.
+        import foo
 
-    let expected =
-      """
-      import AppKit
-      // CoreLocation is necessary to get location stuff.
-      import CoreLocation  // This import must stay.
-      // This is the second CoreLocation import.
-      import CoreLocation  // The 2nd CL import has a comment here too.
-      // UIKit does UI Stuff?
-      import UIKit
-      // Comment about ZeeFramework.
-      // Second comment about ZeeFramework.
-      import ZeeFramework  // This one has a trailing comment too.
-      import foo
-
-      foo()
-      """
-
-    XCTAssertFormatting(
-      OrderedImports.self, input: input, expected: expected, checkForUnassertedDiagnostics: true)
-
-    // Even though this import is technically also not sorted, that won't matter if the import is
-    // removed so there should only be a warning to remove it.
-    XCTAssertDiagnosed(.removeDuplicateImport, line: 7, column: 1)
-    XCTAssertDiagnosed(.removeDuplicateImport, line: 12, column: 1)
+        foo()
+        """,
+      findings: [
+        // Even though this import is technically also not sorted, that won't matter if the import
+        // is removed so there should only be a warning to remove it.
+        FindingSpec("1️⃣", message: "remove this duplicate import"),
+        FindingSpec("2️⃣", message: "remove this duplicate import"),
+      ]
+    )
   }
 
   func testDuplicateIgnoredImports() {
-    let input =
-      """
-      import AppKit
-      // swift-format-ignore
-      import CoreLocation
-      // Second CoreLocation import here.
-      import CoreLocation
-      // Comment about ZeeFramework.
-      import ZeeFramework
-      // swift-format-ignore
-      import ZeeFramework  // trailing comment
-      foo()
-      """
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import AppKit
+        // swift-format-ignore
+        import CoreLocation
+        // Second CoreLocation import here.
+        import CoreLocation
+        // Comment about ZeeFramework.
+        import ZeeFramework
+        // swift-format-ignore
+        import ZeeFramework  // trailing comment
+        foo()
+        """,
+      expected: """
+        import AppKit
 
-    let expected =
-      """
-      import AppKit
+        // swift-format-ignore
+        import CoreLocation
 
-      // swift-format-ignore
-      import CoreLocation
+        // Second CoreLocation import here.
+        import CoreLocation
+        // Comment about ZeeFramework.
+        import ZeeFramework
 
-      // Second CoreLocation import here.
-      import CoreLocation
-      // Comment about ZeeFramework.
-      import ZeeFramework
+        // swift-format-ignore
+        import ZeeFramework  // trailing comment
 
-      // swift-format-ignore
-      import ZeeFramework  // trailing comment
-
-      foo()
-      """
-
-    XCTAssertFormatting(
-      OrderedImports.self, input: input, expected: expected, checkForUnassertedDiagnostics: true)
+        foo()
+        """,
+      findings: []
+    )
   }
 
   func testDuplicateAttributedImports() {
-    let input =
-      """
-      // imports an enum
-      import enum Darwin.D.isatty
-      // this is a dup
-      import enum Darwin.D.isatty
-      import foo
-      import a
-      @testable import foo
-      // exported import of bar
-      @_exported import bar
-      @_implementationOnly import bar
-      import bar
-      // second import of foo
-      import foo
-      baz()
-      """
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        // exported import of bar
+        @_exported import bar
+        @_implementationOnly import bar
+        import bar
+        import foo
+        // second import of foo
+        1️⃣import foo
 
-    let expected =
-      """
-      import a
-      // exported import of bar
-      @_exported import bar
-      @_implementationOnly import bar
-      import bar
-      // second import of foo
-      import foo
+        // imports an enum
+        import enum Darwin.D.isatty
+        // this is a dup
+        2️⃣import enum Darwin.D.isatty
 
-      // imports an enum
-      // this is a dup
-      import enum Darwin.D.isatty
+        @testable import foo
 
-      @testable import foo
+        baz()
+        """,
+      expected: """
+        // exported import of bar
+        @_exported import bar
+        @_implementationOnly import bar
+        import bar
+        // second import of foo
+        import foo
 
-      baz()
-      """
+        // imports an enum
+        // this is a dup
+        import enum Darwin.D.isatty
 
-    XCTAssertFormatting(OrderedImports.self, input: input, expected: expected)
+        @testable import foo
+
+        baz()
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove this duplicate import"),
+        FindingSpec("2️⃣", message: "remove this duplicate import"),
+      ]
+    )
   }
 
   func testConditionalImports() {
-    let input =
-      """
-      import Zebras
-      import Apples
-      #if canImport(Darwin)
-        import Darwin
-      #elseif canImport(Glibc)
-        import Glibc
-      #endif
-      import Aardvarks
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import Zebras
+        1️⃣import Apples
+        #if canImport(Darwin)
+          import Darwin
+        #elseif canImport(Glibc)
+          import Glibc
+        #endif
+        2️⃣import Aardvarks
 
-      foo()
-      bar()
-      baz()
-      """
+        foo()
+        bar()
+        baz()
+        """,
+      expected: """
+        import Aardvarks
+        import Apples
+        import Zebras
 
-    let expected =
-      """
-      import Aardvarks
-      import Apples
-      import Zebras
+        #if canImport(Darwin)
+          import Darwin
+        #elseif canImport(Glibc)
+          import Glibc
+        #endif
 
-      #if canImport(Darwin)
-        import Darwin
-      #elseif canImport(Glibc)
-        import Glibc
-      #endif
-
-      foo()
-      bar()
-      baz()
-      """
-
-    XCTAssertFormatting(OrderedImports.self, input: input, expected: expected)
+        foo()
+        bar()
+        baz()
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("2️⃣", message: "place imports at the top of the file"),
+      ]
+    )
   }
 
   func testIgnoredConditionalImports() {
-    let input =
-      """
-      import Zebras
-      import Apples
-      #if canImport(Darwin)
-        import Darwin
-      #elseif canImport(Glibc)
-        import Glibc
-      #endif
-      // swift-format-ignore
-      import Aardvarks
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import Zebras
+        1️⃣import Apples
+        #if canImport(Darwin)
+          import Darwin
+        #elseif canImport(Glibc)
+          import Glibc
+        #endif
+        // swift-format-ignore
+        import Aardvarks
 
-      foo()
-      bar()
-      baz()
-      """
+        foo()
+        bar()
+        baz()
+        """,
+      expected: """
+        import Apples
+        import Zebras
 
-    let expected =
-      """
-      import Apples
-      import Zebras
+        #if canImport(Darwin)
+          import Darwin
+        #elseif canImport(Glibc)
+          import Glibc
+        #endif
+        // swift-format-ignore
+        import Aardvarks
 
-      #if canImport(Darwin)
-        import Darwin
-      #elseif canImport(Glibc)
-        import Glibc
-      #endif
-      // swift-format-ignore
-      import Aardvarks
-
-      foo()
-      bar()
-      baz()
-      """
-
-    XCTAssertFormatting(OrderedImports.self, input: input, expected: expected)
+        foo()
+        bar()
+        baz()
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+      ]
+    )
   }
 }

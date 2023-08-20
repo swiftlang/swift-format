@@ -1,32 +1,34 @@
+import _SwiftFormatTestSupport
+
 @_spi(Rules) import SwiftFormat
 
 final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
   func testFallthroughCases() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoCasesWithOnlyFallthrough.self,
       input: """
         switch numbers {
         case 1: print("one")
-        case 2: fallthrough
-        case 3: fallthrough
+        1️⃣case 2: fallthrough
+        2️⃣case 3: fallthrough
         case 4: print("two to four")
-        case 5: fallthrough
+        3️⃣case 5: fallthrough
         case 7: print("five or seven")
         default: break
         }
         switch letters {
-        case "a": fallthrough
-        case "b", "c": fallthrough
+        4️⃣case "a": fallthrough
+        5️⃣case "b", "c": fallthrough
         case "d": print("abcd")
         case "e": print("e")
-        case "f": fallthrough
+        6️⃣case "f": fallthrough
         case "z": print("fz")
         default: break
         }
         switch tokens {
         case .comma: print(",")
-        case .rightBrace: fallthrough
-        case .leftBrace: fallthrough
+        7️⃣case .rightBrace: fallthrough
+        8️⃣case .leftBrace: fallthrough
         case .braces: print("{}")
         case .period: print(".")
         case .empty: fallthrough
@@ -54,26 +56,27 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         default: break
         }
         """,
-      checkForUnassertedDiagnostics: true)
-
-    XCTAssertDiagnosed(.collapseCase, line: 3, column: 1)
-    XCTAssertDiagnosed(.collapseCase, line: 4, column: 1)
-    XCTAssertDiagnosed(.collapseCase, line: 6, column: 1)
-    XCTAssertDiagnosed(.collapseCase, line: 11, column: 1)
-    XCTAssertDiagnosed(.collapseCase, line: 12, column: 1)
-    XCTAssertDiagnosed(.collapseCase, line: 15, column: 1)
-    XCTAssertDiagnosed(.collapseCase, line: 21, column: 1)
-    XCTAssertDiagnosed(.collapseCase, line: 22, column: 1)
+      findings: [
+        FindingSpec("1️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("2️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("3️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("4️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("5️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("6️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("7️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("8️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+      ]
+    )
   }
 
   func testFallthroughCasesWithCommentsAreNotCombined() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoCasesWithOnlyFallthrough.self,
       input: """
         switch numbers {
         case 1:
           return 0 // This return has an inline comment.
-        case 2: fallthrough
+        1️⃣case 2: fallthrough
         // This case is commented so it should stay.
         case 3:
           fallthrough
@@ -81,7 +84,7 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
           // This fallthrough is commented so it should stay.
           fallthrough
         case 5: fallthrough  // This fallthrough is relevant.
-        case 6:
+        2️⃣case 6:
           fallthrough
         // This case has a descriptive comment.
         case 7: print("got here")
@@ -102,23 +105,24 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         case 6, 7: print("got here")
         }
         """,
-      checkForUnassertedDiagnostics: true)
-
-    XCTAssertDiagnosed(.collapseCase, line: 4, column: 1)
-    XCTAssertDiagnosed(.collapseCase, line: 12, column: 1)
+      findings: [
+        FindingSpec("1️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("2️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+      ]
+    )
   }
 
   func testCommentsAroundCombinedCasesStayInPlace() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoCasesWithOnlyFallthrough.self,
       input: """
         switch numbers {
         case 5:
           return 42 // This return is important.
-        case 6: fallthrough
+        1️⃣case 6: fallthrough
         // This case has an important comment.
         case 7: print("6 to 7")
-        case 8: fallthrough
+        2️⃣case 8: fallthrough
 
         // This case has an extra leading newline for emphasis.
         case 9: print("8 to 9")
@@ -135,27 +139,29 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         case 8, 9: print("8 to 9")
         }
         """,
-      checkForUnassertedDiagnostics: true)
-
-    XCTAssertDiagnosed(.collapseCase, line: 4, column: 1)
-    XCTAssertDiagnosed(.collapseCase, line: 7, column: 1)
+      findings: [
+        FindingSpec("1️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("2️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+      ]
+    )
   }
 
   func testNestedSwitches() {
-    XCTAssertFormatting(
+    // FIXME: Finding #3 is at an odd column; it should be before the `case`. Look into this.
+    assertFormatting(
       NoCasesWithOnlyFallthrough.self,
       input: """
         switch x {
-        case 1: fallthrough
-        case 2: fallthrough
+        1️⃣case 1: fallthrough
+        2️⃣case 2: fallthrough
         case 3:
           switch y {
-          case 1: fallthrough
+          case 13️⃣: fallthrough
           case 2: print(2)
           }
         case 4:
           switch y {
-          case 1: fallthrough
+          4️⃣case 1: fallthrough
           case 2: print(2)
           }
         }
@@ -172,27 +178,27 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
           }
         }
         """,
-      checkForUnassertedDiagnostics: true)
-
-    XCTAssertDiagnosed(.collapseCase, line: 2, column: 1)
-    XCTAssertDiagnosed(.collapseCase, line: 3, column: 1)
-    // TODO: Column 9 seems wrong here; it should be 3. Look into this.
-    XCTAssertDiagnosed(.collapseCase, line: 6, column: 9)
-    XCTAssertDiagnosed(.collapseCase, line: 11, column: 3)
+      findings: [
+        FindingSpec("1️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("2️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("3️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("4️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+      ]
+    )
   }
 
   func testCasesInsideConditionalCompilationBlock() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoCasesWithOnlyFallthrough.self,
       input: """
         switch x {
         case 1: fallthrough
         #if FOO
-        case 2: fallthrough
+        1️⃣case 2: fallthrough
         case 3: print(3)
         case 4: print(4)
         #endif
-        case 5: fallthrough
+        2️⃣case 5: fallthrough
         case 6: print(6)
         #if BAR
         #if BAZ
@@ -222,29 +228,30 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         case 10: print(10)
         }
         """,
-      checkForUnassertedDiagnostics: true)
-
-    XCTAssertDiagnosed(.collapseCase, line: 4, column: 1)
-    XCTAssertDiagnosed(.collapseCase, line: 8, column: 1)
+      findings: [
+        FindingSpec("1️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("2️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+      ]
+    )
   }
 
   func testCasesWithWhereClauses() {
     // As noted in the rule implementation, the formatted result should include a newline before any
     // case items that have `where` clauses if they follow any case items that do not, to avoid
     // compiler warnings. This is handled by the pretty printer, not this rule.
-    XCTAssertFormatting(
+    assertFormatting(
       NoCasesWithOnlyFallthrough.self,
       input: """
         switch x {
-        case 1 where y < 0: fallthrough
-        case 2 where y == 0: fallthrough
-        case 3 where y < 0: fallthrough
+        1️⃣case 1 where y < 0: fallthrough
+        2️⃣case 2 where y == 0: fallthrough
+        3️⃣case 3 where y < 0: fallthrough
         case 4 where y != 0: print(4)
-        case 5: fallthrough
-        case 6: fallthrough
-        case 7: fallthrough
-        case 8: fallthrough
-        case 9: fallthrough
+        4️⃣case 5: fallthrough
+        5️⃣case 6: fallthrough
+        6️⃣case 7: fallthrough
+        7️⃣case 8: fallthrough
+        8️⃣case 9: fallthrough
         case 10 where y == 0: print(10)
         default: print("?")
         }
@@ -256,31 +263,32 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         default: print("?")
         }
         """,
-      checkForUnassertedDiagnostics: true)
-
-    XCTAssertDiagnosed(.collapseCase, line: 2, column: 1)
-    XCTAssertDiagnosed(.collapseCase, line: 3, column: 1)
-    XCTAssertDiagnosed(.collapseCase, line: 4, column: 1)
-    XCTAssertDiagnosed(.collapseCase, line: 6, column: 1)
-    XCTAssertDiagnosed(.collapseCase, line: 7, column: 1)
-    XCTAssertDiagnosed(.collapseCase, line: 8, column: 1)
-    XCTAssertDiagnosed(.collapseCase, line: 9, column: 1)
-    XCTAssertDiagnosed(.collapseCase, line: 10, column: 1)
+      findings: [
+        FindingSpec("1️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("2️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("3️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("4️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("5️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("6️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("7️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("8️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+      ]
+    )
   }
 
   func testCasesWithValueBindingsAreNotMerged() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoCasesWithOnlyFallthrough.self,
       input: """
         switch x {
-        case .a: fallthrough
+        1️⃣case .a: fallthrough
         case .b: fallthrough
         case .c(let x): fallthrough
         case .d(let y): fallthrough
-        case .e: fallthrough
+        2️⃣case .e: fallthrough
         case .f: fallthrough
         case (let g, let h): fallthrough
-        case .i: fallthrough
+        3️⃣case .i: fallthrough
         case .j?: fallthrough
         case let k as K: fallthrough
         case .l: break
@@ -298,19 +306,20 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         case .l: break
         }
         """,
-      checkForUnassertedDiagnostics: true)
-
-    XCTAssertDiagnosed(.collapseCase, line: 2, column: 1)
-    XCTAssertDiagnosed(.collapseCase, line: 6, column: 1)
-    XCTAssertDiagnosed(.collapseCase, line: 9, column: 1)
+      findings: [
+        FindingSpec("1️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("2️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("3️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+      ]
+    )
   }
 
   func testFallthroughOnlyCasesAreNotMergedWithDefault() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoCasesWithOnlyFallthrough.self,
       input: """
         switch x {
-        case .a: fallthrough
+        1️⃣case .a: fallthrough
         case .b: fallthrough
         default: print("got here")
         }
@@ -321,17 +330,18 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         default: print("got here")
         }
         """,
-      checkForUnassertedDiagnostics: true)
-
-    XCTAssertDiagnosed(.collapseCase, line: 2, column: 1)
+      findings: [
+        FindingSpec("1️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+      ]
+    )
   }
 
   func testFallthroughOnlyCasesAreNotMergedWithUnknownDefault() {
-    XCTAssertFormatting(
+    assertFormatting(
       NoCasesWithOnlyFallthrough.self,
       input: """
         switch x {
-        case .a: fallthrough
+        1️⃣case .a: fallthrough
         case .b: fallthrough
         @unknown default: print("got here")
         }
@@ -342,8 +352,9 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         @unknown default: print("got here")
         }
         """,
-      checkForUnassertedDiagnostics: true)
-
-    XCTAssertDiagnosed(.collapseCase, line: 2, column: 1)
+      findings: [
+        FindingSpec("1️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+      ]
+    )
   }
 }

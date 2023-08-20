@@ -1,70 +1,68 @@
+import _SwiftFormatTestSupport
+
 @_spi(Rules) import SwiftFormat
 
 final class ReturnVoidInsteadOfEmptyTupleTests: LintOrFormatRuleTestCase {
   func testBasic() {
-    XCTAssertFormatting(
+    assertFormatting(
       ReturnVoidInsteadOfEmptyTuple.self,
-      input:
-        """
-        let callback: () -> ()
-        typealias x = Int -> ()
-        func y() -> Int -> () { return }
-        func z(d: Bool -> ()) {}
+      input: """
+        let callback: () -> 1️⃣()
+        typealias x = Int -> 2️⃣()
+        func y() -> Int -> 3️⃣() { return }
+        func z(d: Bool -> 4️⃣()) {}
         """,
-      expected:
-        """
+      expected: """
         let callback: () -> Void
         typealias x = Int -> Void
         func y() -> Int -> Void { return }
         func z(d: Bool -> Void) {}
         """,
-      checkForUnassertedDiagnostics: true
+      findings: [
+        FindingSpec("1️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("2️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("3️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("4️⃣", message: "replace '()' with 'Void'"),
+      ]
     )
-    XCTAssertDiagnosed(.returnVoid, line: 1, column: 21)
-    XCTAssertDiagnosed(.returnVoid, line: 2, column: 22)
-    XCTAssertDiagnosed(.returnVoid, line: 3, column: 20)
-    XCTAssertDiagnosed(.returnVoid, line: 4, column: 19)
   }
 
   func testNestedFunctionTypes() {
-    XCTAssertFormatting(
+    assertFormatting(
       ReturnVoidInsteadOfEmptyTuple.self,
-      input:
-        """
-        typealias Nested1 = (() -> ()) -> Int
-        typealias Nested2 = (() -> ()) -> ()
-        typealias Nested3 = Int -> (() -> ())
+      input: """
+        typealias Nested1 = (() -> 1️⃣()) -> Int
+        typealias Nested2 = (() -> 2️⃣()) -> 3️⃣()
+        typealias Nested3 = Int -> (() -> 4️⃣())
         """,
-      expected:
-        """
+      expected: """
         typealias Nested1 = (() -> Void) -> Int
         typealias Nested2 = (() -> Void) -> Void
         typealias Nested3 = Int -> (() -> Void)
         """,
-      checkForUnassertedDiagnostics: true
+      findings: [
+        FindingSpec("1️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("2️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("3️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("4️⃣", message: "replace '()' with 'Void'"),
+      ]
     )
-    XCTAssertDiagnosed(.returnVoid, line: 1, column: 28)
-    XCTAssertDiagnosed(.returnVoid, line: 2, column: 28)
-    XCTAssertDiagnosed(.returnVoid, line: 2, column: 35)
-    XCTAssertDiagnosed(.returnVoid, line: 3, column: 35)
   }
 
   func testClosureSignatures() {
-    XCTAssertFormatting(
+    assertFormatting(
       ReturnVoidInsteadOfEmptyTuple.self,
-      input:
-        """
-        callWithTrailingClosure(arg) { arg -> () in body }
-        callWithTrailingClosure(arg) { arg -> () in
-          nestedCallWithTrailingClosure(arg) { arg -> () in
+      input: """
+        callWithTrailingClosure(arg) { arg -> 1️⃣() in body }
+        callWithTrailingClosure(arg) { arg -> 2️⃣() in
+          nestedCallWithTrailingClosure(arg) { arg -> 3️⃣() in
             body
           }
         }
-        callWithTrailingClosure(arg) { (arg: () -> ()) -> Int in body }
-        callWithTrailingClosure(arg) { (arg: () -> ()) -> () in body }
+        callWithTrailingClosure(arg) { (arg: () -> 4️⃣()) -> Int in body }
+        callWithTrailingClosure(arg) { (arg: () -> 5️⃣()) -> 6️⃣() in body }
         """,
-      expected:
-        """
+      expected: """
         callWithTrailingClosure(arg) { arg -> Void in body }
         callWithTrailingClosure(arg) { arg -> Void in
           nestedCallWithTrailingClosure(arg) { arg -> Void in
@@ -74,60 +72,58 @@ final class ReturnVoidInsteadOfEmptyTupleTests: LintOrFormatRuleTestCase {
         callWithTrailingClosure(arg) { (arg: () -> Void) -> Int in body }
         callWithTrailingClosure(arg) { (arg: () -> Void) -> Void in body }
         """,
-      checkForUnassertedDiagnostics: true
+      findings: [
+        FindingSpec("1️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("2️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("3️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("4️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("5️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("6️⃣", message: "replace '()' with 'Void'"),
+      ]
     )
-    XCTAssertDiagnosed(.returnVoid, line: 1, column: 39)
-    XCTAssertDiagnosed(.returnVoid, line: 2, column: 39)
-    XCTAssertDiagnosed(.returnVoid, line: 3, column: 47)
-    XCTAssertDiagnosed(.returnVoid, line: 7, column: 44)
-    XCTAssertDiagnosed(.returnVoid, line: 8, column: 44)
-    XCTAssertDiagnosed(.returnVoid, line: 8, column: 51)
   }
 
   func testTriviaPreservation() {
-    XCTAssertFormatting(
+    assertFormatting(
       ReturnVoidInsteadOfEmptyTuple.self,
-      input:
-        """
-        let callback: () -> /*foo*/()/*bar*/
-        let callback: ((Int) ->   /*foo*/   ()   /*bar*/) -> ()
+      input: """
+        let callback: () -> /*foo*/1️⃣()/*bar*/
+        let callback: ((Int) ->   /*foo*/   2️⃣()   /*bar*/) -> 3️⃣()
         """,
-      expected:
-        """
+      expected: """
         let callback: () -> /*foo*/Void/*bar*/
         let callback: ((Int) ->   /*foo*/   Void   /*bar*/) -> Void
         """,
-      checkForUnassertedDiagnostics: true
+      findings: [
+        FindingSpec("1️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("2️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("3️⃣", message: "replace '()' with 'Void'"),
+      ]
     )
-    XCTAssertDiagnosed(.returnVoid, line: 1, column: 28)
-    XCTAssertDiagnosed(.returnVoid, line: 2, column: 37)
-    XCTAssertDiagnosed(.returnVoid, line: 2, column: 54)
   }
 
   func testEmptyTupleWithInternalCommentsIsDiagnosedButNotReplaced() {
-    XCTAssertFormatting(
+    assertFormatting(
       ReturnVoidInsteadOfEmptyTuple.self,
-      input:
-        """
-        let callback: () -> ( )
-        let callback: () -> (\t)
-        let callback: () -> (
+      input: """
+        let callback: () -> 1️⃣( )
+        let callback: () -> 2️⃣(\t)
+        let callback: () -> 3️⃣(
         )
-        let callback: () -> ( /* please don't change me! */ )
-        let callback: () -> ( /** please don't change me! */ )
-        let callback: () -> (
+        let callback: () -> 4️⃣( /* please don't change me! */ )
+        let callback: () -> 5️⃣( /** please don't change me! */ )
+        let callback: () -> 6️⃣(
           // don't change me either!
         )
-        let callback: () -> (
+        let callback: () -> 7️⃣(
           /// don't change me either!
         )
-        let callback: () -> (\u{feff})
+        let callback: () -> 8️⃣(\u{feff})
 
-        let callback: (() -> ()) -> ( /* please don't change me! */ )
-        callWithTrailingClosure(arg) { (arg: () -> ()) -> ( /* no change */ ) in body }
+        let callback: (() -> 9️⃣()) -> 🔟( /* please don't change me! */ )
+        callWithTrailingClosure(arg) { (arg: () -> 0️⃣()) -> ℹ️( /* no change */ ) in body }
         """,
-      expected:
-        """
+      expected: """
         let callback: () -> Void
         let callback: () -> Void
         let callback: () -> Void
@@ -144,19 +140,20 @@ final class ReturnVoidInsteadOfEmptyTupleTests: LintOrFormatRuleTestCase {
         let callback: (() -> Void) -> ( /* please don't change me! */ )
         callWithTrailingClosure(arg) { (arg: () -> Void) -> ( /* no change */ ) in body }
         """,
-      checkForUnassertedDiagnostics: true
+      findings: [
+        FindingSpec("1️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("2️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("3️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("4️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("5️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("6️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("7️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("8️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("9️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("🔟", message: "replace '()' with 'Void'"),
+        FindingSpec("0️⃣", message: "replace '()' with 'Void'"),
+        FindingSpec("ℹ️", message: "replace '()' with 'Void'"),
+      ]
     )
-    XCTAssertDiagnosed(.returnVoid, line: 1, column: 21)
-    XCTAssertDiagnosed(.returnVoid, line: 2, column: 21)
-    XCTAssertDiagnosed(.returnVoid, line: 3, column: 21)
-    XCTAssertDiagnosed(.returnVoid, line: 5, column: 21)
-    XCTAssertDiagnosed(.returnVoid, line: 6, column: 21)
-    XCTAssertDiagnosed(.returnVoid, line: 7, column: 21)
-    XCTAssertDiagnosed(.returnVoid, line: 10, column: 21)
-    XCTAssertDiagnosed(.returnVoid, line: 13, column: 21)
-    XCTAssertDiagnosed(.returnVoid, line: 15, column: 22)
-    XCTAssertDiagnosed(.returnVoid, line: 15, column: 29)
-    XCTAssertDiagnosed(.returnVoid, line: 16, column: 44)
-    XCTAssertDiagnosed(.returnVoid, line: 16, column: 51)
   }
 }

@@ -1,39 +1,43 @@
+import _SwiftFormatTestSupport
+
 @_spi(Rules) import SwiftFormat
 
 final class NeverForceUnwrapTests: LintOrFormatRuleTestCase {
   func testUnsafeUnwrap() {
-    let input =
-    """
-    func someFunc() -> Int {
-      var a = getInt()
-      var b = a as! Int
-      let c = (someValue())!
-      let d = String(a)!
-      let regex = try! NSRegularExpression(pattern: "a*b+c?")
-      let e = /*comment about stuff*/ [1: a, 2: b, 3: c][4]!
-      var f = a as! /*comment about this type*/ FooBarType
-      return a!
-    }
-    """
-    performLint(NeverForceUnwrap.self, input: input)
-    XCTAssertDiagnosed(.doNotForceCast(name: "Int"), line: 3, column: 11)
-    XCTAssertDiagnosed(.doNotForceUnwrap(name: "(someValue())"), line: 4, column: 11)
-    XCTAssertDiagnosed(.doNotForceUnwrap(name: "String(a)"), line: 5, column: 11)
-    XCTAssertNotDiagnosed(.doNotForceCast(name: "try"))
-    XCTAssertNotDiagnosed(.doNotForceUnwrap(name: "try"))
-    XCTAssertDiagnosed(.doNotForceUnwrap(name: "[1: a, 2: b, 3: c][4]"), line: 7, column: 35)
-    XCTAssertDiagnosed(.doNotForceCast(name: "FooBarType"), line: 8, column: 11)
-    XCTAssertDiagnosed(.doNotForceUnwrap(name: "a"), line: 9, column: 10)
+    assertLint(
+      NeverForceUnwrap.self,
+      """
+      func someFunc() -> Int {
+        var a = getInt()
+        var b = 1️⃣a as! Int
+        let c = 2️⃣(someValue())!
+        let d = 3️⃣String(a)!
+        let regex = try! NSRegularExpression(pattern: "a*b+c?")
+        let e = /*comment about stuff*/ 4️⃣[1: a, 2: b, 3: c][4]!
+        var f = 5️⃣a as! /*comment about this type*/ FooBarType
+        return 6️⃣a!
+      }
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "do not force cast to 'Int'"),
+        FindingSpec("2️⃣", message: "do not force unwrap '(someValue())'"),
+        FindingSpec("3️⃣", message: "do not force unwrap 'String(a)'"),
+        FindingSpec("4️⃣", message: "do not force unwrap '[1: a, 2: b, 3: c][4]'"),
+        FindingSpec("5️⃣", message: "do not force cast to 'FooBarType'"),
+        FindingSpec("6️⃣", message: "do not force unwrap 'a'"),
+      ]
+    )
   }
 
   func testIgnoreTestCode() {
-    let input =
-    """
+    assertLint(
+      NeverForceUnwrap.self,
+      """
       import XCTest
 
       var b = a as! Int
-      """
-    performLint(NeverUseImplicitlyUnwrappedOptionals.self, input: input)
-    XCTAssertNotDiagnosed(.doNotForceCast(name: "Int"))
+      """,
+      findings: []
+    )
   }
 }

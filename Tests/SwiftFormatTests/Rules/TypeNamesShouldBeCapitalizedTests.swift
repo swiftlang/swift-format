@@ -1,128 +1,123 @@
+import _SwiftFormatTestSupport
+
 @_spi(Rules) import SwiftFormat
 
+// FIXME: Diagnostics should be emitted at the identifier, not at the start of the declaration.
 final class TypeNamesShouldBeCapitalizedTests: LintOrFormatRuleTestCase {
   func testConstruction() {
-    let input =
+    assertLint(
+      TypeNamesShouldBeCapitalized.self,
       """
-      struct a {}
-      class klassName {
-        struct subType {}
+      1️⃣struct a {}
+      2️⃣class klassName {
+        3️⃣struct subType {}
       }
-      protocol myProtocol {}
+      4️⃣protocol myProtocol {}
 
       extension myType {
-        struct innerType {}
+        5️⃣struct innerType {}
       }
-      """
-
-    performLint(TypeNamesShouldBeCapitalized.self, input: input)
-
-    XCTAssertDiagnosed(.capitalizeTypeName(name: "a"))
-    XCTAssertDiagnosed(.capitalizeTypeName(name: "klassName"))
-    XCTAssertDiagnosed(.capitalizeTypeName(name: "subType"))
-    XCTAssertDiagnosed(.capitalizeTypeName(name: "myProtocol"))
-    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "myType"))
-    XCTAssertDiagnosed(.capitalizeTypeName(name: "innerType"))
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "type names should be capitalized: a -> A"),
+        FindingSpec("2️⃣", message: "type names should be capitalized: klassName -> KlassName"),
+        FindingSpec("3️⃣", message: "type names should be capitalized: subType -> SubType"),
+        FindingSpec("4️⃣", message: "type names should be capitalized: myProtocol -> MyProtocol"),
+        FindingSpec("5️⃣", message: "type names should be capitalized: innerType -> InnerType"),
+      ]
+    )
   }
 
   func testActors() {
-    let input =
+    assertLint(
+      TypeNamesShouldBeCapitalized.self,
       """
-      actor myActor {}
+      1️⃣actor myActor {}
       actor OtherActor {}
-      distributed actor greeter {}
+      2️⃣distributed actor greeter {}
       distributed actor DistGreeter {}
-      """
-
-    performLint(TypeNamesShouldBeCapitalized.self, input: input)
-
-    XCTAssertDiagnosed(.capitalizeTypeName(name: "myActor"))
-    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "OtherActor"))
-    XCTAssertDiagnosed(.capitalizeTypeName(name: "greeter"))
-    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "DistGreeter"))
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "type names should be capitalized: myActor -> MyActor"),
+        FindingSpec("2️⃣", message: "type names should be capitalized: greeter -> Greeter"),
+      ]
+    )
   }
 
   func testAssociatedTypeandTypeAlias() {
-    let input =
+    assertLint(
+      TypeNamesShouldBeCapitalized.self,
       """
       protocol P {
-        associatedtype kind
+        1️⃣associatedtype kind
         associatedtype OtherKind
       }
 
-      typealias x = Int
+      2️⃣typealias x = Int
       typealias Y = String
 
       struct MyType {
-        typealias data<T> = Y
+        3️⃣typealias data<T> = Y
 
         func test() {
           typealias Value<T> = Y
         }
       }
-      """
-
-    performLint(TypeNamesShouldBeCapitalized.self, input: input)
-
-    XCTAssertDiagnosed(.capitalizeTypeName(name: "kind"))
-    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "OtherKind"))
-    XCTAssertDiagnosed(.capitalizeTypeName(name: "x"))
-    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "Y"))
-    XCTAssertDiagnosed(.capitalizeTypeName(name: "data"))
-    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "Value"))
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "type names should be capitalized: kind -> Kind"),
+        FindingSpec("2️⃣", message: "type names should be capitalized: x -> X"),
+        FindingSpec("3️⃣", message: "type names should be capitalized: data -> Data"),
+      ]
+    )
   }
 
   func testThatUnderscoredNamesAreDiagnosed() {
-    let input =
+    assertLint(
+      TypeNamesShouldBeCapitalized.self,
       """
-      protocol _p {
-        associatedtype _value
+      1️⃣protocol _p {
+        2️⃣associatedtype _value
         associatedtype __Value
       }
 
       protocol ___Q {
       }
 
-      struct _data {
-        typealias _x = Int
+      3️⃣struct _data {
+        4️⃣typealias _x = Int
       }
 
       struct _Data {}
 
-      actor _internalActor {}
+      5️⃣actor _internalActor {}
 
-      enum __e {
+      6️⃣enum __e {
       }
 
       enum _OtherE {
       }
 
       func test() {
-        class _myClass {}
+        7️⃣class _myClass {}
         do {
           class _MyClass {}
         }
       }
 
-      distributed actor __greeter {}
+      8️⃣distributed actor __greeter {}
       distributed actor __InternalGreeter {}
-      """
-
-    performLint(TypeNamesShouldBeCapitalized.self, input: input)
-
-    XCTAssertDiagnosed(.capitalizeTypeName(name: "_p"))
-    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "___Q"))
-    XCTAssertDiagnosed(.capitalizeTypeName(name: "_value"))
-    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "__Value"))
-    XCTAssertDiagnosed(.capitalizeTypeName(name: "_data"))
-    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "_Data"))
-    XCTAssertDiagnosed(.capitalizeTypeName(name: "_x"))
-    XCTAssertDiagnosed(.capitalizeTypeName(name: "_internalActor"))
-    XCTAssertDiagnosed(.capitalizeTypeName(name: "__e"))
-    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "__OtherE"))
-    XCTAssertDiagnosed(.capitalizeTypeName(name: "_myClass"))
-    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "_MyClass"))
-    XCTAssertDiagnosed(.capitalizeTypeName(name: "__greeter"))
-    XCTAssertNotDiagnosed(.capitalizeTypeName(name: "__InternalGreeter"))
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "type names should be capitalized: _p -> _P"),
+        FindingSpec("2️⃣", message: "type names should be capitalized: _value -> _Value"),
+        FindingSpec("3️⃣", message: "type names should be capitalized: _data -> _Data"),
+        FindingSpec("4️⃣", message: "type names should be capitalized: _x -> _X"),
+        FindingSpec("5️⃣", message: "type names should be capitalized: _internalActor -> _InternalActor"),
+        FindingSpec("6️⃣", message: "type names should be capitalized: __e -> __E"),
+        FindingSpec("7️⃣", message: "type names should be capitalized: _myClass -> _MyClass"),
+        FindingSpec("8️⃣", message: "type names should be capitalized: __greeter -> __Greeter"),
+      ]
+    )
   }
 }
