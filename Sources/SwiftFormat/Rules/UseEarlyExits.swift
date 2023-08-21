@@ -49,42 +49,42 @@ public final class UseEarlyExits: SyntaxFormatRule {
   public override class var isOptIn: Bool { return true }
 
   public override func visit(_ node: CodeBlockItemListSyntax) -> CodeBlockItemListSyntax {
-    // Continue recursing down the tree first, so that any nested/child nodes get transformed first.
-    let codeBlockItems = super.visit(node)
-    
-    let result = CodeBlockItemListSyntax(
-      codeBlockItems.flatMap { (codeBlockItem: CodeBlockItemSyntax) -> [CodeBlockItemSyntax] in
-        // The `elseBody` of an `IfExprSyntax` will be a `CodeBlockSyntax` if it's an `else` block,
-        // or another `IfExprSyntax` if it's an `else if` block. We only want to handle the former.
-        guard let exprStmt = codeBlockItem.item.as(ExpressionStmtSyntax.self),
-              let ifStatement = exprStmt.expression.as(IfExprSyntax.self),
-              let elseBody = ifStatement.elseBody?.as(CodeBlockSyntax.self),
-              codeBlockEndsWithEarlyExit(elseBody)
-        else {
-          return [codeBlockItem]
-        }
+    var newItems = [CodeBlockItemSyntax]()
 
-        diagnose(.useGuardStatement, on: ifStatement.elseKeyword)
+    for codeBlockItem in node {
+      // The `elseBody` of an `IfExprSyntax` will be a `CodeBlockSyntax` if it's an `else` block,
+      // or another `IfExprSyntax` if it's an `else if` block. We only want to handle the former.
+      guard
+        let exprStmt = codeBlockItem.item.as(ExpressionStmtSyntax.self),
+        let ifStatement = exprStmt.expression.as(IfExprSyntax.self),
+        let elseBody = ifStatement.elseBody?.as(CodeBlockSyntax.self),
+        codeBlockEndsWithEarlyExit(elseBody)
+      else {
+        newItems.append(visit(codeBlockItem))
+        continue
+      }
 
-        let trueBlock = ifStatement.body
+      diagnose(.useGuardStatement, on: ifStatement)
 
-        let guardKeyword = TokenSyntax.keyword(.guard,
-          leadingTrivia: ifStatement.ifKeyword.leadingTrivia,
-          trailingTrivia: .spaces(1))
-        let guardStatement = GuardStmtSyntax(
-          guardKeyword: guardKeyword,
-          conditions: ifStatement.conditions,
-          elseKeyword: TokenSyntax.keyword(.else, trailingTrivia: .spaces(1)),
-          body: elseBody)
+      let guardKeyword = TokenSyntax.keyword(
+        .guard,
+        leadingTrivia: ifStatement.ifKeyword.leadingTrivia,
+        trailingTrivia: .spaces(1))
+      let guardStatement = GuardStmtSyntax(
+        guardKeyword: guardKeyword,
+        conditions: ifStatement.conditions,
+        elseKeyword: TokenSyntax.keyword(.else, trailingTrivia: .spaces(1)),
+        body: visit(elseBody))
 
-        var items = [
-          CodeBlockItemSyntax(
-            item: .stmt(StmtSyntax(guardStatement)), semicolon: nil),
-        ]
-        items.append(contentsOf: trueBlock.statements)
-        return items
-      })
-    return result
+      newItems.append(CodeBlockItemSyntax(item: .stmt(StmtSyntax(guardStatement))))
+
+      let trueBlock = visit(ifStatement.body)
+      for trueStmt in trueBlock.statements {
+        newItems.append(trueStmt)
+      }
+    }
+
+    return CodeBlockItemListSyntax(newItems)
   }
 
   /// Returns true if the last statement in the given code block is one that will cause an early
@@ -109,5 +109,5 @@ public final class UseEarlyExits: SyntaxFormatRule {
 extension Finding.Message {
   @_spi(Rules)
   public static let useGuardStatement: Finding.Message =
-    "replace the 'if/else' block with a 'guard' statement containing the early exit"
+    "replace this 'if/else' block with a 'guard' statement containing the early exit"
 }

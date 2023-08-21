@@ -2,36 +2,35 @@ import _SwiftFormatTestSupport
 
 @_spi(Rules) import SwiftFormat
 
-// FIXME: These diagnostics should be on the variable name, not at the beginning of the declaration.
 final class DontRepeatTypeInStaticPropertiesTests: LintOrFormatRuleTestCase {
   func testRepetitiveProperties() {
     assertLint(
       DontRepeatTypeInStaticProperties.self,
       """
       public class UIColor {
-        1️⃣static let redColor: UIColor
-        2️⃣public class var blueColor: UIColor
+        static let 1️⃣redColor: UIColor
+        public class var 2️⃣blueColor: UIColor
         var yellowColor: UIColor
         static let green: UIColor
         public class var purple: UIColor
       }
       enum Sandwich {
-        3️⃣static let bolognaSandwich: Sandwich
-        4️⃣static var hamSandwich: Sandwich
+        static let 3️⃣bolognaSandwich: Sandwich
+        static var 4️⃣hamSandwich: Sandwich
         static var turkey: Sandwich
       }
       protocol RANDPerson {
         var oldPerson: Person
-        5️⃣static let youngPerson: Person
+        static let 5️⃣youngPerson: Person
       }
       struct TVGame {
-        6️⃣static var basketballGame: TVGame
-        7️⃣static var baseballGame: TVGame
+        static var 6️⃣basketballGame: TVGame
+        static var 7️⃣baseballGame: TVGame
         static let soccer: TVGame
         let hockey: TVGame
       }
       extension URLSession {
-        8️⃣class var sharedSession: URLSession
+        class var 8️⃣sharedSession: URLSession
       }
       """,
       findings: [
@@ -64,7 +63,7 @@ final class DontRepeatTypeInStaticPropertiesTests: LintOrFormatRuleTestCase {
       DontRepeatTypeInStaticProperties.self,
       """
       extension Dotted.Thing {
-        1️⃣static let defaultThing: Dotted.Thing
+        static let 1️⃣defaultThing: Dotted.Thing
       }
       """,
       findings: [

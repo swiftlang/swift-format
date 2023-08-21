@@ -2,18 +2,17 @@ import _SwiftFormatTestSupport
 
 @_spi(Rules) import SwiftFormat
 
-// FIXME: Emit
 final class NoParensAroundConditionsTests: LintOrFormatRuleTestCase {
   func testParensAroundConditions() {
     assertFormatting(
       NoParensAroundConditions.self,
       input: """
-        if (1️⃣x) {}
-        while (2️⃣x) {}
-        guard (3️⃣x), (4️⃣y), (5️⃣x == 3) else {}
+        if 1️⃣(x) {}
+        while 2️⃣(x) {}
+        guard 3️⃣(x), 4️⃣(y), 5️⃣(x == 3) else {}
         if (foo { x }) {}
-        repeat {} while(6️⃣x)
-        switch (7️⃣4) { default: break }
+        repeat {} while6️⃣(x)
+        switch 7️⃣(4) { default: break }
         """,
       expected: """
         if x {}
@@ -39,18 +38,18 @@ final class NoParensAroundConditionsTests: LintOrFormatRuleTestCase {
     assertFormatting(
       NoParensAroundConditions.self,
       input: """
-        switch (1️⃣a) {
+        switch 1️⃣(a) {
           case 1:
-            switch (2️⃣b) {
+            switch 2️⃣(b) {
               default: break
             }
         }
-        if (3️⃣x) {
-          if (4️⃣y) {
-          } else if (5️⃣z) {
+        if 3️⃣(x) {
+          if 4️⃣(y) {
+          } else if 5️⃣(z) {
           } else {
           }
-        } else if (6️⃣w) {
+        } else if 6️⃣(w) {
         }
         """,
       expected: """
@@ -81,20 +80,20 @@ final class NoParensAroundConditionsTests: LintOrFormatRuleTestCase {
     assertFormatting(
       NoParensAroundConditions.self,
       input: """
-        while (1️⃣x) {
-          while (2️⃣y) {}
+        while 1️⃣(x) {
+          while 2️⃣(y) {}
         }
-        guard (3️⃣x), (4️⃣y), (5️⃣x == 3) else {
-          guard (6️⃣a), (7️⃣b), (8️⃣c == x) else {
+        guard 3️⃣(x), 4️⃣(y), 5️⃣(x == 3) else {
+          guard 6️⃣(a), 7️⃣(b), 8️⃣(c == x) else {
             return
           }
           return
         }
         repeat {
           repeat {
-          } while (9️⃣y)
-        } while(🔟x)
-        if (0️⃣foo.someCall({ if (ℹ️x) {} })) {}
+          } while 9️⃣(y)
+        } while🔟(x)
+        if 0️⃣(foo.someCall({ if ℹ️(x) {} })) {}
         """,
       expected: """
         while x {
@@ -135,25 +134,25 @@ final class NoParensAroundConditionsTests: LintOrFormatRuleTestCase {
       input: """
         switch b {
           case 2:
-            switch (1️⃣d) {
+            switch 1️⃣(d) {
               default: break
             }
         }
         if x {
-          if (2️⃣y) {
-          } else if (3️⃣z) {
+          if 2️⃣(y) {
+          } else if 3️⃣(z) {
           } else {
           }
-        } else if (4️⃣w) {
+        } else if 4️⃣(w) {
         }
         while x {
-          while (5️⃣y) {}
+          while 5️⃣(y) {}
         }
         repeat {
           repeat {
-          } while (6️⃣y)
+          } while 6️⃣(y)
         } while x
-        if foo.someCall({ if (7️⃣x) {} }) {}
+        if foo.someCall({ if 7️⃣(x) {} }) {}
         """,
       expected: """
         switch b {
@@ -194,13 +193,13 @@ final class NoParensAroundConditionsTests: LintOrFormatRuleTestCase {
     assertFormatting(
       NoParensAroundConditions.self,
       input: """
-        let x = if (1️⃣x) {}
-        let y = switch (2️⃣4) { default: break }
+        let x = if 1️⃣(x) {}
+        let y = switch 2️⃣(4) { default: break }
         func foo() {
-          return if (3️⃣x) {}
+          return if 3️⃣(x) {}
         }
         func bar() {
-          return switch (4️⃣4) { default: break }
+          return switch 4️⃣(4) { default: break }
         }
         """,
       expected: """

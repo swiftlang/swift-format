@@ -164,10 +164,9 @@ final class WhitespaceLintTests: WhitespaceTestCase {
 
         """,
       findings: [
-        // FIXME: These should be singular.
-        FindingSpec("1️⃣", message: "add 1 line breaks"),
-        FindingSpec("2️⃣", message: "add 1 line breaks"),
-        FindingSpec("3️⃣", message: "add 1 line breaks"),
+        FindingSpec("1️⃣", message: "add 1 line break"),
+        FindingSpec("2️⃣", message: "add 1 line break"),
+        FindingSpec("3️⃣", message: "add 1 line break"),
       ]
     )
   }
@@ -241,7 +240,7 @@ final class WhitespaceLintTests: WhitespaceTestCase {
       findings: [
         FindingSpec("1️⃣", message: "line is too long"),
         FindingSpec("2️⃣", message: "line is too long"),
-        FindingSpec("3️⃣", message: "add 1 line breaks"),
+        FindingSpec("3️⃣", message: "add 1 line break"),
       ]
     )
   }

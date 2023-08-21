@@ -31,7 +31,7 @@ public final class UseWhereClausesInForLoops: SyntaxFormatRule {
     let firstStatement = node.body.statements.first!
 
     // Ignore for-loops with a `where` clause already.
-    // FIXME: Create an `&&` expression with both conditions?
+    // TODO: Create an `&&` expression with both conditions?
     guard node.whereClause == nil else { return StmtSyntax(node) }
 
     // Match:

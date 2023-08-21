@@ -40,13 +40,13 @@ public final class GroupNumericLiterals: SyntaxFormatRule {
       // Hexadecimal
       let digitsNoPrefix = String(originalDigits.dropFirst(2))
       guard digitsNoPrefix.count >= 8 else { return ExprSyntax(node) }
-      diagnose(.groupNumericLiteral(every: 4), on: node)
+      diagnose(.groupNumericLiteral(every: 4, base: "hexadecimal"), on: node)
       newDigits = "0x" + digits(digitsNoPrefix, groupedEvery: 4)
     case "0b":
       // Binary
       let digitsNoPrefix = String(originalDigits.dropFirst(2))
       guard digitsNoPrefix.count >= 10 else { return ExprSyntax(node) }
-      diagnose(.groupNumericLiteral(every: 8), on: node)
+      diagnose(.groupNumericLiteral(every: 8, base: "binary"), on: node)
       newDigits = "0b" + digits(digitsNoPrefix, groupedEvery: 8)
     case "0o":
       // Octal
@@ -54,7 +54,7 @@ public final class GroupNumericLiterals: SyntaxFormatRule {
     default:
       // Decimal
       guard originalDigits.count >= 7 else { return ExprSyntax(node) }
-      diagnose(.groupNumericLiteral(every: 3), on: node)
+      diagnose(.groupNumericLiteral(every: 3, base: "decimal"), on: node)
       newDigits = digits(originalDigits, groupedEvery: 3)
     }
 
@@ -84,8 +84,7 @@ public final class GroupNumericLiterals: SyntaxFormatRule {
 
 extension Finding.Message {
   @_spi(Rules)
-  public static func groupNumericLiteral(every stride: Int) -> Finding.Message {
-    let ending = stride == 3 ? "rd" : "th"
-    return "group numeric literal using '_' every \(stride)\(ending) number"
+  public static func groupNumericLiteral(every stride: Int, base: String) -> Finding.Message {
+    return "group every \(stride) digits in this \(base) literal using a '_' separator"
   }
 }
