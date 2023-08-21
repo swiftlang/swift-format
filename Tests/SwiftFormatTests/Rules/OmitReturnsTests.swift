@@ -30,4 +30,46 @@ final class OmitReturnsTests: LintOrFormatRuleTestCase {
         }
         """)
   }
+
+  func testOmitReturnInSubscript() {
+      XCTAssertFormatting(
+        OmitReturns.self,
+        input: """
+          struct Test {
+            subscript(x: Int) -> Bool {
+              return false
+            }
+          }
+          """,
+        expected: """
+          struct Test {
+            subscript(x: Int) -> Bool {
+              false
+            }
+          }
+          """)
+
+      XCTAssertFormatting(
+        OmitReturns.self,
+        input: """
+          struct Test {
+            subscript(x: Int) -> Bool {
+              get {
+                return false
+              }
+              set { }
+            }
+          }
+          """,
+        expected: """
+          struct Test {
+            subscript(x: Int) -> Bool {
+              get {
+                false
+              }
+              set { }
+            }
+          }
+          """)
+  }
 }
