@@ -2,9 +2,6 @@ import _SwiftFormatTestSupport
 
 @_spi(Rules) import SwiftFormat
 
-// FIXME: The findings are emitted in odd places; the last test is especially wrong. Their locations
-// may be getting computed from the tree post-transformation, so they no longer map to the right
-// locations in the original tree.
 final class UseEarlyExitsTests: LintOrFormatRuleTestCase {
   func testBasicIfElse() {
     // In this and other tests, the indentation of the true block in the expected output is
@@ -13,9 +10,9 @@ final class UseEarlyExitsTests: LintOrFormatRuleTestCase {
     assertFormatting(
       UseEarlyExits.self,
       input: """
-        if condition {
+        1️⃣if condition {
           trueBlock()
-        } 1️⃣else {
+        } else {
           falseBlock()
           return
         }
@@ -28,7 +25,7 @@ final class UseEarlyExitsTests: LintOrFormatRuleTestCase {
           trueBlock()
         """,
       findings: [
-        FindingSpec("1️⃣", message: "replace the 'if/else' block with a 'guard' statement containing the early exit"),
+        FindingSpec("1️⃣", message: "replace this 'if/else' block with a 'guard' statement containing the early exit"),
       ]
     )
   }
@@ -37,10 +34,10 @@ final class UseEarlyExitsTests: LintOrFormatRuleTestCase {
     assertFormatting(
       UseEarlyExits.self,
       input: """
-        if condition {
+        1️⃣if condition {
           trueBlock()
           return
-        } 1️⃣else {
+        } else {
           falseBlock()
           return
         }
@@ -54,7 +51,7 @@ final class UseEarlyExitsTests: LintOrFormatRuleTestCase {
           return
         """,
       findings: [
-        FindingSpec("1️⃣", message: "replace the 'if/else' block with a 'guard' statement containing the early exit"),
+        FindingSpec("1️⃣", message: "replace this 'if/else' block with a 'guard' statement containing the early exit"),
       ]
     )
   }
@@ -94,20 +91,20 @@ final class UseEarlyExitsTests: LintOrFormatRuleTestCase {
 
           // Comment 1
 
-          /*Comment 2*/ if let first = values.first {
+          /*Comment 2*/ 1️⃣if let first = values.first {
             // Comment 3
 
             /// Doc comment
-            if first >= 0 {
+            2️⃣if first >= 0 {
               // Comment 4
               var result = 0
-           2️⃣   for value in values {
+              for value in values {
                 result += invertedCombobulatorFactor(of: value)
               }
               return result
             } else {
               print("Can't have negative energy")
-          1️⃣    throw DiscombobulationError.negativeEnergy
+              throw DiscombobulationError.negativeEnergy
             }
           } else {
             print("The array was empty")
@@ -140,8 +137,8 @@ final class UseEarlyExitsTests: LintOrFormatRuleTestCase {
         }
         """,
       findings: [
-        FindingSpec("1️⃣", message: "replace the 'if/else' block with a 'guard' statement containing the early exit"),
-        FindingSpec("2️⃣", message: "replace the 'if/else' block with a 'guard' statement containing the early exit"),
+        FindingSpec("1️⃣", message: "replace this 'if/else' block with a 'guard' statement containing the early exit"),
+        FindingSpec("2️⃣", message: "replace this 'if/else' block with a 'guard' statement containing the early exit"),
       ]
     )
   }

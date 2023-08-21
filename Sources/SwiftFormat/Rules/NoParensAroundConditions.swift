@@ -42,7 +42,7 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
       }
     }
 
-    diagnose(.removeParensAroundExpression, on: expr)
+    diagnose(.removeParensAroundExpression, on: tuple.leftParen)
 
     guard
       let visitedTuple = visit(tuple).as(TupleExprSyntax.self),
@@ -75,7 +75,6 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
     return node.with(\.condition, .expression(extractExpr(tup)))
   }
 
-  /// FIXME(hbh): Parsing for SwitchExprSyntax is not implemented.
   public override func visit(_ node: SwitchExprSyntax) -> ExprSyntax {
     guard let tup = node.subject.as(TupleExprSyntax.self),
       tup.elements.firstAndOnly != nil

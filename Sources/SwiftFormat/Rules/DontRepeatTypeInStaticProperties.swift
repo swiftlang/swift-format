@@ -77,7 +77,7 @@ public final class DontRepeatTypeInStaticProperties: SyntaxLintRule {
       for pattern in varDecl.identifiers {
         let varName = pattern.identifier.text
         if varName.contains(bareTypeName) {
-          diagnose(.removeTypeFromName(name: varName, type: bareTypeName), on: varDecl)
+          diagnose(.removeTypeFromName(name: varName, type: bareTypeName), on: pattern.identifier)
         }
       }
     }

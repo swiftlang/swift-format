@@ -481,7 +481,10 @@ extension Finding.Message {
 
   public static let removeLineError: Finding.Message = "remove line break"
 
-  public static func addLinesError(_ lines: Int) -> Finding.Message { "add \(lines) line breaks" }
+  public static func addLinesError(_ lines: Int) -> Finding.Message {
+    let noun = lines == 1 ? "break" : "breaks"
+    return "add \(lines) line \(noun)"
+  }
 
   public static let lineLengthError: Finding.Message = "line is too long"
 }

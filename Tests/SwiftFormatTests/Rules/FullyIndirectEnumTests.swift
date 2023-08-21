@@ -2,20 +2,17 @@ import _SwiftFormatTestSupport
 
 @_spi(Rules) import SwiftFormat
 
-// FIXME: Since we're putting the finding on the `enum` decl, we should have notes pointing to each
-// `indirect` that should be removed from the cases. The finding should also probably be attached to
-// the `enum` keyword, not the name, since the inserted keyword will be there.
 class FullyIndirectEnumTests: LintOrFormatRuleTestCase {
   func testAllIndirectCases() {
     assertFormatting(
       FullyIndirectEnum.self,
       input: """
         // Comment 1
-        public enum 1️⃣DependencyGraphNode {
-          internal indirect case userDefined(dependencies: [DependencyGraphNode])
+        public 1️⃣enum DependencyGraphNode {
+          internal 2️⃣indirect case userDefined(dependencies: [DependencyGraphNode])
           // Comment 2
-          indirect case synthesized(dependencies: [DependencyGraphNode])
-          indirect case other(dependencies: [DependencyGraphNode])
+          3️⃣indirect case synthesized(dependencies: [DependencyGraphNode])
+          4️⃣indirect case other(dependencies: [DependencyGraphNode])
           var x: Int
         }
         """,
@@ -30,7 +27,15 @@ class FullyIndirectEnumTests: LintOrFormatRuleTestCase {
         }
         """,
       findings: [
-        FindingSpec("1️⃣", message: "move 'indirect' before the enum declaration 'DependencyGraphNode' when all cases are indirect"),
+        FindingSpec(
+          "1️⃣",
+          message: "declare enum 'DependencyGraphNode' itself as indirect when all cases are indirect",
+          notes: [
+            NoteSpec("2️⃣", message: "remove 'indirect' here"),
+            NoteSpec("3️⃣", message: "remove 'indirect' here"),
+            NoteSpec("4️⃣", message: "remove 'indirect' here"),
+          ]
+        ),
       ]
     )
   }
@@ -40,11 +45,11 @@ class FullyIndirectEnumTests: LintOrFormatRuleTestCase {
       FullyIndirectEnum.self,
       input: """
         // Comment 1
-        public enum 1️⃣DependencyGraphNode {
-          @someAttr internal indirect case userDefined(dependencies: [DependencyGraphNode])
+        public 1️⃣enum DependencyGraphNode {
+          @someAttr internal 2️⃣indirect case userDefined(dependencies: [DependencyGraphNode])
           // Comment 2
-          @someAttr indirect case synthesized(dependencies: [DependencyGraphNode])
-          @someAttr indirect case other(dependencies: [DependencyGraphNode])
+          @someAttr 3️⃣indirect case synthesized(dependencies: [DependencyGraphNode])
+          @someAttr 4️⃣indirect case other(dependencies: [DependencyGraphNode])
           var x: Int
         }
         """,
@@ -59,7 +64,15 @@ class FullyIndirectEnumTests: LintOrFormatRuleTestCase {
         }
         """,
       findings: [
-        FindingSpec("1️⃣", message: "move 'indirect' before the enum declaration 'DependencyGraphNode' when all cases are indirect"),
+        FindingSpec(
+          "1️⃣",
+          message: "declare enum 'DependencyGraphNode' itself as indirect when all cases are indirect",
+          notes: [
+            NoteSpec("2️⃣", message: "remove 'indirect' here"),
+            NoteSpec("3️⃣", message: "remove 'indirect' here"),
+            NoteSpec("4️⃣", message: "remove 'indirect' here"),
+          ]
+        ),
       ]
     )
   }

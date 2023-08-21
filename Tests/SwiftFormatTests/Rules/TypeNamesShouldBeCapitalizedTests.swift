@@ -2,28 +2,27 @@ import _SwiftFormatTestSupport
 
 @_spi(Rules) import SwiftFormat
 
-// FIXME: Diagnostics should be emitted at the identifier, not at the start of the declaration.
 final class TypeNamesShouldBeCapitalizedTests: LintOrFormatRuleTestCase {
   func testConstruction() {
     assertLint(
       TypeNamesShouldBeCapitalized.self,
       """
-      1️⃣struct a {}
-      2️⃣class klassName {
-        3️⃣struct subType {}
+      struct 1️⃣a {}
+      class 2️⃣klassName {
+        struct 3️⃣subType {}
       }
-      4️⃣protocol myProtocol {}
+      protocol 4️⃣myProtocol {}
 
       extension myType {
-        5️⃣struct innerType {}
+        struct 5️⃣innerType {}
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "type names should be capitalized: a -> A"),
-        FindingSpec("2️⃣", message: "type names should be capitalized: klassName -> KlassName"),
-        FindingSpec("3️⃣", message: "type names should be capitalized: subType -> SubType"),
-        FindingSpec("4️⃣", message: "type names should be capitalized: myProtocol -> MyProtocol"),
-        FindingSpec("5️⃣", message: "type names should be capitalized: innerType -> InnerType"),
+        FindingSpec("1️⃣", message: "rename the struct 'a' using UpperCamelCase; for example, 'A'"),
+        FindingSpec("2️⃣", message: "rename the class 'klassName' using UpperCamelCase; for example, 'KlassName'"),
+        FindingSpec("3️⃣", message: "rename the struct 'subType' using UpperCamelCase; for example, 'SubType'"),
+        FindingSpec("4️⃣", message: "rename the protocol 'myProtocol' using UpperCamelCase; for example, 'MyProtocol'"),
+        FindingSpec("5️⃣", message: "rename the struct 'innerType' using UpperCamelCase; for example, 'InnerType'"),
       ]
     )
   }
@@ -32,14 +31,14 @@ final class TypeNamesShouldBeCapitalizedTests: LintOrFormatRuleTestCase {
     assertLint(
       TypeNamesShouldBeCapitalized.self,
       """
-      1️⃣actor myActor {}
+      actor 1️⃣myActor {}
       actor OtherActor {}
-      2️⃣distributed actor greeter {}
+      distributed actor 2️⃣greeter {}
       distributed actor DistGreeter {}
       """,
       findings: [
-        FindingSpec("1️⃣", message: "type names should be capitalized: myActor -> MyActor"),
-        FindingSpec("2️⃣", message: "type names should be capitalized: greeter -> Greeter"),
+        FindingSpec("1️⃣", message: "rename the actor 'myActor' using UpperCamelCase; for example, 'MyActor'"),
+        FindingSpec("2️⃣", message: "rename the actor 'greeter' using UpperCamelCase; for example, 'Greeter'"),
       ]
     )
   }
@@ -49,15 +48,15 @@ final class TypeNamesShouldBeCapitalizedTests: LintOrFormatRuleTestCase {
       TypeNamesShouldBeCapitalized.self,
       """
       protocol P {
-        1️⃣associatedtype kind
+        associatedtype 1️⃣kind
         associatedtype OtherKind
       }
 
-      2️⃣typealias x = Int
+      typealias 2️⃣x = Int
       typealias Y = String
 
       struct MyType {
-        3️⃣typealias data<T> = Y
+        typealias 3️⃣data<T> = Y
 
         func test() {
           typealias Value<T> = Y
@@ -65,9 +64,9 @@ final class TypeNamesShouldBeCapitalizedTests: LintOrFormatRuleTestCase {
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "type names should be capitalized: kind -> Kind"),
-        FindingSpec("2️⃣", message: "type names should be capitalized: x -> X"),
-        FindingSpec("3️⃣", message: "type names should be capitalized: data -> Data"),
+        FindingSpec("1️⃣", message: "rename the associated type 'kind' using UpperCamelCase; for example, 'Kind'"),
+        FindingSpec("2️⃣", message: "rename the type alias 'x' using UpperCamelCase; for example, 'X'"),
+        FindingSpec("3️⃣", message: "rename the type alias 'data' using UpperCamelCase; for example, 'Data'"),
       ]
     )
   }
@@ -76,47 +75,47 @@ final class TypeNamesShouldBeCapitalizedTests: LintOrFormatRuleTestCase {
     assertLint(
       TypeNamesShouldBeCapitalized.self,
       """
-      1️⃣protocol _p {
-        2️⃣associatedtype _value
+      protocol 1️⃣_p {
+        associatedtype 2️⃣_value
         associatedtype __Value
       }
 
       protocol ___Q {
       }
 
-      3️⃣struct _data {
-        4️⃣typealias _x = Int
+      struct 3️⃣_data {
+        typealias 4️⃣_x = Int
       }
 
       struct _Data {}
 
-      5️⃣actor _internalActor {}
+      actor 5️⃣_internalActor {}
 
-      6️⃣enum __e {
+      enum 6️⃣__e {
       }
 
       enum _OtherE {
       }
 
       func test() {
-        7️⃣class _myClass {}
+        class 7️⃣_myClass {}
         do {
           class _MyClass {}
         }
       }
 
-      8️⃣distributed actor __greeter {}
+      distributed actor 8️⃣__greeter {}
       distributed actor __InternalGreeter {}
       """,
       findings: [
-        FindingSpec("1️⃣", message: "type names should be capitalized: _p -> _P"),
-        FindingSpec("2️⃣", message: "type names should be capitalized: _value -> _Value"),
-        FindingSpec("3️⃣", message: "type names should be capitalized: _data -> _Data"),
-        FindingSpec("4️⃣", message: "type names should be capitalized: _x -> _X"),
-        FindingSpec("5️⃣", message: "type names should be capitalized: _internalActor -> _InternalActor"),
-        FindingSpec("6️⃣", message: "type names should be capitalized: __e -> __E"),
-        FindingSpec("7️⃣", message: "type names should be capitalized: _myClass -> _MyClass"),
-        FindingSpec("8️⃣", message: "type names should be capitalized: __greeter -> __Greeter"),
+        FindingSpec("1️⃣", message: "rename the protocol '_p' using UpperCamelCase; for example, '_P'"),
+        FindingSpec("2️⃣", message: "rename the associated type '_value' using UpperCamelCase; for example, '_Value'"),
+        FindingSpec("3️⃣", message: "rename the struct '_data' using UpperCamelCase; for example, '_Data'"),
+        FindingSpec("4️⃣", message: "rename the type alias '_x' using UpperCamelCase; for example, '_X'"),
+        FindingSpec("5️⃣", message: "rename the actor '_internalActor' using UpperCamelCase; for example, '_InternalActor'"),
+        FindingSpec("6️⃣", message: "rename the enum '__e' using UpperCamelCase; for example, '__E'"),
+        FindingSpec("7️⃣", message: "rename the class '_myClass' using UpperCamelCase; for example, '_MyClass'"),
+        FindingSpec("8️⃣", message: "rename the actor '__greeter' using UpperCamelCase; for example, '__Greeter'"),
       ]
     )
   }
