@@ -44,60 +44,27 @@ public final class OmitReturns: SyntaxFormatRule {
       return decl
     }
 
-    if let accessorBlock = `subscript`.accessorBlock {
-      // We are assuming valid Swift code here where only
-      // one `get { ... }` is allowed.
-      switch accessorBlock.accessors {
-      case .accessors(let accessors):
-        guard var getter = accessors.filter({
-          $0.accessorSpecifier.tokenKind == .keyword(.get)
-        }).first else {
-          return decl
-        }
-
-        guard let body = getter.body,
-              let `return` = containsSingleReturn(body.statements) else {
-          return decl
-        }
-
-        guard let getterAt = accessors.firstIndex(where: {
-          $0.accessorSpecifier.tokenKind == .keyword(.get)
-        }) else {
-          return decl
-        }
-
-        getter.body?.statements = unwrapReturnStmt(`return`)
-
-        `subscript`.accessorBlock = .init(
-            leadingTrivia: accessorBlock.leadingTrivia,
-            leftBrace: accessorBlock.leftBrace,
-            accessors: .accessors(accessors.with(\.[getterAt], getter)),
-            rightBrace: accessorBlock.rightBrace,
-            trailingTrivia: accessorBlock.trailingTrivia)
-
-        diagnose(.omitReturnStatement, on: `return`, severity: .refactoring)
-
-        return DeclSyntax(`subscript`)
-
-      case .getter(let getter):
-        guard let `return` = containsSingleReturn(getter) else {
-          return decl
-        }
-        
-        `subscript`.accessorBlock = .init(
-            leadingTrivia: accessorBlock.leadingTrivia,
-            leftBrace: accessorBlock.leftBrace,
-            accessors: .getter(unwrapReturnStmt(`return`)),
-            rightBrace: accessorBlock.rightBrace,
-            trailingTrivia: accessorBlock.trailingTrivia)
-
-        diagnose(.omitReturnStatement, on: `return`, severity: .refactoring)
-
-        return DeclSyntax(`subscript`)
-      }
+    if let accessorBlock = `subscript`.accessorBlock,
+       // We are assuming valid Swift code here where only
+       // one `get { ... }` is allowed.
+       let transformed = transformAccessorBlock(accessorBlock) {
+      `subscript`.accessorBlock = transformed
+      return DeclSyntax(`subscript`)
     }
 
     return decl
+  }
+
+  public override func visit(_ node: PatternBindingSyntax) -> PatternBindingSyntax {
+    var binding = node
+
+    if let accessorBlock = binding.accessorBlock,
+       let transformed = transformAccessorBlock(accessorBlock) {
+      binding.accessorBlock = transformed
+      return binding
+    }
+
+    return node
   }
 
   public override func visit(_ node: ClosureExprSyntax) -> ExprSyntax {
@@ -112,6 +79,55 @@ public final class OmitReturns: SyntaxFormatRule {
     }
 
     return expr
+  }
+
+  private func transformAccessorBlock(_ accessorBlock: AccessorBlockSyntax) -> AccessorBlockSyntax? {
+    // We are assuming valid Swift code here where only
+    // one `get { ... }` is allowed.
+    switch accessorBlock.accessors {
+    case .accessors(let accessors):
+      guard var getter = accessors.filter({
+        $0.accessorSpecifier.tokenKind == .keyword(.get)
+      }).first else {
+        return nil
+      }
+
+      guard let body = getter.body,
+            let `return` = containsSingleReturn(body.statements) else {
+        return nil
+      }
+
+      guard let getterAt = accessors.firstIndex(where: {
+        $0.accessorSpecifier.tokenKind == .keyword(.get)
+      }) else {
+        return nil
+      }
+
+      getter.body?.statements = unwrapReturnStmt(`return`)
+
+      diagnose(.omitReturnStatement, on: `return`, severity: .refactoring)
+
+      return .init(
+          leadingTrivia: accessorBlock.leadingTrivia,
+          leftBrace: accessorBlock.leftBrace,
+          accessors: .accessors(accessors.with(\.[getterAt], getter)),
+          rightBrace: accessorBlock.rightBrace,
+          trailingTrivia: accessorBlock.trailingTrivia)
+
+    case .getter(let getter):
+      guard let `return` = containsSingleReturn(getter) else {
+        return nil
+      }
+
+      diagnose(.omitReturnStatement, on: `return`, severity: .refactoring)
+
+      return .init(
+          leadingTrivia: accessorBlock.leadingTrivia,
+          leftBrace: accessorBlock.leftBrace,
+          accessors: .getter(unwrapReturnStmt(`return`)),
+          rightBrace: accessorBlock.rightBrace,
+          trailingTrivia: accessorBlock.trailingTrivia)
+    }
   }
 
   private func containsSingleReturn(_ body: CodeBlockItemListSyntax) -> ReturnStmtSyntax? {

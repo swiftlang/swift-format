@@ -232,6 +232,7 @@ class LintPipeline: SyntaxVisitor {
   }
 
   override func visit(_ node: PatternBindingSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(OmitReturns.visit, for: node)
     visitIfEnabled(UseSingleLinePropertyGetter.visit, for: node)
     return .visitChildren
   }
