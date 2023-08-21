@@ -72,4 +72,42 @@ final class OmitReturnsTests: LintOrFormatRuleTestCase {
           }
           """)
   }
+
+  func testOmitReturnInComputedVars() {
+    XCTAssertFormatting(
+      OmitReturns.self,
+      input: """
+        var x: Int {
+          return 42
+        }
+        """,
+      expected: """
+        var x: Int {
+          42
+        }
+        """)
+
+    XCTAssertFormatting(
+      OmitReturns.self,
+      input: """
+        struct Test {
+          var x: Int {
+            get {
+              return 42
+            }
+            set { }
+          }
+        }
+        """,
+      expected: """
+        struct Test {
+          var x: Int {
+            get {
+              42
+            }
+            set { }
+          }
+        }
+        """)
+  }
 }
