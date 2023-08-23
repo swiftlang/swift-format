@@ -1,0 +1,40 @@
+name: Build and push docker image
+on:
+  push:
+    tags:
+      - v*-static-binary
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_and_push_image:
+    name: "${{ github.head_ref }}"
+    runs-on:  [self-hosted, charizard]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Authenticate to Google Cloud
+        uses: 'google-github-actions/auth@v1'
+        with:
+          credentials_json: '${{ secrets.DS_GHA_SA_DEV }}'
+
+      - name: Set up Cloud SDK
+        uses: 'google-github-actions/setup-gcloud@v1'
+
+      - name: Configure docker for gcr
+        run: gcloud auth configure-docker
+
+      - name: Build dev image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          tags: us.gcr.io/deepsource-dev/swift-format-static:dev
+          push: true
+          pull: true
+          no-cache: true
