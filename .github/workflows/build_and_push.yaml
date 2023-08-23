@@ -1,8 +1,6 @@
 name: Build and push docker image
 on:
   push:
-    tags:
-      - v*-static-binary
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
