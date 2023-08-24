@@ -10,4 +10,4 @@ steps:
 images: ['us.gcr.io/deepsource-dev/swift-format:dev']
 
 options:
-  machineType: 'E2_HIGHCPU_32'
+  machineType: 'E2_HIGHCPU_8'

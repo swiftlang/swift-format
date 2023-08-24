@@ -14,4 +14,4 @@ steps:
 images: ['us.gcr.io/deepsource-production/swift-format:$TAG_NAME', 'us.gcr.io/deepsource-production/swift-format:latest']
 
 options:
-  machineType: 'E2_HIGHCPU_32'
+  machineType: 'E2_HIGHCPU_8'
