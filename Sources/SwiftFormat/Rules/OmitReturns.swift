@@ -26,59 +26,56 @@ public final class OmitReturns: SyntaxFormatRule {
     let decl = super.visit(node)
 
     // func <name>() -> <Type> { return ... }
-    if var funcDecl = decl.as(FunctionDeclSyntax.self),
-       let body = funcDecl.body,
-       let `return` = containsSingleReturn(body.statements) {
-      funcDecl.body?.statements = unwrapReturnStmt(`return`)
-      diagnose(.omitReturnStatement, on: `return`, severity: .refactoring)
-      return DeclSyntax(funcDecl)
+    guard var funcDecl = decl.as(FunctionDeclSyntax.self),
+          let body = funcDecl.body,
+          let returnStmt = containsSingleReturn(body.statements) else {
+      return decl
     }
 
-    return decl
+    funcDecl.body?.statements = unwrapReturnStmt(returnStmt)
+    diagnose(.omitReturnStatement, on: returnStmt, severity: .refactoring)
+    return DeclSyntax(funcDecl)
   }
 
   public override func visit(_ node: SubscriptDeclSyntax) -> DeclSyntax {
     let decl = super.visit(node)
 
-    guard var `subscript` = decl.as(SubscriptDeclSyntax.self) else {
+    guard var subscriptDecl = decl.as(SubscriptDeclSyntax.self),
+          let accessorBlock = subscriptDecl.accessorBlock,
+          // We are assuming valid Swift code here where only
+          // one `get { ... }` is allowed.
+          let transformed = transformAccessorBlock(accessorBlock) else {
       return decl
     }
 
-    if let accessorBlock = `subscript`.accessorBlock,
-       // We are assuming valid Swift code here where only
-       // one `get { ... }` is allowed.
-       let transformed = transformAccessorBlock(accessorBlock) {
-      `subscript`.accessorBlock = transformed
-      return DeclSyntax(`subscript`)
-    }
-
-    return decl
+    subscriptDecl.accessorBlock = transformed
+    return DeclSyntax(subscriptDecl)
   }
 
   public override func visit(_ node: PatternBindingSyntax) -> PatternBindingSyntax {
     var binding = node
 
-    if let accessorBlock = binding.accessorBlock,
-       let transformed = transformAccessorBlock(accessorBlock) {
-      binding.accessorBlock = transformed
-      return binding
+    guard let accessorBlock = binding.accessorBlock,
+          let transformed = transformAccessorBlock(accessorBlock) else {
+      return node
     }
 
-    return node
+    binding.accessorBlock = transformed
+    return binding
   }
 
   public override func visit(_ node: ClosureExprSyntax) -> ExprSyntax {
     let expr = super.visit(node)
 
     // test { return ... }
-    if var closure = expr.as(ClosureExprSyntax.self),
-       let `return` = containsSingleReturn(closure.statements) {
-       closure.statements = unwrapReturnStmt(`return`)
-       diagnose(.omitReturnStatement, on: `return`, severity: .refactoring)
-       return ExprSyntax(closure)
+    guard var closureExpr = expr.as(ClosureExprSyntax.self),
+          let returnStmt = containsSingleReturn(closureExpr.statements) else {
+       return expr
     }
 
-    return expr
+    closureExpr.statements = unwrapReturnStmt(returnStmt)
+    diagnose(.omitReturnStatement, on: returnStmt, severity: .refactoring)
+    return ExprSyntax(closureExpr)
   }
 
   private func transformAccessorBlock(_ accessorBlock: AccessorBlockSyntax) -> AccessorBlockSyntax? {
@@ -93,7 +90,7 @@ public final class OmitReturns: SyntaxFormatRule {
       }
 
       guard let body = getter.body,
-            let `return` = containsSingleReturn(body.statements) else {
+            let returnStmt = containsSingleReturn(body.statements) else {
         return nil
       }
 
@@ -103,50 +100,44 @@ public final class OmitReturns: SyntaxFormatRule {
         return nil
       }
 
-      getter.body?.statements = unwrapReturnStmt(`return`)
+      getter.body?.statements = unwrapReturnStmt(returnStmt)
 
-      diagnose(.omitReturnStatement, on: `return`, severity: .refactoring)
+      diagnose(.omitReturnStatement, on: returnStmt, severity: .refactoring)
 
-      return .init(
-          leadingTrivia: accessorBlock.leadingTrivia,
-          leftBrace: accessorBlock.leftBrace,
-          accessors: .accessors(accessors.with(\.[getterAt], getter)),
-          rightBrace: accessorBlock.rightBrace,
-          trailingTrivia: accessorBlock.trailingTrivia)
+      var newBlock = accessorBlock
+      newBlock.accessors = .accessors(accessors.with(\.[getterAt], getter))
+      return newBlock
 
     case .getter(let getter):
-      guard let `return` = containsSingleReturn(getter) else {
+      guard let returnStmt = containsSingleReturn(getter) else {
         return nil
       }
 
-      diagnose(.omitReturnStatement, on: `return`, severity: .refactoring)
+      diagnose(.omitReturnStatement, on: returnStmt, severity: .refactoring)
 
-      return .init(
-          leadingTrivia: accessorBlock.leadingTrivia,
-          leftBrace: accessorBlock.leftBrace,
-          accessors: .getter(unwrapReturnStmt(`return`)),
-          rightBrace: accessorBlock.rightBrace,
-          trailingTrivia: accessorBlock.trailingTrivia)
+      var newBlock = accessorBlock
+      newBlock.accessors = .getter(unwrapReturnStmt(returnStmt))
+      return newBlock
     }
   }
 
   private func containsSingleReturn(_ body: CodeBlockItemListSyntax) -> ReturnStmtSyntax? {
-    if let element = body.firstAndOnly?.as(CodeBlockItemSyntax.self),
-       let ret = element.item.as(ReturnStmtSyntax.self),
-       !ret.children(viewMode: .all).isEmpty, ret.expression != nil {
-      return ret
+    guard let element = body.firstAndOnly?.as(CodeBlockItemSyntax.self),
+       let returnStmt = element.item.as(ReturnStmtSyntax.self) else
+        {
+      return nil
     }
 
-    return nil
+    return !returnStmt.children(viewMode: .all).isEmpty && returnStmt.expression != nil ? returnStmt : nil
   }
 
-  private func unwrapReturnStmt(_ `return`: ReturnStmtSyntax) -> CodeBlockItemListSyntax {
+  private func unwrapReturnStmt(_ returnStmt: ReturnStmtSyntax) -> CodeBlockItemListSyntax {
     CodeBlockItemListSyntax([
       CodeBlockItemSyntax(
-        leadingTrivia: `return`.leadingTrivia,
-        item: .expr(`return`.expression!),
+        leadingTrivia: returnStmt.leadingTrivia,
+        item: .expr(returnStmt.expression!),
         semicolon: nil,
-        trailingTrivia: `return`.trailingTrivia)
+        trailingTrivia: returnStmt.trailingTrivia)
     ])
   }
 }
