@@ -144,5 +144,5 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
 
 extension Finding.Message {
   public static let omitReturnStatement: Finding.Message =
-    "`return` can be omitted because body consists of a single expression"
+    "'return' can be omitted because body consists of a single expression"
 }
