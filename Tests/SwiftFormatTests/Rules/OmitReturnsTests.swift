@@ -5,7 +5,7 @@ import _SwiftFormatTestSupport
 final class OmitReturnsTests: LintOrFormatRuleTestCase {
   func testOmitReturnInFunction() {
     assertFormatting(
-      OmitReturns.self,
+      OmitExplicitReturns.self,
       input: """
         func test() -> Bool {
           1️⃣return false
@@ -23,7 +23,7 @@ final class OmitReturnsTests: LintOrFormatRuleTestCase {
 
   func testOmitReturnInClosure() {
     assertFormatting(
-      OmitReturns.self,
+      OmitExplicitReturns.self,
       input: """
         vals.filter {
           1️⃣return $0.count == 1
@@ -41,7 +41,7 @@ final class OmitReturnsTests: LintOrFormatRuleTestCase {
 
   func testOmitReturnInSubscript() {
     assertFormatting(
-      OmitReturns.self,
+      OmitExplicitReturns.self,
       input: """
         struct Test {
           subscript(x: Int) -> Bool {
@@ -82,7 +82,7 @@ final class OmitReturnsTests: LintOrFormatRuleTestCase {
 
   func testOmitReturnInComputedVars() {
     assertFormatting(
-      OmitReturns.self,
+      OmitExplicitReturns.self,
       input: """
         var x: Int {
           1️⃣return 42

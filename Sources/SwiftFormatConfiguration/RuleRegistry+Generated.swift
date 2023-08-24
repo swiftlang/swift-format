@@ -36,7 +36,7 @@ enum RuleRegistry {
     "NoLeadingUnderscores": false,
     "NoParensAroundConditions": true,
     "NoVoidReturnOnFunctionSignature": true,
-    "OmitReturns": false,
+    "OmitExplicitReturns": false,
     "OneCasePerLine": true,
     "OneVariableDeclarationPerLine": true,
     "OnlyOneTrailingClosureArgument": true,
