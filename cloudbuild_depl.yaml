@@ -1,0 +1,17 @@
+# Build
+timeout: 20m0s
+
+steps:
+  - name: "gcr.io/cloud-builders/docker:20.10.14"
+    args:
+      - build
+      - -t
+      - us.gcr.io/deepsource-production/swift-format:$TAG_NAME
+      - -t
+      - us.gcr.io/deepsource-production/swift-format:latest
+      - .
+
+images: ['us.gcr.io/deepsource-production/swift-format:$TAG_NAME', 'us.gcr.io/deepsource-production/swift-format:latest']
+
+options:
+  machineType: 'E2_HIGHCPU_32'
