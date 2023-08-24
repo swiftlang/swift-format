@@ -119,6 +119,8 @@ extension DeclSyntaxProtocol {
           guard let index = trimmedLine.firstIndex(of: ":") else { continue }
           let name = trimmedLine[..<index].trimmingCharacters(in: .init(charactersIn: " -:"))
           let summary = trimmedLine[index...].trimmingCharacters(in: .init(charactersIn: " -:"))
+          let invalidNames = ["Important"]
+          guard !name.isEmpty && !invalidNames.contains(name) else { continue }
           params.append(ParseComment.Parameter(name: name, summary: summary))
 
         case .returnsDescription:
