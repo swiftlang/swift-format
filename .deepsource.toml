@@ -1,7 +1,5 @@
 version = 1
 
-[[analyzers]]
-name = "swift"
 
 [[analyzers]]
 name = "secrets"
