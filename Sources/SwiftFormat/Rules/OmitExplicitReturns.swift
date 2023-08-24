@@ -32,7 +32,7 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
       return decl
     }
 
-    funcDecl.body?.statements = unwrapReturnStmt(returnStmt)
+    funcDecl.body?.statements = rewrapReturnedExpression(returnStmt)
     diagnose(.omitReturnStatement, on: returnStmt, severity: .refactoring)
     return DeclSyntax(funcDecl)
   }
@@ -73,7 +73,7 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
        return expr
     }
 
-    closureExpr.statements = unwrapReturnStmt(returnStmt)
+    closureExpr.statements = rewrapReturnedExpression(returnStmt)
     diagnose(.omitReturnStatement, on: returnStmt, severity: .refactoring)
     return ExprSyntax(closureExpr)
   }
@@ -100,7 +100,7 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
         return nil
       }
 
-      getter.body?.statements = unwrapReturnStmt(returnStmt)
+      getter.body?.statements = rewrapReturnedExpression(returnStmt)
 
       diagnose(.omitReturnStatement, on: returnStmt, severity: .refactoring)
 
@@ -116,7 +116,7 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
       diagnose(.omitReturnStatement, on: returnStmt, severity: .refactoring)
 
       var newBlock = accessorBlock
-      newBlock.accessors = .getter(unwrapReturnStmt(returnStmt))
+      newBlock.accessors = .getter(rewrapReturnedExpression(returnStmt))
       return newBlock
     }
   }
@@ -131,7 +131,7 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
     return !returnStmt.children(viewMode: .all).isEmpty && returnStmt.expression != nil ? returnStmt : nil
   }
 
-  private func unwrapReturnStmt(_ returnStmt: ReturnStmtSyntax) -> CodeBlockItemListSyntax {
+  private func rewrapReturnedExpression(_ returnStmt: ReturnStmtSyntax) -> CodeBlockItemListSyntax {
     CodeBlockItemListSyntax([
       CodeBlockItemSyntax(
         leadingTrivia: returnStmt.leadingTrivia,
