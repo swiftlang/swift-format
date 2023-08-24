@@ -19,7 +19,7 @@ import SwiftSyntax
 /// Format: `func <name>() { return ... }` constructs will be replaced with
 ///         equivalent `func <name>() { ... }` constructs.
 @_spi(Rules)
-public final class OmitReturns: SyntaxFormatRule {
+public final class OmitExplicitReturns: SyntaxFormatRule {
   public override class var isOptIn: Bool { return true }
 
   public override func visit(_ node: FunctionDeclSyntax) -> DeclSyntax {

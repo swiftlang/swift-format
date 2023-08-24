@@ -61,7 +61,7 @@ class LintPipeline: SyntaxVisitor {
   }
 
   override func visit(_ node: ClosureExprSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(OmitReturns.visit, for: node)
+    visitIfEnabled(OmitExplicitReturns.visit, for: node)
     return .visitChildren
   }
 
@@ -151,7 +151,7 @@ class LintPipeline: SyntaxVisitor {
     visitIfEnabled(AlwaysUseLowerCamelCase.visit, for: node)
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)
-    visitIfEnabled(OmitReturns.visit, for: node)
+    visitIfEnabled(OmitExplicitReturns.visit, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     visitIfEnabled(ValidateDocumentationComments.visit, for: node)
     return .visitChildren
@@ -232,7 +232,7 @@ class LintPipeline: SyntaxVisitor {
   }
 
   override func visit(_ node: PatternBindingSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(OmitReturns.visit, for: node)
+    visitIfEnabled(OmitExplicitReturns.visit, for: node)
     visitIfEnabled(UseSingleLinePropertyGetter.visit, for: node)
     return .visitChildren
   }
@@ -282,7 +282,7 @@ class LintPipeline: SyntaxVisitor {
   override func visit(_ node: SubscriptDeclSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
-    visitIfEnabled(OmitReturns.visit, for: node)
+    visitIfEnabled(OmitExplicitReturns.visit, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     return .visitChildren
   }
@@ -351,7 +351,7 @@ extension FormatPipeline {
     node = NoLabelsInCasePatterns(context: context).rewrite(node)
     node = NoParensAroundConditions(context: context).rewrite(node)
     node = NoVoidReturnOnFunctionSignature(context: context).rewrite(node)
-    node = OmitReturns(context: context).rewrite(node)
+    node = OmitExplicitReturns(context: context).rewrite(node)
     node = OneCasePerLine(context: context).rewrite(node)
     node = OneVariableDeclarationPerLine(context: context).rewrite(node)
     node = OrderedImports(context: context).rewrite(node)
