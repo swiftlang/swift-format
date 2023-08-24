@@ -139,7 +139,7 @@ final class SwitchStmtTests: PrettyPrintTestCase {
       case someVeryLongVarName,
         someOtherLongVarName:
         foo(a: [
-          1, 2, 3, 4, 5,
+          1, 2, 3, 4, 5
         ])
       default:
         print("default")

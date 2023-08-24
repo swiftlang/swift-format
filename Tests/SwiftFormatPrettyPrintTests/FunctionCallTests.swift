@@ -155,11 +155,11 @@ final class FunctionCallTests: PrettyPrintTestCase {
       myFunc(someArray: [])
       myFunc(someArray: [
         1000, 2000, 3000, 4000, 5000, 6000, 7000,
-        8000,
+        8000
       ])
       myFunc(someDictionary: [:])
       myFunc(someDictionary: [
-        "foo": "bar", "baz": "quux", "gli": "glop",
+        "foo": "bar", "baz": "quux", "gli": "glop"
       ])
       myFunc(someClosure: {
       })
@@ -170,11 +170,11 @@ final class FunctionCallTests: PrettyPrintTestCase {
       })
       myFunc(someArray: [
         1000, 2000, 3000, 4000, 5000, 6000, 7000,
-        8000,
+        8000
       ]) { foo in bar() }
       myFunc(someArray: [
         1000, 2000, 3000, 4000, 5000, 6000, 7000,
-        8000,
+        8000
       ]) { foo in
         someMuchLongerLineBreakingBarFunction()
       }
@@ -198,22 +198,22 @@ final class FunctionCallTests: PrettyPrintTestCase {
       """
       myFunc([
         1000, 2000, 3000, 4000, 5000, 6000, 7000,
-        8000,
+        8000
       ])
       myFunc([
         "foo": "bar", "baz": "quux",
-        "glip": "glop",
+        "glip": "glop"
       ])
       myFunc({ foo, bar in
         baz(1000, 2000, 3000, 4000, 5000)
       })
       myFunc([
         1000, 2000, 3000, 4000, 5000, 6000, 7000,
-        8000,
+        8000
       ]) { foo in bar() }
       myFunc([
         1000, 2000, 3000, 4000, 5000, 6000, 7000,
-        8000,
+        8000
       ]) { foo in
         someMuchLongerLineBreakingBarFunction()
       }

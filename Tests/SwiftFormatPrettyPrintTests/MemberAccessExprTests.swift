@@ -34,7 +34,7 @@ final class MemberAccessExprTests: PrettyPrintTestCase {
       let array = [
         .first,
         .second,
-        .third,
+        .third
       ]
 
       """
@@ -74,7 +74,7 @@ final class MemberAccessExprTests: PrettyPrintTestCase {
     let expectedNoForcedBreaks =
       """
       let result = [
-        1, 2, 3, 4, 5,
+        1, 2, 3, 4, 5
       ].filter {
         $0 % 2 == 0
       }.map { $0 * $0 }
@@ -97,7 +97,7 @@ final class MemberAccessExprTests: PrettyPrintTestCase {
     let expectedWithForcedBreaks =
       """
       let result = [
-        1, 2, 3, 4, 5,
+        1, 2, 3, 4, 5
       ]
       .filter {
         $0 % 2 == 0

@@ -75,7 +75,8 @@ class PrettyPrintTestCase: DiagnosingTestCase {
       context: context,
       node: Syntax(sourceFileSyntax),
       printTokenStream: false,
-      whitespaceOnly: whitespaceOnly)
+      whitespaceOnly: whitespaceOnly,
+      shouldValidateTrailingComma: false)
     return printer.prettyPrint()
   }
 }

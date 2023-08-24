@@ -14,15 +14,15 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
       :
       // Comment B
       ]
-      let a = [1: "a", 2: "b", 3: "c",]
+      let a = [1: "a", 2: "b", 3: "c"]
       let a: [Int: String] = [1: "a", 2: "b", 3: "c"]
       let a = [10000: "abc", 20000: "def", 30000: "ghij"]
       let a: [Int: String] = [1: "a", 2: "b", 3: "c", 4: "d"]
       let a: [Int: String] = [1: "a", 2: "b", 3: "c", 4: "d", 5: "e", 6: "f", 7: "g"]
-      let a: [Int: String] = [1: "a", 2: "b", 3: "c", 4: "d", 5: "e", 6: "f", 7: "g",]
+      let a: [Int: String] = [1: "a", 2: "b", 3: "c", 4: "d", 5: "e", 6: "f", 7: "g"]
       let a: [Int: String] = [
         1: "a", 2: "b", 3: "c", 4: "d", 5: "e", 6: "f",
-        7: "g", 8: "i",
+        7: "g", 8: "i"
       ]
       let a = [10000: "abc", 20000: "def", 30000: "ghi"]
       """
@@ -39,22 +39,22 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
       let a = [1: "a", 2: "b", 3: "c"]
       let a: [Int: String] = [1: "a", 2: "b", 3: "c"]
       let a = [
-        10000: "abc", 20000: "def", 30000: "ghij",
+        10000: "abc", 20000: "def", 30000: "ghij"
       ]
       let a: [Int: String] = [
-        1: "a", 2: "b", 3: "c", 4: "d",
-      ]
-      let a: [Int: String] = [
-        1: "a", 2: "b", 3: "c", 4: "d", 5: "e", 6: "f",
-        7: "g",
+        1: "a", 2: "b", 3: "c", 4: "d"
       ]
       let a: [Int: String] = [
         1: "a", 2: "b", 3: "c", 4: "d", 5: "e", 6: "f",
-        7: "g",
+        7: "g"
       ]
       let a: [Int: String] = [
         1: "a", 2: "b", 3: "c", 4: "d", 5: "e", 6: "f",
-        7: "g", 8: "i",
+        7: "g"
+      ]
+      let a: [Int: String] = [
+        1: "a", 2: "b", 3: "c", 4: "d", 5: "e", 6: "f",
+        7: "g", 8: "i"
       ]
 
       """
@@ -64,7 +64,7 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
       // dictionary.
       + """
       let a = [
-        10000: "abc", 20000: "def", 30000: "ghi",
+        10000: "abc", 20000: "def", 30000: "ghi"
       ]
 
       """
@@ -93,9 +93,9 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
     let input =
       """
       let a = [
-        1: "a",
+        1: "a"
       ]
-      let a = [1: "a", 2: "b", 3: "c",]
+      let a = [1: "a", 2: "b", 3: "c"]
       let a: [Int: String] = [
         1: "a", 2: "b", 3: "c", 4: "d", 5: "e", 6: "f",
         7: "g", 8: "i"
@@ -104,23 +104,6 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(
       input: input, expected: input + "\n", linelength: 50, whitespaceOnly: true)
-  }
-
-  func testTrailingCommaDiagnostics() {
-    let input =
-      """
-      let a = [1: "a", 2: "b", 3: "c",]
-      let a: [Int: String] = [
-        1: "a", 2: "b", 3: "c", 4: "d", 5: "e", 6: "f",
-        7: "g", 8: "i"
-      ]
-      """
-
-    assertPrettyPrintEqual(
-      input: input, expected: input + "\n", linelength: 50, whitespaceOnly: true)
-
-    XCTAssertDiagnosed(.removeTrailingComma, line: 1, column: 32)
-    XCTAssertDiagnosed(.addTrailingComma, line: 4, column: 17)
   }
 
   func testDiscretionaryNewlineAfterColon() {
@@ -186,7 +169,7 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
       """
       let d = [
         key: cond ? firstOption : secondOption,
-        key2: bar(),
+        key2: bar()
       ]
       """
 
@@ -196,7 +179,7 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
         key: cond
           ? firstOption
           : secondOption,
-        key2: bar(),
+        key2: bar()
       ]
 
       """
@@ -223,13 +206,13 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
         key1: ("abc", "def", "xyz"),
         key2: (
           "this ", "string", "is long"
-        ),
+        )
       ]
       let a = [
         key1: ("abc", "def", "xyz"),
         key2: (
           "this ", "string", "is long"
-        ),
+        )
       ]
       let a = [
         key2: ("this ", "string", "is long")
@@ -243,11 +226,11 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
         )
       ]
       let a = [
-        key1: ("a", "z"), key2: ("b ", "y"),
+        key1: ("a", "z"), key2: ("b ", "y")
       ]
       let a = [
         key1: ("ab", "z"),
-        key2: ("b ", "y"),
+        key2: ("b ", "y")
       ]
 
       """
@@ -257,7 +240,7 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
       // dictionary.
       + """
       a = [
-        k1: ("ab", "z"), k2: ("bc", "y"),
+        k1: ("ab", "z"), k2: ("bc", "y")
       ]
 
       """

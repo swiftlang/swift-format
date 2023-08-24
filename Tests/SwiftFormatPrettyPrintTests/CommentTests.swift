@@ -220,30 +220,30 @@ final class CommentTests: PrettyPrintTestCase {
       // Array comment
       let a = [
         456,  // small comment
-        789,
+        789
       ]
 
       // Dictionary comment
       let b = [
         "abc": 456,  // small comment
-        "def": 789,
+        "def": 789
       ]
 
       // Trailing comment
       let c = [
-        123, 456,  // small comment
+        123, 456  // small comment
       ]
 
       /* Array comment */
       let a = [
         456, /* small comment */
-        789,
+        789
       ]
 
       /* Dictionary comment */
       let b = [
         "abc": 456, /* small comment */
-        "def": 789,
+        "def": 789
       ]
 
       """

@@ -11,15 +11,15 @@ final class ArrayDeclTests: PrettyPrintTestCase {
       let a = [
         // Comment
       ]
-      let a = [1, 2, 3,]
+      let a = [1, 2, 3]
       let a: [Bool] = [false, true, true, false]
       let a = [11111111, 2222222, 33333333, 4444444]
       let a: [String] = ["One", "Two", "Three", "Four"]
       let a: [String] = ["One", "Two", "Three", "Four", "Five", "Six", "Seven"]
-      let a: [String] = ["One", "Two", "Three", "Four", "Five", "Six", "Seven",]
+      let a: [String] = ["One", "Two", "Three", "Four", "Five", "Six", "Seven"]
       let a: [String] = [
         "One", "Two", "Three", "Four", "Five",
-        "Six", "Seven", "Eight",
+        "Six", "Seven", "Eight"
       ]
       let a = [11111111, 2222222, 33333333, 444444]
       """
@@ -34,22 +34,22 @@ final class ArrayDeclTests: PrettyPrintTestCase {
       let a = [1, 2, 3]
       let a: [Bool] = [false, true, true, false]
       let a = [
-        11111111, 2222222, 33333333, 4444444,
+        11111111, 2222222, 33333333, 4444444
       ]
       let a: [String] = [
-        "One", "Two", "Three", "Four",
-      ]
-      let a: [String] = [
-        "One", "Two", "Three", "Four", "Five",
-        "Six", "Seven",
+        "One", "Two", "Three", "Four"
       ]
       let a: [String] = [
         "One", "Two", "Three", "Four", "Five",
-        "Six", "Seven",
+        "Six", "Seven"
       ]
       let a: [String] = [
         "One", "Two", "Three", "Four", "Five",
-        "Six", "Seven", "Eight",
+        "Six", "Seven"
+      ]
+      let a: [String] = [
+        "One", "Two", "Three", "Four", "Five",
+        "Six", "Seven", "Eight"
       ]
 
       """
@@ -58,7 +58,7 @@ final class ArrayDeclTests: PrettyPrintTestCase {
       // always added to last element and that 1 character causes the newlines inside of the array.
       + """
       let a = [
-        11111111, 2222222, 33333333, 444444,
+        11111111, 2222222, 33333333, 444444
       ]
 
       """
@@ -157,9 +157,9 @@ final class ArrayDeclTests: PrettyPrintTestCase {
     let input =
       """
       let a = [
-        "String",
+        "String"
       ]
-      let a = [1, 2, 3,]
+      let a = [1, 2, 3]
       let a: [String] = [
         "One", "Two", "Three", "Four", "Five",
         "Six", "Seven", "Eight"
@@ -168,23 +168,6 @@ final class ArrayDeclTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(
       input: input, expected: input + "\n", linelength: 45, whitespaceOnly: true)
-  }
-
-  func testTrailingCommaDiagnostics() {
-    let input =
-      """
-      let a = [1, 2, 3,]
-      let a: [String] = [
-        "One", "Two", "Three", "Four", "Five",
-        "Six", "Seven", "Eight"
-      ]
-      """
-
-    assertPrettyPrintEqual(
-      input: input, expected: input + "\n", linelength: 45, whitespaceOnly: true)
-
-    XCTAssertDiagnosed(.removeTrailingComma, line: 1, column: 17)
-    XCTAssertDiagnosed(.addTrailingComma, line: 4, column: 26)
   }
 
   func testGroupsTrailingComma() {
@@ -192,7 +175,7 @@ final class ArrayDeclTests: PrettyPrintTestCase {
       """
       let a = [
         condition ? firstOption : secondOption,
-        bar(),
+        bar()
       ]
       """
 
@@ -202,7 +185,7 @@ final class ArrayDeclTests: PrettyPrintTestCase {
         condition
           ? firstOption
           : secondOption,
-        bar(),
+        bar()
       ]
 
       """
@@ -228,13 +211,13 @@ final class ArrayDeclTests: PrettyPrintTestCase {
         ("abc", "def", "xyz"),
         (
           "this ", "string", "is long"
-        ),
+        )
       ]
       let a = [
         ("abc", "def", "xyz"),
         (
           "this ", "string", "is long"
-        ),
+        )
       ]
       let a = [
         ("this ", "string", "is long")
@@ -244,11 +227,11 @@ final class ArrayDeclTests: PrettyPrintTestCase {
       ]
       let a = [
         "this ", "string",
-        "is longer",
+        "is longer"
       ]
       let a = [
         ("this", "str"),
-        ("is", "lng"),
+        ("is", "lng")
       ]
 
       """
@@ -257,7 +240,7 @@ final class ArrayDeclTests: PrettyPrintTestCase {
       // always added to last element and that 1 character causes the newlines inside of the array.
       + """
       a = [
-        ("az", "by"), ("cf", "de"),
+        ("az", "by"), ("cf", "de")
       ]
 
       """
