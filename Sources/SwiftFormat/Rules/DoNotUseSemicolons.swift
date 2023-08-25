@@ -80,10 +80,18 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
           }
         }
 
-        // This discards any trailingTrivia from the semicolon. That trivia is at most some spaces,
-        // and the pretty printer adds any necessary spaces so it's safe to discard.
+        // This discards any trailing trivia from the semicolon. That trivia will only be horizontal
+        // whitespace, and the pretty printer adds any necessary spaces so it's safe to discard.
+        // TODO: When we stop using the legacy trivia transform, we need to fix this to preserve
+        // trailing comments.
         newItem = newItem.with(\.semicolon, nil)
-        if idx < node.count - 1 {
+
+        // When emitting the finding, tell the user to move the next statement down if there is
+        // another statement following this one. Otherwise, just tell them to remove the semicolon.
+        if let nextToken = semicolon.nextToken(viewMode: .sourceAccurate),
+          nextToken.tokenKind != .rightBrace && nextToken.tokenKind != .endOfFile
+            && !nextToken.leadingTrivia.containsNewlines
+        {
           diagnose(.removeSemicolonAndMove, on: semicolon)
         } else {
           diagnose(.removeSemicolon, on: semicolon)

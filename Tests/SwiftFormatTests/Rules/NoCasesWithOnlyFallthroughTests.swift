@@ -147,7 +147,6 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
   }
 
   func testNestedSwitches() {
-    // FIXME: Finding #3 is at an odd column; it should be before the `case`. Look into this.
     assertFormatting(
       NoCasesWithOnlyFallthrough.self,
       input: """
@@ -156,7 +155,7 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         2️⃣case 2: fallthrough
         case 3:
           switch y {
-          case 13️⃣: fallthrough
+          3️⃣case 1: fallthrough
           case 2: print(2)
           }
         case 4:

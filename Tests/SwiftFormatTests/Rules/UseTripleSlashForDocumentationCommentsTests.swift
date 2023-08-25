@@ -2,7 +2,6 @@ import _SwiftFormatTestSupport
 
 @_spi(Rules) import SwiftFormat
 
-// FIXME: Findings aren't actually being emitted by this rule!
 final class UseTripleSlashForDocumentationCommentsTests: LintOrFormatRuleTestCase {
   func testRemoveDocBlockComments() {
     assertFormatting(
@@ -12,7 +11,7 @@ final class UseTripleSlashForDocumentationCommentsTests: LintOrFormatRuleTestCas
          * This comment should not be converted.
          */
 
-        /**
+        1️⃣/**
          * Returns a docLineComment.
          *
          * - Parameters:
@@ -33,7 +32,9 @@ final class UseTripleSlashForDocumentationCommentsTests: LintOrFormatRuleTestCas
         /// - Returns: docLineComment.
         func foo(withOutStar: Bool) {}
         """,
-      findings: []
+      findings: [
+        FindingSpec("1️⃣", message: "replace documentation block comments with documentation line comments")
+      ]
     )
   }
   
@@ -41,7 +42,7 @@ final class UseTripleSlashForDocumentationCommentsTests: LintOrFormatRuleTestCas
     assertFormatting(
       UseTripleSlashForDocumentationComments.self,
       input: """
-        /**
+        1️⃣/**
          Returns a docLineComment.
 
          - Parameters:
@@ -58,7 +59,9 @@ final class UseTripleSlashForDocumentationCommentsTests: LintOrFormatRuleTestCas
         /// - Returns: docLineComment.
         public var test = 1
         """,
-      findings: []
+      findings: [
+        FindingSpec("1️⃣", message: "replace documentation block comments with documentation line comments")
+      ]
     )
   }
 
@@ -137,7 +140,7 @@ final class UseTripleSlashForDocumentationCommentsTests: LintOrFormatRuleTestCas
         /// Why are there so many comments?
         /// Who knows! But there are loads.
 
-        /** AClazz is a class with good name. */
+        1️⃣/** AClazz is a class with good name. */
         public class AClazz {
         }
         """,
@@ -158,7 +161,9 @@ final class UseTripleSlashForDocumentationCommentsTests: LintOrFormatRuleTestCas
         public class AClazz {
         }
         """,
-      findings: []
+      findings: [
+        FindingSpec("1️⃣", message: "replace documentation block comments with documentation line comments")
+      ]
     )
   }
 

@@ -2,7 +2,6 @@ import _SwiftFormatTestSupport
 
 @_spi(Rules) import SwiftFormat
 
-// FIXME: Why not emit the finding at the very parentheses we want the user to remove?
 final class NoEmptyTrailingClosureParenthesesTests: LintOrFormatRuleTestCase {
   func testInvalidEmptyParenTrailingClosure() {
     assertFormatting(
@@ -14,29 +13,29 @@ final class NoEmptyTrailingClosureParenthesesTests: LintOrFormatRuleTestCase {
         func greetApathetically(_ nameProvider: () -> String) {
           // ...
         }
-        0️⃣greetEnthusiastically() { "John" }
+        greetEnthusiastically0️⃣() { "John" }
         greetApathetically { "not John" }
         func myfunc(cls: MyClass) {
           cls.myClosure { $0 }
         }
         func myfunc(cls: MyClass) {
-          1️⃣cls.myBadClosure() { $0 }
+          cls.myBadClosure1️⃣() { $0 }
         }
-        2️⃣DispatchQueue.main.async() {
-          3️⃣greetEnthusiastically() { "John" }
-          4️⃣DispatchQueue.main.async() {
-            5️⃣greetEnthusiastically() { "Willis" }
+        DispatchQueue.main.async2️⃣() {
+          greetEnthusiastically3️⃣() { "John" }
+          DispatchQueue.main.async4️⃣() {
+            greetEnthusiastically5️⃣() { "Willis" }
           }
         }
         DispatchQueue.global.async(inGroup: blah) {
-          6️⃣DispatchQueue.main.async() {
-            7️⃣greetEnthusiastically() { "Willis" }
+          DispatchQueue.main.async6️⃣() {
+            greetEnthusiastically7️⃣() { "Willis" }
           }
           DispatchQueue.main.async {
-            8️⃣greetEnthusiastically() { "Willis" }
+            greetEnthusiastically8️⃣() { "Willis" }
           }
         }
-        9️⃣foo(🔟bar() { baz })() { blah }
+        foo(bar🔟() { baz })9️⃣() { blah }
         """,
       expected: """
         func greetEnthusiastically(_ nameProvider: () -> String) {

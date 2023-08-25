@@ -19,11 +19,8 @@ import SwiftSyntax
 /// Format: The access level is removed from the extension declaration and is added to each
 ///         declaration in the extension; declarations with redundant access levels (e.g.
 ///         `internal`, as that is the default access level) have the explicit access level removed.
-///
-/// TODO: Find a better way to access modifiers and keyword tokens besides casting each declaration
 @_spi(Rules)
 public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
-
   public override func visit(_ node: ExtensionDeclSyntax) -> DeclSyntax {
     guard !node.modifiers.isEmpty else { return DeclSyntax(node) }
     guard let accessKeyword = node.modifiers.accessLevelModifier else { return DeclSyntax(node) }
@@ -32,21 +29,26 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
     switch keywordKind {
     // Public, private, or fileprivate keywords need to be moved to members
     case .keyword(.public), .keyword(.private), .keyword(.fileprivate):
-      diagnose(.moveAccessKeyword(keyword: accessKeyword.name.text), on: accessKeyword)
-
       // The effective access level of the members of a `private` extension is `fileprivate`, so
       // we have to update the keyword to ensure that the result is correct.
       let accessKeywordToAdd: DeclModifierSyntax
+      let message: Finding.Message
       if keywordKind == .keyword(.private) {
         accessKeywordToAdd
           = accessKeyword.with(\.name, accessKeyword.name.with(\.tokenKind, .keyword(.fileprivate)))
+        message = .moveAccessKeywordAndMakeFileprivate(keyword: accessKeyword.name.text)
       } else {
         accessKeywordToAdd = accessKeyword
+        message = .moveAccessKeyword(keyword: accessKeyword.name.text)
       }
+
+      let (newMemberBlock, notes) = addMemberAccessKeywords(
+        memDeclBlock: node.memberBlock, keyword: accessKeywordToAdd)
+      diagnose(message, on: accessKeyword, notes: notes)
 
       let newMembers = MemberBlockSyntax(
         leftBrace: node.memberBlock.leftBrace,
-        members: addMemberAccessKeywords(memDeclBlock: node.memberBlock, keyword: accessKeywordToAdd),
+        members: newMemberBlock,
         rightBrace: node.memberBlock.rightBrace)
       var newKeyword = node.extensionKeyword
       newKeyword.leadingTrivia = accessKeyword.leadingTrivia
@@ -57,9 +59,7 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
 
     // Internal keyword redundant, delete
     case .keyword(.internal):
-      diagnose(
-        .removeRedundantAccessKeyword(name: node.extendedType.description),
-        on: accessKeyword)
+      diagnose(.removeRedundantAccessKeyword, on: accessKeyword)
       var newKeyword = node.extensionKeyword
       newKeyword.leadingTrivia = accessKeyword.leadingTrivia
       let result = node.with(\.modifiers, node.modifiers.remove(name: accessKeyword.name.text))
@@ -76,8 +76,9 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
   private func addMemberAccessKeywords(
     memDeclBlock: MemberBlockSyntax,
     keyword: DeclModifierSyntax
-  ) -> MemberBlockItemListSyntax {
+  ) -> (MemberBlockItemListSyntax, [Finding.Note]) {
     var newMembers: [MemberBlockItemSyntax] = []
+    var notes: [Finding.Note] = []
 
     var formattedKeyword = keyword
     formattedKeyword.leadingTrivia = []
@@ -85,24 +86,46 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
     for memberItem in memDeclBlock.members {
       let member = memberItem.decl
       guard
+        let modifiers = member.asProtocol(WithModifiersSyntax.self)?.modifiers,
         // addModifier relocates trivia for any token(s) displaced by the new modifier.
         let newDecl = addModifier(declaration: member, modifierKeyword: formattedKeyword)
           .as(DeclSyntax.self)
-      else { continue }
+      else {
+        newMembers.append(memberItem)
+        continue
+      }
+
       newMembers.append(memberItem.with(\.decl, newDecl))
+
+      // If it already had an explicit access modifier, don't leave a note.
+      if modifiers.accessLevelModifier == nil {
+        notes.append(Finding.Note(
+          message: .addModifierToExtensionMember(keyword: formattedKeyword.name.text),
+          location: Finding.Location(member.startLocation(converter: context.sourceLocationConverter))
+        ))
+      }
     }
-    return MemberBlockItemListSyntax(newMembers)
+    return (MemberBlockItemListSyntax(newMembers), notes)
   }
 }
 
 extension Finding.Message {
   @_spi(Rules)
-  public static func removeRedundantAccessKeyword(name: String) -> Finding.Message {
-    "remove redundant 'internal' access keyword from '\(name)'"
-  }
+  public static let removeRedundantAccessKeyword: Finding.Message =
+    "remove this redundant 'internal' access modifier from this extension"
 
   @_spi(Rules)
   public static func moveAccessKeyword(keyword: String) -> Finding.Message {
-    "move the '\(keyword)' access keyword to precede each member inside the extension"
+    "move this '\(keyword)' access modifier to precede each member inside this extension"
+  }
+
+  @_spi(Rules)
+  public static func moveAccessKeywordAndMakeFileprivate(keyword: String) -> Finding.Message {
+    "remove this '\(keyword)' access modifier and declare each member inside this extension as 'fileprivate'"
+  }
+
+  @_spi(Rules)
+  public static func addModifierToExtensionMember(keyword: String) -> Finding.Message {
+    "add '\(keyword)' access modifier to this declaration"
   }
 }

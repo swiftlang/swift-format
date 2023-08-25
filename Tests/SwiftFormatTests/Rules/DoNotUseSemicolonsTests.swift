@@ -2,7 +2,6 @@ import _SwiftFormatTestSupport
 
 @_spi(Rules) import SwiftFormat
 
-// FIXME: Some of the messages suggesting the next statement be moved to a new line are inaccurate.
 final class DoNotUseSemicolonsTests: LintOrFormatRuleTestCase {
   func testSemicolonUse() {
     assertFormatting(
@@ -18,7 +17,7 @@ final class DoNotUseSemicolonsTests: LintOrFormatRuleTestCase {
         """,
       findings: [
         FindingSpec("1️⃣", message: "remove ';' and move the next statement to a new line"),
-        FindingSpec("2️⃣", message: "remove ';' and move the next statement to a new line"),
+        FindingSpec("2️⃣", message: "remove ';'"),
       ]
     )
   }
@@ -73,7 +72,7 @@ final class DoNotUseSemicolonsTests: LintOrFormatRuleTestCase {
         }
         """,
       findings: [
-        FindingSpec("1️⃣", message: "remove ';' and move the next statement to a new line"),
+        FindingSpec("1️⃣", message: "remove ';'"),
         FindingSpec("2️⃣", message: "remove ';' and move the next statement to a new line"),
         FindingSpec("3️⃣", message: "remove ';'"),
       ]
@@ -111,12 +110,12 @@ final class DoNotUseSemicolonsTests: LintOrFormatRuleTestCase {
         print("7")
         """,
       findings: [
-        FindingSpec("1️⃣", message: "remove ';' and move the next statement to a new line"),
-        FindingSpec("2️⃣", message: "remove ';' and move the next statement to a new line"),
-        FindingSpec("3️⃣", message: "remove ';' and move the next statement to a new line"),
+        FindingSpec("1️⃣", message: "remove ';'"),
+        FindingSpec("2️⃣", message: "remove ';'"),
+        FindingSpec("3️⃣", message: "remove ';'"),
         FindingSpec("4️⃣", message: "remove ';' and move the next statement to a new line"),
-        FindingSpec("5️⃣", message: "remove ';' and move the next statement to a new line"),
-        FindingSpec("6️⃣", message: "remove ';' and move the next statement to a new line"),
+        FindingSpec("5️⃣", message: "remove ';'"),
+        FindingSpec("6️⃣", message: "remove ';'"),
         FindingSpec("7️⃣", message: "remove ';'"),
       ]
     )
@@ -158,7 +157,7 @@ final class DoNotUseSemicolonsTests: LintOrFormatRuleTestCase {
         for _ in 0..<10 { g() }
         """,
       findings: [
-        FindingSpec("1️⃣", message: "remove ';' and move the next statement to a new line"),
+        FindingSpec("1️⃣", message: "remove ';'"),
       ]
     )
   }
