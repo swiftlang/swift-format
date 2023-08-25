@@ -64,14 +64,11 @@ public final class SwiftLinter {
     if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir), isDir.boolValue {
       throw SwiftFormatError.isDirectory
     }
-    let source = try String(contentsOf: url, encoding: .utf8)
-    let sourceFile = try parseAndEmitDiagnostics(
-      source: source,
-      operatorTable: .standardOperators,
+
+    try lint(
+      source: String(contentsOf: url, encoding: .utf8),
       assumingFileURL: url,
       parsingDiagnosticHandler: parsingDiagnosticHandler)
-    try lint(
-      syntax: sourceFile, operatorTable: .standardOperators, assumingFileURL: url, source: source)
   }
 
   /// Lints the given Swift source code.
@@ -92,6 +89,11 @@ public final class SwiftLinter {
     assumingFileURL url: URL,
     parsingDiagnosticHandler: ((Diagnostic, SourceLocation) -> Void)? = nil
   ) throws {
+    // If the file or input string is completely empty, do nothing. This prevents even a trailing
+    // newline from being diagnosed for an empty file. (This is consistent with clang-format, which
+    // also does not touch an empty file even if the setting to add trailing newlines is enabled.)
+    guard !source.isEmpty else { return }
+
     let sourceFile = try parseAndEmitDiagnostics(
       source: source,
       operatorTable: .standardOperators,

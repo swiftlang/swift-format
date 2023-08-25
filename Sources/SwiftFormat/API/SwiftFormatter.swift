@@ -67,15 +67,12 @@ public final class SwiftFormatter {
     if FileManager.default.fileExists(atPath: url.path, isDirectory: &isDir), isDir.boolValue {
       throw SwiftFormatError.isDirectory
     }
-    let source = try String(contentsOf: url, encoding: .utf8)
-    let sourceFile = try parseAndEmitDiagnostics(
-      source: source,
-      operatorTable: .standardOperators,
-      assumingFileURL: url,
-      parsingDiagnosticHandler: parsingDiagnosticHandler)
+
     try format(
-      syntax: sourceFile, operatorTable: .standardOperators, assumingFileURL: url, source: source,
-      to: &outputStream)
+      source: String(contentsOf: url, encoding: .utf8),
+      assumingFileURL: url,
+      to: &outputStream,
+      parsingDiagnosticHandler: parsingDiagnosticHandler)
   }
 
   /// Formats the given Swift source code and writes the result to an output stream.
@@ -101,6 +98,11 @@ public final class SwiftFormatter {
     to outputStream: inout Output,
     parsingDiagnosticHandler: ((Diagnostic, SourceLocation) -> Void)? = nil
   ) throws {
+    // If the file or input string is completely empty, do nothing. This prevents even a trailing
+    // newline from being emitted for an empty file. (This is consistent with clang-format, which
+    // also does not touch an empty file even if the setting to add trailing newlines is enabled.)
+    guard !source.isEmpty else { return }
+
     let sourceFile = try parseAndEmitDiagnostics(
       source: source,
       operatorTable: .standardOperators,
