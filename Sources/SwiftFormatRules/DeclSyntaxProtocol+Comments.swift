@@ -117,7 +117,9 @@ extension DeclSyntaxProtocol {
           // After the parameters tag is found the following lines should be the parameters
           // description.
           guard let index = trimmedLine.firstIndex(of: ":") else { continue }
-          let name = trimmedLine[..<index].trimmingCharacters(in: .init(charactersIn: " -:"))
+          let untrimmedName = trimmedLine[..<index]
+          guard untrimmedName.contains("-") else { continue }
+          let name = untrimmedName.trimmingCharacters(in: .init(charactersIn: " -:"))
           let summary = trimmedLine[index...].trimmingCharacters(in: .init(charactersIn: " -:"))
           let invalidNames = ["Important"]
           guard !name.isEmpty && !invalidNames.contains(name) else { continue }
