@@ -41,6 +41,7 @@ enum RuleRegistry {
     "OneVariableDeclarationPerLine": true,
     "OnlyOneTrailingClosureArgument": true,
     "OrderedImports": true,
+    "ReplaceForEachWithForLoop": true,
     "ReturnVoidInsteadOfEmptyTuple": true,
     "TypeNamesShouldBeCapitalized": true,
     "UseEarlyExits": false,
