@@ -143,6 +143,7 @@ class LintPipeline: SyntaxVisitor {
   override func visit(_ node: FunctionCallExprSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(NoEmptyTrailingClosureParentheses.visit, for: node)
     visitIfEnabled(OnlyOneTrailingClosureArgument.visit, for: node)
+    visitIfEnabled(ReplaceForEachWithForLoop.visit, for: node)
     return .visitChildren
   }
 
