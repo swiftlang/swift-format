@@ -130,12 +130,17 @@ class Frontend {
       "processURLs(_:) should only be called when 'urls' is non-empty.")
 
     if parallel {
-      let filesToProcess = FileIterator(urls: urls).compactMap(openAndPrepareFile)
+      let filesToProcess =
+        FileIterator(urls: urls, followSymlinks: lintFormatOptions.followSymlinks)
+        .compactMap(openAndPrepareFile)
       DispatchQueue.concurrentPerform(iterations: filesToProcess.count) { index in
         processFile(filesToProcess[index])
       }
     } else {
-      FileIterator(urls: urls).lazy.compactMap(openAndPrepareFile).forEach(processFile)
+      FileIterator(urls: urls, followSymlinks: lintFormatOptions.followSymlinks)
+        .lazy
+        .compactMap(openAndPrepareFile)
+        .forEach(processFile)
     }
   }
 

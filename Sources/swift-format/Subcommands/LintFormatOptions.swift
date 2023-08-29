@@ -71,6 +71,13 @@ struct LintFormatOptions: ParsableArguments {
       """)
   var colorDiagnostics: Bool?
 
+  /// Whether symlinks should be followed.
+  @Flag(help: """
+    Follow symbolic links passed on the command line, or found during directory traversal when \
+    using `-r/--recursive`.
+    """)
+  var followSymlinks: Bool = false
+
   /// The list of paths to Swift source files that should be formatted or linted.
   @Argument(help: "Zero or more input filenames.")
   var paths: [String] = []
