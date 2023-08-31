@@ -181,19 +181,23 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
       // comma. Then, we need to add a trailing comma to the last one, since it will be followed by
       // more items.
       newCaseItems.append(contentsOf: label.caseItems.dropLast())
-      newCaseItems.append(
-        label.caseItems.last!.with(
-          \.trailingComma, 
-          TokenSyntax.commaToken(trailingTrivia: .spaces(1))))
+
+      var lastItem = label.caseItems.last!
+      lastItem.trailingComma = TokenSyntax.commaToken(trailingTrivia: [.spaces(1)])
+      newCaseItems.append(lastItem)
     }
     newCaseItems.append(contentsOf: labels.last!.caseItems)
 
-    let newCase = cases.last!.with(\.label, .case(
-      labels.last!.with(\.caseItems, SwitchCaseItemListSyntax(newCaseItems))))
+    var lastLabel = labels.last!
+    lastLabel.caseItems = SwitchCaseItemListSyntax(newCaseItems)
+
+    var lastCase = cases.last!
+    lastCase.label = .case(lastLabel)
 
     // Only the first violation case can have displaced trivia, because any non-whitespace
     // trivia in the other violation cases would've prevented collapsing.
-    return newCase.with(\.leadingTrivia, cases.first!.leadingTrivia.withoutLastLine() + newCase.leadingTrivia)
+    lastCase.leadingTrivia = cases.first!.leadingTrivia.withoutLastLine() + lastCase.leadingTrivia
+    return lastCase
   }
 }
 

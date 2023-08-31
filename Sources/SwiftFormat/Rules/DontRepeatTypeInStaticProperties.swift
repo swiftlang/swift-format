@@ -69,15 +69,19 @@ public final class DontRepeatTypeInStaticProperties: SyntaxLintRule {
     for member in members {
       guard
         let varDecl = member.decl.as(VariableDeclSyntax.self),
-        varDecl.modifiers.has(modifier: "static") || varDecl.modifiers.has(modifier: "class")
+        varDecl.modifiers.contains(anyOf: [.class, .static])
       else { continue }
 
       let bareTypeName = removingPossibleNamespacePrefix(from: typeName)
 
-      for pattern in varDecl.identifiers {
-        let varName = pattern.identifier.text
+      for binding in varDecl.bindings {
+        guard let identifierPattern = binding.pattern.as(IdentifierPatternSyntax.self) else {
+          continue
+        }
+
+        let varName = identifierPattern.identifier.text
         if varName.contains(bareTypeName) {
-          diagnose(.removeTypeFromName(name: varName, type: bareTypeName), on: pattern.identifier)
+          diagnose(.removeTypeFromName(name: varName, type: bareTypeName), on: identifierPattern)
         }
       }
     }

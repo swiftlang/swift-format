@@ -13,15 +13,6 @@
 import SwiftSyntax
 
 extension DeclModifierListSyntax {
-
-  func has(modifier: String) -> Bool {
-    return contains { $0.name.text == modifier }
-  }
-
-  func has(modifier: TokenKind) -> Bool {
-    return contains { $0.name.tokenKind == modifier }
-  }
-
   /// Returns the declaration's access level modifier, if present.
   var accessLevelModifier: DeclModifierSyntax? {
     for modifier in self {
@@ -35,16 +26,35 @@ extension DeclModifierListSyntax {
     return nil
   }
 
-  /// Returns modifier list without the given modifier.
-  func remove(name: String) -> DeclModifierListSyntax {
-    return filter { $0.name.text != name }
+  /// Returns true if the modifier list contains any of the keywords in the given set.
+  func contains(anyOf keywords: Set<Keyword>) -> Bool {
+    return contains {
+      switch $0.name.tokenKind {
+      case .keyword(let keyword): return keywords.contains(keyword)
+      default: return false
+      }
+    }
   }
 
-  /// Returns a formatted declaration modifier token with the given name.
-  func createModifierToken(name: String) -> DeclModifierSyntax {
-    let id = TokenSyntax.identifier(name, trailingTrivia: .spaces(1))
-    let newModifier = DeclModifierSyntax(name: id, detail: nil)
-    return newModifier
+  /// Removes any of the modifiers in the given set from the modifier list, mutating it in-place.
+  mutating func remove(anyOf keywords: Set<Keyword>) {
+    self = filter {
+      switch $0.name.tokenKind {
+      case .keyword(let keyword): return !keywords.contains(keyword)
+      default: return true
+      }
+    }
+  }
+
+
+  /// Returns a copy of the modifier list with any of the modifiers in the given set removed.
+  func removing(anyOf keywords: Set<Keyword>) -> DeclModifierListSyntax {
+    return filter {
+      switch $0.name.tokenKind {
+      case .keyword(let keyword): return !keywords.contains(keyword)
+      default: return true
+      }
+    }
   }
 
   /// Inserts the given modifier into the list at a specific index.

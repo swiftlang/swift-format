@@ -18,15 +18,14 @@ private final class LegacyTriviaBehaviorRewriter: SyntaxRewriter {
   override func visit(_ token: TokenSyntax) -> TokenSyntax {
     var token = token
     if let pendingLeadingTrivia = pendingLeadingTrivia {
-      token = token.with(\.leadingTrivia, pendingLeadingTrivia + token.leadingTrivia)
+      token.leadingTrivia = pendingLeadingTrivia + token.leadingTrivia
       self.pendingLeadingTrivia = nil
     }
     if token.nextToken(viewMode: .sourceAccurate) != nil,
       let firstIndexToMove = token.trailingTrivia.firstIndex(where: shouldTriviaPieceBeMoved)
     {
       pendingLeadingTrivia = Trivia(pieces: Array(token.trailingTrivia[firstIndexToMove...]))
-      token =
-        token.with(\.trailingTrivia, Trivia(pieces: Array(token.trailingTrivia[..<firstIndexToMove])))
+      token.trailingTrivia = Trivia(pieces: Array(token.trailingTrivia[..<firstIndexToMove]))
     }
     return token
   }

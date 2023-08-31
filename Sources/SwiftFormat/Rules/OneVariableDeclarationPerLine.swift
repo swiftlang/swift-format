@@ -141,7 +141,9 @@ private struct VariableDeclSplitter<Node: SyntaxProtocol> {
         // it's an initializer following other un-flushed lone identifier
         // bindings, that's not valid Swift. But in either case, we'll flush
         // them as a single decl.
-        bindingQueue.append(binding.with(\.trailingComma, nil))
+        var newBinding = binding
+        newBinding.trailingComma = nil
+        bindingQueue.append(newBinding)
         flushRemaining()
       } else if let typeAnnotation = binding.typeAnnotation {
         bindingQueue.append(binding)
@@ -172,8 +174,8 @@ private struct VariableDeclSplitter<Node: SyntaxProtocol> {
   private mutating func flushRemaining() {
     guard !bindingQueue.isEmpty else { return }
 
-    let newDecl =
-      varDecl.with(\.bindings, PatternBindingListSyntax(bindingQueue))
+    var newDecl = varDecl!
+    newDecl.bindings = PatternBindingListSyntax(bindingQueue)
     nodes.append(generator(newDecl))
 
     fixOriginalVarDeclTrivia()
@@ -191,10 +193,12 @@ private struct VariableDeclSplitter<Node: SyntaxProtocol> {
     for binding in bindingQueue {
       assert(binding.initializer == nil)
 
-      let newBinding =
-        binding.with(\.trailingComma, nil).with(\.typeAnnotation, typeAnnotation)
-      let newDecl =
-        varDecl.with(\.bindings, PatternBindingListSyntax([newBinding]))
+      var newBinding = binding
+      newBinding.typeAnnotation = typeAnnotation
+      newBinding.trailingComma = nil
+
+      var newDecl = varDecl!
+      newDecl.bindings = PatternBindingListSyntax([newBinding])
       nodes.append(generator(newDecl))
 
       fixOriginalVarDeclTrivia()

@@ -24,15 +24,30 @@ public final class NoVoidReturnOnFunctionSignature: SyntaxFormatRule {
   /// it for closure signatures, because that may introduce an ambiguity when closure signatures
   /// are inferred.
   public override func visit(_ node: FunctionSignatureSyntax) -> FunctionSignatureSyntax {
-    if let returnType = node.returnClause?.type.as(IdentifierTypeSyntax.self), returnType.name.text == "Void" {
-      diagnose(.removeRedundantReturn("Void"), on: returnType)
-      return node.with(\.returnClause, nil)
+    guard let returnType = node.returnClause?.type else { return node }
+
+    if let identifierType = returnType.as(IdentifierTypeSyntax.self),
+      identifierType.name.text == "Void",
+      identifierType.genericArgumentClause?.arguments.isEmpty ?? true
+    {
+      diagnose(.removeRedundantReturn("Void"), on: identifierType)
+      return removingReturnClause(from: node)
     }
-    if let tupleReturnType = node.returnClause?.type.as(TupleTypeSyntax.self), tupleReturnType.elements.isEmpty {
-      diagnose(.removeRedundantReturn("()"), on: tupleReturnType)
-      return node.with(\.returnClause, nil)
+    if let tupleType = returnType.as(TupleTypeSyntax.self), tupleType.elements.isEmpty {
+      diagnose(.removeRedundantReturn("()"), on: tupleType)
+      return removingReturnClause(from: node)
     }
+
     return node
+  }
+
+  /// Returns a copy of the given function signature with the return clause removed.
+  private func removingReturnClause(from signature: FunctionSignatureSyntax)
+    -> FunctionSignatureSyntax
+  {
+    var result = signature
+    result.returnClause = nil
+    return result
   }
 }
 

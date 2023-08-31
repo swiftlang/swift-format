@@ -46,7 +46,7 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
     // Don't diagnose any issues when the variable is overriding, because this declaration can't
     // rename the variable. If the user analyzes the code where the variable is really declared,
     // then the diagnostic can be raised for just that location.
-    if node.modifiers.has(modifier: "override") {
+    if node.modifiers.contains(anyOf: [.override]) {
       return .visitChildren
     }
 
@@ -114,7 +114,7 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
     // Don't diagnose any issues when the function is overriding, because this declaration can't
     // rename the function. If the user analyzes the code where the function is really declared,
     // then the diagnostic can be raised for just that location.
-    if node.modifiers.has(modifier: "override") {
+    if node.modifiers.contains(anyOf: [.override]) {
       return .visitChildren
     }
 

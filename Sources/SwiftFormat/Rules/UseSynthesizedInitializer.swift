@@ -31,7 +31,7 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
       let member = memberItem.decl
       // Collect all stored variables into a list
       if let varDecl = member.as(VariableDeclSyntax.self) {
-        guard !varDecl.modifiers.has(modifier: "static") else { continue }
+        guard !varDecl.modifiers.contains(anyOf: [.static]) else { continue }
         storedProperties.append(varDecl)
         // Collect any possible redundant initializers into a list
       } else if let initDecl = member.as(InitializerDeclSyntax.self) {

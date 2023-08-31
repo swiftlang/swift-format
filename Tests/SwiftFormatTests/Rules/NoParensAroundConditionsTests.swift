@@ -235,4 +235,34 @@ final class NoParensAroundConditionsTests: LintOrFormatRuleTestCase {
       findings: []
     )
   }
+
+  func testKeywordAlwaysHasTrailingSpace() {
+    assertFormatting(
+      NoParensAroundConditions.self,
+      input: """
+        if1️⃣(x) {}
+        while2️⃣(x) {}
+        guard3️⃣(x),4️⃣(y),5️⃣(x == 3) else {}
+        repeat {} while6️⃣(x)
+        switch7️⃣(4) { default: break }
+        """,
+      expected: """
+        if x {}
+        while x {}
+        guard x,y,x == 3 else {}
+        repeat {} while x
+        switch 4 { default: break }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("2️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("3️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("4️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("5️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("6️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("7️⃣", message: "remove the parentheses around this expression"),
+      ]
+    )
+
+  }
 }
