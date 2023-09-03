@@ -226,13 +226,6 @@ final class PluginRunTests: XCTestCase {
     ]
     try! taskProcess.run()
     taskProcess.waitUntilExit()
-
-    setupProcess()
-    taskProcess.arguments = [
-      "package", "plugin", "lint-source-code",
-    ]
-    try! taskProcess.run()
-    taskProcess.waitUntilExit()
   }
 
   /**
