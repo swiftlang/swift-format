@@ -46,7 +46,6 @@ extension DeclModifierListSyntax {
     }
   }
 
-
   /// Returns a copy of the modifier list with any of the modifiers in the given set removed.
   func removing(anyOf keywords: Set<Keyword>) -> DeclModifierListSyntax {
     return filter {
@@ -55,31 +54,5 @@ extension DeclModifierListSyntax {
       default: return true
       }
     }
-  }
-
-  /// Inserts the given modifier into the list at a specific index.
-  ///
-  /// If the modifier is being inserted at the front of the list, the current front element's
-  /// leading trivia will be moved to the new element to preserve any leading comments and newlines.
-  mutating func triviaPreservingInsert(
-    _ modifier: DeclModifierSyntax, at index: SyntaxChildrenIndex
-  ) {
-    var modifier = modifier
-    modifier.trailingTrivia = [.spaces(1)]
-
-    guard index == self.startIndex else {
-      self.insert(modifier, at: index)
-      return
-    }
-    guard var firstMod = first, let firstTok = firstMod.firstToken(viewMode: .sourceAccurate) else {
-      self.insert(modifier, at: index)
-      return
-    }
-
-    modifier.leadingTrivia = firstTok.leadingTrivia
-    firstMod.leadingTrivia = []
-    firstMod.trailingTrivia = [.spaces(1)]
-    self[self.startIndex] = firstMod
-    self.insert(modifier, at: self.startIndex)
   }
 }

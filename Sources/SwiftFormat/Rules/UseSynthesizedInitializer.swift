@@ -220,3 +220,32 @@ fileprivate func synthesizedInitAccessLevel(using properties: [VariableDeclSynta
   }
   return hasFileprivate ? .fileprivate : .internal
 }
+
+// FIXME: Stop using these extensions; they make assumptions about the structure of stored
+// properties and may miss some valid cases, like tuple patterns.
+extension VariableDeclSyntax {
+  /// Returns array of all identifiers listed in the declaration.
+  fileprivate var identifiers: [IdentifierPatternSyntax] {
+    var ids: [IdentifierPatternSyntax] = []
+    for binding in bindings {
+      guard let id = binding.pattern.as(IdentifierPatternSyntax.self) else { continue }
+      ids.append(id)
+    }
+    return ids
+  }
+
+  /// Returns the first identifier.
+  fileprivate var firstIdentifier: IdentifierPatternSyntax {
+    return identifiers[0]
+  }
+
+  /// Returns the first type explicitly stated in the declaration, if present.
+  fileprivate var firstType: TypeSyntax? {
+    return bindings.first?.typeAnnotation?.type
+  }
+
+  /// Returns the first initializer clause, if present.
+  fileprivate var firstInitializer: InitializerClauseSyntax? {
+    return bindings.first?.initializer
+  }
+}
