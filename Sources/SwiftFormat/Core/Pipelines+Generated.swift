@@ -183,6 +183,11 @@ class LintPipeline: SyntaxVisitor {
     return .visitChildren
   }
 
+  override func visit(_ node: GuardStmtSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(NoParensAroundConditions.visit, for: node)
+    return .visitChildren
+  }
+
   override func visit(_ node: IdentifierPatternSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(IdentifiersMustBeASCII.visit, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)
@@ -214,6 +219,11 @@ class LintPipeline: SyntaxVisitor {
 
   override func visit(_ node: IntegerLiteralExprSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(GroupNumericLiterals.visit, for: node)
+    return .visitChildren
+  }
+
+  override func visit(_ node: MacroExpansionExprSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(NoPlaygroundLiterals.visit, for: node)
     return .visitChildren
   }
 
@@ -333,6 +343,11 @@ class LintPipeline: SyntaxVisitor {
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
     visitIfEnabled(NeverUseImplicitlyUnwrappedOptionals.visit, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
+    return .visitChildren
+  }
+
+  override func visit(_ node: WhileStmtSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(NoParensAroundConditions.visit, for: node)
     return .visitChildren
   }
 }
