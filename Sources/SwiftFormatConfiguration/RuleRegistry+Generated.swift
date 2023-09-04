@@ -35,6 +35,7 @@ enum RuleRegistry {
     "NoLabelsInCasePatterns": true,
     "NoLeadingUnderscores": false,
     "NoParensAroundConditions": true,
+    "NoPlaygroundLiterals": true,
     "NoVoidReturnOnFunctionSignature": true,
     "OmitExplicitReturns": false,
     "OneCasePerLine": true,
