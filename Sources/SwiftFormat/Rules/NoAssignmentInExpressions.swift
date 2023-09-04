@@ -43,13 +43,13 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
 
     for item in node {
       // Make sure to visit recursively so that any nested decls get processed first.
-      let newItem = visit(item)
+      let visitedItem = visit(item)
 
       // Rewrite any `return <assignment>` expressions as `<assignment><newline>return`.
-      switch newItem.item {
+      switch visitedItem.item {
       case .stmt(let stmt):
         guard
-          let returnStmt = stmt.as(ReturnStmtSyntax.self),
+          var returnStmt = stmt.as(ReturnStmtSyntax.self),
           let assignmentExpr = assignmentExpression(from: returnStmt)
         else {
           // Head to the default case where we just keep the original item.
@@ -58,25 +58,21 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
 
         // Move the leading trivia from the `return` statement to the new assignment statement,
         // since that's a more sensible place than between the two.
-        newItems.append(
-          CodeBlockItemSyntax(
-            item: .expr(ExprSyntax(assignmentExpr)),
-            semicolon: nil
-          )
-          .with(
-            \.leadingTrivia,
-            (returnStmt.leadingTrivia) + (assignmentExpr.leadingTrivia))
-          .with(\.trailingTrivia, []))
-        newItems.append(
-          CodeBlockItemSyntax(
-            item: .stmt(StmtSyntax(returnStmt.with(\.expression, nil))),
-            semicolon: nil
-          )
-          .with(\.leadingTrivia, [.newlines(1)])
-          .with(\.trailingTrivia, returnStmt.trailingTrivia.withoutLeadingSpaces()))
+        var assignmentItem = CodeBlockItemSyntax(item: .expr(ExprSyntax(assignmentExpr)))
+        assignmentItem.leadingTrivia = returnStmt.leadingTrivia + assignmentExpr.leadingTrivia
+        assignmentItem.trailingTrivia = []
+
+        let trailingTrivia = returnStmt.trailingTrivia.withoutLeadingSpaces()
+        returnStmt.expression = nil
+        var returnItem = CodeBlockItemSyntax(item: .stmt(StmtSyntax(returnStmt)))
+        returnItem.leadingTrivia = [.newlines(1)]
+        returnItem.trailingTrivia = trailingTrivia
+
+        newItems.append(assignmentItem)
+        newItems.append(returnItem)
 
       default:
-        newItems.append(newItem)
+        newItems.append(visitedItem)
       }
     }
 

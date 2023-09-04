@@ -914,7 +914,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: ArrayExprSyntax) -> SyntaxVisitorContinueKind {
-    if !node.elements.isEmpty || node.rightSquare.leadingTrivia.numberOfComments > 0 {
+    if !node.elements.isEmpty || node.rightSquare.leadingTrivia.hasAnyComments {
       after(node.leftSquare, tokens: .break(.open, size: 0), .open)
       before(node.rightSquare, tokens: .break(.close, size: 0), .close)
     }
@@ -954,8 +954,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // The node's content is either a `DictionaryElementListSyntax` or a `TokenSyntax` for a colon
     // token (for an empty dictionary).
     if !(node.content.as(DictionaryElementListSyntax.self)?.isEmpty ?? true)
-      || node.content.leadingTrivia.numberOfComments > 0
-      || node.rightSquare.leadingTrivia.numberOfComments > 0
+      || node.content.leadingTrivia.hasAnyComments
+      || node.rightSquare.leadingTrivia.hasAnyComments
     {
       after(node.leftSquare, tokens: .break(.open, size: 0), .open)
       before(node.rightSquare, tokens: .break(.close, size: 0), .close)
@@ -2775,7 +2775,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   ) -> Bool where BodyContents.Element: SyntaxProtocol {
     // If the collection is empty, then any comments that might be present in the block must be
     // leading trivia of the right brace.
-    let commentPrecedesRightBrace = node.rightBrace.leadingTrivia.numberOfComments > 0
+    let commentPrecedesRightBrace = node.rightBrace.leadingTrivia.hasAnyComments
     // We can't use `count` here because it also includes missing children. Instead, we get an
     // iterator and check if it returns `nil` immediately.
     var contentsIterator = node[keyPath: contentsKeyPath].makeIterator()
@@ -2796,7 +2796,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   ) -> Bool where BodyContents.Element == Syntax {
     // If the collection is empty, then any comments that might be present in the block must be
     // leading trivia of the right brace.
-    let commentPrecedesRightBrace = node.rightBrace.leadingTrivia.numberOfComments > 0
+    let commentPrecedesRightBrace = node.rightBrace.leadingTrivia.hasAnyComments
     // We can't use `count` here because it also includes missing children. Instead, we get an
     // iterator and check if it returns `nil` immediately.
     var contentsIterator = node[keyPath: contentsKeyPath].makeIterator()
@@ -2817,7 +2817,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   ) -> Bool where BodyContents.Element == DeclSyntax {
     // If the collection is empty, then any comments that might be present in the block must be
     // leading trivia of the right brace.
-    let commentPrecedesRightBrace = node.rightBrace.leadingTrivia.numberOfComments > 0
+    let commentPrecedesRightBrace = node.rightBrace.leadingTrivia.hasAnyComments
     // We can't use `count` here because it also includes missing children. Instead, we get an
     // iterator and check if it returns `nil` immediately.
     var contentsIterator = node[keyPath: contentsKeyPath].makeIterator()
@@ -2980,7 +2980,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   private func arrangeBracesAndContents(leftBrace: TokenSyntax, accessors: AccessorDeclListSyntax, rightBrace: TokenSyntax) {
     // If the collection is empty, then any comments that might be present in the block must be
     // leading trivia of the right brace.
-    let commentPrecedesRightBrace = rightBrace.leadingTrivia.numberOfComments > 0
+    let commentPrecedesRightBrace = rightBrace.leadingTrivia.hasAnyComments
     // We can't use `count` here because it also includes missing children. Instead, we get an
     // iterator and check if it returns `nil` immediately.
     var accessorsIterator = accessors.makeIterator()
@@ -3890,10 +3890,13 @@ class CommentMovingRewriter: SyntaxRewriter {
   }
 
   override func visit(_ token: TokenSyntax) -> TokenSyntax {
-    if let rewrittenTrivia = rewriteTokenTriviaMap[token] {
-      return token.with(\.leadingTrivia, rewrittenTrivia)
+    guard let rewrittenTrivia = rewriteTokenTriviaMap[token] else {
+      return token
     }
-    return token
+
+    var result = token
+    result.leadingTrivia = rewrittenTrivia
+    return result
   }
 
   override func visit(_ node: InfixOperatorExprSyntax) -> ExprSyntax {

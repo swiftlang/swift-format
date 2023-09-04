@@ -13,19 +13,20 @@
 import SwiftSyntax
 
 /// Protocol that declares support for accessing and modifying a token that represents a semicolon.
-protocol SemicolonSyntaxProtocol: SyntaxProtocol {
+protocol WithSemicolonSyntax: SyntaxProtocol {
   var semicolon: TokenSyntax? { get set }
 }
 
-extension MemberBlockItemSyntax: SemicolonSyntaxProtocol {}
-extension CodeBlockItemSyntax: SemicolonSyntaxProtocol {}
+extension MemberBlockItemSyntax: WithSemicolonSyntax {}
+extension CodeBlockItemSyntax: WithSemicolonSyntax {}
 
-extension Syntax {
-  func asProtocol(_: SemicolonSyntaxProtocol.Protocol) -> SemicolonSyntaxProtocol? {
-    return self.asProtocol(SyntaxProtocol.self) as? SemicolonSyntaxProtocol
+extension SyntaxProtocol {
+  func asProtocol(_: WithSemicolonSyntax.Protocol) -> WithSemicolonSyntax? {
+    return Syntax(self).asProtocol(SyntaxProtocol.self) as? WithSemicolonSyntax
   }
 
-  func isProtocol(_: SemicolonSyntaxProtocol.Protocol) -> Bool {
-    return self.asProtocol(SemicolonSyntaxProtocol.self) != nil
+  func isProtocol(_: WithSemicolonSyntax.Protocol) -> Bool {
+    return self.asProtocol(WithSemicolonSyntax.self) != nil
   }
 }
+

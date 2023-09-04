@@ -73,11 +73,11 @@ public final class AllPublicDeclarationsHaveDocumentation: SyntaxLintRule {
   private func diagnoseMissingDocComment(
     _ decl: DeclSyntax,
     name: String,
-    modifiers: DeclModifierListSyntax?
+    modifiers: DeclModifierListSyntax
   ) {
     guard
       DocumentationCommentText(extractedFrom: decl.leadingTrivia) == nil,
-      let mods = modifiers, mods.has(modifier: "public") && !mods.has(modifier: "override")
+      modifiers.contains(anyOf: [.public, .override])
     else {
       return
     }

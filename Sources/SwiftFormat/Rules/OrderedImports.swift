@@ -131,10 +131,8 @@ public final class OrderedImports: SyntaxFormatRule {
       formatAndAppend(linesSection: lines[lastSliceStartIndex..<lines.endIndex])
     }
 
-    let newNode = node.with(
-      \.statements, 
-      CodeBlockItemListSyntax(convertToCodeBlockItems(lines: formattedLines))
-    )
+    var newNode = node
+    newNode.statements = CodeBlockItemListSyntax(convertToCodeBlockItems(lines: formattedLines))
     return newNode
   }
 
@@ -485,8 +483,9 @@ fileprivate class Line {
     // description includes all leading and trailing trivia. It would be unusual to have any
     // non-whitespace trivia on the components of the import. Trim off the leading trivia, where
     // comments could be, and trim whitespace that might be after the import.
-    return importDecl.with(\.leadingTrivia, []).description
-      .trimmingCharacters(in: .whitespacesAndNewlines)
+    var declForDescription = importDecl
+    declForDescription.leadingTrivia = []
+    return declForDescription.description.trimmingCharacters(in: .whitespacesAndNewlines)
   }
 
   /// Returns the path that is imported by this line's import statement if it's an import statement.

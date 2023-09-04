@@ -82,7 +82,7 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
     // We are assuming valid Swift code here where only
     // one `get { ... }` is allowed.
     switch accessorBlock.accessors {
-    case .accessors(let accessors):
+    case .accessors(var accessors):
       guard var getter = accessors.filter({
         $0.accessorSpecifier.tokenKind == .keyword(.get)
       }).first else {
@@ -104,8 +104,9 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
 
       diagnose(.omitReturnStatement, on: returnStmt, severity: .refactoring)
 
+      accessors[getterAt] = getter
       var newBlock = accessorBlock
-      newBlock.accessors = .accessors(accessors.with(\.[getterAt], getter))
+      newBlock.accessors = .accessors(accessors)
       return newBlock
 
     case .getter(let getter):

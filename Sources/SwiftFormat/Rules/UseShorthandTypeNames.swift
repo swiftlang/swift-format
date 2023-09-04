@@ -93,17 +93,20 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     // Even if we don't shorten this specific type that we're visiting, we may have rewritten
     // something in the generic argument list that we recursively visited, so return the original
     // node with that swapped out.
-    let result = node.with(\.genericArgumentClause, 
-      genericArgumentClause.with(\.arguments, genericArgumentList))
+    var newGenericArgumentClause = genericArgumentClause
+    newGenericArgumentClause.arguments = genericArgumentList
+
+    var result = node
+    result.genericArgumentClause = newGenericArgumentClause
     return TypeSyntax(result)
   }
 
   public override func visit(_ node: GenericSpecializationExprSyntax) -> ExprSyntax {
-    // `SpecializeExpr`s are found in the syntax tree when a generic type is encountered in an
-    // expression context, such as `Array<Int>()`. In these situations, the corresponding array and
-    // dictionary shorthand nodes will be expression nodes, not type nodes, so we may need to
-    // translate the arguments inside the generic argument list---which are types---to the
-    // appropriate equivalent.
+    // `GenericSpecializationExprSyntax`s are found in the syntax tree when a generic type is
+    // encountered in an expression context, such as `Array<Int>()`. In these situations, the
+    // corresponding array and dictionary shorthand nodes will be expression nodes, not type nodes,
+    // so we may need to translate the arguments inside the generic argument list---which are
+    // types---to the appropriate equivalent.
 
     // Ignore nodes where the expression being specialized isn't a simple identifier.
     guard let expression = node.expression.as(DeclReferenceExprSyntax.self) else {
@@ -124,8 +127,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 
     // Ensure that all arguments in the clause are shortened and in the expected format by visiting
     // the argument list, first.
-    let genericArgumentList =
-      visit(node.genericArgumentClause.arguments)
+    let genericArgumentList = visit(node.genericArgumentClause.arguments)
 
     let (leadingTrivia, trailingTrivia) = boundaryTrivia(around: Syntax(node))
     let newNode: ExprSyntax?
@@ -178,8 +180,8 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     // Even if we don't shorten this specific expression that we're visiting, we may have
     // rewritten something in the generic argument list that we recursively visited, so return the
     // original node with that swapped out.
-    let result = node.with(\.genericArgumentClause, 
-      node.genericArgumentClause.with(\.arguments, genericArgumentList))
+    var result = node
+    result.genericArgumentClause.arguments = genericArgumentList
     return ExprSyntax(result)
   }
 

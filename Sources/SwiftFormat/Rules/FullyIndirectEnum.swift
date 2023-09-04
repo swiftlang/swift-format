@@ -24,7 +24,7 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
 
   public override func visit(_ node: EnumDeclSyntax) -> DeclSyntax {
     let enumMembers = node.memberBlock.members
-    guard !node.modifiers.has(modifier: "indirect"),
+    guard !node.modifiers.contains(anyOf: [.indirect]),
       case let indirectModifiers = indirectModifiersIfAllCasesIndirect(in: enumMembers),
       !indirectModifiers.isEmpty
     else {
@@ -44,15 +44,18 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
     let newMembers = enumMembers.map {
       (member: MemberBlockItemSyntax) -> MemberBlockItemSyntax in
       guard let caseMember = member.decl.as(EnumCaseDeclSyntax.self),
-        caseMember.modifiers.has(modifier: "indirect"),
+        caseMember.modifiers.contains(anyOf: [.indirect]),
         let firstModifier = caseMember.modifiers.first
       else {
         return member
       }
 
-      let newCase = caseMember.with(\.modifiers, caseMember.modifiers.remove(name: "indirect"))
-      let formattedCase = rearrangeLeadingTrivia(firstModifier.leadingTrivia, on: newCase)
-      return member.with(\.decl, DeclSyntax(formattedCase))
+      var newCase = caseMember
+      newCase.modifiers.remove(anyOf: [.indirect])
+
+      var newMember = member
+      newMember.decl = DeclSyntax(rearrangeLeadingTrivia(firstModifier.leadingTrivia, on: newCase))
+      return newMember
     }
 
     // If the `indirect` keyword being added would be the first token in the decl, we need to move
@@ -73,11 +76,9 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
       name: TokenSyntax.identifier(
         "indirect", leadingTrivia: leadingTrivia, trailingTrivia: .spaces(1)), detail: nil)
 
-    let newMemberBlock = node.memberBlock.with(\.members, MemberBlockItemListSyntax(newMembers))
-    return DeclSyntax(
-      newEnumDecl
-        .with(\.modifiers, newEnumDecl.modifiers + [newModifier])
-        .with(\.memberBlock, newMemberBlock))
+    newEnumDecl.modifiers = newEnumDecl.modifiers + [newModifier]
+    newEnumDecl.memberBlock.members = MemberBlockItemListSyntax(newMembers)
+    return DeclSyntax(newEnumDecl)
   }
 
   /// Returns a value indicating whether all enum cases in the given list are indirect.

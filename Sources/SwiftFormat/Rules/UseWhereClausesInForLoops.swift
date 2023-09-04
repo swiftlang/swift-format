@@ -115,8 +115,10 @@ fileprivate func updateWithWhereCondition(
   )
 
   // Replace the where clause and extract the body from the IfStmt.
-  let newBody = node.body.with(\.statements, statements)
-  return node.with(\.whereClause, whereClause).with(\.body, newBody)
+  var result = node
+  result.whereClause = whereClause
+  result.body.statements = statements
+  return result
 }
 
 extension Finding.Message {

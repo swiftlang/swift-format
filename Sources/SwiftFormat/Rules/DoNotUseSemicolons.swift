@@ -28,7 +28,7 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
   ///   - node: A node that contains items which may have semicolons or nested code blocks.
   ///   - nodeCreator: A closure that creates a new node given an array of items.
   private func nodeByRemovingSemicolons<
-    ItemType: SyntaxProtocol & SemicolonSyntaxProtocol & Equatable, NodeType: SyntaxCollection
+    ItemType: SyntaxProtocol & WithSemicolonSyntax & Equatable, NodeType: SyntaxCollection
   >(from node: NodeType, nodeCreator: ([ItemType]) -> NodeType) -> NodeType
   where NodeType.Element == ItemType {
     var newItems = Array(node)
@@ -84,7 +84,7 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
         // whitespace, and the pretty printer adds any necessary spaces so it's safe to discard.
         // TODO: When we stop using the legacy trivia transform, we need to fix this to preserve
         // trailing comments.
-        newItem = newItem.with(\.semicolon, nil)
+        newItem.semicolon = nil
 
         // When emitting the finding, tell the user to move the next statement down if there is
         // another statement following this one. Otherwise, just tell them to remove the semicolon.
