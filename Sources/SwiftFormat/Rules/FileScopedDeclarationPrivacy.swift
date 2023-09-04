@@ -23,8 +23,9 @@ import SwiftSyntax
 @_spi(Rules)
 public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
   public override func visit(_ node: SourceFileSyntax) -> SourceFileSyntax {
-    let newStatements = rewrittenCodeBlockItems(node.statements)
-    return node.with(\.statements, newStatements)
+    var result = node
+    result.statements = rewrittenCodeBlockItems(node.statements)
+    return result
   }
 
   /// Returns a list of code block items equivalent to the given list, but where any file-scoped
@@ -40,7 +41,9 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
     let newCodeBlockItems = codeBlockItems.map { codeBlockItem -> CodeBlockItemSyntax in
       switch codeBlockItem.item {
       case .decl(let decl):
-        return codeBlockItem.with(\.item, .decl(rewrittenDecl(decl)))
+        var result = codeBlockItem
+        result.item = .decl(rewrittenDecl(decl))
+        return result
       default:
         return codeBlockItem
       }
@@ -56,46 +59,25 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
       return DeclSyntax(rewrittenIfConfigDecl(ifConfigDecl))
 
     case .functionDecl(let functionDecl):
-      return DeclSyntax(rewrittenDecl(
-          functionDecl,
-          modifiers: functionDecl.modifiers,
-          factory: { functionDecl.with(\.modifiers, $0) }))
+      return DeclSyntax(rewrittenDecl(functionDecl))
 
     case .variableDecl(let variableDecl):
-      return DeclSyntax(rewrittenDecl(
-          variableDecl,
-          modifiers: variableDecl.modifiers,
-          factory: { variableDecl.with(\.modifiers, $0) }))
+      return DeclSyntax(rewrittenDecl(variableDecl))
 
     case .classDecl(let classDecl):
-      return DeclSyntax(rewrittenDecl(
-          classDecl,
-          modifiers: classDecl.modifiers,
-          factory: { classDecl.with(\.modifiers, $0) }))
+      return DeclSyntax(rewrittenDecl(classDecl))
 
     case .structDecl(let structDecl):
-      return DeclSyntax(rewrittenDecl(
-          structDecl,
-          modifiers: structDecl.modifiers,
-          factory: { structDecl.with(\.modifiers, $0) }))
+      return DeclSyntax(rewrittenDecl(structDecl))
 
     case .enumDecl(let enumDecl):
-      return DeclSyntax(rewrittenDecl(
-          enumDecl,
-          modifiers: enumDecl.modifiers,
-          factory: { enumDecl.with(\.modifiers, $0) }))
+      return DeclSyntax(rewrittenDecl(enumDecl))
 
     case .protocolDecl(let protocolDecl):
-      return DeclSyntax(rewrittenDecl(
-          protocolDecl,
-          modifiers: protocolDecl.modifiers,
-          factory: { protocolDecl.with(\.modifiers, $0) }))
+      return DeclSyntax(rewrittenDecl(protocolDecl))
 
     case .typeAliasDecl(let typealiasDecl):
-      return DeclSyntax(rewrittenDecl(
-          typealiasDecl,
-          modifiers: typealiasDecl.modifiers,
-          factory: { typealiasDecl.with(\.modifiers, $0) }))
+      return DeclSyntax(rewrittenDecl(typealiasDecl))
 
     default:
       return decl
@@ -113,12 +95,17 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
     let newClauses = ifConfigDecl.clauses.map { clause -> IfConfigClauseSyntax in
       switch clause.elements {
       case .statements(let codeBlockItemList)?:
-        return clause.with(\.elements, .statements(rewrittenCodeBlockItems(codeBlockItemList)))
+        var result = clause
+        result.elements = .statements(rewrittenCodeBlockItems(codeBlockItemList))
+        return result
       default:
         return clause
       }
     }
-    return ifConfigDecl.with(\.clauses, IfConfigClauseListSyntax(newClauses))
+
+    var result = ifConfigDecl
+    result.clauses = IfConfigClauseListSyntax(newClauses)
+    return result
   }
 
   /// Returns a rewritten version of the given declaration if its modifier list contains `private`
@@ -133,39 +120,42 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
   ///   - factory: A reference to the `decl`'s `withModifiers` instance method that is called to
   ///     rewrite the node if needed.
   /// - Returns: A new node if the modifiers were rewritten, or the original node if not.
-  private func rewrittenDecl<DeclType: DeclSyntaxProtocol>(
-    _ decl: DeclType,
-    modifiers: DeclModifierListSyntax?,
-    factory: (DeclModifierListSyntax) -> DeclType
+  private func rewrittenDecl<DeclType: DeclSyntaxProtocol & WithModifiersSyntax>(
+    _ decl: DeclType
   ) -> DeclType {
-    let invalidAccess: TokenKind
-    let validAccess: TokenKind
+    let invalidAccess: Keyword
+    let validAccess: Keyword
     let diagnostic: Finding.Message
 
     switch context.configuration.fileScopedDeclarationPrivacy.accessLevel {
     case .private:
-      invalidAccess = .keyword(.fileprivate)
-      validAccess = .keyword(.private)
+      invalidAccess = .fileprivate
+      validAccess = .private
       diagnostic = .replaceFileprivateWithPrivate
     case .fileprivate:
-      invalidAccess = .keyword(.private)
-      validAccess = .keyword(.fileprivate)
+      invalidAccess = .private
+      validAccess = .fileprivate
       diagnostic = .replacePrivateWithFileprivate
     }
 
-    guard let modifiers = modifiers, modifiers.has(modifier: invalidAccess) else {
+    guard decl.modifiers.contains(anyOf: [invalidAccess]) else {
       return decl
     }
 
-    let newModifiers = modifiers.map { modifier -> DeclModifierSyntax in
+    let newModifiers = decl.modifiers.map { modifier -> DeclModifierSyntax in
+      var modifier = modifier
+
       let name = modifier.name
-      if name.tokenKind == invalidAccess {
+      if case .keyword(invalidAccess) = name.tokenKind {
         diagnose(diagnostic, on: name)
-        return modifier.with(\.name, name.with(\.tokenKind, validAccess))
+        modifier.name.tokenKind = .keyword(validAccess)
       }
       return modifier
     }
-    return factory(DeclModifierListSyntax(newModifiers))
+
+    var result = decl
+    result.modifiers = DeclModifierListSyntax(newModifiers)
+    return result
   }
 }
 

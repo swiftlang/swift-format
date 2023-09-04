@@ -50,7 +50,8 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
   }
 
   public override func visit(_ node: ClosureSignatureSyntax) -> ClosureSignatureSyntax {
-    guard let returnClause = node.returnClause,
+    guard
+      let returnClause = node.returnClause,
       let returnType = returnClause.type.as(TupleTypeSyntax.self),
       returnType.elements.count == 0
     else {
@@ -80,7 +81,14 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
       closureParameterClause = node.parameterClause
     }
     let voidKeyword = makeVoidIdentifierType(toReplace: returnType)
-    return node.with(\.parameterClause, closureParameterClause).with(\.returnClause, returnClause.with(\.type, TypeSyntax(voidKeyword)))
+
+    var newReturnClause = returnClause
+    newReturnClause.type = TypeSyntax(voidKeyword)
+
+    var result = node
+    result.parameterClause = closureParameterClause
+    result.returnClause = newReturnClause
+    return result
   }
 
   /// Returns a value indicating whether the leading trivia of the given token contained any

@@ -56,12 +56,10 @@ public final class OneCasePerLine: SyntaxFormatRule {
     /// This will return nil if there are no elements collected since the last time this was called
     /// (or the collector was created).
     mutating func makeCaseDeclAndReset() -> EnumCaseDeclSyntax? {
-      guard let last = elements.last else { return nil }
+      guard !elements.isEmpty else { return nil }
 
       // Remove the trailing comma on the final element, if there was one.
-      if last.trailingComma != nil {
-        elements[elements.count - 1] = last.with(\.trailingComma, nil)
-      }
+      elements[elements.count - 1].trailingComma = nil
 
       defer { elements.removeAll() }
       return makeCaseDeclFromBasis(elements: elements)
@@ -70,14 +68,15 @@ public final class OneCasePerLine: SyntaxFormatRule {
     /// Creates and returns a new `EnumCaseDeclSyntax` with the given elements, based on the current
     /// basis declaration, and updates the comment preserving state if needed.
     mutating func makeCaseDeclFromBasis(elements: [EnumCaseElementSyntax]) -> EnumCaseDeclSyntax {
-      let caseDecl = basis.with(\.elements, EnumCaseElementListSyntax(elements))
+      var caseDecl = basis
+      caseDecl.elements = EnumCaseElementListSyntax(elements)
 
       if shouldKeepLeadingTrivia {
         shouldKeepLeadingTrivia = false
 
         // We don't bother preserving any indentation because the pretty printer will fix that up.
         // All we need to do here is ensure that there is a newline.
-        basis = basis.with(\.leadingTrivia, Trivia.newlines(1))
+        basis.leadingTrivia = Trivia.newlines(1)
       }
 
       return caseDecl
@@ -106,12 +105,18 @@ public final class OneCasePerLine: SyntaxFormatRule {
           diagnose(.moveAssociatedOrRawValueCase(name: element.name.text), on: element)
 
           if let caseDeclForCollectedElements = collector.makeCaseDeclAndReset() {
-            newMembers.append(member.with(\.decl, DeclSyntax(caseDeclForCollectedElements)))
+            var newMember = member
+            newMember.decl = DeclSyntax(caseDeclForCollectedElements)
+            newMembers.append(newMember)
           }
 
-          let separatedCaseDecl =
-            collector.makeCaseDeclFromBasis(elements: [element.with(\.trailingComma, nil)])
-          newMembers.append(member.with(\.decl, DeclSyntax(separatedCaseDecl)))
+          var basisElement = element
+          basisElement.trailingComma = nil
+          let separatedCaseDecl = collector.makeCaseDeclFromBasis(elements: [basisElement])
+
+          var newMember = member
+          newMember.decl = DeclSyntax(separatedCaseDecl)
+          newMembers.append(newMember)
         } else {
           collector.addElement(element)
         }
@@ -119,12 +124,15 @@ public final class OneCasePerLine: SyntaxFormatRule {
 
       // Make sure to emit any trailing collected elements.
       if let caseDeclForCollectedElements = collector.makeCaseDeclAndReset() {
-        newMembers.append(member.with(\.decl, DeclSyntax(caseDeclForCollectedElements)))
+        var newMember = member
+        newMember.decl = DeclSyntax(caseDeclForCollectedElements)
+        newMembers.append(newMember)
       }
     }
 
-    let newMemberBlock = node.memberBlock.with(\.members, MemberBlockItemListSyntax(newMembers))
-    return DeclSyntax(node.with(\.memberBlock, newMemberBlock))
+    var result = node
+    result.memberBlock.members = MemberBlockItemListSyntax(newMembers)
+    return DeclSyntax(result)
   }
 }
 

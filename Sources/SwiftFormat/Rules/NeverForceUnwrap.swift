@@ -34,7 +34,7 @@ public final class NeverForceUnwrap: SyntaxLintRule {
 
   public override func visit(_ node: ForceUnwrapExprSyntax) -> SyntaxVisitorContinueKind {
     guard context.importsXCTest == .doesNotImportXCTest else { return .skipChildren }
-    diagnose(.doNotForceUnwrap(name: node.expression.with(\.leadingTrivia, []).with(\.trailingTrivia, []).description), on: node)
+    diagnose(.doNotForceUnwrap(name: node.expression.trimmedDescription), on: node)
     return .skipChildren
   }
 
@@ -44,7 +44,7 @@ public final class NeverForceUnwrap: SyntaxLintRule {
     guard context.importsXCTest == .doesNotImportXCTest else { return .skipChildren }
     guard let questionOrExclamation = node.questionOrExclamationMark else { return .skipChildren }
     guard questionOrExclamation.tokenKind == .exclamationMark else { return .skipChildren }
-    diagnose(.doNotForceCast(name: node.type.with(\.leadingTrivia, []).with(\.trailingTrivia, []).description), on: node)
+    diagnose(.doNotForceCast(name: node.type.trimmedDescription), on: node)
     return .skipChildren
   }
 }

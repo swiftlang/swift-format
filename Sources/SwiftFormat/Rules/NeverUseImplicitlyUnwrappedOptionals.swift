@@ -56,8 +56,7 @@ public final class NeverUseImplicitlyUnwrappedOptionals: SyntaxLintRule {
   private func diagnoseImplicitWrapViolation(_ type: TypeSyntax) {
     guard let violation = type.as(ImplicitlyUnwrappedOptionalTypeSyntax.self) else { return }
     diagnose(
-      .doNotUseImplicitUnwrapping(
-        identifier: violation.wrappedType.with(\.leadingTrivia, []).with(\.trailingTrivia, []).description), on: type)
+      .doNotUseImplicitUnwrapping(identifier: violation.wrappedType.trimmedDescription), on: type)
   }
 }
 
