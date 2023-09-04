@@ -36,6 +36,7 @@ public let ruleNameCache: [ObjectIdentifier: String] = [
   ObjectIdentifier(NoLabelsInCasePatterns.self): "NoLabelsInCasePatterns",
   ObjectIdentifier(NoLeadingUnderscores.self): "NoLeadingUnderscores",
   ObjectIdentifier(NoParensAroundConditions.self): "NoParensAroundConditions",
+  ObjectIdentifier(NoPlaygroundLiterals.self): "NoPlaygroundLiterals",
   ObjectIdentifier(NoVoidReturnOnFunctionSignature.self): "NoVoidReturnOnFunctionSignature",
   ObjectIdentifier(OmitExplicitReturns.self): "OmitExplicitReturns",
   ObjectIdentifier(OneCasePerLine.self): "OneCasePerLine",
