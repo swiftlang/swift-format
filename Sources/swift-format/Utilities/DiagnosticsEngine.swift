@@ -65,6 +65,20 @@ final class DiagnosticsEngine {
         message: message))
   }
 
+  /// Emits a generic warning message.
+  ///
+  /// - Parameters:
+  ///   - message: The message associated with the error.
+  ///   - location: The location in the source code associated with the error, or nil if there is no
+  ///     location associated with the error.
+  func emitWarning(_ message: String, location: SourceLocation? = nil) {
+    emit(
+      Diagnostic(
+        severity: .warning,
+        location: location.map(Diagnostic.Location.init),
+        message: message))
+  }
+
   /// Emits a finding from the linter and any of its associated notes as diagnostics.
   ///
   /// - Parameter finding: The finding that should be emitted.
