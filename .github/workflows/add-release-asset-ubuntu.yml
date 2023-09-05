@@ -31,6 +31,10 @@ jobs:
       - name: Build
         run: swift build --disable-sandbox -c release
 
+      # Smoke test
+      - name: Test the executable works
+        run: .build/release/swift-format --version
+
       # Zip the executable so it can be given a descriptive name to distinguish the MacOS and Ubuntu builds
       - name: Create archive
         id: create-plugin-archive
