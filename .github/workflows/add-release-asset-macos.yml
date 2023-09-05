@@ -38,7 +38,7 @@ jobs:
           FILENAME=swift-format.${{ github.event.release.name }}.macos.zip
           cd .build/release/
           echo "xattr -c swift-format" > disable-codesigning.sh
-          zip $FILENAME *.*
+          zip $FILENAME swift-format disable-codesigning.sh
           echo "ARCHIVE_ABSOLUTE_FILEPATH=$(pwd)/$FILENAME" >> $GITHUB_OUTPUT;
 
       - name: Attach asset
