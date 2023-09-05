@@ -8,6 +8,9 @@ jobs:
   release:
     runs-on: macos-12
 
+    permissions:
+      contents: write
+
     steps:
 
       - name: Checkout
