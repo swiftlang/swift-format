@@ -101,6 +101,7 @@ final class DiagnosticsEngine {
     case .error: severity = .error
     case .warning: severity = .warning
     case .note: severity = .note
+    case .remark: severity = .note // should we model this?
     }
     return Diagnostic(
       severity: severity,
