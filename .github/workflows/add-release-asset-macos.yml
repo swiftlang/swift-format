@@ -27,9 +27,7 @@ jobs:
           zip $FILENAME .build/release/swift-format
           echo "ARCHIVE_ABSOLUTE_FILEPATH=$(pwd)/$FILENAME" >> $GITHUB_OUTPUT;
 
-      - uses: meeDamian/github-release@2.0
+      - name: Attach asset
+        uses: softprops/action-gh-release@v1
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
           files: ${{ steps.create-plugin-archive.outputs.ARCHIVE_ABSOLUTE_FILEPATH }}
-          gzip: false
-          allow_override: true
