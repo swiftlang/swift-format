@@ -1,0 +1,35 @@
+name: Build and attach on releases
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  release:
+    runs-on: macos-12
+
+    steps:
+
+      - name: Checkout
+        uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      # Should output executable to `.build/release/swift-format`
+      - name: Build
+        run: swift build --disable-sandbox -c release
+
+      # Zip the executable so it can be given a descriptive name to distinguish the MacOS and Ubuntu builds
+      - name: Create archive
+        id: create-plugin-archive
+        run: |
+          FILENAME=swift-format.${{ github.event.release.name }}.macos.zip
+          zip $FILENAME .build/release/swift-format
+          echo "ARCHIVE_ABSOLUTE_FILEPATH=$(pwd)/$FILENAME" >> $GITHUB_OUTPUT;
+
+      - uses: meeDamian/github-release@2.0
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          files: ${{ steps.create-plugin-archive.outputs.ARCHIVE_ABSOLUTE_FILEPATH }}
+          gzip: false
+          allow_override: true
