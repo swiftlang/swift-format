@@ -18,6 +18,15 @@ jobs:
         with:
           ref: ${{ github.event.release.tag_name }}
 
+      # @see https://github.com/apple/swift-format/commit/fbfe1869527923dd9f9b2edac148baccfce0dce7
+      # NB: sed syntax differs between MacOS and Ubuntu
+      - name: Edit `VersionOptions.swift` to update the version number
+        env:
+          CURRENT_RELEASE: ${{ github.event.release.tag_name }}
+        run: |
+          find . -name 'VersionOptions.swift' -exec sed -i 's/print("[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}")/print("'$CURRENT_RELEASE'")/g' {} +
+          cat Sources/swift-format/VersionOptions.swift
+
       # Should output executable to `.build/release/swift-format`
       - name: Build
         run: swift build --disable-sandbox -c release
