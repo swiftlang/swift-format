@@ -1,4 +1,4 @@
-import SwiftFormatConfiguration
+import SwiftFormat
 
 /// Sanity checks and regression tests for the `respectsExistingLineBreaks` configuration setting
 /// in both true and false states.

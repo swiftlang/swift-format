@@ -1,4 +1,4 @@
-import SwiftFormatConfiguration
+import SwiftFormat
 import SwiftParser
 import XCTest
 

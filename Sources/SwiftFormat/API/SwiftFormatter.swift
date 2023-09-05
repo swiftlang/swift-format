@@ -12,7 +12,6 @@
 
 import Foundation
 import SwiftDiagnostics
-import SwiftFormatConfiguration
 import SwiftOperators
 import SwiftSyntax
 

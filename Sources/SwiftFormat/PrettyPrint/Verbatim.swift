@@ -11,7 +11,6 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import SwiftFormatConfiguration
 
 /// Describes options for behavior when applying the indentation of the current context when
 /// printing a verbatim token.

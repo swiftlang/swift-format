@@ -11,7 +11,6 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import SwiftFormatConfiguration
 import SwiftSyntax
 
 extension StringProtocol {

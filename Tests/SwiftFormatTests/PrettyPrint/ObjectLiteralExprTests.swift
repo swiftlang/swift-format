@@ -1,4 +1,4 @@
-import SwiftFormatConfiguration
+import SwiftFormat
 
 final class ObjectLiteralExprTests: PrettyPrintTestCase {
   func testColorLiteral_noPackArguments() {

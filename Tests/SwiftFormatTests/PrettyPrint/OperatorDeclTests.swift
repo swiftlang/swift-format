@@ -1,4 +1,4 @@
-import SwiftFormatConfiguration
+import SwiftFormat
 
 final class OperatorDeclTests: PrettyPrintTestCase {
   func testOperatorDecl() {

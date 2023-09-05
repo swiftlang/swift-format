@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SwiftFormatConfiguration
 import SwiftSyntax
 
 /// PrettyPrinter takes a Syntax node and outputs a well-formatted, re-indented reproduction of the

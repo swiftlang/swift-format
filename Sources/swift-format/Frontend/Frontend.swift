@@ -12,7 +12,6 @@
 
 import Foundation
 import SwiftFormat
-import SwiftFormatConfiguration
 import SwiftSyntax
 import SwiftParser
 

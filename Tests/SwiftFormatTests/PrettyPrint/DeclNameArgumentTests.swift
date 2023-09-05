@@ -1,4 +1,4 @@
-import SwiftFormatConfiguration
+import SwiftFormat
 
 final class DeclNameArgumentTests: PrettyPrintTestCase {
   func testSelectors_noPackArguments() {

@@ -1,4 +1,4 @@
-import SwiftFormatConfiguration
+import SwiftFormat
 
 final class ExtensionDeclTests: PrettyPrintTestCase {
   func testBasicExtensionDeclarations() {
