@@ -103,6 +103,18 @@ An example `.swift-format` configuration file is shown below.
 }
 ```
 
+## Linter and Formatter Rules Configuration
+
+In the `rules` block of `.swift-format`, you can specify which rules to apply
+when linting and formatting your project. Read the
+[rules documentation](Documentation/RuleDocumentation.md) to see the list of all
+supported linter and formatter rules, and their overview.
+
+You can also run this command to see the list of rules in the default
+`swift-format` configuration:
+
+    $ swift-format dump-configuration
+
 ## API Configuration
 
 The `SwiftConfiguration` module contains a `Configuration` type that is

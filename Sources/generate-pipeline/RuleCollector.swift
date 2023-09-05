@@ -20,6 +20,11 @@ import SwiftParser
 final class RuleCollector {
   /// Information about a detected rule.
   struct DetectedRule: Hashable {
+
+    /// The DocC comments of the rule,
+    /// presumably in the leading trivia of the rule declaration.
+    let doccComment: String
+
     /// The type name of the rule.
     let typeName: String
 
@@ -86,12 +91,15 @@ final class RuleCollector {
     let typeName: String
     let members: MemberBlockItemListSyntax
     let maybeInheritanceClause: InheritanceClauseSyntax?
+    let doccComment: String
 
     if let classDecl = statement.item.as(ClassDeclSyntax.self) {
+      doccComment = classDecl.leadingTrivia.description
       typeName = classDecl.name.text
       members = classDecl.memberBlock.members
       maybeInheritanceClause = classDecl.inheritanceClause
     } else if let structDecl = statement.item.as(StructDeclSyntax.self) {
+      doccComment = structDecl.leadingTrivia.description
       typeName = structDecl.name.text
       members = structDecl.memberBlock.members
       maybeInheritanceClause = structDecl.inheritanceClause
@@ -140,7 +148,10 @@ final class RuleCollector {
         preconditionFailure("Failed to find type for rule named \(typeName)")
       }
       return DetectedRule(
-        typeName: typeName, visitedNodes: visitedNodes, canFormat: canFormat,
+        doccComment: doccComment,
+        typeName: typeName,
+        visitedNodes: visitedNodes,
+        canFormat: canFormat,
         isOptIn: ruleType.isOptIn)
     }
 
