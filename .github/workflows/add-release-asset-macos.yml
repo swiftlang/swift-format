@@ -1,4 +1,4 @@
-name: Build and attach on releases
+name: Build and attach on releases – MacOS
 
 on:
   release:
