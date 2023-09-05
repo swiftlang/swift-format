@@ -24,7 +24,7 @@ jobs:
         env:
           CURRENT_RELEASE: ${{ github.event.release.tag_name }}
         run: |
-          find . -name 'VersionOptions.swift' -exec sed -i '' 's/print("[0-9]\{1,\}\.[0-9]\{1,\}\.[0-9]\{1,\}")/print("'$CURRENT_RELEASE'")/g' {} +
+          find . -name 'VersionOptions.swift' -exec sed -i '' 's/print(".*")/print("'$CURRENT_RELEASE'")/g' {} +
           cat Sources/swift-format/VersionOptions.swift
 
       # Should output executable to `.build/release/swift-format`
