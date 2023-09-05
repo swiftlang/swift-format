@@ -1,4 +1,4 @@
-import SwiftFormatConfiguration
+import SwiftFormat
 
 final class RepeatStmtTests: PrettyPrintTestCase {
   func testBasicRepeatTests_noBreakBeforeWhile() {

@@ -1,4 +1,4 @@
-import SwiftFormatConfiguration
+import SwiftFormat
 
 final class MacroDeclTests: PrettyPrintTestCase {
   func testBasicMacroDeclarations_noPackArguments() {

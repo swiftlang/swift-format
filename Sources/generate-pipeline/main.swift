@@ -24,7 +24,8 @@ let pipelineFile = sourcesDirectory
   .appendingPathComponent("Core")
   .appendingPathComponent("Pipelines+Generated.swift")
 let ruleRegistryFile = sourcesDirectory
-  .appendingPathComponent("SwiftFormatConfiguration")
+  .appendingPathComponent("SwiftFormat")
+  .appendingPathComponent("Core")
   .appendingPathComponent("RuleRegistry+Generated.swift")
 
 let ruleNameCacheFile = sourcesDirectory

@@ -10,7 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SwiftFormatConfiguration
+import SwiftFormat
 
 extension Configuration {
   /// The default configuration to be used during unit tests.

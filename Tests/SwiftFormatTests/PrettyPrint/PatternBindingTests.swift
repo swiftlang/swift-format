@@ -1,4 +1,4 @@
-import SwiftFormatConfiguration
+import SwiftFormat
 
 final class PatternBindingTests: PrettyPrintTestCase {
   func testBindingIncludingTypeAnnotation() {

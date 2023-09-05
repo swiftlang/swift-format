@@ -10,8 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SwiftFormatConfiguration
-
 extension Indent {
   var character: Character {
     switch self {

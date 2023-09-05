@@ -1,4 +1,4 @@
-import SwiftFormatConfiguration
+import SwiftFormat
 
 final class InitializerDeclTests: PrettyPrintTestCase {
   func testBasicInitializerDeclarations_noPackArguments() {

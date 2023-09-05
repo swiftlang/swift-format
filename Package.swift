@@ -29,6 +29,7 @@ let package = Package(
       name: "SwiftFormat",
       targets: ["SwiftFormat", "SwiftFormatConfiguration"]
     ),
+    // TODO: Remove this product after the 509 release.
     .library(
       name: "SwiftFormatConfiguration",
       targets: ["SwiftFormatConfiguration"]
@@ -49,7 +50,6 @@ let package = Package(
     .target(
       name: "SwiftFormat",
       dependencies: [
-        "SwiftFormatConfiguration",
         .product(name: "Markdown", package: "swift-markdown"),
         .product(name: "SwiftSyntax", package: "swift-syntax"),
         .product(name: "SwiftOperators", package: "swift-syntax"),
@@ -57,14 +57,17 @@ let package = Package(
         .product(name: "SwiftParserDiagnostics", package: "swift-syntax"),
       ]
     ),
+    // TODO: Remove this target after the 509 release.
     .target(
-      name: "SwiftFormatConfiguration"
+      name: "SwiftFormatConfiguration",
+      dependencies: [
+        "SwiftFormat"
+      ]
     ),
     .target(
       name: "_SwiftFormatTestSupport",
       dependencies: [
         "SwiftFormat",
-        "SwiftFormatConfiguration",
         .product(name: "SwiftOperators", package: "swift-syntax"),
       ]
     ),
@@ -106,17 +109,12 @@ let package = Package(
       name: "swift-format",
       dependencies: [
         "SwiftFormat",
-        "SwiftFormatConfiguration",
         .product(name: "ArgumentParser", package: "swift-argument-parser"),
         .product(name: "SwiftSyntax", package: "swift-syntax"),
         .product(name: "SwiftParser", package: "swift-syntax"),
       ]
     ),
 
-    .testTarget(
-      name: "SwiftFormatConfigurationTests",
-      dependencies: ["SwiftFormatConfiguration"]
-    ),
     .testTarget(
       name: "SwiftFormatPerformanceTests",
       dependencies: [
@@ -130,7 +128,6 @@ let package = Package(
       name: "SwiftFormatTests",
       dependencies: [
         "SwiftFormat",
-        "SwiftFormatConfiguration",
         "_SwiftFormatTestSupport",
         .product(name: "Markdown", package: "swift-markdown"),
         .product(name: "SwiftOperators", package: "swift-syntax"),
