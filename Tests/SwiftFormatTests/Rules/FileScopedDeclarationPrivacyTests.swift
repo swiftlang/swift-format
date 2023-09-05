@@ -1,4 +1,4 @@
-import SwiftFormatConfiguration
+import SwiftFormat
 import SwiftSyntax
 import _SwiftFormatTestSupport
 

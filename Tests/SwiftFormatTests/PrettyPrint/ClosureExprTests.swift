@@ -1,4 +1,4 @@
-import SwiftFormatConfiguration
+import SwiftFormat
 
 final class ClosureExprTests: PrettyPrintTestCase {
   func testBasicFunctionClosures_noPackArguments() {

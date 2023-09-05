@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SwiftFormatConfiguration
 import SwiftSyntax
 
 /// Assignment expressions must be their own statements.

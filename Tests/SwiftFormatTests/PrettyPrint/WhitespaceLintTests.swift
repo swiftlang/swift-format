@@ -1,5 +1,4 @@
 import SwiftFormat
-import SwiftFormatConfiguration
 import _SwiftFormatTestSupport
 
 // A note about these tests: `WhitespaceLinter` *only* emits findings; it does not do any

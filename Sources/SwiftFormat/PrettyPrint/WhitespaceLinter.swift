@@ -10,7 +10,6 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SwiftFormatConfiguration
 import SwiftSyntax
 
 private let utf8Newline = UTF8.CodeUnit(ascii: "\n")

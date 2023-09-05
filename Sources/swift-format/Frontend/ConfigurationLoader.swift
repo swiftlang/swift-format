@@ -11,7 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import SwiftFormatConfiguration
+import SwiftFormat
 
 /// Loads formatter configurations, caching them in memory so that multiple operations in the same
 /// directory do not repeatedly hit the file system.
