@@ -3,20 +3,17 @@ import Foundation
 
 @main
 struct FormatPlugin {
-  func format(tool: PluginContext.Tool, targetDirectories: [String], configurationFilePath: String?) throws {
+  private func format(tool: PluginContext.Tool, targetDirectories: [String], configurationFilePath: String?) throws {
     let swiftFormatExec = URL(fileURLWithPath: tool.path.string)
     
-    var arguments: [String] = ["format"]
-    
-    arguments.append(contentsOf: targetDirectories)
-    
-    arguments.append(contentsOf: ["--recursive", "--parallel", "--in-place"])
-    
-    if let configurationFilePath = configurationFilePath {
-      arguments.append(contentsOf: ["--configuration", configurationFilePath])
+    var swiftFormatArgs = ["format"]
+    swiftFormatArgs.append(contentsOf: targetDirectories)
+    swiftFormatArgs.append(contentsOf: ["--recursive", "--parallel", "--in-place"])
+    if let configurationFilePath {
+      swiftFormatArgs.append(contentsOf: ["--configuration", configurationFilePath])
     }
     
-    let process = try Process.run(swiftFormatExec, arguments: arguments)
+    let process = try Process.run(swiftFormatExec, arguments: swiftFormatArgs)
     process.waitUntilExit()
     
     if process.terminationReason == .exit && process.terminationStatus == 0 {
@@ -38,15 +35,15 @@ extension FormatPlugin: CommandPlugin {
     
     var argExtractor = ArgumentExtractor(arguments)
     let targetNames = argExtractor.extractOption(named: "target")
-    let targetsToFormat = try context.package.targets(named: targetNames)
+    let targetDirectories = try context.package.targets(named: targetNames)
+      .compactMap { $0 as? SourceModuleTarget }
+      .map(\.directory.string)
     
     let configurationFilePath = argExtractor.extractOption(named: "configuration").first
     
-    let sourceCodeTargets = targetsToFormat.compactMap{ $0 as? SourceModuleTarget }
-    
     try format(
       tool: swiftFormatTool,
-      targetDirectories: sourceCodeTargets.map(\.directory.string),
+      targetDirectories: targetDirectories,
       configurationFilePath: configurationFilePath
     )
   }
