@@ -36,7 +36,8 @@ jobs:
         id: create-plugin-archive
         run: |
           FILENAME=swift-format.${{ github.event.release.name }}.macos.zip
-          zip $FILENAME .build/release/swift-format
+          cd .build/release/
+          zip $FILENAME *.*
           echo "ARCHIVE_ABSOLUTE_FILEPATH=$(pwd)/$FILENAME" >> $GITHUB_OUTPUT;
 
       - name: Attach asset

@@ -36,7 +36,8 @@ jobs:
         id: create-plugin-archive
         run: |
           FILENAME=swift-format.${{ github.event.release.name }}.ubuntu.zip
-          zip $FILENAME .build/release/swift-format
+          cd .build/release/
+          zip $FILENAME swift-format
           echo "ARCHIVE_ABSOLUTE_FILEPATH=$(pwd)/$FILENAME" >> $GITHUB_OUTPUT;
 
       - uses: meeDamian/github-release@2.0
