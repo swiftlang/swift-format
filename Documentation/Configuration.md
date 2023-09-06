@@ -82,6 +82,9 @@ top-level keys and values:
 *  `spacesAroundRangeFormationOperators` _(boolean)_: Determines whether whitespace should be forced
    before and after the range formation operators `...` and `..<`.
 
+*  `multilineCollectionTrailingCommas` _(boolean)_: Determines whether multi-line collections should have trailing commas.
+    Defaults to `true`.
+
 > TODO: Add support for enabling/disabling specific syntax transformations in
 > the pipeline.
 

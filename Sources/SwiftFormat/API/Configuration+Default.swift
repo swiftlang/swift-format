@@ -37,5 +37,6 @@ extension Configuration {
     self.indentSwitchCaseLabels = false
     self.spacesAroundRangeFormationOperators = false
     self.noAssignmentInExpressions = NoAssignmentInExpressionsConfiguration()
+    self.multilineCollectionTrailingCommas = true
   }
 }
