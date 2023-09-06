@@ -22,7 +22,7 @@ final class RuleCollector {
   struct DetectedRule: Hashable {
 
     /// The DocC comments of the rule,
-    /// presumably in the leading trivia of the rule declaration.
+    /// extracted from the .leadingTrivia of the rule class or struct.
     let doccComment: String
 
     /// The type name of the rule.
