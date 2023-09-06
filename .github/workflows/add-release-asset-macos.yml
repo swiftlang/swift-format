@@ -37,7 +37,7 @@ jobs:
 
       # Zip the executable so it can be given a descriptive name to distinguish the MacOS and Ubuntu builds
       - name: Create archive
-        id: create-plugin-archive
+        id: create-archive
         run: |
           FILENAME=swift-format.${{ github.event.release.name }}.macos.zip
           cd .build/release/
@@ -48,4 +48,4 @@ jobs:
       - name: Attach asset
         uses: softprops/action-gh-release@v1
         with:
-          files: ${{ steps.create-plugin-archive.outputs.ARCHIVE_ABSOLUTE_FILEPATH }}
+          files: ${{ steps.create-archive.outputs.ARCHIVE_ABSOLUTE_FILEPATH }}
