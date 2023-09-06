@@ -231,8 +231,8 @@ creates. Instead, it can pass the in-memory syntax tree to the `SwiftFormat`
 API and receive perfectly formatted code as output.
 
 Please see the documentation in the
-[`SwiftFormatter`](Sources/SwiftFormat/SwiftFormatter.swift) and
-[`SwiftLinter`](Sources/SwiftFormat/SwiftLinter.swift) classes for more
+[`SwiftFormatter`](Sources/SwiftFormat/API/SwiftFormatter.swift) and
+[`SwiftLinter`](Sources/SwiftFormat/API/SwiftLinter.swift) classes for more
 information about their usage.
 
 ### Checking Out the Source Code for Development
