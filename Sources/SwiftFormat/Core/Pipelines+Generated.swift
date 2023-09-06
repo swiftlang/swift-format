@@ -243,6 +243,7 @@ class LintPipeline: SyntaxVisitor {
   }
 
   override func visit(_ node: PatternBindingSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(AlwaysUseLiteralForEmptyArrayInit.visit, for: node)
     visitIfEnabled(OmitExplicitReturns.visit, for: node)
     visitIfEnabled(UseSingleLinePropertyGetter.visit, for: node)
     return .visitChildren
@@ -356,6 +357,7 @@ extension FormatPipeline {
 
   func rewrite(_ node: Syntax) -> Syntax {
     var node = node
+    node = AlwaysUseLiteralForEmptyArrayInit(context: context).rewrite(node)
     node = DoNotUseSemicolons(context: context).rewrite(node)
     node = FileScopedDeclarationPrivacy(context: context).rewrite(node)
     node = FullyIndirectEnum(context: context).rewrite(node)
