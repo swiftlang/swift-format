@@ -20,13 +20,12 @@ import SwiftParser
 final class RuleCollector {
   /// Information about a detected rule.
   struct DetectedRule: Hashable {
-
-    /// The DocC comments of the rule,
-    /// extracted from the .leadingTrivia of the rule class or struct.
-    let doccComment: String
-
     /// The type name of the rule.
     let typeName: String
+
+    /// The description of the rule, extracted from the rule class or struct DocC comment
+    /// with `DocumentationCommentText(extractedFrom:)`
+    let description: String?
 
     /// The syntax node types visited by the rule type.
     let visitedNodes: [String]
@@ -91,15 +90,13 @@ final class RuleCollector {
     let typeName: String
     let members: MemberBlockItemListSyntax
     let maybeInheritanceClause: InheritanceClauseSyntax?
-    let doccComment: String
+    let description = DocumentationCommentText(extractedFrom: statement.item.leadingTrivia)
 
     if let classDecl = statement.item.as(ClassDeclSyntax.self) {
-      doccComment = classDecl.leadingTrivia.description
       typeName = classDecl.name.text
       members = classDecl.memberBlock.members
       maybeInheritanceClause = classDecl.inheritanceClause
     } else if let structDecl = statement.item.as(StructDeclSyntax.self) {
-      doccComment = structDecl.leadingTrivia.description
       typeName = structDecl.name.text
       members = structDecl.memberBlock.members
       maybeInheritanceClause = structDecl.inheritanceClause
@@ -148,8 +145,8 @@ final class RuleCollector {
         preconditionFailure("Failed to find type for rule named \(typeName)")
       }
       return DetectedRule(
-        doccComment: doccComment,
         typeName: typeName,
+        description: description?.text,
         visitedNodes: visitedNodes,
         canFormat: canFormat,
         isOptIn: ruleType.isOptIn)

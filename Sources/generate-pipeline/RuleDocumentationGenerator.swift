@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import SwiftFormat
 
 /// Generates the markdown file with extended documenation on the available rules.
 final class RuleDocumentationGenerator: FileGenerator {
@@ -37,17 +38,25 @@ final class RuleDocumentationGenerator: FileGenerator {
       applied in the linter, but only some of them can format your source code
       automatically.
 
+      Here's the list of available rules:
+
 
       """
     )
 
     for detectedRule in ruleCollector.allLinters.sorted(by: { $0.typeName < $1.typeName }) {
       handle.write("""
+      - [\(detectedRule.typeName)](#\(detectedRule.typeName))
+
+      """)
+    }
+
+    for detectedRule in ruleCollector.allLinters.sorted(by: { $0.typeName < $1.typeName }) {
+      handle.write("""
 
       ### \(detectedRule.typeName)
 
-      \(ruleDescription(for: detectedRule))
-
+      \(detectedRule.description ?? "")
       \(ruleFormatSupportDescription(for: detectedRule))
 
       """)
@@ -58,26 +67,5 @@ final class RuleDocumentationGenerator: FileGenerator {
     return rule.canFormat ?
       "`\(rule.typeName)` rule can format your code automatically." :
       "`\(rule.typeName)` is a linter-only rule."
-  }
-
-  /// Takes the DocC comment of the rule and strip `///` from the beginning of each line.
-  /// Also removes empty lines with under 4 characters.
-  private func ruleDescription(for rule: RuleCollector.DetectedRule) -> String {
-    let described = rule.doccComment.split(whereSeparator: \.isNewline)
-      .compactMap { line in
-        // Remove the first 4 characters, i.e. `/// `
-        if line.count >= 4 {
-          let index = line.index(line.startIndex, offsetBy: 4)
-          return line.suffix(from: index)
-        } else {
-          // For lines that have less than 4 characters, emit an empty line.
-          return ""
-        }
-      }
-      // not great, but that shoves multiple lines into the single
-      // table cell in markdown
-      .joined(separator: "\n")
-
-    return described
   }
 }

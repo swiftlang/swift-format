@@ -9,6 +9,47 @@ configuration file, as described in
 applied in the linter, but only some of them can format your source code
 automatically.
 
+Here's the list of available rules:
+
+- [AllPublicDeclarationsHaveDocumentation](#AllPublicDeclarationsHaveDocumentation)
+- [AlwaysUseLowerCamelCase](#AlwaysUseLowerCamelCase)
+- [AmbiguousTrailingClosureOverload](#AmbiguousTrailingClosureOverload)
+- [BeginDocumentationCommentWithOneLineSummary](#BeginDocumentationCommentWithOneLineSummary)
+- [DoNotUseSemicolons](#DoNotUseSemicolons)
+- [DontRepeatTypeInStaticProperties](#DontRepeatTypeInStaticProperties)
+- [FileScopedDeclarationPrivacy](#FileScopedDeclarationPrivacy)
+- [FullyIndirectEnum](#FullyIndirectEnum)
+- [GroupNumericLiterals](#GroupNumericLiterals)
+- [IdentifiersMustBeASCII](#IdentifiersMustBeASCII)
+- [NeverForceUnwrap](#NeverForceUnwrap)
+- [NeverUseForceTry](#NeverUseForceTry)
+- [NeverUseImplicitlyUnwrappedOptionals](#NeverUseImplicitlyUnwrappedOptionals)
+- [NoAccessLevelOnExtensionDeclaration](#NoAccessLevelOnExtensionDeclaration)
+- [NoAssignmentInExpressions](#NoAssignmentInExpressions)
+- [NoBlockComments](#NoBlockComments)
+- [NoCasesWithOnlyFallthrough](#NoCasesWithOnlyFallthrough)
+- [NoEmptyTrailingClosureParentheses](#NoEmptyTrailingClosureParentheses)
+- [NoLabelsInCasePatterns](#NoLabelsInCasePatterns)
+- [NoLeadingUnderscores](#NoLeadingUnderscores)
+- [NoParensAroundConditions](#NoParensAroundConditions)
+- [NoPlaygroundLiterals](#NoPlaygroundLiterals)
+- [NoVoidReturnOnFunctionSignature](#NoVoidReturnOnFunctionSignature)
+- [OmitExplicitReturns](#OmitExplicitReturns)
+- [OneCasePerLine](#OneCasePerLine)
+- [OneVariableDeclarationPerLine](#OneVariableDeclarationPerLine)
+- [OnlyOneTrailingClosureArgument](#OnlyOneTrailingClosureArgument)
+- [OrderedImports](#OrderedImports)
+- [ReplaceForEachWithForLoop](#ReplaceForEachWithForLoop)
+- [ReturnVoidInsteadOfEmptyTuple](#ReturnVoidInsteadOfEmptyTuple)
+- [TypeNamesShouldBeCapitalized](#TypeNamesShouldBeCapitalized)
+- [UseEarlyExits](#UseEarlyExits)
+- [UseLetInEveryBoundCaseVariable](#UseLetInEveryBoundCaseVariable)
+- [UseShorthandTypeNames](#UseShorthandTypeNames)
+- [UseSingleLinePropertyGetter](#UseSingleLinePropertyGetter)
+- [UseSynthesizedInitializer](#UseSynthesizedInitializer)
+- [UseTripleSlashForDocumentationComments](#UseTripleSlashForDocumentationComments)
+- [UseWhereClausesInForLoops](#UseWhereClausesInForLoops)
+- [ValidateDocumentationComments](#ValidateDocumentationComments)
 
 ### AllPublicDeclarationsHaveDocumentation
 
@@ -260,6 +301,15 @@ Format: Parentheses around such expressions are removed, if they do not cause a 
         call with a trailing closure.
 
 `NoParensAroundConditions` rule can format your code automatically.
+
+### NoPlaygroundLiterals
+
+The playground literals (`#colorLiteral`, `#fileLiteral`, and `#imageLiteral`) are forbidden.
+
+Lint: Using a playground literal will yield a lint error with a suggestion of an API to replace
+it.
+
+`NoPlaygroundLiterals` is a linter-only rule.
 
 ### NoVoidReturnOnFunctionSignature
 
