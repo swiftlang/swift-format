@@ -163,7 +163,7 @@ public struct Configuration: Codable, Equatable {
   /// Contains exceptions for the `NoAssignmentInExpressions` rule.
   public var noAssignmentInExpressions: NoAssignmentInExpressionsConfiguration
 
-  /// Determines whether multi-line list initializers should have trailing commas
+  /// Determines whether multi-line list initializers should have trailing commas.
   public var multilineCollectionTrailingCommas: Bool
 
   /// Constructs a Configuration by loading it from a configuration file.
