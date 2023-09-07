@@ -23,6 +23,10 @@ final class RuleCollector {
     /// The type name of the rule.
     let typeName: String
 
+    /// The description of the rule, extracted from the rule class or struct DocC comment
+    /// with `DocumentationCommentText(extractedFrom:)`
+    let description: String?
+
     /// The syntax node types visited by the rule type.
     let visitedNodes: [String]
 
@@ -86,6 +90,7 @@ final class RuleCollector {
     let typeName: String
     let members: MemberBlockItemListSyntax
     let maybeInheritanceClause: InheritanceClauseSyntax?
+    let description = DocumentationCommentText(extractedFrom: statement.item.leadingTrivia)
 
     if let classDecl = statement.item.as(ClassDeclSyntax.self) {
       typeName = classDecl.name.text
@@ -140,7 +145,10 @@ final class RuleCollector {
         preconditionFailure("Failed to find type for rule named \(typeName)")
       }
       return DetectedRule(
-        typeName: typeName, visitedNodes: visitedNodes, canFormat: canFormat,
+        typeName: typeName,
+        description: description?.text,
+        visitedNodes: visitedNodes,
+        canFormat: canFormat,
         isOptIn: ruleType.isOptIn)
     }
 
