@@ -123,7 +123,7 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
   }
 
   private func containsSingleReturn(_ body: CodeBlockItemListSyntax) -> ReturnStmtSyntax? {
-    guard let element = body.firstAndOnly?.as(CodeBlockItemSyntax.self),
+    guard let element = body.firstAndOnly,
        let returnStmt = element.item.as(ReturnStmtSyntax.self) else
         {
       return nil

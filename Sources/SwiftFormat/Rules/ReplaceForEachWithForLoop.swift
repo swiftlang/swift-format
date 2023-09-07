@@ -29,8 +29,8 @@ public final class ReplaceForEachWithForLoop : SyntaxLintRule {
       return .visitChildren
     }
 
-    guard let memberName = member.declName.baseName.as(TokenSyntax.self),
-          memberName.text == "forEach" else {
+    let memberName = member.declName.baseName
+    guard memberName.text == "forEach" else {
       return .visitChildren
     }
 
