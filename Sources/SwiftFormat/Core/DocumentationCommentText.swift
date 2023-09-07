@@ -18,6 +18,7 @@ import SwiftSyntax
 /// structural organization. It automatically handles trimming leading indentation from comments as
 /// well as "ASCII art" in block comments (i.e., leading asterisks on each line).
 @_spi(Testing)
+@_spi(Rules)
 public struct DocumentationCommentText {
   /// Denotes the kind of punctuation used to introduce the comment.
   public enum Introducer {
