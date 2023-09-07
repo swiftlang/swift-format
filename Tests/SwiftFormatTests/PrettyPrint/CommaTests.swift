@@ -1,10 +1,10 @@
 import SwiftFormat
 
 final class CommaTests: PrettyPrintTestCase {
-  func testCommasAbsentEnabled() {
+  func testArrayCommasAbsentEnabled() {
     let input =
       """
-      let MyList = [
+      let MyCollection = [
         1,
         2,
         3
@@ -14,7 +14,7 @@ final class CommaTests: PrettyPrintTestCase {
     
     let expected =
       """
-      let MyList = [
+      let MyCollection = [
         1,
         2,
         3,
@@ -27,10 +27,10 @@ final class CommaTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20, configuration: configuration)
   }
   
-  func testCommasAbsentDisabled() {
+  func testArrayCommasAbsentDisabled() {
     let input =
       """
-      let MyList = [
+      let MyCollection = [
         1,
         2,
         3
@@ -40,7 +40,7 @@ final class CommaTests: PrettyPrintTestCase {
     
     let expected =
       """
-      let MyList = [
+      let MyCollection = [
         1,
         2,
         3
@@ -53,10 +53,10 @@ final class CommaTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20, configuration: configuration)
   }
   
-  func testCommasPresentEnabled() {
+  func testArrayCommasPresentEnabled() {
     let input =
       """
-      let MyList = [
+      let MyCollection = [
         1,
         2,
         3,
@@ -66,7 +66,7 @@ final class CommaTests: PrettyPrintTestCase {
     
     let expected =
       """
-      let MyList = [
+      let MyCollection = [
         1,
         2,
         3,
@@ -79,10 +79,10 @@ final class CommaTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20, configuration: configuration)
   }
   
-  func testCommasPresentDisabled() {
+  func testArrayCommasPresentDisabled() {
     let input =
       """
-      let MyList = [
+      let MyCollection = [
         1,
         2,
         3,
@@ -92,7 +92,7 @@ final class CommaTests: PrettyPrintTestCase {
     
     let expected =
       """
-      let MyList = [
+      let MyCollection = [
         1,
         2,
         3
@@ -105,17 +105,17 @@ final class CommaTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20, configuration: configuration)
   }
   
-  func testCommasPresentSingleLineDisabled() {
+  func testArraySingleLineCommasPresentDisabled() {
     let input =
       """
-      let MyList = [1, 2, 3,]
+      let MyCollection = [1, 2, 3,]
       
       """
     
     // no effect expected
     let expected =
       """
-      let MyList = [1, 2, 3]
+      let MyCollection = [1, 2, 3]
       
       """
     
@@ -124,17 +124,161 @@ final class CommaTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: configuration)
   }
   
-  func testCommasPresentSingleLineEnabled() {
+  func testArraySingleLineCommasPresentEnabled() {
     let input =
       """
-      let MyList = [1, 2, 3,]
+      let MyCollection = [1, 2, 3,]
       
       """
     
     // no effect expected
     let expected =
       """
-      let MyList = [1, 2, 3]
+      let MyCollection = [1, 2, 3]
+      
+      """
+    
+    var configuration = Configuration.forTesting
+    configuration.multilineCollectionTrailingCommas = false
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: configuration)
+  }
+  
+  func testDictionaryCommasAbsentEnabled() {
+    let input =
+      """
+      let MyCollection = [
+        "a": 1,
+        "b": 2,
+        "c": 3
+      ]
+      
+      """
+    
+    let expected =
+      """
+      let MyCollection = [
+        "a": 1,
+        "b": 2,
+        "c": 3,
+      ]
+      
+      """
+    
+    var configuration = Configuration.forTesting
+    configuration.multilineCollectionTrailingCommas = true
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 20, configuration: configuration)
+  }
+  
+  func testDictionaryCommasAbsentDisabled() {
+    let input =
+      """
+      let MyCollection = [
+        "a": 1,
+        "b": 2,
+        "c": 3
+      ]
+      
+      """
+    
+    let expected =
+      """
+      let MyCollection = [
+        "a": 1,
+        "b": 2,
+        "c": 3
+      ]
+      
+      """
+    
+    var configuration = Configuration.forTesting
+    configuration.multilineCollectionTrailingCommas = false
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 20, configuration: configuration)
+  }
+  
+  func testDictionaryCommasPresentEnabled() {
+    let input =
+      """
+      let MyCollection = [
+        "a": 1,
+        "b": 2,
+        "c": 3,
+      ]
+      
+      """
+    
+    let expected =
+      """
+      let MyCollection = [
+        "a": 1,
+        "b": 2,
+        "c": 3,
+      ]
+      
+      """
+    
+    var configuration = Configuration.forTesting
+    configuration.multilineCollectionTrailingCommas = true
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 20, configuration: configuration)
+  }
+  
+  func testDictionaryCommasPresentDisabled() {
+    let input =
+      """
+      let MyCollection = [
+        "a": 1,
+        "b": 2,
+        "c": 3,
+      ]
+      
+      """
+    
+    let expected =
+      """
+      let MyCollection = [
+        "a": 1,
+        "b": 2,
+        "c": 3
+      ]
+      
+      """
+    
+    var configuration = Configuration.forTesting
+    configuration.multilineCollectionTrailingCommas = false
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 20, configuration: configuration)
+  }
+  
+  func testDictionarySingleLineCommasPresentDisabled() {
+    let input =
+      """
+      let MyCollection = ["a": 1, "b": 2, "c": 3,]
+      
+      """
+    
+    let expected =
+      """
+      let MyCollection = [
+        "a": 1, "b": 2, "c": 3,
+      ]
+      
+      """
+    
+    var configuration = Configuration.forTesting
+    configuration.multilineCollectionTrailingCommas = true
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: configuration)
+  }
+  
+  func testDictionarySingleLineCommasPresentEnabled() {
+    let input =
+      """
+      let MyCollection = ["a": 1, "b": 2, "c": 3,]
+      
+      """
+    
+    let expected =
+      """
+      let MyCollection = [
+        "a": 1, "b": 2, "c": 3
+      ]
       
       """
     
