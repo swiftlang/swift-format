@@ -2,10 +2,10 @@ import _SwiftFormatTestSupport
 
 @_spi(Rules) import SwiftFormat
 
-final class AlwaysUseLiteralForEmptyArrayInitTests: LintOrFormatRuleTestCase {
+final class AlwaysUseLiteralForEmptyCollectionInitTests: LintOrFormatRuleTestCase {
   func testArray() {
     assertFormatting(
-      AlwaysUseLiteralForEmptyArrayInit.self,
+      AlwaysUseLiteralForEmptyCollectionInit.self,
       input: """
         public struct Test {
           var value1 = 1️⃣[Int]()
@@ -48,7 +48,7 @@ final class AlwaysUseLiteralForEmptyArrayInitTests: LintOrFormatRuleTestCase {
 
   func testDictionary() {
     assertFormatting(
-      AlwaysUseLiteralForEmptyArrayInit.self,
+      AlwaysUseLiteralForEmptyCollectionInit.self,
       input: """
         public struct Test {
           var value1 = 1️⃣[Int: String]()
