@@ -159,6 +159,7 @@ class LintPipeline: SyntaxVisitor {
   }
 
   override func visit(_ node: FunctionParameterSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(AlwaysUseLiteralForEmptyCollectionInit.visit, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)
     return .visitChildren
   }
