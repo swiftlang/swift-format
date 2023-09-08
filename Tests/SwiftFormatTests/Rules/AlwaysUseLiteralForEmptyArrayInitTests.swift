@@ -3,7 +3,7 @@ import _SwiftFormatTestSupport
 @_spi(Rules) import SwiftFormat
 
 final class AlwaysUseLiteralForEmptyArrayInitTests: LintOrFormatRuleTestCase {
-  func testPatternBindings() {
+  func testArray() {
     assertFormatting(
       AlwaysUseLiteralForEmptyArrayInit.self,
       input: """
@@ -42,6 +42,49 @@ final class AlwaysUseLiteralForEmptyArrayInitTests: LintOrFormatRuleTestCase {
         FindingSpec("3️⃣", message: "replace '[Category<Int>]()' with '[]'"),
         FindingSpec("4️⃣", message: "replace '[(Int, Array<String>)]()' with ': [(Int, Array<String>)] = []'"),
         FindingSpec("5️⃣", message: "replace '[(String, Int, Float)]()' with '[]'"),
+      ]
+    )
+  }
+
+  func testDictionary() {
+    assertFormatting(
+      AlwaysUseLiteralForEmptyArrayInit.self,
+      input: """
+        public struct Test {
+          var value1 = 1️⃣[Int: String]()
+
+          func test(v: [Double: Int] = [Double: Int]()) {
+            let _ = 2️⃣[String: Int]()
+          }
+        }
+
+        var _: [Category<Int>: String] = 3️⃣[Category<Int>: String]()
+        let _ = 4️⃣[(Int, Array<String>): Int]()
+        let _: [String: (String, Int, Float)] = 5️⃣[String: (String, Int, Float)]()
+
+        let _ = [String: (1, 2, String)]()
+        """,
+      expected: """
+        public struct Test {
+          var value1: [Int: String] = [:]
+
+          func test(v: [Double: Int] = [Double: Int]()) {
+            let _: [String: Int] = [:]
+          }
+        }
+
+        var _: [Category<Int>: String] = [:]
+        let _: [(Int, Array<String>): Int] = [:]
+        let _: [String: (String, Int, Float)] = [:]
+
+        let _ = [String: (1, 2, String)]()
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "replace '[Int: String]()' with ': [Int: String] = [:]'"),
+        FindingSpec("2️⃣", message: "replace '[String: Int]()' with ': [String: Int] = [:]'"),
+        FindingSpec("3️⃣", message: "replace '[Category<Int>: String]()' with '[:]'"),
+        FindingSpec("4️⃣", message: "replace '[(Int, Array<String>): Int]()' with ': [(Int, Array<String>): Int] = [:]'"),
+        FindingSpec("5️⃣", message: "replace '[String: (String, Int, Float)]()' with '[:]'"),
       ]
     )
   }

@@ -25,59 +25,116 @@ public final class AlwaysUseLiteralForEmptyArrayInit : SyntaxFormatRule {
   public override class var isOptIn: Bool { return true }
 
   public override func visit(_ node: PatternBindingSyntax) -> PatternBindingSyntax {
-    guard let initializer = node.initializer else {
-      return node
-    }
-
     // Check whether the initializer is `[<Type>]()`
-    guard let initCall = initializer.value.as(FunctionCallExprSyntax.self),
-          var arrayLiteral = initCall.calledExpression.as(ArrayExprSyntax.self),
+    guard let initializer = node.initializer,
+          let initCall = initializer.value.as(FunctionCallExprSyntax.self),
           initCall.arguments.isEmpty else {
       return node
     }
 
-    guard let elementType = getElementType(arrayLiteral) else {
-      return node
+    if let arrayLiteral = initCall.calledExpression.as(ArrayExprSyntax.self),
+       let type = getLiteralType(arrayLiteral) {
+      return rewrite(node, type: type)
     }
 
+    if let dictLiteral = initCall.calledExpression.as(DictionaryExprSyntax.self),
+       let type = getLiteralType(dictLiteral) {
+      return rewrite(node, type: type)
+    }
+
+    return node
+  }
+
+  private func rewrite(_ node: PatternBindingSyntax,
+                       type: ArrayTypeSyntax) -> PatternBindingSyntax {
     var replacement = node
 
-    var withFixIt = "[]"
-    if replacement.typeAnnotation == nil {
-      withFixIt = ": [\(elementType)] = []"
-    }
-
-    diagnose(.refactorEmptyArrayInit(replace: "\(initCall)", with: withFixIt), on: initCall)
+    diagnose(node, type: type)
 
     if replacement.typeAnnotation == nil {
       // Drop trailing trivia after pattern because ':' has to appear connected to it.
       replacement.pattern = node.pattern.with(\.trailingTrivia, [])
       // Add explicit type annotiation: ': [<Type>]`
-      replacement.typeAnnotation = .init(type: ArrayTypeSyntax(leadingTrivia: .space,
-                                                               element: elementType,
-                                                               trailingTrivia: .space))
+      replacement.typeAnnotation = .init(type: type.with(\.leadingTrivia, .space)
+                                                   .with(\.trailingTrivia, .space))
     }
 
+    let initializer = node.initializer!
+    let emptyArrayExpr = ArrayExprSyntax(elements: ArrayElementListSyntax.init([]))
+
     // Replace initializer call with empty array literal: `[<Type>]()` -> `[]`
-    arrayLiteral.elements = ArrayElementListSyntax.init([])
-    replacement.initializer = initializer.with(\.value, ExprSyntax(arrayLiteral))
+    replacement.initializer = initializer.with(\.value, ExprSyntax(emptyArrayExpr))
 
     return replacement
   }
 
-  private func getElementType(_ arrayLiteral: ArrayExprSyntax) -> TypeSyntax? {
-    guard let elementExpr = arrayLiteral.elements.firstAndOnly?.as(ArrayElementSyntax.self) else {
+  private func rewrite(_ node: PatternBindingSyntax,
+                       type: DictionaryTypeSyntax) -> PatternBindingSyntax {
+    var replacement = node
+
+    diagnose(node, type: type)
+
+    if replacement.typeAnnotation == nil {
+      // Drop trailing trivia after pattern because ':' has to appear connected to it.
+      replacement.pattern = node.pattern.with(\.trailingTrivia, [])
+      // Add explicit type annotiation: ': [<Type>]`
+      replacement.typeAnnotation = .init(type: type.with(\.leadingTrivia, .space)
+                                                   .with(\.trailingTrivia, .space))
+    }
+
+    let initializer = node.initializer!
+    let emptyDictExpr = DictionaryExprSyntax(content: .colon(.colonToken()))
+
+    // Replace initializer call with empty dictionary literal: `[<Type>]()` -> `[]`
+    replacement.initializer = initializer.with(\.value, ExprSyntax(emptyDictExpr))
+
+    return replacement
+  }
+
+  private func diagnose(_ node: PatternBindingSyntax, type: ArrayTypeSyntax) {
+    var withFixIt = "[]"
+    if node.typeAnnotation == nil {
+      withFixIt = ": \(type) = []"
+    }
+
+    let initCall = node.initializer!.value
+    emitDiagnostic(replace: "\(initCall)", with: withFixIt, on: initCall)
+  }
+
+  private func diagnose(_ node: PatternBindingSyntax, type: DictionaryTypeSyntax) {
+    var withFixIt = "[:]"
+    if node.typeAnnotation == nil {
+      withFixIt = ": \(type) = [:]"
+    }
+
+    let initCall = node.initializer!.value
+    emitDiagnostic(replace: "\(initCall)", with: withFixIt, on: initCall)
+  }
+
+  private func emitDiagnostic(replace: String, with fixIt: String, on: ExprSyntax?) {
+    diagnose(.refactorIntoEmptyLiteral(replace: replace, with: fixIt), on: on)
+  }
+
+  private func getLiteralType(_ arrayLiteral: ArrayExprSyntax) -> ArrayTypeSyntax? {
+    guard let elementExpr = arrayLiteral.elements.firstAndOnly,
+          elementExpr.is(ArrayElementSyntax.self) else {
       return nil
     }
 
-    var parser = Parser(elementExpr.description)
+    var parser = Parser(arrayLiteral.description)
     let elementType = TypeSyntax.parse(from: &parser)
-    return elementType.hasError ? nil : elementType
+    return elementType.hasError ? nil : elementType.as(ArrayTypeSyntax.self)
+  }
+
+  private func getLiteralType(_ dictLiteral: DictionaryExprSyntax) -> DictionaryTypeSyntax? {
+    var parser = Parser(dictLiteral.description)
+    let elementType = TypeSyntax.parse(from: &parser)
+    return elementType.hasError ? nil : elementType.as(DictionaryTypeSyntax.self)
   }
 }
 
 extension Finding.Message {
-  public static func refactorEmptyArrayInit(replace: String, with: String) -> Finding.Message {
+  public static func refactorIntoEmptyLiteral(replace: String, with: String) -> Finding.Message {
     "replace '\(replace)' with '\(with)'"
   }
 }
