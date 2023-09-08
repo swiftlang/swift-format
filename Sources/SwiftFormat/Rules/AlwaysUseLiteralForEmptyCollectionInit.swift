@@ -25,24 +25,56 @@ public final class AlwaysUseLiteralForEmptyCollectionInit : SyntaxFormatRule {
   public override class var isOptIn: Bool { return true }
 
   public override func visit(_ node: PatternBindingSyntax) -> PatternBindingSyntax {
-    // Check whether the initializer is `[<Type>]()`
     guard let initializer = node.initializer,
-          let initCall = initializer.value.as(FunctionCallExprSyntax.self),
-          initCall.arguments.isEmpty else {
+          let type = isRewritable(initializer) else {
       return node
     }
 
-    if let arrayLiteral = initCall.calledExpression.as(ArrayExprSyntax.self),
-       let type = getLiteralType(arrayLiteral) {
+    if let type = type.as(ArrayTypeSyntax.self) {
       return rewrite(node, type: type)
     }
 
-    if let dictLiteral = initCall.calledExpression.as(DictionaryExprSyntax.self),
-       let type = getLiteralType(dictLiteral) {
+    if let type = type.as(DictionaryTypeSyntax.self) {
       return rewrite(node, type: type)
     }
 
     return node
+  }
+
+  public override func visit(_ param: FunctionParameterSyntax) -> FunctionParameterSyntax {
+    guard let initializer = param.defaultValue,
+          let type = isRewritable(initializer) else {
+      return param
+    }
+
+    if let type = type.as(ArrayTypeSyntax.self) {
+      return rewrite(param, type: type)
+    }
+
+    if let type = type.as(DictionaryTypeSyntax.self) {
+      return rewrite(param, type: type)
+    }
+
+    return param
+  }
+
+  /// Check whether the initializer is `[<Type>]()` and, if so, it could be rewritten to use an empty collection literal.
+  /// Return a type of the collection.
+  public func isRewritable(_ initializer: InitializerClauseSyntax) -> TypeSyntax? {
+    guard let initCall = initializer.value.as(FunctionCallExprSyntax.self),
+          initCall.arguments.isEmpty else {
+      return nil
+    }
+
+    if let arrayLiteral = initCall.calledExpression.as(ArrayExprSyntax.self) {
+      return getLiteralType(arrayLiteral)
+    }
+
+    if let dictLiteral = initCall.calledExpression.as(DictionaryExprSyntax.self) {
+      return getLiteralType(dictLiteral)
+    }
+
+    return nil
   }
 
   private func rewrite(_ node: PatternBindingSyntax,
@@ -83,12 +115,30 @@ public final class AlwaysUseLiteralForEmptyCollectionInit : SyntaxFormatRule {
     }
 
     let initializer = node.initializer!
-    let emptyDictExpr = DictionaryExprSyntax(content: .colon(.colonToken()))
-
     // Replace initializer call with empty dictionary literal: `[<Type>]()` -> `[]`
-    replacement.initializer = initializer.with(\.value, ExprSyntax(emptyDictExpr))
+    replacement.initializer = initializer.with(\.value, ExprSyntax(getEmptyDictionaryLiteral()))
 
     return replacement
+  }
+
+  private func rewrite(_ param: FunctionParameterSyntax,
+                       type: ArrayTypeSyntax) -> FunctionParameterSyntax {
+    guard let initializer = param.defaultValue else {
+      return param
+    }
+
+    emitDiagnostic(replace: "\(initializer.value)", with: "[]", on: initializer.value)
+    return param.with(\.defaultValue, initializer.with(\.value, getEmptyArrayLiteral()))
+  }
+
+  private func rewrite(_ param: FunctionParameterSyntax,
+                       type: DictionaryTypeSyntax) -> FunctionParameterSyntax {
+    guard let initializer = param.defaultValue else {
+      return param
+    }
+
+    emitDiagnostic(replace: "\(initializer.value)", with: "[:]", on: initializer.value)
+    return param.with(\.defaultValue, initializer.with(\.value, getEmptyDictionaryLiteral()))
   }
 
   private func diagnose(_ node: PatternBindingSyntax, type: ArrayTypeSyntax) {
@@ -115,7 +165,7 @@ public final class AlwaysUseLiteralForEmptyCollectionInit : SyntaxFormatRule {
     diagnose(.refactorIntoEmptyLiteral(replace: replace, with: fixIt), on: on)
   }
 
-  private func getLiteralType(_ arrayLiteral: ArrayExprSyntax) -> ArrayTypeSyntax? {
+  private func getLiteralType(_ arrayLiteral: ArrayExprSyntax) -> TypeSyntax? {
     guard let elementExpr = arrayLiteral.elements.firstAndOnly,
           elementExpr.is(ArrayElementSyntax.self) else {
       return nil
@@ -123,13 +173,31 @@ public final class AlwaysUseLiteralForEmptyCollectionInit : SyntaxFormatRule {
 
     var parser = Parser(arrayLiteral.description)
     let elementType = TypeSyntax.parse(from: &parser)
-    return elementType.hasError ? nil : elementType.as(ArrayTypeSyntax.self)
+
+    guard !elementType.hasError, elementType.is(ArrayTypeSyntax.self) else {
+      return nil
+    }
+
+    return elementType
   }
 
-  private func getLiteralType(_ dictLiteral: DictionaryExprSyntax) -> DictionaryTypeSyntax? {
+  private func getLiteralType(_ dictLiteral: DictionaryExprSyntax) -> TypeSyntax? {
     var parser = Parser(dictLiteral.description)
     let elementType = TypeSyntax.parse(from: &parser)
-    return elementType.hasError ? nil : elementType.as(DictionaryTypeSyntax.self)
+
+    guard !elementType.hasError, elementType.is(DictionaryTypeSyntax.self) else {
+      return nil
+    }
+
+    return elementType
+  }
+
+  private func getEmptyArrayLiteral() -> ExprSyntax {
+    ExprSyntax(ArrayExprSyntax(elements: ArrayElementListSyntax.init([])))
+  }
+
+  private func getEmptyDictionaryLiteral() -> ExprSyntax {
+    ExprSyntax(DictionaryExprSyntax(content: .colon(.colonToken())))
   }
 }
 
