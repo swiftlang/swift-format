@@ -21,7 +21,7 @@ import SwiftParser
 /// Lint:  Non-literal empty array initialization will yield a lint error.
 /// Format: All invalid use sites would be related with empty literal (with or without explicit type annotation).
 @_spi(Rules)
-public final class AlwaysUseLiteralForEmptyArrayInit : SyntaxFormatRule {
+public final class AlwaysUseLiteralForEmptyCollectionInit : SyntaxFormatRule {
   public override class var isOptIn: Bool { return true }
 
   public override func visit(_ node: PatternBindingSyntax) -> PatternBindingSyntax {

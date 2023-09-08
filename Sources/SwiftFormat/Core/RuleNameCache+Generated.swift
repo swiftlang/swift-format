@@ -16,7 +16,7 @@
 @_spi(Testing)
 public let ruleNameCache: [ObjectIdentifier: String] = [
   ObjectIdentifier(AllPublicDeclarationsHaveDocumentation.self): "AllPublicDeclarationsHaveDocumentation",
-  ObjectIdentifier(AlwaysUseLiteralForEmptyArrayInit.self): "AlwaysUseLiteralForEmptyArrayInit",
+  ObjectIdentifier(AlwaysUseLiteralForEmptyCollectionInit.self): "AlwaysUseLiteralForEmptyCollectionInit",
   ObjectIdentifier(AlwaysUseLowerCamelCase.self): "AlwaysUseLowerCamelCase",
   ObjectIdentifier(AmbiguousTrailingClosureOverload.self): "AmbiguousTrailingClosureOverload",
   ObjectIdentifier(BeginDocumentationCommentWithOneLineSummary.self): "BeginDocumentationCommentWithOneLineSummary",
