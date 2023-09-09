@@ -557,7 +557,7 @@ public class PrettyPrinter {
       // We never want to add a trailing comma in an initializer so we disable trailing commas on
       // single element collections.
       let shouldHaveTrailingComma =
-        startLineNumber != openCloseBreakCompensatingLineNumber && !isSingleElement && configuration.multilineCollectionTrailingCommas
+        startLineNumber != openCloseBreakCompensatingLineNumber && !isSingleElement && configuration.multiElementCollectionTrailingCommas
       if shouldHaveTrailingComma && !hasTrailingComma {
         diagnose(.addTrailingComma, category: .trailingComma)
       } else if !shouldHaveTrailingComma && hasTrailingComma {
