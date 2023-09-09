@@ -23,7 +23,7 @@ final class CommaTests: PrettyPrintTestCase {
       """
     
     var configuration = Configuration.forTesting
-    configuration.multilineCollectionTrailingCommas = true
+    configuration.multiElementCollectionTrailingCommas = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20, configuration: configuration)
   }
   
@@ -49,7 +49,7 @@ final class CommaTests: PrettyPrintTestCase {
       """
     
     var configuration = Configuration.forTesting
-    configuration.multilineCollectionTrailingCommas = false
+    configuration.multiElementCollectionTrailingCommas = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20, configuration: configuration)
   }
   
@@ -75,7 +75,7 @@ final class CommaTests: PrettyPrintTestCase {
       """
     
     var configuration = Configuration.forTesting
-    configuration.multilineCollectionTrailingCommas = true
+    configuration.multiElementCollectionTrailingCommas = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20, configuration: configuration)
   }
   
@@ -101,7 +101,7 @@ final class CommaTests: PrettyPrintTestCase {
       """
     
     var configuration = Configuration.forTesting
-    configuration.multilineCollectionTrailingCommas = false
+    configuration.multiElementCollectionTrailingCommas = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20, configuration: configuration)
   }
   
@@ -120,7 +120,7 @@ final class CommaTests: PrettyPrintTestCase {
       """
     
     var configuration = Configuration.forTesting
-    configuration.multilineCollectionTrailingCommas = true
+    configuration.multiElementCollectionTrailingCommas = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: configuration)
   }
   
@@ -139,7 +139,7 @@ final class CommaTests: PrettyPrintTestCase {
       """
     
     var configuration = Configuration.forTesting
-    configuration.multilineCollectionTrailingCommas = false
+    configuration.multiElementCollectionTrailingCommas = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: configuration)
   }
   
@@ -165,7 +165,7 @@ final class CommaTests: PrettyPrintTestCase {
       """
     
     var configuration = Configuration.forTesting
-    configuration.multilineCollectionTrailingCommas = true
+    configuration.multiElementCollectionTrailingCommas = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20, configuration: configuration)
   }
   
@@ -191,7 +191,7 @@ final class CommaTests: PrettyPrintTestCase {
       """
     
     var configuration = Configuration.forTesting
-    configuration.multilineCollectionTrailingCommas = false
+    configuration.multiElementCollectionTrailingCommas = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20, configuration: configuration)
   }
   
@@ -217,7 +217,7 @@ final class CommaTests: PrettyPrintTestCase {
       """
     
     var configuration = Configuration.forTesting
-    configuration.multilineCollectionTrailingCommas = true
+    configuration.multiElementCollectionTrailingCommas = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20, configuration: configuration)
   }
   
@@ -243,7 +243,7 @@ final class CommaTests: PrettyPrintTestCase {
       """
     
     var configuration = Configuration.forTesting
-    configuration.multilineCollectionTrailingCommas = false
+    configuration.multiElementCollectionTrailingCommas = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20, configuration: configuration)
   }
   
@@ -263,7 +263,7 @@ final class CommaTests: PrettyPrintTestCase {
       """
     
     var configuration = Configuration.forTesting
-    configuration.multilineCollectionTrailingCommas = true
+    configuration.multiElementCollectionTrailingCommas = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: configuration)
   }
   
@@ -283,7 +283,7 @@ final class CommaTests: PrettyPrintTestCase {
       """
     
     var configuration = Configuration.forTesting
-    configuration.multilineCollectionTrailingCommas = false
+    configuration.multiElementCollectionTrailingCommas = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: configuration)
   }
 }
