@@ -163,7 +163,27 @@ public struct Configuration: Codable, Equatable {
   /// Contains exceptions for the `NoAssignmentInExpressions` rule.
   public var noAssignmentInExpressions: NoAssignmentInExpressionsConfiguration
 
-  /// Determines whether multi-element collection literals should have trailing commas.
+  /// Determines if multi-element collection literals should have trailing commas.
+  ///
+  /// When `true` (default), the correct form is:
+  /// ```swift
+  /// let MyCollection = [1, 2,]
+  /// ...
+  /// let MyCollection = [
+  ///   "a": 1,
+  ///   "b": 2,
+  /// ]
+  /// ```
+  ///
+  /// When `false`, the correct form is:
+  /// ```swift
+  /// let MyCollection = [1, 2]
+  /// ...
+  /// let MyCollection = [
+  ///   "a": 1,
+  ///   "b": 2
+  /// ]
+  /// ```
   public var multiElementCollectionTrailingCommas: Bool
 
   /// Constructs a Configuration by loading it from a configuration file.
