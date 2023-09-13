@@ -48,6 +48,8 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
     guard let commentInfo = node.docCommentInfo else { return .skipChildren }
     guard let params = commentInfo.parameters else { return .skipChildren }
 
+    print("name: \(name), ")
+
     // If a single sentence summary is the only documentation, parameter(s) and
     // returns tags may be omitted.
     if commentInfo.oneSentenceSummary != nil && commentInfo.commentParagraphs!.isEmpty && params
@@ -84,7 +86,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
     if (params.count != funcParameters.count) || !parametersAreEqual(
       params: params, funcParam: funcParameters)
     {
-      diagnose(.parametersDontMatch(funcName: name), on: node)
+      diagnose(.parametersDontMatch(funcName: name, documented: params.map{$0.name} , method: funcParameters), on: node)
     }
 
     return .skipChildren
@@ -165,8 +167,8 @@ extension Finding.Message {
     "remove the return comment of \(funcName), it doesn't return a value"
   }
 
-  public static func parametersDontMatch(funcName: String) -> Finding.Message {
-    "change the parameters of \(funcName)'s documentation to match its parameters"
+  public static func parametersDontMatch(funcName: String, documented: [String], method: [String]) -> Finding.Message {
+    "change the parameters of \(funcName)'s documentation to match its parameters, documented: \(documented), method signature: \(method)"
   }
 
   public static let useSingularParameter: Finding.Message =

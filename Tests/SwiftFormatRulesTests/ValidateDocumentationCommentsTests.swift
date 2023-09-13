@@ -62,8 +62,8 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
     func foo(p1: Int, p2: Int, p3: Int) -> Int {}
     """
     performLint(ValidateDocumentationComments.self, input: input)
-    XCTAssertDiagnosed(.parametersDontMatch(funcName: "sum"), line: 7, column: 1)
-    XCTAssertDiagnosed(.parametersDontMatch(funcName: "foo"), line: 15, column: 1)
+    XCTAssertDiagnosed(.parametersDontMatch(funcName: "sum", documented: ["sum","avg"], method: ["avg","sum"]), line: 7, column: 1)
+    XCTAssertDiagnosed(.parametersDontMatch(funcName: "foo", documented: ["p1","p2"], method: ["p1","p2","p3"]), line: 15, column: 1)
   }
 
   func testThrowsDocumentation() {
@@ -185,11 +185,11 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
 
     XCTAssertNotDiagnosed(.documentReturnValue(funcName: "singularParam"))
     XCTAssertNotDiagnosed(.removeReturnComment(funcName: "singularParam"))
-    XCTAssertNotDiagnosed(.parametersDontMatch(funcName: "singularParam"))
+    XCTAssertNotDiagnosed(.parametersDontMatch(funcName: "singularParam", documented: ["command"], method: ["command"]))
 
     XCTAssertNotDiagnosed(.documentReturnValue(funcName: "pluralParam"))
     XCTAssertNotDiagnosed(.removeReturnComment(funcName: "pluralParam"))
-    XCTAssertNotDiagnosed(.parametersDontMatch(funcName: "pluralParam"))
+    XCTAssertNotDiagnosed(.parametersDontMatch(funcName: "pluralParam", documented: ["command","stdin"], method: ["command","stdin"]))
     XCTAssertNotDiagnosed(.documentErrorsThrown(funcName: "pluralParam"))
     XCTAssertNotDiagnosed(.removeThrowsComment(funcName: "pluralParam"))
 
@@ -198,7 +198,7 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
 
     XCTAssertNotDiagnosed(.documentReturnValue(funcName: "omittedFunc"))
     XCTAssertNotDiagnosed(.removeReturnComment(funcName: "omittedFunc"))
-    XCTAssertNotDiagnosed(.parametersDontMatch(funcName: "omittedFunc"))
+    XCTAssertNotDiagnosed(.parametersDontMatch(funcName: "omittedFunc", documented: [], method: []))
   }
 
   func testSeparateLabelAndIdentifier() {
@@ -238,15 +238,15 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
     XCTAssertNotDiagnosed(.useSingularParameter)
     XCTAssertNotDiagnosed(.usePluralParameters)
 
-    XCTAssertDiagnosed(.parametersDontMatch(funcName: "incorrectParam"), line: 6, column: 1)
+    XCTAssertDiagnosed(.parametersDontMatch(funcName: "incorrectParam", documented: ["command"], method: ["commando"]), line: 6, column: 1)
 
     XCTAssertNotDiagnosed(.documentReturnValue(funcName: "singularParam"))
     XCTAssertNotDiagnosed(.removeReturnComment(funcName: "singularParam"))
-    XCTAssertNotDiagnosed(.parametersDontMatch(funcName: "singularParam"))
+    XCTAssertNotDiagnosed(.parametersDontMatch(funcName: "singularParam", documented: ["command"], method: ["command"]))
 
     XCTAssertNotDiagnosed(.documentReturnValue(funcName: "pluralParam"))
     XCTAssertNotDiagnosed(.removeReturnComment(funcName: "pluralParam"))
-    XCTAssertNotDiagnosed(.parametersDontMatch(funcName: "pluralParam"))
+    XCTAssertNotDiagnosed(.parametersDontMatch(funcName: "pluralParam", documented: ["command","stdin"], method: ["command","stdin"]))
   }
 
   func testInitializer() {
@@ -292,20 +292,20 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
     XCTAssertNotDiagnosed(.useSingularParameter)
     XCTAssertNotDiagnosed(.usePluralParameters)
 
-    XCTAssertDiagnosed(.parametersDontMatch(funcName: "init"), line: 6, column: 3)
+    XCTAssertDiagnosed(.parametersDontMatch(funcName: "init", documented: ["command"], method: ["commando"]), line: 6, column: 3)
     XCTAssertDiagnosed(.removeReturnComment(funcName: "init"), line: 6, column: 3)
 
     XCTAssertNotDiagnosed(.documentReturnValue(funcName: "init"))
     XCTAssertNotDiagnosed(.removeReturnComment(funcName: "init"))
-    XCTAssertNotDiagnosed(.parametersDontMatch(funcName: "init"))
+    XCTAssertNotDiagnosed(.parametersDontMatch(funcName: "init", documented: ["command"], method: ["command"]))
 
     XCTAssertNotDiagnosed(.documentReturnValue(funcName: "init"))
     XCTAssertNotDiagnosed(.removeReturnComment(funcName: "init"))
-    XCTAssertNotDiagnosed(.parametersDontMatch(funcName: "init"))
+    XCTAssertNotDiagnosed(.parametersDontMatch(funcName: "init", documented: ["command","stdin"], method: ["command","stdin"]))
 
     XCTAssertNotDiagnosed(.documentReturnValue(funcName: "init"))
     XCTAssertNotDiagnosed(.removeReturnComment(funcName: "init"))
-    XCTAssertNotDiagnosed(.parametersDontMatch(funcName: "init"))
+    XCTAssertNotDiagnosed(.parametersDontMatch(funcName: "init", documented: ["command","stdin"], method: ["command","stdin"]))
     XCTAssertNotDiagnosed(.documentErrorsThrown(funcName: "init"))
     XCTAssertNotDiagnosed(.removeThrowsComment(funcName: "init"))
   }
