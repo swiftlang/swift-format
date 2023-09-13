@@ -40,6 +40,7 @@ extension Configuration {
     config.indentSwitchCaseLabels = false
     config.spacesAroundRangeFormationOperators = false
     config.noAssignmentInExpressions = NoAssignmentInExpressionsConfiguration()
+    config.multiElementCollectionTrailingCommas = true
     return config
   }
 }
