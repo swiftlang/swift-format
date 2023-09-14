@@ -25,6 +25,20 @@ final class AlwaysUseLiteralForEmptyCollectionInitTests: LintOrFormatRuleTestCas
           subscript(_: [A] = 7️⃣[A](), x: [(Int, B)] = 8️⃣[(Int, B)]()) {
           }
         }
+
+        // All of the examples in this block could be re-written to use leading-dot syntax: `.init(...)`
+        do {
+          let _ = [Int](repeating: 0, count: 10)
+          let _: [Int] = [Int](repeating: 0, count: 10)
+
+          func testDefault(_ x: [String] = [String](repeating: "a", count: 42)) {
+          }
+
+          class TestSubscript {
+            subscript(_: Int = 42, x: [(Int, B)] = [(Int, B)](repeating: (0, B()), count: 1)) {
+            }
+          }
+        }
         """,
       expected: """
         public struct Test {
@@ -43,6 +57,20 @@ final class AlwaysUseLiteralForEmptyCollectionInitTests: LintOrFormatRuleTestCas
 
         class TestSubscript {
           subscript(_: [A] = [], x: [(Int, B)] = []) {
+          }
+        }
+
+        // All of the examples in this block could be re-written to use leading-dot syntax: `.init(...)`
+        do {
+          let _ = [Int](repeating: 0, count: 10)
+          let _: [Int] = [Int](repeating: 0, count: 10)
+
+          func testDefault(_ x: [String] = [String](repeating: "a", count: 42)) {
+          }
+
+          class TestSubscript {
+            subscript(_: Int = 42, x: [(Int, B)] = [(Int, B)](repeating: (0, B()), count: 1)) {
+            }
           }
         }
         """,
@@ -81,6 +109,20 @@ final class AlwaysUseLiteralForEmptyCollectionInitTests: LintOrFormatRuleTestCas
           subscript(_: [A: Int] = 7️⃣[A: Int](), x: [(Int, B): String] = 8️⃣[(Int, B): String]()) {
           }
         }
+
+        // All of the examples in this block could be re-written to use leading-dot syntax: `.init(...)`
+        do {
+          let _ = [String: Int](minimumCapacity: 42)
+          let _: [String: Int] = [String: Int](minimumCapacity: 42)
+
+          func testDefault(_ x: [Int: String] = [String](minimumCapacity: 1)) {
+          }
+
+          class TestSubscript {
+            subscript(_: Int = 42, x: [String: (Int, B)] = [String: (Int, B)](minimumCapacity: 2)) {
+            }
+          }
+        }
         """,
       expected: """
         public struct Test {
@@ -99,6 +141,20 @@ final class AlwaysUseLiteralForEmptyCollectionInitTests: LintOrFormatRuleTestCas
 
         class TestSubscript {
           subscript(_: [A: Int] = [:], x: [(Int, B): String] = [:]) {
+          }
+        }
+
+        // All of the examples in this block could be re-written to use leading-dot syntax: `.init(...)`
+        do {
+          let _ = [String: Int](minimumCapacity: 42)
+          let _: [String: Int] = [String: Int](minimumCapacity: 42)
+
+          func testDefault(_ x: [Int: String] = [String](minimumCapacity: 1)) {
+          }
+
+          class TestSubscript {
+            subscript(_: Int = 42, x: [String: (Int, B)] = [String: (Int, B)](minimumCapacity: 2)) {
+            }
           }
         }
         """,
