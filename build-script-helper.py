@@ -189,7 +189,10 @@ def invoke_swift_single_product(package_path, swift_exec, action, product, build
   args = [swift_exec, action]
   args += get_swiftpm_options(package_path, build_path, multiroot_data_file, configuration, verbose)
   if action == 'test':
-    args += ['--test-product', product]
+    args += [
+      '--test-product', product,
+      '--disable-testable-imports'
+    ]
   else:
     args += ['--product', product]
 
