@@ -2504,6 +2504,13 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
+  override func visit(_ node: ConsumeExprSyntax) -> SyntaxVisitorContinueKind {
+    // The `consume` keyword cannot be separated from the following token or it will be parsed as
+    // an identifier.
+    after(node.consumeKeyword, tokens: .space)
+    return .visitChildren
+  }
+
   override func visit(_ node: InheritanceClauseSyntax) -> SyntaxVisitorContinueKind {
     // Normally, the open-break is placed before the open token. In this case, it's intentionally
     // ordered differently so that the inheritance list can start on the current line and only
