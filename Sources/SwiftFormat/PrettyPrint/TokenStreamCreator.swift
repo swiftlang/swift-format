@@ -2293,6 +2293,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: GenericParameterSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken(viewMode: .sourceAccurate), tokens: .open)
+    after(node.eachKeyword, tokens: .break)
     after(node.colon, tokens: .break)
     if let trailingComma = node.trailingComma {
       after(trailingComma, tokens: .close, .break(.same))
@@ -2309,6 +2310,28 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     } else {
       after(node.lastToken(viewMode: .sourceAccurate), tokens: .close)
     }
+    return .visitChildren
+  }
+
+  override func visit(_ node: PackElementExprSyntax) -> SyntaxVisitorContinueKind {
+    // `each` cannot be separated from the following token, or it is parsed as an identifier itself.
+    after(node.eachKeyword, tokens: .space)
+    return .visitChildren
+  }
+
+  override func visit(_ node: PackElementTypeSyntax) -> SyntaxVisitorContinueKind {
+    // `each` cannot be separated from the following token, or it is parsed as an identifier itself.
+    after(node.eachKeyword, tokens: .space)
+    return .visitChildren
+  }
+
+  override func visit(_ node: PackExpansionExprSyntax) -> SyntaxVisitorContinueKind {
+    after(node.repeatKeyword, tokens: .break)
+    return .visitChildren
+  }
+
+  override func visit(_ node: PackExpansionTypeSyntax) -> SyntaxVisitorContinueKind {
+    after(node.repeatKeyword, tokens: .break)
     return .visitChildren
   }
 
