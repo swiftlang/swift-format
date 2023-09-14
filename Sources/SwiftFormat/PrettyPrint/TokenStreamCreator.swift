@@ -2511,6 +2511,13 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
+  override func visit(_ node: CopyExprSyntax) -> SyntaxVisitorContinueKind {
+    // The `copy` keyword cannot be separated from the following token or it will be parsed as an
+    // identifier.
+    after(node.copyKeyword, tokens: .space)
+    return .visitChildren
+  }
+
   override func visit(_ node: DiscardStmtSyntax) -> SyntaxVisitorContinueKind {
     // The `discard` keyword cannot be separated from the following token or it will be parsed as
     // an identifier.
