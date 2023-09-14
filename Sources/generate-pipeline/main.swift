@@ -16,17 +16,27 @@ import SwiftSyntax
 let sourcesDirectory = URL(fileURLWithPath: #file)
   .deletingLastPathComponent()
   .deletingLastPathComponent()
-let rulesDirectory = sourcesDirectory.appendingPathComponent("SwiftFormatRules")
+let rulesDirectory = sourcesDirectory
+  .appendingPathComponent("SwiftFormat")
+  .appendingPathComponent("Rules")
 let pipelineFile = sourcesDirectory
   .appendingPathComponent("SwiftFormat")
+  .appendingPathComponent("Core")
   .appendingPathComponent("Pipelines+Generated.swift")
 let ruleRegistryFile = sourcesDirectory
-  .appendingPathComponent("SwiftFormatConfiguration")
+  .appendingPathComponent("SwiftFormat")
+  .appendingPathComponent("Core")
   .appendingPathComponent("RuleRegistry+Generated.swift")
 
 let ruleNameCacheFile = sourcesDirectory
-  .appendingPathComponent("SwiftFormatRules")
+  .appendingPathComponent("SwiftFormat")
+  .appendingPathComponent("Core")
   .appendingPathComponent("RuleNameCache+Generated.swift")
+
+let ruleDocumentationFile = sourcesDirectory
+  .appendingPathComponent("..")
+  .appendingPathComponent("Documentation")
+  .appendingPathComponent("RuleDocumentation.md")
 
 var ruleCollector = RuleCollector()
 try ruleCollector.collect(from: rulesDirectory)
@@ -42,3 +52,8 @@ try registryGenerator.generateFile(at: ruleRegistryFile)
 // Generate the rule name cache.
 let ruleNameCacheGenerator = RuleNameCacheGenerator(ruleCollector: ruleCollector)
 try ruleNameCacheGenerator.generateFile(at: ruleNameCacheFile)
+
+// Generate the Documentation/RuleDocumentation.md file with rule descriptions.
+// This uses DocC comments from rule implementations.
+let ruleDocumentationGenerator = RuleDocumentationGenerator(ruleCollector: ruleCollector)
+try ruleDocumentationGenerator.generateFile(at: ruleDocumentationFile)

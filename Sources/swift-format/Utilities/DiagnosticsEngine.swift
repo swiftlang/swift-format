@@ -10,7 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SwiftFormatCore
+import SwiftFormat
 import SwiftSyntax
 import SwiftDiagnostics
 
@@ -61,6 +61,20 @@ final class DiagnosticsEngine {
     emit(
       Diagnostic(
         severity: .error,
+        location: location.map(Diagnostic.Location.init),
+        message: message))
+  }
+
+  /// Emits a generic warning message.
+  ///
+  /// - Parameters:
+  ///   - message: The message associated with the error.
+  ///   - location: The location in the source code associated with the error, or nil if there is no
+  ///     location associated with the error.
+  func emitWarning(_ message: String, location: SourceLocation? = nil) {
+    emit(
+      Diagnostic(
+        severity: .warning,
         location: location.map(Diagnostic.Location.init),
         message: message))
   }
@@ -116,6 +130,8 @@ final class DiagnosticsEngine {
     switch finding.severity {
     case .error: severity = .error
     case .warning: severity = .warning
+    case .refactoring: severity = .warning
+    case .convention: severity = .warning
     }
     return Diagnostic(
       severity: severity,

@@ -11,9 +11,10 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import SwiftFormatCore
 import SwiftSyntax
 import SwiftParser
+
+@_spi(Rules) import SwiftFormat
 
 /// Collects information about rules in the formatter code base.
 final class RuleCollector {
@@ -21,6 +22,10 @@ final class RuleCollector {
   struct DetectedRule: Hashable {
     /// The type name of the rule.
     let typeName: String
+
+    /// The description of the rule, extracted from the rule class or struct DocC comment
+    /// with `DocumentationCommentText(extractedFrom:)`
+    let description: String?
 
     /// The syntax node types visited by the rule type.
     let visitedNodes: [String]
@@ -83,15 +88,16 @@ final class RuleCollector {
   /// Determine the rule kind for the declaration in the given statement, if any.
   private func detectedRule(at statement: CodeBlockItemSyntax) -> DetectedRule? {
     let typeName: String
-    let members: MemberDeclListSyntax
-    let maybeInheritanceClause: TypeInheritanceClauseSyntax?
+    let members: MemberBlockItemListSyntax
+    let maybeInheritanceClause: InheritanceClauseSyntax?
+    let description = DocumentationCommentText(extractedFrom: statement.item.leadingTrivia)
 
     if let classDecl = statement.item.as(ClassDeclSyntax.self) {
-      typeName = classDecl.identifier.text
+      typeName = classDecl.name.text
       members = classDecl.memberBlock.members
       maybeInheritanceClause = classDecl.inheritanceClause
     } else if let structDecl = statement.item.as(StructDeclSyntax.self) {
-      typeName = structDecl.identifier.text
+      typeName = structDecl.name.text
       members = structDecl.memberBlock.members
       maybeInheritanceClause = structDecl.inheritanceClause
     } else {
@@ -104,8 +110,8 @@ final class RuleCollector {
     }
 
     // Scan through the inheritance clause to find one of the protocols/types we're interested in.
-    for inheritance in inheritanceClause.inheritedTypeCollection {
-      guard let identifier = inheritance.typeName.as(SimpleTypeIdentifierSyntax.self) else {
+    for inheritance in inheritanceClause.inheritedTypes {
+      guard let identifier = inheritance.type.as(IdentifierTypeSyntax.self) else {
         continue
       }
 
@@ -124,9 +130,9 @@ final class RuleCollector {
       var visitedNodes = [String]()
       for member in members {
         guard let function = member.decl.as(FunctionDeclSyntax.self) else { continue }
-        guard function.identifier.text == "visit" else { continue }
-        let params = function.signature.input.parameterList
-        guard let firstType = params.firstAndOnly?.type.as(SimpleTypeIdentifierSyntax.self) else {
+        guard function.name.text == "visit" else { continue }
+        let params = function.signature.parameterClause.parameters
+        guard let firstType = params.firstAndOnly?.type.as(IdentifierTypeSyntax.self) else {
           continue
         }
         visitedNodes.append(firstType.name.text)
@@ -135,11 +141,14 @@ final class RuleCollector {
       /// Ignore it if it doesn't have any; there's no point in putting no-op rules in the pipeline.
       /// Otherwise, return it (we don't need to look at the rest of the inheritances).
       guard !visitedNodes.isEmpty else { return nil }
-      guard let ruleType = _typeByName("SwiftFormatRules.\(typeName)") as? Rule.Type else {
+      guard let ruleType = _typeByName("SwiftFormat.\(typeName)") as? Rule.Type else {
         preconditionFailure("Failed to find type for rule named \(typeName)")
       }
       return DetectedRule(
-        typeName: typeName, visitedNodes: visitedNodes, canFormat: canFormat,
+        typeName: typeName,
+        description: description?.text,
+        visitedNodes: visitedNodes,
+        canFormat: canFormat,
         isOptIn: ruleType.isOptIn)
     }
 

@@ -82,6 +82,9 @@ top-level keys and values:
 *  `spacesAroundRangeFormationOperators` _(boolean)_: Determines whether whitespace should be forced
    before and after the range formation operators `...` and `..<`.
 
+*  `multiElementCollectionTrailingCommas` _(boolean)_: Determines whether multi-element collection literals should have trailing commas.
+    Defaults to `true`.
+
 > TODO: Add support for enabling/disabling specific syntax transformations in
 > the pipeline.
 
@@ -102,6 +105,18 @@ An example `.swift-format` configuration file is shown below.
     "lineBreakBeforeEachArgument": true
 }
 ```
+
+## Linter and Formatter Rules Configuration
+
+In the `rules` block of `.swift-format`, you can specify which rules to apply
+when linting and formatting your project. Read the
+[rules documentation](Documentation/RuleDocumentation.md) to see the list of all
+supported linter and formatter rules, and their overview.
+
+You can also run this command to see the list of rules in the default
+`swift-format` configuration:
+
+    $ swift-format dump-configuration
 
 ## API Configuration
 
