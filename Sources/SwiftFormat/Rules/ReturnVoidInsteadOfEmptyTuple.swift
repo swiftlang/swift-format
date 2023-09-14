@@ -39,9 +39,9 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
       return super.visit(node)
     }
 
-    // Make sure that function types nested in the argument list are also rewritten (for example,
+    // Make sure that function types nested in the parameter list are also rewritten (for example,
     // `(Int -> ()) -> ()` should become `(Int -> Void) -> Void`).
-    let arguments = visit(node.arguments)
+    let parameters = visit(node.parameters)
     let voidKeyword = makeVoidIdentifierType(toReplace: returnType)
     var rewrittenNode = node
     rewrittenNode.parameters = parameters

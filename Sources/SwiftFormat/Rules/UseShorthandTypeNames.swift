@@ -154,8 +154,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         valueType: typeArguments.1.argument,
         leftSquare: TokenSyntax.leftSquareToken(leadingTrivia: leadingTrivia),
         colon: TokenSyntax.colonToken(trailingTrivia: .spaces(1)),
-        rightSquareBracket:
-          TokenSyntax.rightSquareBracketToken(trailingTrivia: trailingTrivia))
+        rightSquare: TokenSyntax.rightSquareToken(trailingTrivia: trailingTrivia))
       newNode = ExprSyntax(dictTypeExpr)
 
     case "Optional":
@@ -267,18 +266,18 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
   /// have a valid expression representation.
   private func makeArrayTypeExpression(
     elementType: TypeSyntax,
-    leftSquareBracket: TokenSyntax,
-    rightSquareBracket: TokenSyntax
+    leftSquare: TokenSyntax,
+    rightSquare: TokenSyntax
   ) -> ArrayExprSyntax? {
     guard let elementTypeExpr = expressionRepresentation(of: elementType) else {
       return nil
     }
     return ArrayExprSyntax(
-      leftSquare: leftSquareBracket,
+      leftSquare: leftSquare,
       elements: ArrayElementListSyntax([
         ArrayElementSyntax(expression: elementTypeExpr, trailingComma: nil),
       ]),
-      rightSquare: rightSquareBracket)
+      rightSquare: rightSquare)
   }
 
   /// Returns a `DictionaryExprSyntax` whose single key/value pair is the expression representations
@@ -287,9 +286,9 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
   private func makeDictionaryTypeExpression(
     keyType: TypeSyntax,
     valueType: TypeSyntax,
-    leftSquareBracket: TokenSyntax,
+    leftSquare: TokenSyntax,
     colon: TokenSyntax,
-    rightSquareBracket: TokenSyntax
+    rightSquare: TokenSyntax
   ) -> DictionaryExprSyntax? {
     guard
       let keyTypeExpr = expressionRepresentation(of: keyType),
@@ -305,9 +304,9 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         trailingComma: nil),
     ])
     return DictionaryExprSyntax(
-      leftSquare: leftSquareBracket,
+      leftSquare: leftSquare,
       content: .elements(dictElementList),
-      rightSquare: rightSquareBracket)
+      rightSquare: rightSquare)
   }
 
   /// Returns an `OptionalChainingExprSyntax` whose wrapped expression is the expression
@@ -417,7 +416,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         valueType: dictionaryType.value,
         leftSquare: dictionaryType.leftSquare,
         colon: dictionaryType.colon,
-        rightSquareBracket: dictionaryType.rightSquareBracket)
+        rightSquare: dictionaryType.rightSquare)
       return ExprSyntax(result)
 
     case .optionalType(let optionalType):
@@ -430,7 +429,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     case .functionType(let functionType):
       let result = makeFunctionTypeExpression(
         leftParen: functionType.leftParen,
-        argumentTypes: functionType.arguments,
+        parameters: functionType.parameters,
         rightParen: functionType.rightParen,
         effectSpecifiers: functionType.effectSpecifiers,
         arrow: functionType.returnClause.arrow,
@@ -442,7 +441,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       guard let elementExprs = expressionRepresentation(of: tupleType.elements) else { return nil }
       let result = TupleExprSyntax(
         leftParen: tupleType.leftParen,
-        elementList: elementExprs,
+        elements: elementExprs,
         rightParen: tupleType.rightParen)
       return ExprSyntax(result)
 
@@ -474,14 +473,14 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 
   private func makeFunctionTypeExpression(
     leftParen: TokenSyntax,
-    argumentTypes: TupleTypeElementListSyntax,
+    parameters: TupleTypeElementListSyntax,
     rightParen: TokenSyntax,
     effectSpecifiers: TypeEffectSpecifiersSyntax?,
     arrow: TokenSyntax,
     returnType: TypeSyntax
   ) -> SequenceExprSyntax? {
     guard
-      let argumentTypeExprs = expressionRepresentation(of: argumentTypes),
+      let parameterExprs = expressionRepresentation(of: parameters),
       let returnTypeExpr = expressionRepresentation(of: returnType)
     else {
       return nil
@@ -489,7 +488,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 
     let tupleExpr = TupleExprSyntax(
       leftParen: leftParen,
-      elementList: argumentTypeExprs,
+      elements: parameterExprs,
       rightParen: rightParen)
     let arrowExpr = ArrowExprSyntax(
       effectSpecifiers: effectSpecifiers,
