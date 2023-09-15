@@ -17,8 +17,7 @@ extension DeclModifierListSyntax {
   var accessLevelModifier: DeclModifierSyntax? {
     for modifier in self {
       switch modifier.name.tokenKind {
-      case .keyword(.public), .keyword(.private), .keyword(.fileprivate), .keyword(.internal),
-          .keyword(.package):
+      case .keyword(.public), .keyword(.private), .keyword(.fileprivate), .keyword(.internal):
         return modifier
       default:
         continue
