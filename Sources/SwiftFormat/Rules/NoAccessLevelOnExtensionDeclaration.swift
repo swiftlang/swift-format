@@ -32,8 +32,8 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
     var result = node
 
     switch keyword {
-    // Public, private, fileprivate, or package keywords need to be moved to members
-    case .public, .private, .fileprivate, .package:
+    // Public, private, or fileprivate keywords need to be moved to members
+    case .public, .private, .fileprivate:
       // The effective access level of the members of a `private` extension is `fileprivate`, so
       // we have to update the keyword to ensure that the result is correct.
       var accessKeywordToAdd = accessKeyword

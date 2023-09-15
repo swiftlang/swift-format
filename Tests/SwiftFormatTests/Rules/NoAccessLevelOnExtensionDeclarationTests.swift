@@ -128,31 +128,6 @@ final class NoAccessLevelOnExtensionDeclarationTests: LintOrFormatRuleTestCase {
     )
   }
 
-  func testPackageAccessLevel() {
-    assertFormatting(
-      NoAccessLevelOnExtensionDeclaration.self,
-      input: """
-        1️⃣package extension Foo {
-          2️⃣func f() {}
-        }
-        """,
-      expected: """
-        extension Foo {
-          package func f() {}
-        }
-        """,
-      findings: [
-        FindingSpec(
-          "1️⃣",
-          message: "move this 'package' access modifier to precede each member inside this extension",
-          notes: [
-            NoteSpec("2️⃣", message: "add 'package' access modifier to this declaration"),
-          ]
-        ),
-      ]
-    )
-  }
-
   func testPrivateIsEffectivelyFileprivate() {
     assertFormatting(
       NoAccessLevelOnExtensionDeclaration.self,

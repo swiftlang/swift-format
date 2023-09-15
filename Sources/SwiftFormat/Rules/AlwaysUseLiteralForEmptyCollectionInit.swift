@@ -166,7 +166,8 @@ public final class AlwaysUseLiteralForEmptyCollectionInit : SyntaxFormatRule {
   }
 
   private func getLiteralType(_ arrayLiteral: ArrayExprSyntax) -> TypeSyntax? {
-    guard arrayLiteral.elements.count == 1 else {
+    guard let elementExpr = arrayLiteral.elements.firstAndOnly,
+          elementExpr.is(ArrayElementSyntax.self) else {
       return nil
     }
 
