@@ -12,6 +12,7 @@ automatically.
 Here's the list of available rules:
 
 - [AllPublicDeclarationsHaveDocumentation](#AllPublicDeclarationsHaveDocumentation)
+- [AlwaysUseLiteralForEmptyCollectionInit](#AlwaysUseLiteralForEmptyCollectionInit)
 - [AlwaysUseLowerCamelCase](#AlwaysUseLowerCamelCase)
 - [AmbiguousTrailingClosureOverload](#AmbiguousTrailingClosureOverload)
 - [BeginDocumentationCommentWithOneLineSummary](#BeginDocumentationCommentWithOneLineSummary)
@@ -43,6 +44,7 @@ Here's the list of available rules:
 - [ReturnVoidInsteadOfEmptyTuple](#ReturnVoidInsteadOfEmptyTuple)
 - [TypeNamesShouldBeCapitalized](#TypeNamesShouldBeCapitalized)
 - [UseEarlyExits](#UseEarlyExits)
+- [UseExplicitNilCheckInConditions](#UseExplicitNilCheckInConditions)
 - [UseLetInEveryBoundCaseVariable](#UseLetInEveryBoundCaseVariable)
 - [UseShorthandTypeNames](#UseShorthandTypeNames)
 - [UseSingleLinePropertyGetter](#UseSingleLinePropertyGetter)
@@ -58,6 +60,17 @@ All public or open declarations must have a top-level documentation comment.
 Lint: If a public declaration is missing a documentation comment, a lint error is raised.
 
 `AllPublicDeclarationsHaveDocumentation` is a linter-only rule.
+
+### AlwaysUseLiteralForEmptyCollectionInit
+
+Never use `[<Type>]()` syntax. In call sites that should be replaced with `[]`,
+for initializations use explicit type combined with empty array literal `let _: [<Type>] = []`
+Static properties of a type that return that type should not include a reference to their type.
+
+Lint:  Non-literal empty array initialization will yield a lint error.
+Format: All invalid use sites would be related with empty literal (with or without explicit type annotation).
+
+`AlwaysUseLiteralForEmptyCollectionInit` rule can format your code automatically.
 
 ### AlwaysUseLowerCamelCase
 
@@ -445,6 +458,20 @@ Format: `if ... else { return/throw/break/continue }` constructs will be replace
         equivalent `guard ... else { return/throw/break/continue }` constructs.
 
 `UseEarlyExits` rule can format your code automatically.
+
+### UseExplicitNilCheckInConditions
+
+When checking an optional value for `nil`-ness, prefer writing an explicit `nil` check rather
+than binding and immediately discarding the value.
+
+For example, `if let _ = someValue { ... }` is forbidden. Use `if someValue != nil { ... }`
+instead.
+
+Lint: `let _ = expr` inside a condition list will yield a lint error.
+
+Format: `let _ = expr` inside a condition list will be replaced by `expr != nil`.
+
+`UseExplicitNilCheckInConditions` rule can format your code automatically.
 
 ### UseLetInEveryBoundCaseVariable
 

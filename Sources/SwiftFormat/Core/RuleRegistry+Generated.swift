@@ -47,6 +47,7 @@
     "ReturnVoidInsteadOfEmptyTuple": true,
     "TypeNamesShouldBeCapitalized": true,
     "UseEarlyExits": false,
+    "UseExplicitNilCheckInConditions": true,
     "UseLetInEveryBoundCaseVariable": true,
     "UseShorthandTypeNames": true,
     "UseSingleLinePropertyGetter": true,
