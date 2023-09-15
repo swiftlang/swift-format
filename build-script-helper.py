@@ -176,10 +176,7 @@ def get_swiftpm_options(package_path, build_path, multiroot_data_file, configura
   return args
 
 def get_swiftpm_environment_variables(no_local_deps):
-  # Tell SwiftSyntax that we are building in a build-script environment so that
-  # it does not need to be rebuilt if it has already been built before.
   env = dict(os.environ)
-  env['SWIFT_BUILD_SCRIPT_ENVIRONMENT'] = '1'
   if not no_local_deps:
     env['SWIFTCI_USE_LOCAL_DEPS'] = "1"
   return env
