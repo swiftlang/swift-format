@@ -11,7 +11,8 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-@_spi(Internal) import SwiftFormat
+import SwiftFormat
+import SwiftFormatConfiguration
 import SwiftSyntax
 import SwiftParser
 
@@ -161,19 +162,17 @@ class Frontend {
   }
 
   /// Returns the configuration that applies to the given `.swift` source file, when an explicit
-  /// configuration path is also perhaps provided. Checks for unrecognized rules within the configuration.
+  /// configuration path is also perhaps provided.
   ///
   /// - Parameters:
   ///   - configurationFilePath: The path to a configuration file that will be loaded, or `nil` to
   ///     try to infer it from `swiftFilePath`.
   ///   - swiftFilePath: The path to a `.swift` file, which will be used to infer the path to the
   ///     configuration file if `configurationFilePath` is nil.
-  ///
   /// - Returns: If successful, the returned configuration is the one loaded from
   ///   `configurationFilePath` if it was provided, or by searching in paths inferred by
   ///   `swiftFilePath` if one exists, or the default configuration otherwise. If an error occurred
   ///   when reading the configuration, a diagnostic is emitted and `nil` is returned.
-  ///   if neither `configurationFilePath` nor `swiftFilePath` were provided, a default `Configuration()` will be returned.
   private func configuration(
     at configurationFileURL: URL?,
     orInferredFromSwiftFileAt swiftFileURL: URL?
@@ -182,9 +181,7 @@ class Frontend {
     // loaded. (Do not try to fall back to a path inferred from the source file path.)
     if let configurationFileURL = configurationFileURL {
       do {
-        let configuration = try configurationLoader.configuration(at: configurationFileURL)
-        self.checkForUnrecognizedRules(in: configuration)
-        return configuration
+        return try configurationLoader.configuration(at: configurationFileURL)
       } catch {
         diagnosticsEngine.emitError("Unable to read configuration: \(error.localizedDescription)")
         return nil
@@ -196,7 +193,6 @@ class Frontend {
     if let swiftFileURL = swiftFileURL {
       do {
         if let configuration = try configurationLoader.configuration(forSwiftFileAt: swiftFileURL) {
-          self.checkForUnrecognizedRules(in: configuration)
           return configuration
         }
         // Fall through to the default return at the end of the function.
@@ -211,17 +207,5 @@ class Frontend {
     // or if there was no configuration found by inferring it from the source file path, return the
     // default configuration.
     return Configuration()
-  }
-
-  /// Checks if all the rules in the given configuration are supported by the registry.
-  /// If there are any rules that are not supported, they are emitted as a warning.
-  private func checkForUnrecognizedRules(in configuration: Configuration) {
-    // If any rules in the decoded configuration are not supported by the registry,
-    // emit them into the diagnosticsEngine as warnings.
-    // That way they will be printed out, but we'll continue execution on the valid rules.
-    let invalidRules = configuration.rules.filter { !RuleRegistry.rules.keys.contains($0.key) }
-    for rule in invalidRules {
-      diagnosticsEngine.emitWarning("Configuration contains an unrecognized rule: \(rule.key)", location: nil)
-    }
   }
 }

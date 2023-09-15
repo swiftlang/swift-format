@@ -4,7 +4,7 @@
 
 Since Swift does not yet have a runtime reflection system, we use code
 generation to keep the linting/formatting pipeline up-to-date. If you add or
-remove any rules from the `SwiftFormat` module, or if you add or remove
+remove any rules from the `SwiftFormatRules` module, or if you add or remove
 any `visit` methods from an existing rule in that module, you must run the
 `generate-pipeline` tool update the pipeline and configuration sources.
 
@@ -14,9 +14,17 @@ The easiest way to do this is to run the following command in your terminal:
 swift run generate-pipeline
 ```
 
-If successful, this tool will update the files `Pipelines+Generated.swift`,
-`RuleNameCache+Generated.swift`, and `RuleRegistry+Generated.swift` in
-the `Sources/SwiftFormat/Core` directory.
+If successful, this tool will update
+`Sources/SwiftFormatConfiguration/RuleRegistry+Generated.swift` and
+`Sources/SwiftFormat/Pipelines+Generated.swift`.
+
+Likewise, you should keep the Linux XCTest manifests updated if you add or
+remove any tests from `swift-format` by running the following command in your
+terminal:
+
+```shell
+swift test --generate-linuxmain
+```
 
 ## Command Line Options for Debugging
 
