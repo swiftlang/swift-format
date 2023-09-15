@@ -197,7 +197,7 @@ file is not found, then it looks in the parent directory, and so on.
 
 If no configuration file is found, a default configuration is used. The
 settings in the default configuration can be viewed by running
-`swift-format dump-configuration`, which will dump it to standard
+`swift-format --mode dump-configuration`, which will dump it to standard
 output.
 
 If the `--configuration <file>` option is passed to `swift-format`, then that
@@ -231,8 +231,8 @@ creates. Instead, it can pass the in-memory syntax tree to the `SwiftFormat`
 API and receive perfectly formatted code as output.
 
 Please see the documentation in the
-[`SwiftFormatter`](Sources/SwiftFormat/API/SwiftFormatter.swift) and
-[`SwiftLinter`](Sources/SwiftFormat/API/SwiftLinter.swift) classes for more
+[`SwiftFormatter`](Sources/SwiftFormat/SwiftFormatter.swift) and
+[`SwiftLinter`](Sources/SwiftFormat/SwiftLinter.swift) classes for more
 information about their usage.
 
 ### Checking Out the Source Code for Development

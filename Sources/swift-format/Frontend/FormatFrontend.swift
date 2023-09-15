@@ -13,6 +13,7 @@
 import Foundation
 import SwiftDiagnostics
 import SwiftFormat
+import SwiftFormatConfiguration
 import SwiftSyntax
 
 /// The frontend for formatting operations.

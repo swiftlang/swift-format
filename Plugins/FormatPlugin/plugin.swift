@@ -38,7 +38,7 @@ extension FormatPlugin: CommandPlugin {
     
     var argExtractor = ArgumentExtractor(arguments)
     let targetNames = argExtractor.extractOption(named: "target")
-    let targetsToFormat = targetNames.isEmpty ? context.package.targets : try context.package.targets(named: targetNames)
+    let targetsToFormat = try context.package.targets(named: targetNames)
     
     let configurationFilePath = argExtractor.extractOption(named: "configuration").first
     

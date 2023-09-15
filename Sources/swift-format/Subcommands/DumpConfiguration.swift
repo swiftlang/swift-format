@@ -12,7 +12,7 @@
 
 import ArgumentParser
 import Foundation
-import SwiftFormat
+import SwiftFormatConfiguration
 
 extension SwiftFormatCommand {
   /// Dumps the tool's default configuration in JSON format to standard output.
