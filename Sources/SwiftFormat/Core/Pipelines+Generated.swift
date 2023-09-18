@@ -91,6 +91,7 @@ class LintPipeline: SyntaxVisitor {
 
   override func visit(_ node: ConditionElementSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(NoParensAroundConditions.visit, for: node)
+    visitIfEnabled(UseExplicitNilCheckInConditions.visit, for: node)
     return .visitChildren
   }
 
@@ -376,6 +377,7 @@ extension FormatPipeline {
     node = OrderedImports(context: context).rewrite(node)
     node = ReturnVoidInsteadOfEmptyTuple(context: context).rewrite(node)
     node = UseEarlyExits(context: context).rewrite(node)
+    node = UseExplicitNilCheckInConditions(context: context).rewrite(node)
     node = UseShorthandTypeNames(context: context).rewrite(node)
     node = UseSingleLinePropertyGetter(context: context).rewrite(node)
     node = UseTripleSlashForDocumentationComments(context: context).rewrite(node)
