@@ -48,7 +48,7 @@ let package = Package(
   ],
   targets: [
     .target(
-      name: "_InstructionCounter"
+      name: "_SwiftFormatInstructionCounter"
     ),
 
     .target(
@@ -113,7 +113,7 @@ let package = Package(
     .executableTarget(
       name: "swift-format",
       dependencies: [
-        "_InstructionCounter",
+        "_SwiftFormatInstructionCounter",
         "SwiftFormat",
         .product(name: "ArgumentParser", package: "swift-argument-parser"),
         .product(name: "SwiftSyntax", package: "swift-syntax"),
