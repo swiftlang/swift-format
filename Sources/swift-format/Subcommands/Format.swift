@@ -30,6 +30,9 @@ extension SwiftFormatCommand {
     @OptionGroup()
     var formatOptions: LintFormatOptions
 
+    @OptionGroup(visibility: .hidden)
+    var performanceMeasurementOptions: PerformanceMeasurementsOptions
+
     func validate() throws {
       if inPlace && formatOptions.paths.isEmpty {
         throw ValidationError("'--in-place' is only valid when formatting files")
@@ -37,9 +40,11 @@ extension SwiftFormatCommand {
     }
 
     func run() throws {
-      let frontend = FormatFrontend(lintFormatOptions: formatOptions, inPlace: inPlace)
-      frontend.run()
-      if frontend.diagnosticsEngine.hasErrors { throw ExitCode.failure }
+      try performanceMeasurementOptions.countingInstructionsIfRequested {
+        let frontend = FormatFrontend(lintFormatOptions: formatOptions, inPlace: inPlace)
+        frontend.run()
+        if frontend.diagnosticsEngine.hasErrors { throw ExitCode.failure }
+      }
     }
   }
 }

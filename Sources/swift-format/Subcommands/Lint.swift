@@ -28,12 +28,17 @@ extension SwiftFormatCommand {
     )
     var strict: Bool = false
 
-    func run() throws {
-      let frontend = LintFrontend(lintFormatOptions: lintOptions)
-      frontend.run()
+    @OptionGroup(visibility: .hidden)
+    var performanceMeasurementOptions: PerformanceMeasurementsOptions
 
-      if frontend.diagnosticsEngine.hasErrors || strict && frontend.diagnosticsEngine.hasWarnings {
-        throw ExitCode.failure
+    func run() throws {
+      try performanceMeasurementOptions.countingInstructionsIfRequested {
+        let frontend = LintFrontend(lintFormatOptions: lintOptions)
+        frontend.run()
+        
+        if frontend.diagnosticsEngine.hasErrors || strict && frontend.diagnosticsEngine.hasWarnings {
+          throw ExitCode.failure
+        }
       }
     }
   }
