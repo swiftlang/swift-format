@@ -32,7 +32,7 @@ extension SwiftFormatCommand {
     var performanceMeasurementOptions: PerformanceMeasurementsOptions
 
     func run() throws {
-      try performanceMeasurementOptions.countingInstructionsIfRequested {
+      try performanceMeasurementOptions.printingInstructionCountIfRequested {
         let frontend = LintFrontend(lintFormatOptions: lintOptions)
         frontend.run()
         

@@ -40,7 +40,7 @@ extension SwiftFormatCommand {
     }
 
     func run() throws {
-      try performanceMeasurementOptions.countingInstructionsIfRequested {
+      try performanceMeasurementOptions.printingInstructionCountIfRequested() {
         let frontend = FormatFrontend(lintFormatOptions: formatOptions, inPlace: inPlace)
         frontend.run()
         if frontend.diagnosticsEngine.hasErrors { throw ExitCode.failure }
