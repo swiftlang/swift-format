@@ -11,7 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 import ArgumentParser
-import _InstructionCounter
+import _SwiftFormatInstructionCounter
 
 struct PerformanceMeasurementsOptions: ParsableArguments {
   @Flag(help: "Measure number of instructions executed by swift-format")
