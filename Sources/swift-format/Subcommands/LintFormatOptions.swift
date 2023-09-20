@@ -20,8 +20,11 @@ struct LintFormatOptions: ParsableArguments {
   /// If not specified, the default configuration will be used.
   @Option(
     name: .customLong("configuration"),
-    help: "The path to a JSON file containing the configuration of the linter/formatter.")
-  var configurationPath: String?
+    help: """
+      The path to a JSON file containing the configuration of the linter/formatter or a JSON \
+      string containing the configuration directly.
+      """)
+  var configuration: String?
 
   /// The filename for the source code when reading from standard input, to include in diagnostic
   /// messages.
