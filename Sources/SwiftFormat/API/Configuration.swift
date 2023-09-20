@@ -186,9 +186,14 @@ public struct Configuration: Codable, Equatable {
   /// ```
   public var multiElementCollectionTrailingCommas: Bool
 
-  /// Constructs a Configuration by loading it from a configuration file.
+  /// Creates a new `Configuration` by loading it from a configuration file.
   public init(contentsOf url: URL) throws {
     let data = try Data(contentsOf: url)
+    try self.init(data: data)
+  }
+
+  /// Creates a new `Configuration` by decoding it from the UTF-8 representation in the given data.
+  public init(data: Data) throws {
     self = try JSONDecoder().decode(Configuration.self, from: data)
   }
 

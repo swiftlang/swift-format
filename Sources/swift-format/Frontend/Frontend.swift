@@ -109,7 +109,7 @@ class Frontend {
   /// Processes source content from standard input.
   private func processStandardInput() {
     guard let configuration = configuration(
-      at: lintFormatOptions.configurationPath.map(URL.init(fileURLWithPath:)),
+      fromPathOrString: lintFormatOptions.configuration,
       orInferredFromSwiftFileAt: nil)
     else {
       // Already diagnosed in the called method.
@@ -150,7 +150,7 @@ class Frontend {
 
     guard
       let configuration = configuration(
-        at: lintFormatOptions.configurationPath.map(URL.init(fileURLWithPath:)),
+        fromPathOrString: lintFormatOptions.configuration,
         orInferredFromSwiftFileAt: url)
     else {
       // Already diagnosed in the called method.
@@ -161,31 +161,44 @@ class Frontend {
   }
 
   /// Returns the configuration that applies to the given `.swift` source file, when an explicit
-  /// configuration path is also perhaps provided. Checks for unrecognized rules within the configuration.
+  /// configuration path is also perhaps provided.
+  ///
+  /// This method also checks for unrecognized rules within the configuration.
   ///
   /// - Parameters:
-  ///   - configurationFilePath: The path to a configuration file that will be loaded, or `nil` to
-  ///     try to infer it from `swiftFilePath`.
+  ///   - pathOrString: A string containing either the path to a configuration file that will be
+  ///     loaded, JSON configuration data directly, or `nil` to try to infer it from
+  ///     `swiftFilePath`.
   ///   - swiftFilePath: The path to a `.swift` file, which will be used to infer the path to the
   ///     configuration file if `configurationFilePath` is nil.
   ///
-  /// - Returns: If successful, the returned configuration is the one loaded from
-  ///   `configurationFilePath` if it was provided, or by searching in paths inferred by
-  ///   `swiftFilePath` if one exists, or the default configuration otherwise. If an error occurred
-  ///   when reading the configuration, a diagnostic is emitted and `nil` is returned.
-  ///   if neither `configurationFilePath` nor `swiftFilePath` were provided, a default `Configuration()` will be returned.
+  /// - Returns: If successful, the returned configuration is the one loaded from `pathOrString` if
+  ///   it was provided, or by searching in paths inferred by `swiftFilePath` if one exists, or the
+  ///   default configuration otherwise. If an error occurred when reading the configuration, a
+  ///   diagnostic is emitted and `nil` is returned. If neither `pathOrString` nor `swiftFilePath`
+  ///   were provided, a default `Configuration()` will be returned.
   private func configuration(
-    at configurationFileURL: URL?,
+    fromPathOrString pathOrString: String?,
     orInferredFromSwiftFileAt swiftFileURL: URL?
   ) -> Configuration? {
-    // If an explicit configuration file path was given, try to load it and fail if it cannot be
-    // loaded. (Do not try to fall back to a path inferred from the source file path.)
-    if let configurationFileURL = configurationFileURL {
+    if let pathOrString = pathOrString {
+      // If an explicit configuration file path was given, try to load it and fail if it cannot be
+      // loaded. (Do not try to fall back to a path inferred from the source file path.)
+      let configurationFileURL = URL(fileURLWithPath: pathOrString)
       do {
         let configuration = try configurationLoader.configuration(at: configurationFileURL)
         self.checkForUnrecognizedRules(in: configuration)
         return configuration
       } catch {
+        // If we failed to load this from the path, try interpreting the string as configuration
+        // data itself because the user might have written something like `--configuration '{...}'`,
+        let data = pathOrString.data(using: .utf8)!
+        if let configuration = try? Configuration(data: data) {
+          return configuration
+        }
+
+        // Fail if the configuration flag was neither a valid file path nor valid configuration
+        // data.
         diagnosticsEngine.emitError("Unable to read configuration: \(error.localizedDescription)")
         return nil
       }
