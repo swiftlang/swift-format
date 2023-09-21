@@ -27,12 +27,7 @@ let package = Package(
     ),
     .library(
       name: "SwiftFormat",
-      targets: ["SwiftFormat", "SwiftFormatConfiguration"]
-    ),
-    // TODO: Remove this product after the 509 release.
-    .library(
-      name: "SwiftFormatConfiguration",
-      targets: ["SwiftFormatConfiguration"]
+      targets: ["SwiftFormat"]
     ),
     .plugin(
       name: "FormatPlugin",
@@ -60,13 +55,6 @@ let package = Package(
         .product(name: "SwiftOperators", package: "swift-syntax"),
         .product(name: "SwiftParser", package: "swift-syntax"),
         .product(name: "SwiftParserDiagnostics", package: "swift-syntax"),
-      ]
-    ),
-    // TODO: Remove this target after the 509 release.
-    .target(
-      name: "SwiftFormatConfiguration",
-      dependencies: [
-        "SwiftFormat"
       ]
     ),
     .target(
