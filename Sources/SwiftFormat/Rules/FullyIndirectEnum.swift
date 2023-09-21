@@ -123,10 +123,9 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static func moveIndirectKeywordToEnumDecl(name: String) -> Finding.Message {
+  fileprivate static func moveIndirectKeywordToEnumDecl(name: String) -> Finding.Message {
     "declare enum '\(name)' itself as indirect when all cases are indirect"
   }
 
-  public static let removeIndirect: Finding.Message = "remove 'indirect' here"
+  fileprivate static let removeIndirect: Finding.Message = "remove 'indirect' here"
 }

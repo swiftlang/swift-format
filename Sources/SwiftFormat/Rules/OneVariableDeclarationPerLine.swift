@@ -74,8 +74,7 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static func onlyOneVariableDeclaration(specifier: String) -> Finding.Message {
+  fileprivate static func onlyOneVariableDeclaration(specifier: String) -> Finding.Message {
     "split this variable declaration to introduce only one variable per '\(specifier)'"
   }
 }

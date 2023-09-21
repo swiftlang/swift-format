@@ -119,6 +119,5 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static let returnVoid: Finding.Message = "replace '()' with 'Void'"
+  fileprivate static let returnVoid: Finding.Message = "replace '()' with 'Void'"
 }

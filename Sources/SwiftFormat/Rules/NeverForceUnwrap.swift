@@ -50,13 +50,11 @@ public final class NeverForceUnwrap: SyntaxLintRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static func doNotForceUnwrap(name: String) -> Finding.Message {
+  fileprivate static func doNotForceUnwrap(name: String) -> Finding.Message {
     "do not force unwrap '\(name)'"
   }
 
-  @_spi(Rules)
-  public static func doNotForceCast(name: String) -> Finding.Message {
+  fileprivate static func doNotForceCast(name: String) -> Finding.Message {
     "do not force cast to '\(name)'"
   }
 }

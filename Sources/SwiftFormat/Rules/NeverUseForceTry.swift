@@ -44,6 +44,5 @@ public final class NeverUseForceTry: SyntaxLintRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static let doNotForceTry: Finding.Message = "do not use force try"
+  fileprivate static let doNotForceTry: Finding.Message = "do not use force try"
 }

@@ -790,12 +790,12 @@ public class PrettyPrinter {
 }
 
 extension Finding.Message {
-  public static let moveEndOfLineComment: Finding.Message =
+  fileprivate static let moveEndOfLineComment: Finding.Message =
     "move end-of-line comment that exceeds the line length"
 
-  public static let addTrailingComma: Finding.Message =
+  fileprivate static let addTrailingComma: Finding.Message =
     "add trailing comma to the last element in multiline collection literal"
 
-  public static let removeTrailingComma: Finding.Message =
+  fileprivate static let removeTrailingComma: Finding.Message =
     "remove trailing comma from the last element in single line collection literal"
 }

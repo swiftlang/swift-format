@@ -137,8 +137,7 @@ public final class OneCasePerLine: SyntaxFormatRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static func moveAssociatedOrRawValueCase(name: String) -> Finding.Message {
+  fileprivate static func moveAssociatedOrRawValueCase(name: String) -> Finding.Message {
     "move '\(name)' to its own 'case' declaration"
   }
 }

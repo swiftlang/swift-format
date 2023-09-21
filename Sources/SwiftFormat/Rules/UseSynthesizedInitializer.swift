@@ -185,8 +185,7 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static let removeRedundantInitializer: Finding.Message =
+  fileprivate static let removeRedundantInitializer: Finding.Message =
     "remove this explicit initializer, which is identical to the compiler-synthesized initializer"
 }
 

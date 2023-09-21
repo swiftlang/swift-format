@@ -580,8 +580,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static func useTypeShorthand(type: String) -> Finding.Message {
+  fileprivate static func useTypeShorthand(type: String) -> Finding.Message {
     "use shorthand syntax for this '\(type)' type"
   }
 }

@@ -73,13 +73,11 @@ public final class AmbiguousTrailingClosureOverload: SyntaxLintRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static func ambiguousTrailingClosureOverload(_ decl: String) -> Finding.Message {
+  fileprivate static func ambiguousTrailingClosureOverload(_ decl: String) -> Finding.Message {
     "rename '\(decl)' so it is no longer ambiguous when called with a trailing closure"
   }
 
-  @_spi(Rules)
-  public static func otherAmbiguousOverloadHere(_ decl: String) -> Finding.Message {
+  fileprivate static func otherAmbiguousOverloadHere(_ decl: String) -> Finding.Message {
     "ambiguous overload '\(decl)' is here"
   }
 }

@@ -214,8 +214,7 @@ extension ReturnClauseSyntax {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static func nameMustBeLowerCamelCase(
+  fileprivate static func nameMustBeLowerCamelCase(
     _ name: String, description: String
   ) -> Finding.Message {
     "rename the \(description) '\(name)' using lowerCamelCase"

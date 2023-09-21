@@ -569,17 +569,13 @@ extension Line: CustomDebugStringConvertible {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static let placeAtTopOfFile: Finding.Message = "place imports at the top of the file"
+  fileprivate static let placeAtTopOfFile: Finding.Message = "place imports at the top of the file"
 
-  @_spi(Rules)
-  public static func groupImports(before: LineType, after: LineType) -> Finding.Message {
+  fileprivate static func groupImports(before: LineType, after: LineType) -> Finding.Message {
     "place \(before) imports before \(after) imports"
   }
 
-  @_spi(Rules)
-  public static let removeDuplicateImport: Finding.Message = "remove this duplicate import"
+  fileprivate static let removeDuplicateImport: Finding.Message = "remove this duplicate import"
 
-  @_spi(Rules)
-  public static let sortImports: Finding.Message = "sort import statements lexicographically"
+  fileprivate static let sortImports: Finding.Message = "sort import statements lexicographically"
 }

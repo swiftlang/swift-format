@@ -47,7 +47,7 @@ public final class ReplaceForEachWithForLoop : SyntaxLintRule {
 }
 
 extension Finding.Message {
-  public static func replaceForEachWithLoop() -> Finding.Message {
+  fileprivate static func replaceForEachWithLoop() -> Finding.Message {
     "replace use of '.forEach { ... }' with for-in loop"
   }
 }

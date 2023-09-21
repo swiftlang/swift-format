@@ -106,8 +106,7 @@ public final class DontRepeatTypeInStaticProperties: SyntaxLintRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static func removeTypeFromName(name: String, type: Substring) -> Finding.Message {
+  fileprivate static func removeTypeFromName(name: String, type: Substring) -> Finding.Message {
     "remove the suffix '\(type)' from the name of the variable '\(name)'"
   }
 }

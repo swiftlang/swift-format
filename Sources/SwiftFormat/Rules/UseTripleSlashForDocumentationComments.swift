@@ -109,7 +109,6 @@ public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static let avoidDocBlockComment: Finding.Message =
+  fileprivate static let avoidDocBlockComment: Finding.Message =
     "replace documentation block comments with documentation line comments"
 }

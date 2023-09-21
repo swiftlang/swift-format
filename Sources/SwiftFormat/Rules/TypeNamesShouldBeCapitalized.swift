@@ -66,8 +66,7 @@ public final class TypeNamesShouldBeCapitalized : SyntaxLintRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static func capitalizeTypeName(name: String, kind: String) -> Finding.Message {
+  fileprivate static func capitalizeTypeName(name: String, kind: String) -> Finding.Message {
     var capitalized = name
     let leadingUnderscores = capitalized.prefix { $0 == "_" }
     let charAt = leadingUnderscores.endIndex

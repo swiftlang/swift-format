@@ -157,7 +157,6 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static let moveAssignmentToOwnStatement: Finding.Message =
+  fileprivate static let moveAssignmentToOwnStatement: Finding.Message =
     "move this assignment expression into its own statement"
 }

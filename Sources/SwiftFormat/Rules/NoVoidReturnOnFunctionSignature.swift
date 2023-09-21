@@ -52,8 +52,7 @@ public final class NoVoidReturnOnFunctionSignature: SyntaxFormatRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static func removeRedundantReturn(_ type: String) -> Finding.Message {
+  fileprivate static func removeRedundantReturn(_ type: String) -> Finding.Message {
     "remove the explicit return type '\(type)' from this function"
   }
 }

@@ -30,7 +30,6 @@ public final class OnlyOneTrailingClosureArgument: SyntaxLintRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static let removeTrailingClosure: Finding.Message =
+  fileprivate static let removeTrailingClosure: Finding.Message =
     "revise this function call to avoid using both closure arguments and a trailing closure"
 }

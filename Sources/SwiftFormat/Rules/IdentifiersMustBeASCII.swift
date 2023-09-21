@@ -31,8 +31,7 @@ public final class IdentifiersMustBeASCII: SyntaxLintRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static func nonASCIICharsNotAllowed(
+  fileprivate static func nonASCIICharsNotAllowed(
     _ invalidCharacters: [String], _ identifierName: String
   ) -> Finding.Message {
     """

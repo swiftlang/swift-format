@@ -54,8 +54,7 @@ public final class NoEmptyTrailingClosureParentheses: SyntaxFormatRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static func removeEmptyTrailingParentheses(name: String) -> Finding.Message {
+  fileprivate static func removeEmptyTrailingParentheses(name: String) -> Finding.Message {
     "remove the empty parentheses following '\(name)'"
   }
 }
