@@ -103,7 +103,7 @@ let package = Package(
       path: "Plugins/LintPlugin"
     ),
     .executableTarget(
-      name: "generate-pipeline",
+      name: "generate-swift-format",
       dependencies: [
         "SwiftFormat",
         .product(name: "SwiftSyntax", package: "swift-syntax"),
