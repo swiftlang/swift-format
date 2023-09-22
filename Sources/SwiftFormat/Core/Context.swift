@@ -94,7 +94,7 @@ public final class Context {
       ruleNameCache[ObjectIdentifier(rule)] != nil,
       """
       Missing cached rule name for '\(rule)'! \
-      Ensure `generate-pipelines` has been run and `ruleNameCache` was injected.
+      Ensure `generate-swift-format` has been run and `ruleNameCache` was injected.
       """)
 
     let ruleName = ruleNameCache[ObjectIdentifier(rule)] ?? R.ruleName

@@ -6,12 +6,12 @@ Since Swift does not yet have a runtime reflection system, we use code
 generation to keep the linting/formatting pipeline up-to-date. If you add or
 remove any rules from the `SwiftFormat` module, or if you add or remove
 any `visit` methods from an existing rule in that module, you must run the
-`generate-pipeline` tool update the pipeline and configuration sources.
+`generate-swift-format` tool update the pipeline and configuration sources.
 
 The easiest way to do this is to run the following command in your terminal:
 
 ```shell
-swift run generate-pipeline
+swift run generate-swift-format
 ```
 
 If successful, this tool will update the files `Pipelines+Generated.swift`,
