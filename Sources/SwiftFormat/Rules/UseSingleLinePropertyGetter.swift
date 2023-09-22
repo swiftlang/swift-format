@@ -41,7 +41,6 @@ public final class UseSingleLinePropertyGetter: SyntaxFormatRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static let removeExtraneousGetBlock: Finding.Message =
+  fileprivate static let removeExtraneousGetBlock: Finding.Message =
     "remove 'get {...}' around the accessor and move its body directly into the computed property"
 }

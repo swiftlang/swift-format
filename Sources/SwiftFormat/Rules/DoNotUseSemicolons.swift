@@ -111,10 +111,8 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static let removeSemicolon: Finding.Message = "remove ';'"
+  fileprivate static let removeSemicolon: Finding.Message = "remove ';'"
 
-  @_spi(Rules)
-  public static let removeSemicolonAndMove: Finding.Message =
+  fileprivate static let removeSemicolonAndMove: Finding.Message =
     "remove ';' and move the next statement to a new line"
 }

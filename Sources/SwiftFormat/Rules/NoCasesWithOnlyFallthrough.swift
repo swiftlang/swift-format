@@ -224,8 +224,7 @@ extension TriviaPiece {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static var collapseCase: Finding.Message {
+  fileprivate static var collapseCase: Finding.Message {
     "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"
   }
 }

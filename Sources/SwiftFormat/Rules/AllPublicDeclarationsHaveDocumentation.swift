@@ -87,8 +87,7 @@ public final class AllPublicDeclarationsHaveDocumentation: SyntaxLintRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static func declRequiresComment(_ name: String) -> Finding.Message {
+  fileprivate static func declRequiresComment(_ name: String) -> Finding.Message {
     "add a documentation comment for '\(name)'"
   }
 }

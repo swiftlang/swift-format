@@ -107,7 +107,6 @@ public final class UseEarlyExits: SyntaxFormatRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static let useGuardStatement: Finding.Message =
+  fileprivate static let useGuardStatement: Finding.Message =
     "replace this 'if/else' block with a 'guard' statement containing the early exit"
 }

@@ -122,11 +122,9 @@ fileprivate func updateWithWhereCondition(
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static let useWhereInsteadOfIf: Finding.Message =
+  fileprivate static let useWhereInsteadOfIf: Finding.Message =
     "replace this 'if' statement with a 'where' clause"
 
-  @_spi(Rules)
-  public static let useWhereInsteadOfGuard: Finding.Message =
+  fileprivate static let useWhereInsteadOfGuard: Finding.Message =
     "replace this 'guard' statement with a 'where' clause"
 }

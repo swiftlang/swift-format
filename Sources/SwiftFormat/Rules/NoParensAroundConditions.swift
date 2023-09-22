@@ -121,7 +121,6 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static let removeParensAroundExpression: Finding.Message =
+  fileprivate static let removeParensAroundExpression: Finding.Message =
     "remove the parentheses around this expression"
 }

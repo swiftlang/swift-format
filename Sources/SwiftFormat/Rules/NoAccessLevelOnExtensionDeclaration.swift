@@ -105,22 +105,18 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static let removeRedundantAccessKeyword: Finding.Message =
+  fileprivate static let removeRedundantAccessKeyword: Finding.Message =
     "remove this redundant 'internal' access modifier from this extension"
 
-  @_spi(Rules)
-  public static func moveAccessKeyword(keyword: String) -> Finding.Message {
+  fileprivate static func moveAccessKeyword(keyword: String) -> Finding.Message {
     "move this '\(keyword)' access modifier to precede each member inside this extension"
   }
 
-  @_spi(Rules)
-  public static func moveAccessKeywordAndMakeFileprivate(keyword: String) -> Finding.Message {
+  fileprivate static func moveAccessKeywordAndMakeFileprivate(keyword: String) -> Finding.Message {
     "remove this '\(keyword)' access modifier and declare each member inside this extension as 'fileprivate'"
   }
 
-  @_spi(Rules)
-  public static func addModifierToExtensionMember(keyword: String) -> Finding.Message {
+  fileprivate static func addModifierToExtensionMember(keyword: String) -> Finding.Message {
     "add '\(keyword)' access modifier to this declaration"
   }
 }

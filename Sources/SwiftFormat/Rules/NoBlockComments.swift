@@ -29,7 +29,6 @@ public final class NoBlockComments: SyntaxLintRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static let avoidBlockComment: Finding.Message =
+  fileprivate static let avoidBlockComment: Finding.Message =
     "replace this block comment with line comments"
 }

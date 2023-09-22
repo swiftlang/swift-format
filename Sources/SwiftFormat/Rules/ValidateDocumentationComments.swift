@@ -167,39 +167,32 @@ fileprivate func parametersAreEqual(
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static func documentReturnValue(funcName: String) -> Finding.Message {
+  fileprivate static func documentReturnValue(funcName: String) -> Finding.Message {
     "add a 'Returns:' section to document the return value of '\(funcName)'"
   }
 
-  @_spi(Rules)
-  public static func removeReturnComment(funcName: String) -> Finding.Message {
+  fileprivate static func removeReturnComment(funcName: String) -> Finding.Message {
     "remove the 'Returns:' section of '\(funcName)'; it does not return a value"
   }
 
-  @_spi(Rules)
-  public static func parametersDontMatch(funcName: String) -> Finding.Message {
+  fileprivate static func parametersDontMatch(funcName: String) -> Finding.Message {
     "change the parameters of the documentation of '\(funcName)' to match its parameters"
   }
 
-  @_spi(Rules)
-  public static let useSingularParameter: Finding.Message =
+  fileprivate static let useSingularParameter: Finding.Message =
     "replace the plural 'Parameters:' section with a singular inline 'Parameter' section"
 
-  @_spi(Rules)
-  public static let usePluralParameters: Finding.Message =
+  fileprivate static let usePluralParameters: Finding.Message =
     """
     replace the singular inline 'Parameter' section with a plural 'Parameters:' section \
     that has the parameters nested inside it
     """
 
-  @_spi(Rules)
-  public static func removeThrowsComment(funcName: String) -> Finding.Message {
+  fileprivate static func removeThrowsComment(funcName: String) -> Finding.Message {
     "remove the 'Throws:' sections of '\(funcName)'; it does not throw any errors"
   }
 
-  @_spi(Rules)
-  public static func documentErrorsThrown(funcName: String) -> Finding.Message {
+  fileprivate static func documentErrorsThrown(funcName: String) -> Finding.Message {
     "add a 'Throws:' section to document the errors thrown by '\(funcName)'"
   }
 }

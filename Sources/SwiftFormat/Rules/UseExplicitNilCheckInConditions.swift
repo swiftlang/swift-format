@@ -61,7 +61,6 @@ public final class UseExplicitNilCheckInConditions: SyntaxFormatRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static let useExplicitNilComparison: Finding.Message =
+  fileprivate static let useExplicitNilComparison: Finding.Message =
     "compare this value using `!= nil` instead of binding and discarding it"
 }

@@ -80,8 +80,7 @@ public final class GroupNumericLiterals: SyntaxFormatRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static func groupNumericLiteral(every stride: Int, base: String) -> Finding.Message {
+  fileprivate static func groupNumericLiteral(every stride: Int, base: String) -> Finding.Message {
     return "group every \(stride) digits in this \(base) literal using a '_' separator"
   }
 }

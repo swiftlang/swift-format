@@ -201,7 +201,9 @@ public final class AlwaysUseLiteralForEmptyCollectionInit : SyntaxFormatRule {
 }
 
 extension Finding.Message {
-  public static func refactorIntoEmptyLiteral(replace: String, with: String) -> Finding.Message {
+  fileprivate static func refactorIntoEmptyLiteral(replace: String, with: String)
+    -> Finding.Message
+  {
     "replace '\(replace)' with '\(with)'"
   }
 }

@@ -432,9 +432,9 @@ extension WhitespaceIndentation {
 }
 
 extension Finding.Message {
-  public static let trailingWhitespaceError: Finding.Message = "remove trailing whitespace"
+  fileprivate static let trailingWhitespaceError: Finding.Message = "remove trailing whitespace"
 
-  public static func indentationError(
+  fileprivate static func indentationError(
     expected expectedIndentation: WhitespaceIndentation,
     actual actualIndentation: WhitespaceIndentation
   ) -> Finding.Message {
@@ -470,20 +470,20 @@ extension Finding.Message {
     }
   }
 
-  public static func spacingError(_ spaces: Int) -> Finding.Message {
+  fileprivate static func spacingError(_ spaces: Int) -> Finding.Message {
     let verb = spaces > 0 ? "add" : "remove"
     let noun = abs(spaces) == 1 ? "space" : "spaces"
     return "\(verb) \(abs(spaces)) \(noun)"
   }
 
-  public static let spacingCharError: Finding.Message = "use spaces for spacing"
+  fileprivate static let spacingCharError: Finding.Message = "use spaces for spacing"
 
-  public static let removeLineError: Finding.Message = "remove line break"
+  fileprivate static let removeLineError: Finding.Message = "remove line break"
 
-  public static func addLinesError(_ lines: Int) -> Finding.Message {
+  fileprivate static func addLinesError(_ lines: Int) -> Finding.Message {
     let noun = lines == 1 ? "break" : "breaks"
     return "add \(lines) line \(noun)"
   }
 
-  public static let lineLengthError: Finding.Message = "line is too long"
+  fileprivate static let lineLengthError: Finding.Message = "line is too long"
 }

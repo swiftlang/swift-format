@@ -61,8 +61,7 @@ public final class NeverUseImplicitlyUnwrappedOptionals: SyntaxLintRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static func doNotUseImplicitUnwrapping(identifier: String) -> Finding.Message {
+  fileprivate static func doNotUseImplicitUnwrapping(identifier: String) -> Finding.Message {
     "use '\(identifier)' or '\(identifier)?' instead of '\(identifier)!'"
   }
 }

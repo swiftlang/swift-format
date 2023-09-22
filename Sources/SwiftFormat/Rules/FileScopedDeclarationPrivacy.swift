@@ -160,11 +160,9 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
 }
 
 extension Finding.Message {
-  @_spi(Rules)
-  public static let replacePrivateWithFileprivate: Finding.Message =
+  fileprivate static let replacePrivateWithFileprivate: Finding.Message =
     "replace 'private' with 'fileprivate' on file-scoped declarations"
 
-  @_spi(Rules)
-  public static let replaceFileprivateWithPrivate: Finding.Message =
+  fileprivate static let replaceFileprivateWithPrivate: Finding.Message =
     "replace 'fileprivate' with 'private' on file-scoped declarations"
 }
