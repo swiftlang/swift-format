@@ -61,11 +61,19 @@ For example, if you are using Xcode 13.3 (Swift 5.6), you will need
 ## Getting swift-format
 
 If you are mainly interested in using swift-format (rather than developing it),
-then once you have identified the version you need, you can check out the
-source and build it using the following commands:
+then you can get swift-format either via [Homebrew](https://brew.sh/) or by checking out the
+source and building it.
+
+### Installing via Homebrew
+
+Run `brew install swift-format` to install the latest version.
+
+### Building from source
+
+Install swift-fromat using the following commands:
 
 ```sh
-VERSION=508.0.0  # replace this with the version you need
+VERSION=509.0.0  # replace this with the version you need
 git clone https://github.com/apple/swift-format.git
 cd swift-format
 git checkout "tags/$VERSION"
