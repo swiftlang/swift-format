@@ -58,11 +58,15 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
         // Move the leading trivia from the `return` statement to the new assignment statement,
         // since that's a more sensible place than between the two.
         var assignmentItem = CodeBlockItemSyntax(item: .expr(ExprSyntax(assignmentExpr)))
-        assignmentItem.leadingTrivia = returnStmt.leadingTrivia + assignmentExpr.leadingTrivia
+        assignmentItem.leadingTrivia =
+          returnStmt.leadingTrivia
+            + returnStmt.returnKeyword.trailingTrivia.withoutLeadingSpaces()
+            + assignmentExpr.leadingTrivia
         assignmentItem.trailingTrivia = []
 
-        let trailingTrivia = returnStmt.trailingTrivia.withoutLeadingSpaces()
+        let trailingTrivia = returnStmt.trailingTrivia
         returnStmt.expression = nil
+        returnStmt.returnKeyword.trailingTrivia = []
         var returnItem = CodeBlockItemSyntax(item: .stmt(StmtSyntax(returnStmt)))
         returnItem.leadingTrivia = [.newlines(1)]
         returnItem.trailingTrivia = trailingTrivia

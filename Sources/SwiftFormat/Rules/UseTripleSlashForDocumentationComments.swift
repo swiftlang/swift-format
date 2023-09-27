@@ -80,7 +80,7 @@ public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
       return decl
     }
 
-    diagnose(.avoidDocBlockComment, on: decl, leadingTriviaIndex: commentInfo.startIndex)
+    diagnose(.avoidDocBlockComment, on: decl, anchor: .leadingTrivia(commentInfo.startIndex))
 
     // Keep any trivia leading up to the doc comment.
     var pieces = Array(decl.leadingTrivia[..<commentInfo.startIndex])

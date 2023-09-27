@@ -34,8 +34,8 @@ final class DoNotUseSemicolonsTests: LintOrFormatRuleTestCase {
       // printer and isn't a concern for the format rule.
       expected: """
         guard let someVar = Optional(items.filter ({ a in foo(a)
-        return true})) else {
-          items.forEach { a in foo(a)}
+        return true })) else {
+          items.forEach { a in foo(a) }
         return
         }
         """,
@@ -106,7 +106,7 @@ final class DoNotUseSemicolonsTests: LintOrFormatRuleTestCase {
         print("4")
         /** Inline comment. */ print("5")
 
-        print("6")// This is an important statement.
+        print("6")  // This is an important statement.
         print("7")
         """,
       findings: [
@@ -121,6 +121,71 @@ final class DoNotUseSemicolonsTests: LintOrFormatRuleTestCase {
     )
   }
   
+  func testBlockCommentAtEndOfBlock() {
+    assertFormatting(
+      DoNotUseSemicolons.self,
+      input: """
+        print("hello")1️⃣; /* block comment */
+        """,
+      expected: """
+        print("hello") /* block comment */
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove ';'"),
+      ]
+    )
+
+    assertFormatting(
+      DoNotUseSemicolons.self,
+      input: """
+        if x {
+          print("hello")1️⃣; /* block comment */
+        }
+        """,
+      expected: """
+        if x {
+          print("hello") /* block comment */
+        }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove ';'"),
+      ]
+    )
+  }
+
+  func testBlockCommentAfterSemicolonPrecedingOtherStatement() {
+    assertFormatting(
+      DoNotUseSemicolons.self,
+      input: """
+        print("hello")1️⃣; /* block comment */ print("world")
+        """,
+      expected: """
+        print("hello")
+        /* block comment */ print("world")
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove ';' and move the next statement to a new line"),
+      ]
+    )
+
+    assertFormatting(
+      DoNotUseSemicolons.self,
+      input: """
+        if x {
+          print("hello")1️⃣; /* block comment */
+        }
+        """,
+      expected: """
+        if x {
+          print("hello") /* block comment */
+        }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove ';'"),
+      ]
+    )
+  }
+
   func testSemicolonsSeparatingDoWhile() {
     assertFormatting(
       DoNotUseSemicolons.self,

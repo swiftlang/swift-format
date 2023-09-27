@@ -34,12 +34,14 @@ extension Trivia {
 
   /// Returns this set of trivia, without any leading spaces.
   func withoutLeadingSpaces() -> Trivia {
-    return Trivia(
-      pieces: Array(drop {
-        if case .spaces = $0 { return false }
-        if case .tabs = $0 { return false }
-        return true
-      }))
+    return Trivia(pieces: self.pieces.drop(while: \.isSpaceOrTab))
+  }
+
+  func withoutTrailingSpaces() -> Trivia {
+    guard let lastNonSpaceIndex = self.pieces.lastIndex(where: \.isSpaceOrTab) else {
+      return self
+    }
+    return Trivia(pieces: self[..<lastNonSpaceIndex])
   }
 
   /// Returns this trivia, excluding the last newline and anything following it.

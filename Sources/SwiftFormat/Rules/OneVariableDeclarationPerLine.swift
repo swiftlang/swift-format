@@ -103,8 +103,8 @@ private struct VariableDeclSplitter<Node: SyntaxProtocol> {
   /// as a `CodeBlockItemSyntax`, that wraps it.
   private let generator: (VariableDeclSyntax) -> Node
 
-  /// Bindings that have been collected so far.
-  private var bindingQueue = [PatternBindingSyntax]()
+  /// Bindings that have been collected so far and the trivia that preceded them.
+  private var bindingQueue = [(PatternBindingSyntax, Trivia)]()
 
   /// The variable declaration being split.
   ///
@@ -134,6 +134,12 @@ private struct VariableDeclSplitter<Node: SyntaxProtocol> {
     self.varDecl = varDecl
     self.nodes = []
 
+    // We keep track of trivia that precedes each binding (which is reflected as trailing trivia
+    // on the previous token) so that we can reassociate it if we flush the bindings out as
+    // individual variable decls. This means that we can rewrite `let /*a*/ a, /*b*/ b: Int` as
+    // `let /*a*/ a: Int; let /*b*/ b: Int`, for example.
+    var precedingTrivia = varDecl.bindingSpecifier.trailingTrivia
+
     for binding in varDecl.bindings {
       if binding.initializer != nil {
         // If this is the only initializer in the queue so far, that's ok. If
@@ -142,14 +148,15 @@ private struct VariableDeclSplitter<Node: SyntaxProtocol> {
         // them as a single decl.
         var newBinding = binding
         newBinding.trailingComma = nil
-        bindingQueue.append(newBinding)
+        bindingQueue.append((newBinding, precedingTrivia))
         flushRemaining()
       } else if let typeAnnotation = binding.typeAnnotation {
-        bindingQueue.append(binding)
+        bindingQueue.append((binding, precedingTrivia))
         flushIndividually(typeAnnotation: typeAnnotation)
       } else {
-        bindingQueue.append(binding)
+        bindingQueue.append((binding, precedingTrivia))
       }
+      precedingTrivia = binding.trailingComma?.trailingTrivia ?? []
     }
     flushRemaining()
 
@@ -174,7 +181,7 @@ private struct VariableDeclSplitter<Node: SyntaxProtocol> {
     guard !bindingQueue.isEmpty else { return }
 
     var newDecl = varDecl!
-    newDecl.bindings = PatternBindingListSyntax(bindingQueue)
+    newDecl.bindings = PatternBindingListSyntax(bindingQueue.map(\.0))
     nodes.append(generator(newDecl))
 
     fixOriginalVarDeclTrivia()
@@ -189,7 +196,7 @@ private struct VariableDeclSplitter<Node: SyntaxProtocol> {
   ) {
     assert(!bindingQueue.isEmpty)
 
-    for binding in bindingQueue {
+    for (binding, trailingTrivia) in bindingQueue {
       assert(binding.initializer == nil)
 
       var newBinding = binding
@@ -197,6 +204,7 @@ private struct VariableDeclSplitter<Node: SyntaxProtocol> {
       newBinding.trailingComma = nil
 
       var newDecl = varDecl!
+      newDecl.bindingSpecifier.trailingTrivia = trailingTrivia
       newDecl.bindings = PatternBindingListSyntax([newBinding])
       nodes.append(generator(newDecl))
 
