@@ -100,5 +100,16 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
       context: context,
       file: file,
       line: line)
+
+    // Verify that the pretty printer can consume the transformed tree (e.g., it does not contain
+    // any unfolded `SequenceExpr`s). We don't need to check the actual output here (we don't want
+    // the rule tests to be pretty-printer dependent), but this will catch invariants that aren't
+    // satisfied.
+    _ = PrettyPrinter(
+      context: context,
+      node: Syntax(actual),
+      printTokenStream: false,
+      whitespaceOnly: false
+    ).prettyPrint()
   }
 }

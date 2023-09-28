@@ -2079,7 +2079,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: SequenceExprSyntax) -> SyntaxVisitorContinueKind {
-    preconditionFailure("SequenceExpr should have already been folded.")
+    preconditionFailure(
+      """
+      SequenceExpr should have already been folded; found at byte offsets \
+      \(node.position.utf8Offset)..<\(node.endPosition.utf8Offset)
+      """)
   }
 
   override func visit(_ node: AssignmentExprSyntax) -> SyntaxVisitorContinueKind {
