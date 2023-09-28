@@ -478,7 +478,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     effectSpecifiers: TypeEffectSpecifiersSyntax?,
     arrow: TokenSyntax,
     returnType: TypeSyntax
-  ) -> SequenceExprSyntax? {
+  ) -> InfixOperatorExprSyntax? {
     guard
       let parameterExprs = expressionRepresentation(of: parameters),
       let returnTypeExpr = expressionRepresentation(of: returnType)
@@ -493,11 +493,10 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     let arrowExpr = ArrowExprSyntax(
       effectSpecifiers: effectSpecifiers,
       arrow: arrow)
-
-    return SequenceExprSyntax(
-      elements: ExprListSyntax([
-        ExprSyntax(tupleExpr), ExprSyntax(arrowExpr), returnTypeExpr,
-      ]))
+    return InfixOperatorExprSyntax(
+      leftOperand: tupleExpr,
+      operator: arrowExpr,
+      rightOperand: returnTypeExpr)
   }
 
   /// Returns the leading and trailing trivia from the front and end of the entire given node.
