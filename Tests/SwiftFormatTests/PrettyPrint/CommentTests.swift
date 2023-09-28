@@ -1,3 +1,5 @@
+import _SwiftFormatTestSupport
+
 final class CommentTests: PrettyPrintTestCase {
   func testDocumentationComments() {
     let input =
@@ -408,7 +410,7 @@ final class CommentTests: PrettyPrintTestCase {
         case quux
       }
       """
-    
+
     let expected =
       """
       struct Foo {
@@ -424,7 +426,7 @@ final class CommentTests: PrettyPrintTestCase {
       }
 
       """
-    
+
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
   }
 
@@ -594,25 +596,25 @@ final class CommentTests: PrettyPrintTestCase {
 
   func testCommentsInIfStatements() {
     let input =
-    """
-         if foo.bar && false && // comment about foo.bar
-           baz && // comment about baz
-           // comment about next
-           next
-           && // other is important
-           // second line about other
-           other &&
-           // comment about final on a new line
-           final
-         {
-         }
-         if foo.bar && foo.baz
-           && // comment about the next line
-           // another comment line
-           next.line
-         {
-         }
-         """
+      """
+      if foo.bar && false && // comment about foo.bar
+        baz && // comment about baz
+        // comment about next
+        next
+        && // other is important
+        // second line about other
+        other &&
+        // comment about final on a new line
+        final
+      {
+      }
+      if foo.bar && foo.baz
+        && // comment about the next line
+        // another comment line
+        next.line
+      {
+      }
+      """
 
     let expected =
       """
@@ -681,5 +683,33 @@ final class CommentTests: PrettyPrintTestCase {
       """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
+  }
+
+  func testDiagnoseMoveEndOfLineComment() {
+    assertPrettyPrintEqual(
+      input: """
+        import veryveryverylongmodulenameherebecauseitistypical  // special sentinel comment
+
+        func fooBarBazRunningOutOfIdeas() {  1️⃣// comment that needs to move
+          if foo {  // comment is fine
+          }
+        }
+
+        """,
+      expected: """
+        import veryveryverylongmodulenameherebecauseitistypical  // special sentinel comment
+
+        func fooBarBazRunningOutOfIdeas() {  // comment that needs to move
+          if foo {  // comment is fine
+          }
+        }
+
+        """,
+      linelength: 45,
+      whitespaceOnly: true,
+      findings: [
+        FindingSpec("1️⃣", message: "move end-of-line comment that exceeds the line length"),
+      ]
+    )
   }
 }
