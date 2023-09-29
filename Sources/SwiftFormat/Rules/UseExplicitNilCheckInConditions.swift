@@ -52,7 +52,10 @@ public final class UseExplicitNilCheckInConditions: SyntaxFormatRule {
         rightOperand: NilLiteralExprSyntax())
       inequalExpr.leadingTrivia = node.leadingTrivia
       inequalExpr.trailingTrivia = trailingTrivia
-      return ConditionElementSyntax(condition: .expression(ExprSyntax(inequalExpr)))
+
+      var result = node
+      result.condition = .expression(ExprSyntax(inequalExpr))
+      return result
     default:
       return node
     }

@@ -79,4 +79,20 @@ final class UseExplicitNilCheckInConditionsTests: LintOrFormatRuleTestCase {
       ]
     )
   }
+
+  func testDoNotDropTrailingCommaInConditionList() {
+    assertFormatting(
+      UseExplicitNilCheckInConditions.self,
+      input: """
+        if 1️⃣let _ = x, 2️⃣let _ = y {}
+        """,
+      expected: """
+        if x != nil, y != nil {}
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "compare this value using `!= nil` instead of binding and discarding it"),
+        FindingSpec("2️⃣", message: "compare this value using `!= nil` instead of binding and discarding it"),
+      ]
+    )
+  }
 }
