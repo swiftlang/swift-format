@@ -515,7 +515,7 @@ public class PrettyPrinter {
 
       write(comment.print(indent: currentIndentation))
       if wasEndOfLine {
-        if comment.length > spaceRemaining {
+        if comment.length > spaceRemaining && !isBreakingSuppressed {
           diagnose(.moveEndOfLineComment, category: .endOfLineComment)
         }
       } else {

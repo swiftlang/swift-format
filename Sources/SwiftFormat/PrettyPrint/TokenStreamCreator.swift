@@ -2746,9 +2746,10 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   ///   will stay inside the group.
   ///
   /// * If the trailing comment is a line comment, we first append any enqueued after-tokens
-  ///   that are *not* breaks or newlines, then we append the comment, and then the remaining
-  ///   after-tokens. Due to visitation ordering, this ensures that a trailing line comment is
-  ///   not incorrectly inserted into the token stream *after* a break or newline.
+  ///   that are *not*  related to breaks or newlines (e.g. includes print control tokens), then
+  ///   we append the comment, and then the remaining after-tokens. Due to visitation ordering,
+  ///   this ensures that a trailing line comment is not incorrectly inserted into the token stream
+  ///   *after* a break or newline.
   private func appendAfterTokensAndTrailingComments(_ token: TokenSyntax) {
     let (wasLineComment, trailingCommentTokens) = afterTokensForTrailingComment(token)
     let afterGroups = afterMap.removeValue(forKey: token) ?? []
@@ -2763,7 +2764,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         var shouldExtractTrailingComment = false
         if wasLineComment && !hasAppendedTrailingComment {
           switch afterToken {
-          case .break: shouldExtractTrailingComment = true
+          case .break, .printerControl: shouldExtractTrailingComment = true
           default: break
           }
         }
