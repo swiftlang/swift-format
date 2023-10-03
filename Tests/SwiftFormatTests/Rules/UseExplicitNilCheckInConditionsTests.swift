@@ -95,4 +95,58 @@ final class UseExplicitNilCheckInConditionsTests: LintOrFormatRuleTestCase {
       ]
     )
   }
+
+  func testAddNecessaryParenthesesAroundTryExpr() {
+    assertFormatting(
+      UseExplicitNilCheckInConditions.self,
+      input: """
+        if 1️⃣let _ = try? x {}
+        if 2️⃣let _ = try x {}
+        """,
+      expected: """
+        if (try? x) != nil {}
+        if (try x) != nil {}
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "compare this value using `!= nil` instead of binding and discarding it"),
+        FindingSpec("2️⃣", message: "compare this value using `!= nil` instead of binding and discarding it"),
+      ]
+    )
+  }
+
+  func testAddNecessaryParenthesesAroundTernaryExpr() {
+    assertFormatting(
+      UseExplicitNilCheckInConditions.self,
+      input: """
+        if 1️⃣let _ = x ? y : z {}
+        """,
+      expected: """
+        if (x ? y : z) != nil {}
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "compare this value using `!= nil` instead of binding and discarding it"),
+      ]
+    )
+  }
+
+  func testAddNecessaryParenthesesAroundSameOrLowerPrecedenceOperator() {
+    // The use of `&&` and `==` are semantically meaningless here because they don't return
+    // optionals. We just need them to stand in for any potential custom operator with lower or same
+    // precedence, respectively.
+    assertFormatting(
+      UseExplicitNilCheckInConditions.self,
+      input: """
+        if 1️⃣let _ = x && y {}
+        if 2️⃣let _ = x == y {}
+        """,
+      expected: """
+        if (x && y) != nil {}
+        if (x == y) != nil {}
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "compare this value using `!= nil` instead of binding and discarding it"),
+        FindingSpec("2️⃣", message: "compare this value using `!= nil` instead of binding and discarding it"),
+      ]
+    )
+  }
 }
