@@ -28,8 +28,8 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
   ) {
     let markedText = MarkedText(textWithMarkers: markedSource)
     let tree = Parser.parse(source: markedText.textWithoutMarkers)
-    let sourceFileSyntax = try! restoringLegacyTriviaBehavior(
-      OperatorTable.standardOperators.foldAll(tree).as(SourceFileSyntax.self)!)
+    let sourceFileSyntax =
+      try! OperatorTable.standardOperators.foldAll(tree).as(SourceFileSyntax.self)!
 
     var emittedFindings = [Finding]()
 
@@ -76,8 +76,8 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
   ) {
     let markedInput = MarkedText(textWithMarkers: input)
     let tree = Parser.parse(source: markedInput.textWithoutMarkers)
-    let sourceFileSyntax = try! restoringLegacyTriviaBehavior(
-      OperatorTable.standardOperators.foldAll(tree).as(SourceFileSyntax.self)!)
+    let sourceFileSyntax =
+      try! OperatorTable.standardOperators.foldAll(tree).as(SourceFileSyntax.self)!
 
     var emittedFindings = [Finding]()
 

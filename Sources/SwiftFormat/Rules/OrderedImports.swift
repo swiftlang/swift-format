@@ -286,18 +286,13 @@ fileprivate func generateLines(codeBlockItemList: CodeBlockItemListSyntax, conte
 {
   var lines: [Line] = []
   var currentLine = Line()
-  var afterNewline = false
-  var isFirstBlock = true
 
   func appendNewLine() {
     lines.append(currentLine)
     currentLine = Line()
-    afterNewline = true  // Note: trailing line comments always come before any newlines.
   }
 
   for block in codeBlockItemList {
-    afterNewline = false
-
     for piece in block.leadingTrivia {
       switch piece {
       // Create new Line objects when we encounter newlines.
@@ -306,22 +301,19 @@ fileprivate func generateLines(codeBlockItemList: CodeBlockItemListSyntax, conte
           appendNewLine()
         }
       default:
-        if afterNewline || isFirstBlock {
-          currentLine.leadingTrivia.append(piece)  // This will be a standalone comment.
-        } else {
-          currentLine.trailingTrivia.append(piece)  // This will be a trailing line comment.
-        }
+        currentLine.leadingTrivia.append(piece)  // This will be a standalone comment.
       }
     }
 
     if block.item.is(ImportDeclSyntax.self) {
       // Always create a new `Line` for each import statement, so they can be reordered.
       if currentLine.syntaxNode != nil {
-        lines.append(currentLine)
-        currentLine = Line()
+        appendNewLine()
       }
       let sortable = context.isRuleEnabled(OrderedImports.self, node: Syntax(block))
-      currentLine.syntaxNode = .importCodeBlock(block, sortable: sortable)
+      var blockWithoutTrailingTrivia = block
+      blockWithoutTrailingTrivia.trailingTrivia = []
+      currentLine.syntaxNode = .importCodeBlock(blockWithoutTrailingTrivia, sortable: sortable)
     } else {
       guard let syntaxNode = currentLine.syntaxNode else {
         currentLine.syntaxNode = .nonImportCodeBlocks([block])
@@ -330,18 +322,19 @@ fileprivate func generateLines(codeBlockItemList: CodeBlockItemListSyntax, conte
       // Multiple code blocks can be merged, as long as there isn't an import statement.
       switch syntaxNode {
       case .importCodeBlock:
-        lines.append(currentLine)
-        currentLine = Line()
+        appendNewLine()
         currentLine.syntaxNode = .nonImportCodeBlocks([block])
       case .nonImportCodeBlocks(let existingCodeBlocks):
         currentLine.syntaxNode = .nonImportCodeBlocks(existingCodeBlocks + [block])
       }
     }
 
-    isFirstBlock = false
+    for piece in block.trailingTrivia {
+      currentLine.trailingTrivia.append(piece)  // This will be a trailing line comment.
+    }
   }
-  lines.append(currentLine)
 
+  lines.append(currentLine)
   return lines
 }
 

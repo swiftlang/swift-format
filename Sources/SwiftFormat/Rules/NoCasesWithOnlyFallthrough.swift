@@ -140,19 +140,20 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
     }
 
     // Check for any comments that are adjacent to the case or fallthrough statement.
-    if switchCase.leadingTrivia.drop(while: { !$0.isNewline }).contains(where: { $0.isComment })
+    if switchCase.allPrecedingTrivia
+      .drop(while: { !$0.isNewline }).contains(where: { $0.isComment })
     {
       return false
     }
-    if onlyStatement.leadingTrivia.drop(while: { !$0.isNewline }).contains(where: { $0.isComment })
+    if onlyStatement.allPrecedingTrivia
+      .drop(while: { !$0.isNewline }).contains(where: { $0.isComment })
     {
       return false
     }
 
-    // Check for any comments that are inline on the fallthrough statement. Inline comments are
-    // always stored in the next token's leading trivia.
-    if let nextLeadingTrivia = onlyStatement.nextToken(viewMode: .sourceAccurate)?.leadingTrivia,
-      nextLeadingTrivia.prefix(while: { !$0.isNewline }).contains(where: { $0.isComment })
+    // Check for any comments that are inline on the fallthrough statement.
+    if onlyStatement.allFollowingTrivia
+      .prefix(while: { !$0.isNewline }).contains(where: { $0.isComment })
     {
       return false
     }

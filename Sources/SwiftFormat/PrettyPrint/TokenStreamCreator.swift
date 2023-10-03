@@ -574,7 +574,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       // there's a comment.
       if config.lineBreakBeforeControlFlowKeywords {
         before(elseKeyword, tokens: .break(.same, newlines: .soft))
-      } else if elseKeyword.leadingTrivia.hasLineComment {
+      } else if elseKeyword.hasPrecedingLineComment {
         before(elseKeyword, tokens: .break(.same, size: 1))
       } else {
         before(elseKeyword, tokens: .space)
@@ -582,7 +582,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
       // Breaks are only allowed after `else` when there's a comment; otherwise there shouldn't be
       // any newlines between `else` and the open brace or a following `if`.
-      if let tokenAfterElse = elseKeyword.nextToken(viewMode: .all), tokenAfterElse.leadingTrivia.hasLineComment {
+      if let tokenAfterElse = elseKeyword.nextToken(viewMode: .all),
+        tokenAfterElse.hasPrecedingLineComment
+      {
         after(node.elseKeyword, tokens: .break(.same, size: 1))
       } else if let elseBody = node.elseBody, elseBody.is(IfExprSyntax.self) {
         after(node.elseKeyword, tokens: .space)
@@ -867,7 +869,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       // to exist at the EOL with the left paren or on its own line. The contents are always
       // indented on the following lines, since parens always create a scope. An open/close break
       // pair isn't used here to avoid forcing the closing paren down onto a new line.
-      if node.leftParen.nextToken(viewMode: .all)?.leadingTrivia.hasLineComment ?? false {
+      if node.leftParen.nextToken(viewMode: .all)?.hasPrecedingLineComment ?? false {
         after(node.leftParen, tokens: .break(.continue, size: 0))
       }
     } else if elementCount > 1 {
@@ -913,7 +915,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: ArrayExprSyntax) -> SyntaxVisitorContinueKind {
-    if !node.elements.isEmpty || node.rightSquare.leadingTrivia.hasAnyComments {
+    if !node.elements.isEmpty || node.rightSquare.hasAnyPrecedingComment {
       after(node.leftSquare, tokens: .break(.open, size: 0), .open)
       before(node.rightSquare, tokens: .break(.close, size: 0), .close)
     }
@@ -953,8 +955,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // The node's content is either a `DictionaryElementListSyntax` or a `TokenSyntax` for a colon
     // token (for an empty dictionary).
     if !(node.content.as(DictionaryElementListSyntax.self)?.isEmpty ?? true)
-      || node.content.leadingTrivia.hasAnyComments
-      || node.rightSquare.leadingTrivia.hasAnyComments
+      || node.content.hasAnyPrecedingComment
+      || node.rightSquare.hasAnyPrecedingComment
     {
       after(node.leftSquare, tokens: .break(.open, size: 0), .open)
       before(node.rightSquare, tokens: .break(.close, size: 0), .close)
@@ -2704,8 +2706,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   /// some legitimate uses), this is a reasonable compromise to keep the garbage text roughly in the
   /// same place but still let surrounding formatting occur somewhat as expected.
   private func appendTrailingTrivia(_ token: TokenSyntax, forced: Bool = false) {
-    let trailingTrivia = Array(token.trailingTrivia)
-    let lastIndex: Array<TriviaPiece>.Index
+    let trailingTrivia = Array(partitionTrailingTrivia(token.trailingTrivia).0)
+    let lastIndex: Array<Trivia>.Index
     if forced {
       lastIndex = trailingTrivia.index(before: trailingTrivia.endIndex)
     } else {
@@ -2823,7 +2825,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   ) -> Bool where BodyContents.Element: SyntaxProtocol {
     // If the collection is empty, then any comments that might be present in the block must be
     // leading trivia of the right brace.
-    let commentPrecedesRightBrace = node.rightBrace.leadingTrivia.hasAnyComments
+    let commentPrecedesRightBrace = node.rightBrace.hasAnyPrecedingComment
     // We can't use `count` here because it also includes missing children. Instead, we get an
     // iterator and check if it returns `nil` immediately.
     var contentsIterator = node[keyPath: contentsKeyPath].makeIterator()
@@ -2844,7 +2846,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   ) -> Bool where BodyContents.Element == Syntax {
     // If the collection is empty, then any comments that might be present in the block must be
     // leading trivia of the right brace.
-    let commentPrecedesRightBrace = node.rightBrace.leadingTrivia.hasAnyComments
+    let commentPrecedesRightBrace = node.rightBrace.hasAnyPrecedingComment
     // We can't use `count` here because it also includes missing children. Instead, we get an
     // iterator and check if it returns `nil` immediately.
     var contentsIterator = node[keyPath: contentsKeyPath].makeIterator()
@@ -2865,7 +2867,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   ) -> Bool where BodyContents.Element == DeclSyntax {
     // If the collection is empty, then any comments that might be present in the block must be
     // leading trivia of the right brace.
-    let commentPrecedesRightBrace = node.rightBrace.leadingTrivia.hasAnyComments
+    let commentPrecedesRightBrace = node.rightBrace.hasAnyPrecedingComment
     // We can't use `count` here because it also includes missing children. Instead, we get an
     // iterator and check if it returns `nil` immediately.
     var contentsIterator = node[keyPath: contentsKeyPath].makeIterator()
@@ -3028,7 +3030,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   private func arrangeBracesAndContents(leftBrace: TokenSyntax, accessors: AccessorDeclListSyntax, rightBrace: TokenSyntax) {
     // If the collection is empty, then any comments that might be present in the block must be
     // leading trivia of the right brace.
-    let commentPrecedesRightBrace = rightBrace.leadingTrivia.hasAnyComments
+    let commentPrecedesRightBrace = rightBrace.hasAnyPrecedingComment
     // We can't use `count` here because it also includes missing children. Instead, we get an
     // iterator and check if it returns `nil` immediately.
     var accessorsIterator = accessors.makeIterator()
@@ -3061,10 +3063,12 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   private func afterTokensForTrailingComment(_ token: TokenSyntax)
     -> (isLineComment: Bool, tokens: [Token])
   {
-    let nextToken = token.nextToken(viewMode: .sourceAccurate)
-    guard let trivia = nextToken?.leadingTrivia,
-      let firstPiece = trivia.first
-    else {
+    let (_, trailingComments) = partitionTrailingTrivia(token.trailingTrivia)
+    let trivia =
+      Trivia(pieces: trailingComments)
+      + (token.nextToken(viewMode: .sourceAccurate)?.leadingTrivia ?? [])
+
+    guard let firstPiece = trivia.first else {
       return (false, [])
     }
 
@@ -3127,9 +3131,30 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return (beforeTokens, [])
   }
 
+  /// Partitions the given trailing trivia into two contiguous slices: the first containing only
+  /// whitespace and unexpected text, and the second containing everything else from the first
+  /// non-whitespace/non-unexpected-text.
+  ///
+  /// It is possible that one or both of the slices will be empty.
+  private func partitionTrailingTrivia(_ trailingTrivia: Trivia) -> (Slice<Trivia>, Slice<Trivia>) {
+    let pivot =
+      trailingTrivia.firstIndex { !$0.isSpaceOrTab && !$0.isUnexpectedText }
+      ?? trailingTrivia.endIndex
+    return (trailingTrivia[..<pivot], trailingTrivia[pivot...])
+  }
+
   private func extractLeadingTrivia(_ token: TokenSyntax) {
-    var isStartOfFile = token.previousToken(viewMode: .all) == nil
-    let trivia = token.leadingTrivia
+    var isStartOfFile: Bool
+    let trivia: Trivia
+    if let previousToken = token.previousToken(viewMode: .sourceAccurate) {
+      isStartOfFile = false
+      // Find the first non-whitespace in the previous token's trailing and peel those off.
+      let (_, prevTrailingComments) = partitionTrailingTrivia(previousToken.trailingTrivia)
+      trivia = Trivia(pieces: prevTrailingComments) + token.leadingTrivia
+    } else {
+      isStartOfFile = true
+      trivia = token.leadingTrivia
+    }
 
     // If we're at the end of the file, determine at which index to stop checking trivia pieces to
     // prevent trailing newlines.
@@ -3913,9 +3938,6 @@ extension Syntax {
 /// For example, comments after binary operators are relocated to be before the operator, which
 /// results in fewer line breaks with the comment closer to the relevant tokens.
 class CommentMovingRewriter: SyntaxRewriter {
-  /// Map of tokens to alternate trivia to use as the token's leading trivia.
-  var rewriteTokenTriviaMap: [TokenSyntax: Trivia] = [:]
-
   override func visit(_ node: SourceFileSyntax) -> SourceFileSyntax {
     if shouldFormatterIgnore(file: node) {
       return node
@@ -3937,28 +3959,40 @@ class CommentMovingRewriter: SyntaxRewriter {
     return super.visit(node)
   }
 
-  override func visit(_ token: TokenSyntax) -> TokenSyntax {
-    guard let rewrittenTrivia = rewriteTokenTriviaMap[token] else {
-      return token
-    }
-
-    var result = token
-    result.leadingTrivia = rewrittenTrivia
-    return result
-  }
-
   override func visit(_ node: InfixOperatorExprSyntax) -> ExprSyntax {
-    if let binaryOperatorExpr = node.operator.as(BinaryOperatorExprSyntax.self),
-      let followingToken = binaryOperatorExpr.operator.nextToken(viewMode: .all),
-      followingToken.leadingTrivia.hasLineComment
-    {
-      // Rewrite the trivia so that the comment is in the operator token's leading trivia.
-      let (remainingTrivia, extractedTrivia) = extractLineCommentTrivia(from: followingToken)
-      let combinedTrivia = binaryOperatorExpr.operator.leadingTrivia + extractedTrivia
-      rewriteTokenTriviaMap[binaryOperatorExpr.operator] = combinedTrivia
-      rewriteTokenTriviaMap[followingToken] = remainingTrivia
+    var node = super.visit(node).as(InfixOperatorExprSyntax.self)!
+    guard node.rightOperand.hasAnyPrecedingComment else {
+      return ExprSyntax(node)
     }
-    return super.visit(node)
+
+    // Rearrange the comments around the operators to make it easier to break properly later.
+    // Since we break on the left of operators (except for assignment), line comments between an
+    // operator and the right-hand-side of an expression should be moved to the left of the
+    // operator. Block comments can remain where they're originally located since they don't force
+    // breaks.
+    let operatorLeading = node.operator.leadingTrivia
+    var operatorTrailing = node.operator.trailingTrivia
+    let rhsLeading = node.rightOperand.leadingTrivia
+
+    let operatorTrailingLineComment: Trivia
+    if operatorTrailing.hasLineComment {
+      operatorTrailingLineComment = [operatorTrailing.pieces.last!]
+      operatorTrailing = Trivia(pieces: operatorTrailing.dropLast())
+    } else {
+      operatorTrailingLineComment = []
+    }
+
+    if operatorLeading.containsNewlines {
+      node.operator.leadingTrivia = operatorLeading + operatorTrailingLineComment + rhsLeading
+      node.operator.trailingTrivia = operatorTrailing
+    } else {
+      node.leftOperand.trailingTrivia += operatorTrailingLineComment
+      node.operator.leadingTrivia = rhsLeading
+      node.operator.trailingTrivia = operatorTrailing
+    }
+    node.rightOperand.leadingTrivia = []
+
+    return ExprSyntax(node)
   }
 
   /// Extracts trivia containing and related to line comments from `token`'s leading trivia. Returns
@@ -4053,10 +4087,7 @@ fileprivate func isFormatterIgnorePresent(inTrivia trivia: Trivia, isWholeFile: 
 fileprivate func shouldFormatterIgnore(node: Syntax) -> Bool {
   // Regardless of the level of nesting, if the ignore directive is present on the first token
   // contained within the node then the entire node is eligible for ignoring.
-  if let firstTrivia = node.firstToken(viewMode: .sourceAccurate)?.leadingTrivia {
-    return isFormatterIgnorePresent(inTrivia: firstTrivia, isWholeFile: false)
-  }
-  return false
+  return isFormatterIgnorePresent(inTrivia: node.allPrecedingTrivia, isWholeFile: false)
 }
 
 /// Returns whether the formatter should ignore the given file by printing it without changing the
@@ -4065,10 +4096,7 @@ fileprivate func shouldFormatterIgnore(node: Syntax) -> Bool {
 ///
 /// - Parameter file: The root syntax node for a source file.
 fileprivate func shouldFormatterIgnore(file: SourceFileSyntax) -> Bool {
-  if let firstTrivia = file.firstToken(viewMode: .sourceAccurate)?.leadingTrivia {
-    return isFormatterIgnorePresent(inTrivia: firstTrivia, isWholeFile: true)
-  }
-  return false
+  return isFormatterIgnorePresent(inTrivia: file.allPrecedingTrivia, isWholeFile: true)
 }
 
 extension NewlineBehavior {

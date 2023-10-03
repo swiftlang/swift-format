@@ -29,6 +29,22 @@ public protocol Rule {
   init(context: Context)
 }
 
+/// The part of a node where an emitted finding should be anchored.
+@_spi(Rules)
+public enum FindingAnchor {
+  /// The finding is anchored at the beginning of the node's actual content, skipping any leading
+  /// trivia.
+  case start
+
+  /// The finding is anchored at the beginning of the trivia piece at the given index in the node's
+  /// leading trivia.
+  case leadingTrivia(Trivia.Index)
+
+  /// The finding is anchored at the beginning of the trivia piece at the given index in the node's
+  /// trailing trivia.
+  case trailingTrivia(Trivia.Index)
+}
+
 extension Rule {
   /// By default, the `ruleName` is just the name of the implementing rule class.
   public static var ruleName: String { String("\(self)".split(separator: ".").last!) }
@@ -40,30 +56,37 @@ extension Rule {
   ///   - node: The syntax node to which the finding should be attached. The finding's location will
   ///     be set to the start of the node (excluding leading trivia, unless `leadingTriviaIndex` is
   ///     provided).
-  ///   - leadingTriviaIndex: If non-nil, the index of a trivia piece in the node's leading trivia
-  ///     that should be used to determine the location of the finding. Otherwise, the finding's
-  ///     location will be the start of the node after any leading trivia.
+  ///   - anchor: The part of the node where the finding should be anchored. Defaults to the start
+  ///     of the node's content (after any leading trivia).
   ///   - notes: An array of notes that provide additional detail about the finding.
   public func diagnose<SyntaxType: SyntaxProtocol>(
     _ message: Finding.Message,
     on node: SyntaxType?,
     severity: Finding.Severity? = nil,
-    leadingTriviaIndex: Trivia.Index? = nil,
+    anchor: FindingAnchor = .start,
     notes: [Finding.Note] = []
   ) {
     let syntaxLocation: SourceLocation?
-    if let leadingTriviaIndex = leadingTriviaIndex {
-      syntaxLocation = node?.startLocation(
-        ofLeadingTriviaAt: leadingTriviaIndex, converter: context.sourceLocationConverter)
+    if let node = node {
+      switch anchor {
+      case .start:
+        syntaxLocation = node.startLocation(converter: context.sourceLocationConverter)
+      case .leadingTrivia(let index):
+        syntaxLocation = node.startLocation(
+          ofLeadingTriviaAt: index, converter: context.sourceLocationConverter)
+      case .trailingTrivia(let index):
+        syntaxLocation = node.startLocation(
+          ofTrailingTriviaAt: index, converter: context.sourceLocationConverter)
+      }
     } else {
-      syntaxLocation = node?.startLocation(converter: context.sourceLocationConverter)
+      syntaxLocation = nil
     }
 
     let category = RuleBasedFindingCategory(ruleType: type(of: self), severity: severity)
     context.findingEmitter.emit(
-        message,
-        category: category,
-        location: syntaxLocation.flatMap(Finding.Location.init),
-        notes: notes)
+      message,
+      category: category,
+      location: syntaxLocation.flatMap(Finding.Location.init),
+      notes: notes)
   }
 }

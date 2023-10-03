@@ -594,6 +594,54 @@ final class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
   }
 
+  func testOperatorOnNewLineWithTrailingLineComment() {
+    let input =
+      """
+      if next
+        && // final is important
+        // second line about final
+        final
+      {
+      }
+      """
+
+    let expected =
+      """
+      if next
+        // final is important
+        // second line about final
+        && final
+      {
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
+  }
+
+  func testOperatorOnSameLineWithTrailingLineComment() {
+    let input =
+      """
+      if next && // final is important
+        // second line about final
+        final
+      {
+      }
+      """
+
+    let expected =
+      """
+      if next  // final is important
+        // second line about final
+        && final
+      {
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
+  }
+
   func testCommentsInIfStatements() {
     let input =
       """

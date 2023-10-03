@@ -63,8 +63,7 @@ func parseAndEmitDiagnostics(
   guard !hasErrors else {
     throw SwiftFormatError.fileContainsInvalidSyntax
   }
-
-  return restoringLegacyTriviaBehavior(sourceFile)
+  return sourceFile
 }
 
 // Wraps a `DiagnosticMessage` but forces its severity to be that of a warning instead of an error.
