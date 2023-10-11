@@ -263,6 +263,77 @@ final class NoParensAroundConditionsTests: LintOrFormatRuleTestCase {
         FindingSpec("7️⃣", message: "remove the parentheses around this expression"),
       ]
     )
+  }
 
+  func testBlockCommentsBeforeConditionArePreserved() {
+    assertFormatting(
+      NoParensAroundConditions.self,
+      input: """
+        if/*foo*/1️⃣(x) {}
+        while/*foo*/2️⃣(x) {}
+        guard/*foo*/3️⃣(x), /*foo*/4️⃣(y), /*foo*/5️⃣(x == 3) else {}
+        repeat {} while/*foo*/6️⃣(x)
+        switch/*foo*/7️⃣(4) { default: break }
+        """,
+      expected: """
+        if/*foo*/x {}
+        while/*foo*/x {}
+        guard/*foo*/x, /*foo*/y, /*foo*/x == 3 else {}
+        repeat {} while/*foo*/x
+        switch/*foo*/4 { default: break }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("2️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("3️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("4️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("5️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("6️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("7️⃣", message: "remove the parentheses around this expression"),
+      ]
+    )
+  }
+
+  func testCommentsAfterKeywordArePreserved() {
+    assertFormatting(
+      NoParensAroundConditions.self,
+      input: """
+        if /*foo*/ // bar
+          1️⃣(x) {}
+        while /*foo*/ // bar
+          2️⃣(x) {}
+        guard /*foo*/ // bar
+          3️⃣(x), /*foo*/ // bar
+          4️⃣(y), /*foo*/ // bar
+          5️⃣(x == 3) else {}
+        repeat {} while /*foo*/ // bar
+          6️⃣(x)
+        switch /*foo*/ // bar
+          7️⃣(4) { default: break }
+        """,
+      expected: """
+        if /*foo*/ // bar
+          x {}
+        while /*foo*/ // bar
+          x {}
+        guard /*foo*/ // bar
+          x, /*foo*/ // bar
+          y, /*foo*/ // bar
+          x == 3 else {}
+        repeat {} while /*foo*/ // bar
+          x
+        switch /*foo*/ // bar
+          4 { default: break }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("2️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("3️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("4️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("5️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("6️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec("7️⃣", message: "remove the parentheses around this expression"),
+      ]
+    )
   }
 }

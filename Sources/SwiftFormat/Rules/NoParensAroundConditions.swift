@@ -28,7 +28,7 @@ import SwiftSyntax
 public final class NoParensAroundConditions: SyntaxFormatRule {
   public override func visit(_ node: IfExprSyntax) -> ExprSyntax {
     var result = node
-    result.ifKeyword.trailingTrivia = [.spaces(1)]
+    fixKeywordTrailingTrivia(&result.ifKeyword.trailingTrivia)
     result.conditions = visit(node.conditions)
     result.body = visit(node.body)
     if let elseBody = node.elseBody {
@@ -52,7 +52,7 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
 
   public override func visit(_ node: GuardStmtSyntax) -> StmtSyntax {
     var result = node
-    result.guardKeyword.trailingTrivia = [.spaces(1)]
+    fixKeywordTrailingTrivia(&result.guardKeyword.trailingTrivia)
     result.conditions = visit(node.conditions)
     result.body = visit(node.body)
     return StmtSyntax(result)
@@ -64,7 +64,7 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
     }
 
     var result = node
-    result.switchKeyword.trailingTrivia = [.spaces(1)]
+    fixKeywordTrailingTrivia(&result.switchKeyword.trailingTrivia)
     result.subject = newSubject
     result.cases = visit(node.cases)
     return ExprSyntax(result)
@@ -76,7 +76,7 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
     }
 
     var result = node
-    result.whileKeyword.trailingTrivia = [.spaces(1)]
+    fixKeywordTrailingTrivia(&result.whileKeyword.trailingTrivia)
     result.condition = newCondition
     result.body = visit(node.body)
     return StmtSyntax(result)
@@ -84,10 +84,15 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
 
   public override func visit(_ node: WhileStmtSyntax) -> StmtSyntax {
     var result = node
-    result.whileKeyword.trailingTrivia = [.spaces(1)]
+    fixKeywordTrailingTrivia(&result.whileKeyword.trailingTrivia)
     result.conditions = visit(node.conditions)
     result.body = visit(node.body)
     return StmtSyntax(result)
+  }
+
+  private func fixKeywordTrailingTrivia(_ trivia: inout Trivia) {
+    guard trivia.isEmpty else { return }
+    trivia = [.spaces(1)]
   }
 
   private func minimalSingleExpression(_ original: ExprSyntax) -> ExprSyntax? {
