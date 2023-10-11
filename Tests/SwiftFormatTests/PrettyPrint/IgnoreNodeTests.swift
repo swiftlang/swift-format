@@ -318,36 +318,18 @@ final class IgnoreNodeTests: PrettyPrintTestCase {
       {
         var bazzle = 0 }
       """
+    assertPrettyPrintEqual(input: input, expected: input, linelength: 50)
+  }
 
-    let expected =
+  func testIgnoreWholeFileDoesNotTouchWhitespace() {
+    let input =
       """
       // swift-format-ignore-file
-      import Zoo
-      import Aoo
-      import foo
-
-          struct Foo {
-            private var baz: Bool {
-                return foo +
-                 bar + // poorly placed comment
-                  false
-            }
-
-            var a = true    // line comment
-                            // aligned line comment
-            var b = false  // correct trailing comment
-
-      var c = 0 +
-          1
-          + (2 + 3)
-      }
-
-            class Bar
-      {
-        var bazzle = 0 }
+      /// foo bar
+      \u{0020}
+      // baz
       """
-
-    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+    assertPrettyPrintEqual(input: input, expected: input, linelength: 100)
   }
 
   func testIgnoreWholeFileInNestedNode() {
