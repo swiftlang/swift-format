@@ -1516,7 +1516,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
     if shouldFormatterIgnore(file: node) {
-      appendFormatterIgnored(node: Syntax(node))
+      appendToken(.verbatim(Verbatim(text: "\(node)", indentingBehavior: .none)))
       return .skipChildren
     }
     after(node.shebang, tokens: .break(.same, newlines: .soft))
