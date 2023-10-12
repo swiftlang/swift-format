@@ -342,20 +342,18 @@ fileprivate func generateLines(codeBlockItemList: CodeBlockItemListSyntax, conte
 /// replacing the trivia appropriately to ensure comments appear in the right location.
 fileprivate func convertToCodeBlockItems(lines: [Line]) -> [CodeBlockItemSyntax] {
   var output: [CodeBlockItemSyntax] = []
-  var triviaBuffer: [TriviaPiece] = []
+  var pendingLeadingTrivia: [TriviaPiece] = []
 
   for line in lines {
-    triviaBuffer += line.leadingTrivia
+    pendingLeadingTrivia += line.leadingTrivia
 
     func append(codeBlockItem: CodeBlockItemSyntax) {
-      // Comments and newlines are always located in the leading trivia of an AST node, so we need
-      // not deal with trailing trivia.
       var codeBlockItem = codeBlockItem
-      codeBlockItem.leadingTrivia = Trivia(pieces: triviaBuffer)
+      codeBlockItem.leadingTrivia = Trivia(pieces: pendingLeadingTrivia)
+      codeBlockItem.trailingTrivia = Trivia(pieces: line.trailingTrivia)
       output.append(codeBlockItem)
 
-      triviaBuffer = []
-      triviaBuffer += line.trailingTrivia
+      pendingLeadingTrivia = []
     }
 
     if let syntaxNode = line.syntaxNode {
@@ -367,11 +365,11 @@ fileprivate func convertToCodeBlockItems(lines: [Line]) -> [CodeBlockItemSyntax]
       }
     }
 
-    // Merge multiple newlines together into a single trivia piece by updating it's N value.
-    if let lastPiece = triviaBuffer.last, case .newlines(let N) = lastPiece {
-      triviaBuffer[triviaBuffer.endIndex - 1] = TriviaPiece.newlines(N + 1)
+    // Merge multiple newlines together into a single trivia piece by updating its count.
+    if let lastPiece = pendingLeadingTrivia.last, case .newlines(let count) = lastPiece {
+      pendingLeadingTrivia[pendingLeadingTrivia.endIndex - 1] = .newlines(count + 1)
     } else {
-      triviaBuffer.append(TriviaPiece.newlines(1))
+      pendingLeadingTrivia.append(.newlines(1))
     }
   }
 
