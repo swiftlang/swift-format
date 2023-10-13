@@ -109,6 +109,7 @@ class LintPipeline: SyntaxVisitor {
   }
 
   override func visit(_ node: EnumCaseParameterSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(AlwaysUseLowerCamelCase.visit, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)
     return .visitChildren
   }

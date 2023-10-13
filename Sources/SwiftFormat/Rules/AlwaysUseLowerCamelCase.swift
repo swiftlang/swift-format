@@ -71,32 +71,13 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
 
   public override func visit(_ node: ClosureSignatureSyntax) -> SyntaxVisitorContinueKind {
     if let input = node.parameterClause {
-      if let closureParamList = input.as(ClosureShorthandParameterListSyntax.self) {
+      switch input {
+      case .simpleInput(let closureParamList):
         for param in closureParamList {
           diagnoseLowerCamelCaseViolations(
             param.name, allowUnderscores: false, description: identifierDescription(for: node))
         }
-      } else if let parameterClause = input.as(ClosureParameterClauseSyntax.self) {
-        for param in parameterClause.parameters {
-          diagnoseLowerCamelCaseViolations(
-            param.firstName, allowUnderscores: false, description: identifierDescription(for: node))
-          if let secondName = param.secondName {
-            diagnoseLowerCamelCaseViolations(
-              secondName, allowUnderscores: false, description: identifierDescription(for: node))
-          }
-        }
-      } else if let parameterClause = input.as(EnumCaseParameterClauseSyntax.self) {
-        for param in parameterClause.parameters {
-          if let firstName = param.firstName {
-            diagnoseLowerCamelCaseViolations(
-              firstName, allowUnderscores: false, description: identifierDescription(for: node))
-          }
-          if let secondName = param.secondName {
-            diagnoseLowerCamelCaseViolations(
-              secondName, allowUnderscores: false, description: identifierDescription(for: node))
-          }
-        }
-      } else if let parameterClause = input.as(FunctionParameterClauseSyntax.self) {
+      case .parameterClause(let parameterClause):
         for param in parameterClause.parameters {
           diagnoseLowerCamelCaseViolations(
             param.firstName, allowUnderscores: false, description: identifierDescription(for: node))
@@ -140,6 +121,20 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
   public override func visit(_ node: EnumCaseElementSyntax) -> SyntaxVisitorContinueKind {
     diagnoseLowerCamelCaseViolations(
       node.name, allowUnderscores: false, description: identifierDescription(for: node))
+    return .visitChildren
+  }
+
+  public override func visit(_ node: EnumCaseParameterSyntax) -> SyntaxVisitorContinueKind {
+    if let firstName = node.firstName {
+      diagnoseLowerCamelCaseViolations(
+        firstName,
+        allowUnderscores: false,
+        description: node.secondName != nil ? "enum case argument label" : "enum case parameter")
+    }
+    if let secondName = node.secondName {
+      diagnoseLowerCamelCaseViolations(
+        secondName, allowUnderscores: false, description: "enum case parameter")
+    }
     return .skipChildren
   }
 

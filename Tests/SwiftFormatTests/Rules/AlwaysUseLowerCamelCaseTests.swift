@@ -44,7 +44,6 @@ final class AlwaysUseLowerCamelCaseTests: LintOrFormatRuleTestCase {
         FindingSpec("5️⃣", message: "rename the variable 'PoorlyNamedVar' using lowerCamelCase"),
       ]
     )
-
   }
 
   func testInvalidEnumCaseCasing() {
@@ -60,7 +59,24 @@ final class AlwaysUseLowerCamelCaseTests: LintOrFormatRuleTestCase {
         FindingSpec("1️⃣", message: "rename the enum case 'UpperCamelCase' using lowerCamelCase"),
       ]
     )
+  }
 
+  func testInvalidEnumPayloadCasing() {
+    assertLint(
+      AlwaysUseLowerCamelCase.self,
+      """
+      enum FooBarCases {
+        case payload1(1️⃣UpperCamelCase: Int)
+        case payload2(lowerCamelCase: Int, 2️⃣Label param: String)
+        case payload3(lowerCamelCase: Int, _ 3️⃣Param: String)
+      }
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "rename the enum case parameter 'UpperCamelCase' using lowerCamelCase"),
+        FindingSpec("2️⃣", message: "rename the enum case argument label 'Label' using lowerCamelCase"),
+        FindingSpec("3️⃣", message: "rename the enum case parameter 'Param' using lowerCamelCase"),
+      ]
+    )
   }
 
   func testInvalidClosureCasing() {
