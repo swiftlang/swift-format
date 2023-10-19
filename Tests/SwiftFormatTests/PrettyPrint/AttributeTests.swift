@@ -356,4 +356,58 @@ final class AttributeTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 32)
   }
+
+  func testMultilineStringLiteralInCustomAttribute() {
+    let input =
+      #"""
+      @CustomAttribute(message: """
+      This is a
+      multiline
+      string
+      """)
+      public func f() {}
+      """#
+
+    let expected =
+      #"""
+      @CustomAttribute(
+        message: """
+          This is a
+          multiline
+          string
+          """)
+      public func f() {}
+
+      """#
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
+  }
+
+  func testMultilineStringLiteralInAvailableAttribute() {
+    let input =
+      #"""
+      @available(*, deprecated, message: """
+      This is a
+      multiline
+      string
+      """)
+      public func f() {}
+      """#
+
+    let expected =
+      #"""
+      @available(
+        *, deprecated,
+        message: """
+          This is a
+          multiline
+          string
+          """
+      )
+      public func f() {}
+
+      """#
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
+  }
 }

@@ -1799,8 +1799,23 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: AvailabilityLabeledArgumentSyntax) -> SyntaxVisitorContinueKind {
     before(node.label, tokens: .open)
-    after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
-    after(node.value.lastToken(viewMode: .sourceAccurate), tokens: .close)
+
+    let tokensAfterColon: [Token]
+    let endTokens: [Token]
+
+    if case .string(let string) = node.value,
+      string.openingQuote.tokenKind == .multilineStringQuote
+    {
+      tokensAfterColon =
+        [.break(.open(kind: .block), newlines: .elective(ignoresDiscretionary: true))]
+      endTokens = [.break(.close(mustBreak: false), size: 0), .close]
+    } else {
+      tokensAfterColon = [.break(.continue, newlines: .elective(ignoresDiscretionary: true))]
+      endTokens = [.close]
+    }
+
+    after(node.colon, tokens: tokensAfterColon)
+    after(node.value.lastToken(viewMode: .sourceAccurate), tokens: endTokens)
     return .visitChildren
   }
 
@@ -2371,6 +2386,16 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       after(node.openingQuote, tokens: .break(breakKind, size: 0, newlines: .hard(count: 1)))
       if !node.segments.isEmpty {
         before(node.closingQuote, tokens: .break(breakKind, newlines: .hard(count: 1)))
+      }
+    }
+    return .visitChildren
+  }
+
+  override func visit(_ node: SimpleStringLiteralExprSyntax) -> SyntaxVisitorContinueKind {
+    if node.openingQuote.tokenKind == .multilineStringQuote {
+      after(node.openingQuote, tokens: .break(.same, size: 0, newlines: .hard(count: 1)))
+      if !node.segments.isEmpty {
+        before(node.closingQuote, tokens: .break(.same, newlines: .hard(count: 1)))
       }
     }
     return .visitChildren
