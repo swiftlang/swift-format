@@ -77,7 +77,8 @@ public final class AllPublicDeclarationsHaveDocumentation: SyntaxLintRule {
   ) {
     guard
       DocumentationCommentText(extractedFrom: decl.leadingTrivia) == nil,
-      modifiers.contains(anyOf: [.public, .override])
+      modifiers.contains(anyOf: [.public]),
+      !modifiers.contains(anyOf: [.override])
     else {
       return
     }
