@@ -50,6 +50,27 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
       context: context,
       file: file,
       line: line)
+
+    var emittedPipelineFindings = [Finding]()
+    // Disable default rules, so only select rule runs in pipeline
+    configuration.rules = [type.ruleName: true]
+    let pipeline = SwiftLinter(
+      configuration: configuration,
+      findingConsumer: { emittedPipelineFindings.append($0) })
+    pipeline.debugOptions.insert(.disablePrettyPrint)
+    try! pipeline.lint(
+      syntax: sourceFileSyntax,
+      operatorTable: OperatorTable.standardOperators,
+      assumingFileURL: URL(string: file.description)!)
+
+    // Check that pipeline produces the same findings as the isolated linter rule
+    assertFindings(
+      expected: findings,
+      markerLocations: markedText.markers,
+      emittedFindings: emittedPipelineFindings,
+      context: context,
+      file: file,
+      line: line)
   }
 
   /// Asserts that the result of applying a formatter to the provided input code yields the output.
@@ -111,5 +132,20 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
       printTokenStream: false,
       whitespaceOnly: false
     ).prettyPrint()
+
+    var emittedPipelineFindings = [Finding]()
+    // Disable default rules, so only select rule runs in pipeline
+    configuration.rules = [formatType.ruleName: true]
+    let pipeline = SwiftFormatter(
+      configuration: configuration, findingConsumer: { emittedPipelineFindings.append($0) })
+    pipeline.debugOptions.insert(.disablePrettyPrint)
+    var pipelineActual = ""
+    try! pipeline.format(
+      syntax: sourceFileSyntax, operatorTable: OperatorTable.standardOperators,
+      assumingFileURL: nil, to: &pipelineActual)
+    assertStringsEqualWithDiff(pipelineActual, expected)
+    assertFindings(
+      expected: findings, markerLocations: markedInput.markers,
+      emittedFindings: emittedPipelineFindings, context: context, file: file, line: line)
   }
 }
