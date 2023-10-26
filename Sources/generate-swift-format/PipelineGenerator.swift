@@ -54,6 +54,10 @@ final class PipelineGenerator: FileGenerator {
         /// class type.
         var ruleCache = [ObjectIdentifier: Rule]()
 
+        /// Rules present in this dictionary skip visiting children until they leave the
+        /// syntax node stored as their value
+        var shouldSkipChildren = [ObjectIdentifier: SyntaxProtocol]()
+
         /// Creates a new lint pipeline.
         init(context: Context) {
           self.context = context
@@ -85,6 +89,25 @@ final class PipelineGenerator: FileGenerator {
           }
 
         """)
+
+        handle.write(
+          """
+            override func visitPost(_ node: \(nodeType)) {
+          """
+        )
+        for ruleName in lintRules.sorted() {
+          handle.write(
+            """
+                onVisitPost(rule: \(ruleName).self, for: node)
+
+            """)
+        }
+        handle.write(
+          """
+            }
+
+          """
+        )
     }
 
     handle.write(
