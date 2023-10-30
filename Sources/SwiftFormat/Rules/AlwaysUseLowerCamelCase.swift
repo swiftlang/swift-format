@@ -85,26 +85,6 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
               secondName, allowUnderscores: false, description: identifierDescription(for: node))
           }
         }
-      } else if let parameterClause = input.as(EnumCaseParameterClauseSyntax.self) {
-        for param in parameterClause.parameters {
-          if let firstName = param.firstName {
-            diagnoseLowerCamelCaseViolations(
-              firstName, allowUnderscores: false, description: identifierDescription(for: node))
-          }
-          if let secondName = param.secondName {
-            diagnoseLowerCamelCaseViolations(
-              secondName, allowUnderscores: false, description: identifierDescription(for: node))
-          }
-        }
-      } else if let parameterClause = input.as(FunctionParameterClauseSyntax.self) {
-        for param in parameterClause.parameters {
-          diagnoseLowerCamelCaseViolations(
-            param.firstName, allowUnderscores: false, description: identifierDescription(for: node))
-          if let secondName = param.secondName {
-            diagnoseLowerCamelCaseViolations(
-              secondName, allowUnderscores: false, description: identifierDescription(for: node))
-          }
-        }
       }
     }
     return .visitChildren
