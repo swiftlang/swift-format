@@ -27,7 +27,10 @@ public final class NoEmptyTrailingClosureParentheses: SyntaxFormatRule {
     guard
       let trailingClosure = node.trailingClosure,
       let leftParen = node.leftParen,
-      node.arguments.isEmpty
+      let rightParen = node.rightParen,
+      node.arguments.isEmpty,
+      !leftParen.trailingTrivia.hasAnyComments,
+      !rightParen.leadingTrivia.hasAnyComments
     else {
       return super.visit(node)
     }

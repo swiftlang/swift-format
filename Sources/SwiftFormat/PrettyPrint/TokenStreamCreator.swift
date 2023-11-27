@@ -1894,9 +1894,29 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: KeyPathSubscriptComponentSyntax) -> SyntaxVisitorContinueKind {
-    after(node.leftSquare, tokens: .break(.open, size: 0), .open)
-    before(node.rightSquare, tokens: .break(.close, size: 0), .close)
+    var breakBeforeRightParen = !isCompactSingleFunctionCallArgument(node.arguments)
+    if let component = node.parent?.as(KeyPathComponentSyntax.self) {
+      breakBeforeRightParen = !isLastKeyPathComponent(component)
+    }
+
+    arrangeFunctionCallArgumentList(
+      node.arguments,
+      leftDelimiter: node.leftSquare,
+      rightDelimiter: node.rightSquare,
+      forcesBreakBeforeRightDelimiter: breakBeforeRightParen)
     return .visitChildren
+  }
+
+  /// Returns a value indicating whether the given key path component was the last component in the
+  /// list containing it.
+  private func isLastKeyPathComponent(_ component: KeyPathComponentSyntax) -> Bool {
+    guard
+      let componentList = component.parent?.as(KeyPathComponentListSyntax.self),
+      let lastComponent = componentList.last
+    else {
+      return false
+    }
+    return component == lastComponent
   }
 
   override func visit(_ node: TernaryExprSyntax) -> SyntaxVisitorContinueKind {

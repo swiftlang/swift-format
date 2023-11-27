@@ -83,4 +83,29 @@ final class NoEmptyTrailingClosureParenthesesTests: LintOrFormatRuleTestCase {
       ]
     )
   }
+
+  func testDoNotRemoveParensContainingOnlyComments() {
+    assertFormatting(
+      NoEmptyTrailingClosureParentheses.self,
+      input: """
+        greetEnthusiastically(/*oldArg: x*/) { "John" }
+        greetEnthusiastically(
+          /*oldArg: x*/
+        ) { "John" }
+        greetEnthusiastically(
+          // oldArg: x
+        ) { "John" }
+        """,
+      expected: """
+        greetEnthusiastically(/*oldArg: x*/) { "John" }
+        greetEnthusiastically(
+          /*oldArg: x*/
+        ) { "John" }
+        greetEnthusiastically(
+          // oldArg: x
+        ) { "John" }
+        """,
+      findings: []
+    )
+  }
 }

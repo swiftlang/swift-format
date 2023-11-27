@@ -131,7 +131,9 @@ final class KeyPathExprTests: PrettyPrintTestCase {
       #"""
       let x = \ReallyLongType.reallyLongProperty.anotherLongProperty
       let x = \.reeeeallyLongProperty.anotherLongProperty
+      let x = \.longProperty.a.b.c[really + long + expression]
       let x = \.longProperty.a.b.c[really + long + expression].anotherLongProperty
+      let x = \.longProperty.a.b.c[label:really + long + expression].anotherLongProperty
       """#
 
     let expected =
@@ -146,6 +148,16 @@ final class KeyPathExprTests: PrettyPrintTestCase {
       let x =
         \.longProperty.a.b.c[
           really + long
+            + expression]
+      let x =
+        \.longProperty.a.b.c[
+          really + long
+            + expression
+        ].anotherLongProperty
+      let x =
+        \.longProperty.a.b.c[
+          label: really
+            + long
             + expression
         ].anotherLongProperty
 
