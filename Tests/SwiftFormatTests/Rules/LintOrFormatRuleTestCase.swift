@@ -112,7 +112,7 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
 
     let formatter = formatType.init(context: context)
     let actual = formatter.visit(sourceFileSyntax)
-    assertStringsEqualWithDiff(actual.description, expected, file: file, line: line)
+    assertStringsEqualWithDiff("\(actual)", expected, file: file, line: line)
 
     assertFindings(
       expected: findings,
@@ -123,15 +123,22 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
       line: line)
 
     // Verify that the pretty printer can consume the transformed tree (e.g., it does not contain
-    // any unfolded `SequenceExpr`s). We don't need to check the actual output here (we don't want
-    // the rule tests to be pretty-printer dependent), but this will catch invariants that aren't
-    // satisfied.
-    _ = PrettyPrinter(
+    // any unfolded `SequenceExpr`s). Then do a whitespace-insensitive comparison of the two trees
+    // to verify that the format rule didn't transform the tree in such a way that it caused the
+    // pretty-printer to drop important information (the most likely case is a format rule
+    // misplacing trivia in a way that the pretty-printer isn't able to handle).
+    let prettyPrintedSource = PrettyPrinter(
       context: context,
       node: Syntax(actual),
       printTokenStream: false,
       whitespaceOnly: false
     ).prettyPrint()
+    let prettyPrintedTree = Parser.parse(source: prettyPrintedSource)
+    XCTAssertEqual(
+      whitespaceInsensitiveText(of: actual),
+      whitespaceInsensitiveText(of: prettyPrintedTree),
+      "After pretty-printing and removing fluid whitespace, the files did not match",
+      file: file, line: line)
 
     var emittedPipelineFindings = [Finding]()
     // Disable default rules, so only select rule runs in pipeline
@@ -147,5 +154,36 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
     assertFindings(
       expected: findings, markerLocations: markedInput.markers,
       emittedFindings: emittedPipelineFindings, context: context, file: file, line: line)
+  }
+}
+
+/// Returns a string containing a whitespace-insensitive representation of the given source file.
+private func whitespaceInsensitiveText(of file: SourceFileSyntax) -> String {
+  var result = ""
+  for token in file.tokens(viewMode: .sourceAccurate) {
+    appendNonspaceTrivia(token.leadingTrivia, to: &result)
+    result.append(token.text)
+    appendNonspaceTrivia(token.trailingTrivia, to: &result)
+  }
+  return result
+}
+
+/// Appends any non-whitespace trivia pieces from the given trivia collection to the output string.
+private func appendNonspaceTrivia(_ trivia: Trivia, to string: inout String) {
+  for piece in trivia {
+    switch piece {
+    case .carriageReturnLineFeeds, .carriageReturns, .formfeeds, .newlines, .spaces, .tabs:
+      break
+    case .lineComment(let comment), .docLineComment(let comment):
+      // A tree transforming rule might leave whitespace at the end of a line comment, which the
+      // pretty printer will remove, so we should ignore that.
+      if let lastNonWhitespaceIndex = comment.lastIndex(where: { !$0.isWhitespace }) {
+        string.append(contentsOf: comment[...lastNonWhitespaceIndex])
+      } else {
+        string.append(comment)
+      }
+    default:
+      piece.write(to: &string)
+    }
   }
 }

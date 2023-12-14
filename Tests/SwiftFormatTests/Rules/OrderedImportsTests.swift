@@ -618,4 +618,38 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       ]
     )
   }
+
+  func testTrailingCommentsOnTopLevelCodeItems() {
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import Zebras
+        1️⃣import Apples
+        #if canImport(Darwin)
+          import Darwin
+        #elseif canImport(Glibc)
+          import Glibc
+        #endif  // canImport(Darwin)
+
+        foo()  // calls the foo
+        bar()  // calls the bar
+        """,
+      expected: """
+        import Apples
+        import Zebras
+
+        #if canImport(Darwin)
+          import Darwin
+        #elseif canImport(Glibc)
+          import Glibc
+        #endif  // canImport(Darwin)
+
+        foo()  // calls the foo
+        bar()  // calls the bar
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+      ]
+    )
+  }
 }

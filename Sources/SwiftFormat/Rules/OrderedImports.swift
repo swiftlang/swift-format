@@ -315,17 +315,17 @@ fileprivate func generateLines(codeBlockItemList: CodeBlockItemListSyntax, conte
       blockWithoutTrailingTrivia.trailingTrivia = []
       currentLine.syntaxNode = .importCodeBlock(blockWithoutTrailingTrivia, sortable: sortable)
     } else {
-      guard let syntaxNode = currentLine.syntaxNode else {
+      if let syntaxNode = currentLine.syntaxNode {
+        // Multiple code blocks can be merged, as long as there isn't an import statement.
+        switch syntaxNode {
+        case .importCodeBlock:
+          appendNewLine()
+          currentLine.syntaxNode = .nonImportCodeBlocks([block])
+        case .nonImportCodeBlocks(let existingCodeBlocks):
+          currentLine.syntaxNode = .nonImportCodeBlocks(existingCodeBlocks + [block])
+        }
+      } else {
         currentLine.syntaxNode = .nonImportCodeBlocks([block])
-        continue
-      }
-      // Multiple code blocks can be merged, as long as there isn't an import statement.
-      switch syntaxNode {
-      case .importCodeBlock:
-        appendNewLine()
-        currentLine.syntaxNode = .nonImportCodeBlocks([block])
-      case .nonImportCodeBlocks(let existingCodeBlocks):
-        currentLine.syntaxNode = .nonImportCodeBlocks(existingCodeBlocks + [block])
       }
     }
 
