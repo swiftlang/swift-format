@@ -41,9 +41,9 @@ extension SwiftFormatCommand {
 
     func run() async throws {
       try await performanceMeasurementOptions.printingInstructionCountIfRequested() {
-        let frontend = FormatFrontend(lintFormatOptions: formatOptions, inPlace: inPlace)
+        let frontend = await FormatFrontend(lintFormatOptions: formatOptions, inPlace: inPlace)
         await frontend.run()
-        if frontend.diagnosticsEngine.hasErrors { throw ExitCode.failure }
+        if await frontend.diagnosticsEngine.hasErrors { throw ExitCode.failure }
       }
     }
   }

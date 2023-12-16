@@ -33,10 +33,12 @@ extension SwiftFormatCommand {
 
     func run() async throws {
       try await performanceMeasurementOptions.printingInstructionCountIfRequested {
-        let frontend = LintFrontend(lintFormatOptions: lintOptions)
+        let frontend = await LintFrontend(lintFormatOptions: lintOptions)
         await frontend.run()
 
-        if frontend.diagnosticsEngine.hasErrors || strict && frontend.diagnosticsEngine.hasWarnings {
+        let hasErrors = await frontend.diagnosticsEngine.hasErrors
+        let hasWarnings = await frontend.diagnosticsEngine.hasWarnings
+        if hasErrors || strict && hasWarnings {
           throw ExitCode.failure
         }
       }

@@ -76,13 +76,13 @@ class Frontend {
   /// Creates a new frontend with the given options.
   ///
   /// - Parameter lintFormatOptions: Options that apply during formatting or linting.
-  init(lintFormatOptions: LintFormatOptions) {
+  init(lintFormatOptions: LintFormatOptions) async {
     self.lintFormatOptions = lintFormatOptions
 
     self.diagnosticPrinter = StderrDiagnosticPrinter(
       colorMode: lintFormatOptions.colorDiagnostics.map { $0 ? .on : .off } ?? .auto)
     self.diagnosticsEngine =
-      DiagnosticsEngine(diagnosticsHandlers: [diagnosticPrinter.printDiagnostic])
+      await DiagnosticsEngine(diagnosticsHandlers: [diagnosticPrinter.printDiagnostic])
   }
 
   /// Runs the linter or formatter over the inputs.
@@ -94,6 +94,7 @@ class Frontend {
         lintFormatOptions.paths.map(URL.init(fileURLWithPath:)),
         parallel: lintFormatOptions.parallel)
     }
+    await diagnosticsEngine.flush()
   }
 
   /// Called by the frontend to process a single file.
