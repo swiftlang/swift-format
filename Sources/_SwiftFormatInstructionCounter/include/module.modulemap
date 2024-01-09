@@ -1,0 +1,3 @@
+module _SwiftFormatInstructionCounter {
+  header "InstructionsExecuted.h"
+}
