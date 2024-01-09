@@ -1,0 +1,105 @@
+#[[
+This source file is part of the swift-format open source project
+
+Copyright (c) 2024 Apple Inc. and the swift-format project authors
+Licensed under Apache License v2.0 with Runtime Library Exception
+
+See https://swift.org/LICENSE.txt for license information
+#]]
+
+add_library(SwiftFormat
+  API/Configuration+Default.swift
+  API/Configuration.swift
+  API/DebugOptions.swift
+  API/Finding.swift
+  API/FindingCategorizing.swift
+  API/Indent.swift
+  API/SwiftFormatError.swift
+  API/SwiftFormatter.swift
+  API/SwiftLinter.swift
+  Core/Context.swift
+  Core/DocumentationComment.swift
+  Core/DocumentationCommentText.swift
+  Core/Finding+Convenience.swift
+  Core/FindingEmitter.swift
+  Core/FormatPipeline.swift
+  Core/FunctionDeclSyntax+Convenience.swift
+  Core/ImportsXCTestVisitor.swift
+  Core/LazySplitSequence.swift
+  Core/LintPipeline.swift
+  Core/ModifierListSyntax+Convenience.swift
+  Core/Parsing.swift
+  Core/Pipelines+Generated.swift
+  Core/RememberingIterator.swift
+  Core/Rule.swift
+  Core/RuleBasedFindingCategory.swift
+  Core/RuleMask.swift
+  Core/RuleNameCache+Generated.swift
+  Core/RuleRegistry+Generated.swift
+  Core/RuleState.swift
+  Core/SyntaxFormatRule.swift
+  Core/SyntaxLintRule.swift
+  Core/SyntaxProtocol+Convenience.swift
+  Core/Trivia+Convenience.swift
+  Core/WithSemicolonSyntax.swift
+  PrettyPrint/Comment.swift
+  PrettyPrint/Indent+Length.swift
+  PrettyPrint/PrettyPrint.swift
+  PrettyPrint/PrettyPrintFindingCategory.swift
+  PrettyPrint/Token.swift
+  PrettyPrint/TokenStreamCreator.swift
+  PrettyPrint/Verbatim.swift
+  PrettyPrint/WhitespaceFindingCategory.swift
+  PrettyPrint/WhitespaceLinter.swift
+  Rules/AllPublicDeclarationsHaveDocumentation.swift
+  Rules/AlwaysUseLiteralForEmptyCollectionInit.swift
+  Rules/AlwaysUseLowerCamelCase.swift
+  Rules/AmbiguousTrailingClosureOverload.swift
+  Rules/BeginDocumentationCommentWithOneLineSummary.swift
+  Rules/DoNotUseSemicolons.swift
+  Rules/DontRepeatTypeInStaticProperties.swift
+  Rules/FileScopedDeclarationPrivacy.swift
+  Rules/FullyIndirectEnum.swift
+  Rules/GroupNumericLiterals.swift
+  Rules/IdentifiersMustBeASCII.swift
+  Rules/NeverForceUnwrap.swift
+  Rules/NeverUseForceTry.swift
+  Rules/NeverUseImplicitlyUnwrappedOptionals.swift
+  Rules/NoAccessLevelOnExtensionDeclaration.swift
+  Rules/NoAssignmentInExpressions.swift
+  Rules/NoBlockComments.swift
+  Rules/NoCasesWithOnlyFallthrough.swift
+  Rules/NoEmptyTrailingClosureParentheses.swift
+  Rules/NoLabelsInCasePatterns.swift
+  Rules/NoLeadingUnderscores.swift
+  Rules/NoParensAroundConditions.swift
+  Rules/NoPlaygroundLiterals.swift
+  Rules/NoVoidReturnOnFunctionSignature.swift
+  Rules/OmitExplicitReturns.swift
+  Rules/OneCasePerLine.swift
+  Rules/OneVariableDeclarationPerLine.swift
+  Rules/OnlyOneTrailingClosureArgument.swift
+  Rules/OrderedImports.swift
+  Rules/ReplaceForEachWithForLoop.swift
+  Rules/ReturnVoidInsteadOfEmptyTuple.swift
+  Rules/TypeNamesShouldBeCapitalized.swift
+  Rules/UseEarlyExits.swift
+  Rules/UseExplicitNilCheckInConditions.swift
+  Rules/UseLetInEveryBoundCaseVariable.swift
+  Rules/UseShorthandTypeNames.swift
+  Rules/UseSingleLinePropertyGetter.swift
+  Rules/UseSynthesizedInitializer.swift
+  Rules/UseTripleSlashForDocumentationComments.swift
+  Rules/UseWhereClausesInForLoops.swift
+  Rules/ValidateDocumentationComments.swift)
+target_link_libraries(SwiftFormat PUBLIC
+  SwiftMarkdown::Markdown
+  SwiftSyntax::SwiftSyntax
+  SwiftSyntax::SwiftSyntaxBuilder
+  SwiftSyntax::SwiftOperators
+  SwiftSyntax::SwiftParser
+  SwiftSyntax::SwiftParserDiagnostics
+  libcmark-gfm
+  libcmark-gfm-extensions)
+
+_install_target(SwiftFormat)
