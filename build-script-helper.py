@@ -20,6 +20,7 @@ import os, platform
 import subprocess
 from pathlib import Path
 from typing import List, Union, Optional
+import json
 
 # -----------------------------------------------------------------------------
 # General utilities
@@ -68,11 +69,29 @@ def escape_cmd_arg(arg: Union[str, Path]) -> str:
 # SwiftPM wrappers
 
 
+def get_build_target(swift_exec: Path, cross_compile_config: Optional[Path]) -> str:
+    """Returns the target-triple of the current machine or for cross-compilation."""
+    command = [swift_exec, "-print-target-info"]
+    if cross_compile_config:
+        cross_compile_json = json.load(open(cross_compile_config))
+        command += ["-target", cross_compile_json["target"]]
+    target_info_json = subprocess.check_output(
+        command, stderr=subprocess.PIPE, universal_newlines=True
+    ).strip()
+    target_info = json.loads(target_info_json)
+    if "-apple-macosx" in target_info["target"]["unversionedTriple"]:
+        return target_info["target"]["unversionedTriple"]
+    return target_info["target"]["triple"]
+
+
 def get_swiftpm_options(
+    swift_exec: Path,
     package_path: Path,
     build_path: Path,
     multiroot_data_file: Optional[Path],
     configuration: str,
+    cross_compile_host: Optional[str],
+    cross_compile_config: Optional[Path],
     verbose: bool,
 ) -> List[Union[str, Path]]:
     args: List[Union[str, Path]] = [
@@ -87,8 +106,17 @@ def get_swiftpm_options(
         args += ["--multiroot-data-file", multiroot_data_file]
     if verbose:
         args += ["--verbose"]
-    if platform.system() == "Darwin":
-        args += ["-Xlinker", "-rpath", "-Xlinker", "/usr/lib/swift"]
+    build_target = get_build_target(
+        swift_exec, cross_compile_config=cross_compile_config
+    )
+    build_os = build_target.split("-")[2]
+    if build_os.startswith("macosx"):
+        args += [
+            "-Xlinker",
+            "-rpath",
+            "-Xlinker",
+            "/usr/lib/swift",
+        ]
         args += [
             "-Xlinker",
             "-rpath",
@@ -101,6 +129,21 @@ def get_swiftpm_options(
             "-Xlinker",
             "@executable_path/../lib/swift-5.5/macosx",
         ]
+    else:
+        # Library rpath for swift, dispatch, Foundation, etc. when installing
+        args += [
+            "-Xlinker",
+            "-rpath",
+            "-Xlinker",
+            "$ORIGIN/../lib/swift/" + build_os,
+        ]
+
+    if cross_compile_host:
+        if build_os.startswith("macosx") and cross_compile_host.startswith("macosx-"):
+            args += ["--arch", "x86_64", "--arch", "arm64"]
+        else:
+            fatal_error("cannot cross-compile for %s" % cross_compile_host)
+
     return args
 
 
@@ -118,6 +161,8 @@ def invoke_swiftpm(
     build_path: Path,
     multiroot_data_file: Optional[Path],
     configuration: str,
+    cross_compile_host: Optional[str],
+    cross_compile_config: Optional[Path],
     env,
     verbose: bool,
 ):
@@ -126,7 +171,14 @@ def invoke_swiftpm(
     """
     args = [swift_exec, action]
     args += get_swiftpm_options(
-        package_path, build_path, multiroot_data_file, configuration, verbose
+        swift_exec=swift_exec,
+        package_path=package_path,
+        build_path=build_path,
+        multiroot_data_file=multiroot_data_file,
+        configuration=configuration,
+        cross_compile_host=cross_compile_host,
+        cross_compile_config=cross_compile_config,
+        verbose=verbose,
     )
     if action == "test":
         args += ["--test-product", product, "--disable-testable-imports"]
@@ -151,6 +203,8 @@ def build(args: argparse.Namespace) -> None:
         build_path=args.build_path,
         multiroot_data_file=args.multiroot_data_file,
         configuration=args.configuration,
+        cross_compile_host=args.cross_compile_host,
+        cross_compile_config=args.cross_compile_config,
         env=env,
         verbose=args.verbose,
     )
@@ -167,6 +221,8 @@ def test(args: argparse.Namespace) -> None:
         build_path=args.build_path,
         multiroot_data_file=args.multiroot_data_file,
         configuration=args.configuration,
+        cross_compile_host=args.cross_compile_host,
+        cross_compile_config=args.cross_compile_config,
         env=env,
         verbose=args.verbose,
     )
@@ -179,10 +235,13 @@ def install(args: argparse.Namespace) -> None:
 
     env = get_swiftpm_environment_variables()
     swiftpm_args = get_swiftpm_options(
+        swift_exec=args.swift_exec,
         package_path=args.package_path,
         build_path=args.build_path,
         multiroot_data_file=args.multiroot_data_file,
         configuration=args.configuration,
+        cross_compile_host=args.cross_compile_host,
+        cross_compile_config=args.cross_compile_config,
         verbose=args.verbose,
     )
     cmd = [args.swift_exec, "build", "--show-bin-path"] + swiftpm_args
@@ -221,6 +280,13 @@ def add_common_args(parser: argparse.ArgumentParser) -> None:
         required=True,
         type=Path,
         help="the toolchain to use when building this package",
+    )
+    parser.add_argument(
+        "--cross-compile-host", help="cross-compile for another host instead"
+    )
+    parser.add_argument(
+        "--cross-compile-config",
+        help="an SPM JSON destination file containing Swift cross-compilation flags",
     )
 
 
