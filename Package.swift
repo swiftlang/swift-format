@@ -14,6 +14,24 @@
 import Foundation
 import PackageDescription
 
+// MARK: - Parse build arguments
+
+func hasEnvironmentVariable(_ name: String) -> Bool {
+  return ProcessInfo.processInfo.environment[name] != nil
+}
+
+// When building the toolchain on the CI, don't add the CI's runpath for the
+// final build before installing.
+let installAction = hasEnvironmentVariable("SOURCEKIT_LSP_CI_INSTALL")
+
+
+// MARK: - Compute custom build settings
+
+var swiftformatLinkSettings: [LinkerSetting] = []
+if installAction {
+  swiftformatLinkSettings += [.unsafeFlags(["-no-toolchain-stdlib-rpath"], .when(platforms: [.linux, .android]))]
+}
+
 let package = Package(
   name: "swift-format",
   platforms: [
@@ -106,7 +124,8 @@ let package = Package(
         .product(name: "ArgumentParser", package: "swift-argument-parser"),
         .product(name: "SwiftSyntax", package: "swift-syntax"),
         .product(name: "SwiftParser", package: "swift-syntax"),
-      ]
+      ],
+      linkerSettings: swiftformatLinkSettings
     ),
 
     .testTarget(

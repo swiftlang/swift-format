@@ -147,9 +147,11 @@ def get_swiftpm_options(
     return args
 
 
-def get_swiftpm_environment_variables():
+def get_swiftpm_environment_variables(action: str):
     env = dict(os.environ)
     env["SWIFTCI_USE_LOCAL_DEPS"] = "1"
+    if action == "install":
+        env["SOURCEKIT_LSP_CI_INSTALL"] = "1"
     return env
 
 
@@ -194,7 +196,7 @@ def invoke_swiftpm(
 
 def build(args: argparse.Namespace) -> None:
     print("** Building swift-format **")
-    env = get_swiftpm_environment_variables()
+    env = get_swiftpm_environment_variables(args.action)
     invoke_swiftpm(
         package_path=args.package_path,
         swift_exec=args.swift_exec,
@@ -212,7 +214,7 @@ def build(args: argparse.Namespace) -> None:
 
 def test(args: argparse.Namespace) -> None:
     print("** Testing swift-format **")
-    env = get_swiftpm_environment_variables()
+    env = get_swiftpm_environment_variables(args.action)
     invoke_swiftpm(
         package_path=args.package_path,
         swift_exec=args.swift_exec,
@@ -233,7 +235,7 @@ def install(args: argparse.Namespace) -> None:
 
     print("** Installing swift-format **")
 
-    env = get_swiftpm_environment_variables()
+    env = get_swiftpm_environment_variables(args.action)
     swiftpm_args = get_swiftpm_options(
         swift_exec=args.swift_exec,
         package_path=args.package_path,
