@@ -17,8 +17,8 @@ import PackageDescription
 let package = Package(
   name: "swift-format",
   platforms: [
-    .iOS("13.0"),
-    .macOS("10.15")
+    .macOS("12.0"),
+    .iOS("13.0")
   ],
   products: [
     .executable(
@@ -144,7 +144,7 @@ func hasEnvironmentVariable(_ name: String) -> Bool {
 
 // When building the toolchain on the CI, don't add the CI's runpath for the
 // final build before installing.
-var installAction: Bool { hasEnvironmentVariable("SOURCEKIT_LSP_CI_INSTALL") }
+var installAction: Bool { hasEnvironmentVariable("SWIFTFORMAT_CI_INSTALL") }
 
 /// Assume that all the package dependencies are checked out next to sourcekit-lsp and use that instead of fetching a
 /// remote dependency.
