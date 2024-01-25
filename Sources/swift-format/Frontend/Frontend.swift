@@ -213,7 +213,7 @@ class Frontend {
     // then try to load the configuration by inferring it based on the source file path.
     if let swiftFileURL = swiftFileURL {
       do {
-        if let configuration = try configurationLoader.configuration(forSwiftFileAt: swiftFileURL) {
+        if let configuration = try configurationLoader.configuration(forPath: swiftFileURL) {
           self.checkForUnrecognizedRules(in: configuration)
           return configuration
         }
@@ -223,11 +223,26 @@ class Frontend {
           "Unable to read configuration for \(swiftFileURL.path): \(error.localizedDescription)")
         return nil
       }
+    } else {
+      // If reading from stdin and no explicit configuration file was given,
+      // walk up the file tree from the cwd to find a config.
+
+      let cwd = URL(fileURLWithPath: FileManager.default.currentDirectoryPath)
+      // Definitely a Swift file. Definitely not a directory. Shhhhhh.
+      do {
+        if let configuration = try configurationLoader.configuration(forPath: cwd) {
+          self.checkForUnrecognizedRules(in: configuration)
+          return configuration
+        }
+      } catch {
+        diagnosticsEngine.emitError(
+          "Unable to read configuration for \(cwd): \(error.localizedDescription)")
+        return nil
+      }
     }
 
-    // If neither path was given (for example, formatting standard input with no assumed filename)
-    // or if there was no configuration found by inferring it from the source file path, return the
-    // default configuration.
+    // An explicit configuration has not been given, and one cannot be found.
+    // Return the default configuration.
     return Configuration()
   }
 
