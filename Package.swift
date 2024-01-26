@@ -14,24 +14,6 @@
 import Foundation
 import PackageDescription
 
-// MARK: - Parse build arguments
-
-func hasEnvironmentVariable(_ name: String) -> Bool {
-  return ProcessInfo.processInfo.environment[name] != nil
-}
-
-// When building the toolchain on the CI, don't add the CI's runpath for the
-// final build before installing.
-let installAction = hasEnvironmentVariable("SOURCEKIT_LSP_CI_INSTALL")
-
-
-// MARK: - Compute custom build settings
-
-var swiftformatLinkSettings: [LinkerSetting] = []
-if installAction {
-  swiftformatLinkSettings += [.unsafeFlags(["-no-toolchain-stdlib-rpath"], .when(platforms: [.linux, .android]))]
-}
-
 let package = Package(
   name: "swift-format",
   platforms: [
@@ -56,9 +38,7 @@ let package = Package(
       targets: ["Lint Source Code"]
     ),
   ],
-  dependencies: [
-    // See the "Dependencies" section below.
-  ],
+  dependencies: dependencies,
   targets: [
     .target(
       name: "_SwiftFormatInstructionCounter"
@@ -156,28 +136,47 @@ let package = Package(
   ]
 )
 
-// MARK: Dependencies
+// MARK: - Parse build arguments
 
-if ProcessInfo.processInfo.environment["SWIFTCI_USE_LOCAL_DEPS"] == nil {
-  // Building standalone.
-  package.dependencies += [
-    .package(
-      url: "https://github.com/apple/swift-argument-parser.git", 
-      from: "1.2.2"
-    ),
-    .package(
-      url: "https://github.com/apple/swift-markdown.git",
-      from: "0.2.0"
-    ),
-    .package(
-      url: "https://github.com/apple/swift-syntax.git",
-      branch: "main"
-    ),
-  ]
-} else {
-  package.dependencies += [
-    .package(path: "../swift-argument-parser"),
-    .package(path: "../swift-markdown"),
-    .package(path: "../swift-syntax"),
-  ]
+func hasEnvironmentVariable(_ name: String) -> Bool {
+  return ProcessInfo.processInfo.environment[name] != nil
 }
+
+// When building the toolchain on the CI, don't add the CI's runpath for the
+// final build before installing.
+var installAction: Bool { hasEnvironmentVariable("SOURCEKIT_LSP_CI_INSTALL") }
+
+/// Assume that all the package dependencies are checked out next to sourcekit-lsp and use that instead of fetching a
+/// remote dependency.
+var useLocalDependencies: Bool { hasEnvironmentVariable("SWIFTCI_USE_LOCAL_DEPS") }
+
+// MARK: - Dependencies
+
+var dependencies: [Package.Dependency] {
+  if useLocalDependencies {
+    return [
+      .package(path: "../swift-argument-parser"),
+      .package(path: "../swift-markdown"),
+      .package(path: "../swift-syntax"),
+    ]
+  } else {
+    return [
+      .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.2.2"),
+      .package(url: "https://github.com/apple/swift-markdown.git", from: "0.2.0"),
+      .package(url: "https://github.com/apple/swift-syntax.git", branch: "main"),
+    ]
+  }
+}
+
+
+
+// MARK: - Compute custom build settings
+
+var swiftformatLinkSettings: [LinkerSetting]  {
+  if installAction {
+    return [.unsafeFlags(["-no-toolchain-stdlib-rpath"], .when(platforms: [.linux, .android]))]
+  } else {
+    return []
+  }
+}
+
