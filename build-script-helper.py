@@ -110,26 +110,7 @@ def get_swiftpm_options(
         swift_exec, cross_compile_config=cross_compile_config
     )
     build_os = build_target.split("-")[2]
-    if build_os.startswith("macosx"):
-        args += [
-            "-Xlinker",
-            "-rpath",
-            "-Xlinker",
-            "/usr/lib/swift",
-        ]
-        args += [
-            "-Xlinker",
-            "-rpath",
-            "-Xlinker",
-            "@executable_path/../lib/swift/macosx",
-        ]
-        args += [
-            "-Xlinker",
-            "-rpath",
-            "-Xlinker",
-            "@executable_path/../lib/swift-5.5/macosx",
-        ]
-    else:
+    if not build_os.startswith("macosx"):
         # Library rpath for swift, dispatch, Foundation, etc. when installing
         args += [
             "-Xlinker",
@@ -137,6 +118,7 @@ def get_swiftpm_options(
             "-Xlinker",
             "$ORIGIN/../lib/swift/" + build_os,
         ]
+        args += ['--disable-local-rpath']
 
     if cross_compile_host:
         if build_os.startswith("macosx") and cross_compile_host.startswith("macosx-"):
@@ -151,7 +133,7 @@ def get_swiftpm_environment_variables(action: str):
     env = dict(os.environ)
     env["SWIFTCI_USE_LOCAL_DEPS"] = "1"
     if action == "install":
-        env["SOURCEKIT_LSP_CI_INSTALL"] = "1"
+        env["SWIFTFORMAT_CI_INSTALL"] = "1"
     return env
 
 
