@@ -15,7 +15,7 @@ import ArgumentParser
 /// Collects the command line options that were passed to `swift-format` and dispatches to the
 /// appropriate subcommand.
 @main
-struct SwiftFormatCommand: ParsableCommand {
+struct SwiftFormatCommand: AsyncParsableCommand {
   static var configuration = CommandConfiguration(
     commandName: "swift-format",
     abstract: "Format or lint Swift source code",

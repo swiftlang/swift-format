@@ -20,9 +20,9 @@ class FormatFrontend: Frontend {
   /// Whether or not to format the Swift file in-place.
   private let inPlace: Bool
 
-  init(lintFormatOptions: LintFormatOptions, inPlace: Bool) {
+  init(lintFormatOptions: LintFormatOptions, inPlace: Bool) async {
     self.inPlace = inPlace
-    super.init(lintFormatOptions: lintFormatOptions)
+    await super.init(lintFormatOptions: lintFormatOptions)
   }
 
   override func processFile(_ fileToProcess: FileToProcess) {

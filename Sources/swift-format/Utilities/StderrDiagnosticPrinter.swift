@@ -38,9 +38,6 @@ final class StderrDiagnosticPrinter {
     case reset = "0"
   }
 
-  /// The queue used to synchronize printing uninterrupted diagnostic messages.
-  private let printQueue = DispatchQueue(label: "com.apple.swift-format.StderrDiagnosticPrinter")
-
   /// Indicates whether colors should be used when printing diagnostics.
   private let useColors: Bool
 
@@ -58,22 +55,20 @@ final class StderrDiagnosticPrinter {
 
   /// Prints a diagnostic to standard error.
   func printDiagnostic(_ diagnostic: Diagnostic) {
-    printQueue.sync {
-      let stderr = FileHandleTextOutputStream(FileHandle.standardError)
+    let stderr = FileHandleTextOutputStream(FileHandle.standardError)
 
-      stderr.write("\(ansiSGR(.boldWhite))\(description(of: diagnostic.location)): ")
+    stderr.write("\(ansiSGR(.boldWhite))\(description(of: diagnostic.location)): ")
 
-      switch diagnostic.severity {
-      case .error: stderr.write("\(ansiSGR(.boldRed))error: ")
-      case .warning: stderr.write("\(ansiSGR(.boldMagenta))warning: ")
-      case .note: stderr.write("\(ansiSGR(.boldGray))note: ")
-      }
-
-      if let category = diagnostic.category {
-        stderr.write("\(ansiSGR(.boldYellow))[\(category)] ")
-      }
-      stderr.write("\(ansiSGR(.boldWhite))\(diagnostic.message)\(ansiSGR(.reset))\n")
+    switch diagnostic.severity {
+    case .error: stderr.write("\(ansiSGR(.boldRed))error: ")
+    case .warning: stderr.write("\(ansiSGR(.boldMagenta))warning: ")
+    case .note: stderr.write("\(ansiSGR(.boldGray))note: ")
     }
+
+    if let category = diagnostic.category {
+      stderr.write("\(ansiSGR(.boldYellow))[\(category)] ")
+    }
+    stderr.write("\(ansiSGR(.boldWhite))\(diagnostic.message)\(ansiSGR(.reset))\n")
   }
 
   /// Returns a string representation of the given diagnostic location, or a fallback string if the

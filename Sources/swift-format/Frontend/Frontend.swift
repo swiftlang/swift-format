@@ -76,24 +76,25 @@ class Frontend {
   /// Creates a new frontend with the given options.
   ///
   /// - Parameter lintFormatOptions: Options that apply during formatting or linting.
-  init(lintFormatOptions: LintFormatOptions) {
+  init(lintFormatOptions: LintFormatOptions) async {
     self.lintFormatOptions = lintFormatOptions
 
     self.diagnosticPrinter = StderrDiagnosticPrinter(
       colorMode: lintFormatOptions.colorDiagnostics.map { $0 ? .on : .off } ?? .auto)
     self.diagnosticsEngine =
-      DiagnosticsEngine(diagnosticsHandlers: [diagnosticPrinter.printDiagnostic])
+      await DiagnosticsEngine(diagnosticsHandlers: [diagnosticPrinter.printDiagnostic])
   }
 
   /// Runs the linter or formatter over the inputs.
-  final func run() {
+  final func run() async {
     if lintFormatOptions.paths.isEmpty {
-      processStandardInput()
+      await processStandardInput()
     } else {
-      processURLs(
+      await processURLs(
         lintFormatOptions.paths.map(URL.init(fileURLWithPath:)),
         parallel: lintFormatOptions.parallel)
     }
+    await diagnosticsEngine.flush()
   }
 
   /// Called by the frontend to process a single file.
@@ -107,8 +108,8 @@ class Frontend {
   }
 
   /// Processes source content from standard input.
-  private func processStandardInput() {
-    guard let configuration = configuration(
+  private func processStandardInput() async {
+    guard let configuration = await configuration(
       fromPathOrString: lintFormatOptions.configuration,
       orInferredFromSwiftFileAt: nil)
     else {
@@ -124,29 +125,33 @@ class Frontend {
   }
 
   /// Processes source content from a list of files and/or directories provided as file URLs.
-  private func processURLs(_ urls: [URL], parallel: Bool) {
+  private func processURLs(_ urls: [URL], parallel: Bool) async {
     precondition(
       !urls.isEmpty,
       "processURLs(_:) should only be called when 'urls' is non-empty.")
 
     if parallel {
-      let filesToProcess =
-        FileIterator(urls: urls, followSymlinks: lintFormatOptions.followSymlinks)
-        .compactMap(openAndPrepareFile)
-      DispatchQueue.concurrentPerform(iterations: filesToProcess.count) { index in
-        processFile(filesToProcess[index])
+      await withTaskGroup(of: Void.self) { group in
+        for url in FileIterator(urls: urls, followSymlinks: lintFormatOptions.followSymlinks) {
+          group.addTask {
+            if let fileToProcess = await self.openAndPrepareFile(at: url) {
+              self.processFile(fileToProcess)
+            }
+          }
+        }
       }
     } else {
-      FileIterator(urls: urls, followSymlinks: lintFormatOptions.followSymlinks)
-        .lazy
-        .compactMap(openAndPrepareFile)
-        .forEach(processFile)
+      for url in FileIterator(urls: urls, followSymlinks: lintFormatOptions.followSymlinks) {
+        if let fileToProcess = await openAndPrepareFile(at: url) {
+          processFile(fileToProcess)
+        }
+      }
     }
   }
 
   /// Read and prepare the file at the given path for processing, optionally synchronizing
   /// diagnostic output.
-  private func openAndPrepareFile(at url: URL) -> FileToProcess? {
+  private func openAndPrepareFile(at url: URL) async -> FileToProcess? {
     guard let sourceFile = try? FileHandle(forReadingFrom: url) else {
       diagnosticsEngine.emitError(
         "Unable to open \(url.relativePath): file is not readable or does not exist")
@@ -154,7 +159,7 @@ class Frontend {
     }
 
     guard
-      let configuration = configuration(
+      let configuration = await configuration(
         fromPathOrString: lintFormatOptions.configuration,
         orInferredFromSwiftFileAt: url)
     else {
@@ -185,13 +190,13 @@ class Frontend {
   private func configuration(
     fromPathOrString pathOrString: String?,
     orInferredFromSwiftFileAt swiftFileURL: URL?
-  ) -> Configuration? {
+  ) async -> Configuration? {
     if let pathOrString = pathOrString {
       // If an explicit configuration file path was given, try to load it and fail if it cannot be
       // loaded. (Do not try to fall back to a path inferred from the source file path.)
       let configurationFileURL = URL(fileURLWithPath: pathOrString)
       do {
-        let configuration = try configurationLoader.configuration(at: configurationFileURL)
+        let configuration = try await configurationLoader.configuration(at: configurationFileURL)
         self.checkForUnrecognizedRules(in: configuration)
         return configuration
       } catch {
@@ -213,7 +218,7 @@ class Frontend {
     // then try to load the configuration by inferring it based on the source file path.
     if let swiftFileURL = swiftFileURL {
       do {
-        if let configuration = try configurationLoader.configuration(forSwiftFileAt: swiftFileURL) {
+        if let configuration = try await configurationLoader.configuration(forSwiftFileAt: swiftFileURL) {
           self.checkForUnrecognizedRules(in: configuration)
           return configuration
         }
