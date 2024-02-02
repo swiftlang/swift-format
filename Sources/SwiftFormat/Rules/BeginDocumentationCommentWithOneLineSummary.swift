@@ -130,8 +130,14 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
         in: text.startIndex..<text.endIndex,
         scheme: NSLinguisticTagScheme.lexicalClass.rawValue,
         tokenRanges: &tokenRanges)
+      var isInsideQuotes = false
       let sentenceTerminatorIndices = tags.enumerated().filter {
-        $0.element == "SentenceTerminator"
+        if $0.element == "OpenQuote" {
+          isInsideQuotes = true
+        } else if $0.element == "CloseQuote" {
+          isInsideQuotes = false
+        }
+        return !isInsideQuotes && $0.element == "SentenceTerminator"
       }.map {
         tokenRanges[$0.offset].lowerBound
       }

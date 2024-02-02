@@ -139,4 +139,24 @@ final class BeginDocumentationCommentWithOneLineSummaryTests: LintOrFormatRuleTe
       )
     #endif
   }
+    
+  func testSentenceTerminationInsideQuotes() {
+    assertLint(
+      BeginDocumentationCommentWithOneLineSummary.self,
+      """
+      /// Creates an instance with the same raw value as `x` failing iff `x.kind != Subject.kind`.
+      struct TestBackTick {}
+      
+      /// A set of `Diagnostic` that can answer the question 'was there an error?' in O(1).
+      struct TestSingleQuotes {}
+      
+      /// A set of `Diagnostic` that can answer the question “was there an error?” in O(1).
+      struct TestDoubleQuotes {}
+      
+      /// A set of `Diagnostic` that can answer the question “was there 
+      /// an error?” in O(1).
+      struct TestTwoLinesDoubleQuotes {}
+      """
+    )
+  }
 }
