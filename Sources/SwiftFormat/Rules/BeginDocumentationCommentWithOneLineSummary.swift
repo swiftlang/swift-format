@@ -11,6 +11,9 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+#if os(macOS)
+import NaturalLanguage
+#endif
 import SwiftSyntax
 
 /// All documentation comments must begin with a one-line summary of the declaration.
@@ -125,19 +128,31 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
       }
 
       var sentences = [String]()
+      var tags = [NLTag]()
       var tokenRanges = [Range<String.Index>]()
-      let tags = text.linguisticTags(
+      
+      let tagger = NLTagger(tagSchemes: [.lexicalClass])
+      tagger.string = text
+      tagger.enumerateTags(
         in: text.startIndex..<text.endIndex,
-        scheme: NSLinguisticTagScheme.lexicalClass.rawValue,
-        tokenRanges: &tokenRanges)
+        unit: .word,
+        scheme: .lexicalClass
+      ) { tag, range in
+        if let tag {
+          tags.append(tag)
+          tokenRanges.append(range)
+        }
+        return true
+      }
+
       var isInsideQuotes = false
       let sentenceTerminatorIndices = tags.enumerated().filter {
-        if $0.element == "OpenQuote" {
+        if $0.element == NLTag.openQuote {
           isInsideQuotes = true
-        } else if $0.element == "CloseQuote" {
+        } else if $0.element == NLTag.closeQuote {
           isInsideQuotes = false
         }
-        return !isInsideQuotes && $0.element == "SentenceTerminator"
+        return !isInsideQuotes && $0.element == NLTag.sentenceTerminator
       }.map {
         tokenRanges[$0.offset].lowerBound
       }
@@ -158,8 +173,8 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
   /// Returns the best approximation of sentences in the given text using string splitting around
   /// periods that are followed by spaces.
   ///
-  /// This method is a fallback for platforms (like Linux, currently) where `String` does not
-  /// support `NSLinguisticTagger` and its related APIs. It will fail to catch certain kinds of
+  /// This method is a fallback for platforms (like Linux, currently) that does not
+  /// support `NaturalLanguage` and its related APIs. It will fail to catch certain kinds of
   /// sentences (such as those containing abbreviations that are followed by a period, like "Dr.")
   /// that the more advanced API can handle.
   private func nonLinguisticSentenceApproximations(in text: String) -> (
