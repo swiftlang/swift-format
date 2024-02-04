@@ -19,13 +19,13 @@ struct ConfigurationLoader {
   /// The cache of previously loaded configurations.
   private var cache = [String: Configuration]()
 
-  /// Returns the configuration found by searching in the directory (and ancestor directories)
-  /// containing the given `.swift` source file.
+  /// Returns the configuration found by walking up the file tree from `url`.
+  /// This function works for both files and directories.
   ///
   /// If no configuration file was found during the search, this method returns nil.
   ///
   /// - Throws: If a configuration file was found but an error occurred loading it.
-  mutating func configuration(forSwiftFileAt url: URL) throws -> Configuration? {
+  mutating func configuration(forPath url: URL) throws -> Configuration? {
     guard let configurationFileURL = Configuration.url(forConfigurationFileApplyingTo: url)
     else {
       return nil
