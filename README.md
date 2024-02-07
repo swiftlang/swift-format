@@ -70,7 +70,7 @@ Run `brew install swift-format` to install the latest version.
 
 ### Building from source
 
-Install swift-fromat using the following commands:
+Install `swift-format` using the following commands:
 
 ```sh
 VERSION=509.0.0  # replace this with the version you need
