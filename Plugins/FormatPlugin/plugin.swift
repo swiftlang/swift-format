@@ -40,7 +40,7 @@ extension FormatPlugin: CommandPlugin {
     let targetNames = argExtractor.extractOption(named: "target")
     let targetsToFormat = targetNames.isEmpty ? context.package.targets : try context.package.targets(named: targetNames)
     
-    let configurationFilePath = argExtractor.extractOption(named: "configuration").first
+    let configurationFilePath = argExtractor.extractOption(named: "swift-format-configuration").first
     
     let sourceCodeTargets = targetsToFormat.compactMap{ $0 as? SourceModuleTarget }
     
@@ -60,7 +60,7 @@ extension FormatPlugin: XcodeCommandPlugin {
     let swiftFormatTool = try context.tool(named: "swift-format")
     
     var argExtractor = ArgumentExtractor(arguments)
-    let configurationFilePath = argExtractor.extractOption(named: "configuration").first
+    let configurationFilePath = argExtractor.extractOption(named: "swift-format-configuration").first
     
     try format(
       tool: swiftFormatTool,
