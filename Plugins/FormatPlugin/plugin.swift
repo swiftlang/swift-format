@@ -20,7 +20,7 @@ struct FormatPlugin {
     process.waitUntilExit()
     
     if process.terminationReason == .exit && process.terminationStatus == 0 {
-      print("Formatted the source code.")
+      Diagnostics.remark("Formatted the source code.")
     }
     else {
       let problem = "\(process.terminationReason):\(process.terminationStatus)"
