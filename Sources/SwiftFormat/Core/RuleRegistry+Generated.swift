@@ -15,6 +15,7 @@
 @_spi(Internal) public enum RuleRegistry {
   public static let rules: [String: Bool] = [
     "AllPublicDeclarationsHaveDocumentation": false,
+    "AlwaysUseLiteralForEmptyCollectionInit": false,
     "AlwaysUseLowerCamelCase": true,
     "AmbiguousTrailingClosureOverload": true,
     "BeginDocumentationCommentWithOneLineSummary": false,

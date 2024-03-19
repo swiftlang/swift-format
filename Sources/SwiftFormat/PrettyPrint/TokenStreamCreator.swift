@@ -1799,8 +1799,23 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: AvailabilityLabeledArgumentSyntax) -> SyntaxVisitorContinueKind {
     before(node.label, tokens: .open)
-    after(node.colon, tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
-    after(node.value.lastToken(viewMode: .sourceAccurate), tokens: .close)
+
+    let tokensAfterColon: [Token]
+    let endTokens: [Token]
+
+    if case .string(let string) = node.value,
+      string.openingQuote.tokenKind == .multilineStringQuote
+    {
+      tokensAfterColon =
+        [.break(.open(kind: .block), newlines: .elective(ignoresDiscretionary: true))]
+      endTokens = [.break(.close(mustBreak: false), size: 0), .close]
+    } else {
+      tokensAfterColon = [.break(.continue, newlines: .elective(ignoresDiscretionary: true))]
+      endTokens = [.close]
+    }
+
+    after(node.colon, tokens: tokensAfterColon)
+    after(node.value.lastToken(viewMode: .sourceAccurate), tokens: endTokens)
     return .visitChildren
   }
 
@@ -2293,6 +2308,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: GenericParameterSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken(viewMode: .sourceAccurate), tokens: .open)
+    after(node.eachKeyword, tokens: .break)
     after(node.colon, tokens: .break)
     if let trailingComma = node.trailingComma {
       after(trailingComma, tokens: .close, .break(.same))
@@ -2309,6 +2325,28 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     } else {
       after(node.lastToken(viewMode: .sourceAccurate), tokens: .close)
     }
+    return .visitChildren
+  }
+
+  override func visit(_ node: PackElementExprSyntax) -> SyntaxVisitorContinueKind {
+    // `each` cannot be separated from the following token, or it is parsed as an identifier itself.
+    after(node.eachKeyword, tokens: .space)
+    return .visitChildren
+  }
+
+  override func visit(_ node: PackElementTypeSyntax) -> SyntaxVisitorContinueKind {
+    // `each` cannot be separated from the following token, or it is parsed as an identifier itself.
+    after(node.eachKeyword, tokens: .space)
+    return .visitChildren
+  }
+
+  override func visit(_ node: PackExpansionExprSyntax) -> SyntaxVisitorContinueKind {
+    after(node.repeatKeyword, tokens: .break)
+    return .visitChildren
+  }
+
+  override func visit(_ node: PackExpansionTypeSyntax) -> SyntaxVisitorContinueKind {
+    after(node.repeatKeyword, tokens: .break)
     return .visitChildren
   }
 
@@ -2348,6 +2386,16 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       after(node.openingQuote, tokens: .break(breakKind, size: 0, newlines: .hard(count: 1)))
       if !node.segments.isEmpty {
         before(node.closingQuote, tokens: .break(breakKind, newlines: .hard(count: 1)))
+      }
+    }
+    return .visitChildren
+  }
+
+  override func visit(_ node: SimpleStringLiteralExprSyntax) -> SyntaxVisitorContinueKind {
+    if node.openingQuote.tokenKind == .multilineStringQuote {
+      after(node.openingQuote, tokens: .break(.same, size: 0, newlines: .hard(count: 1)))
+      if !node.segments.isEmpty {
+        before(node.closingQuote, tokens: .break(.same, newlines: .hard(count: 1)))
       }
     }
     return .visitChildren
@@ -2478,6 +2526,27 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: EditorPlaceholderExprSyntax) -> SyntaxVisitorContinueKind {
+    return .visitChildren
+  }
+
+  override func visit(_ node: ConsumeExprSyntax) -> SyntaxVisitorContinueKind {
+    // The `consume` keyword cannot be separated from the following token or it will be parsed as
+    // an identifier.
+    after(node.consumeKeyword, tokens: .space)
+    return .visitChildren
+  }
+
+  override func visit(_ node: CopyExprSyntax) -> SyntaxVisitorContinueKind {
+    // The `copy` keyword cannot be separated from the following token or it will be parsed as an
+    // identifier.
+    after(node.copyKeyword, tokens: .space)
+    return .visitChildren
+  }
+
+  override func visit(_ node: DiscardStmtSyntax) -> SyntaxVisitorContinueKind {
+    // The `discard` keyword cannot be separated from the following token or it will be parsed as
+    // an identifier.
+    after(node.discardKeyword, tokens: .space)
     return .visitChildren
   }
 

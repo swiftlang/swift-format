@@ -238,11 +238,12 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
   ) -> TypeSyntax {
     var wrappedType = wrappedType
 
-    // Function types and some-or-any types must be wrapped in parentheses before using shorthand
-    // optional syntax, otherwise the "?" will bind incorrectly (in the function case it binds to
-    // only the result, and in the some-or-any case it only binds to the child protocol). Attach the
-    // leading trivia to the left-paren that we're adding in these cases.
+    // Certain types must be wrapped in parentheses before using shorthand optional syntax to avoid
+    // the "?" from binding incorrectly when re-parsed. Attach the leading trivia to the left-paren
+    // that we're adding in these cases.
     switch Syntax(wrappedType).as(SyntaxEnum.self) {
+    case .attributedType(let attributedType):
+      wrappedType = parenthesizedType(attributedType, leadingTrivia: leadingTrivia)
     case .functionType(let functionType):
       wrappedType = parenthesizedType(functionType, leadingTrivia: leadingTrivia)
     case .someOrAnyType(let someOrAnyType):
@@ -319,12 +320,11 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
   ) -> OptionalChainingExprSyntax? {
     guard var wrappedTypeExpr = expressionRepresentation(of: wrappedType) else { return nil }
 
-    // Function types and some-or-any types must be wrapped in parentheses before using shorthand
-    // optional syntax, otherwise the "?" will bind incorrectly (in the function case it binds to
-    // only the result, and in the some-or-any case it only binds to the child protocol). Attach the
-    // leading trivia to the left-paren that we're adding in these cases.
+    // Certain types must be wrapped in parentheses before using shorthand optional syntax to avoid
+    // the "?" from binding incorrectly when re-parsed. Attach the leading trivia to the left-paren
+    // that we're adding in these cases.
     switch Syntax(wrappedType).as(SyntaxEnum.self) {
-    case .functionType, .someOrAnyType:
+    case .attributedType, .functionType, .someOrAnyType:
       wrappedTypeExpr = parenthesizedExpr(wrappedTypeExpr, leadingTrivia: leadingTrivia)
     default:
       // Otherwise, the argument type can safely become an optional by simply appending a "?". If
@@ -447,6 +447,9 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 
     case .someOrAnyType(let someOrAnyType):
       return ExprSyntax(TypeExprSyntax(type: someOrAnyType))
+
+    case .attributedType(let attributedType):
+      return ExprSyntax(TypeExprSyntax(type: attributedType))
 
     default:
       return nil
