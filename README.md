@@ -73,7 +73,7 @@ Run `brew install swift-format` to install the latest version.
 Install `swift-format` using the following commands:
 
 ```sh
-VERSION=509.0.0  # replace this with the version you need
+VERSION=510.1.0  # replace this with the version you need
 git clone https://github.com/apple/swift-format.git
 cd swift-format
 git checkout "tags/$VERSION"
