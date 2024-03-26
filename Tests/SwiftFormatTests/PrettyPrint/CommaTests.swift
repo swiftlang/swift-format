@@ -105,7 +105,7 @@ final class CommaTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20, configuration: configuration)
   }
   
-  func testArraySingleLineCommasPresentDisabled() {
+  func testArraySingleLineCommasPresentEnabled() {
     let input =
       """
       let MyCollection = [1, 2, 3,]
@@ -124,7 +124,7 @@ final class CommaTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: configuration)
   }
   
-  func testArraySingleLineCommasPresentEnabled() {
+  func testArraySingleLineCommasPresentDisabled() {
     let input =
       """
       let MyCollection = [1, 2, 3,]
