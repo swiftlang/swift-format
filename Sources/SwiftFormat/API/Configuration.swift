@@ -167,7 +167,7 @@ public struct Configuration: Codable, Equatable {
   ///
   /// When `true` (default), the correct form is:
   /// ```swift
-  /// let MyCollection = [1, 2,]
+  /// let MyCollection = [1, 2]
   /// ...
   /// let MyCollection = [
   ///   "a": 1,
