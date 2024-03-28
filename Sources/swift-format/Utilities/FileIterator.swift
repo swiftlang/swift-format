@@ -132,7 +132,7 @@ public struct FileIterator: Sequence, IteratorProtocol {
       case .typeRegular:
         // We attempt to relativize the URLs based on the current working directory, not the
         // directory being iterated over, so that they can be displayed better in diagnostics. Thus,
-        // if the user passes paths that are relative to the current working diectory, they will
+        // if the user passes paths that are relative to the current working directory, they will
         // be displayed as relative paths. Otherwise, they will still be displayed as absolute
         // paths.
         let relativePath =

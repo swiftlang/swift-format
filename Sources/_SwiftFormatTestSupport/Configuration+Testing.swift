@@ -20,7 +20,7 @@ extension Configuration {
   /// different module than where `Configuration` is defined, we can't make this an initializer that
   /// would enforce that every field of `Configuration` is initialized here (we're forced to
   /// delegate to another initializer first, which defeats the purpose). So, users adding new
-  /// configuration settings shouls be sure to supply a default here for testing, otherwise they
+  /// configuration settings should be sure to supply a default here for testing, otherwise they
   /// will be implicitly relying on the real default.
   public static var forTesting: Configuration {
     var config = Configuration()

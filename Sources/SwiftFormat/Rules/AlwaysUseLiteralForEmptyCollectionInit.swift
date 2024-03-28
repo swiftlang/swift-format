@@ -86,7 +86,7 @@ public final class AlwaysUseLiteralForEmptyCollectionInit : SyntaxFormatRule {
     if replacement.typeAnnotation == nil {
       // Drop trailing trivia after pattern because ':' has to appear connected to it.
       replacement.pattern = node.pattern.with(\.trailingTrivia, [])
-      // Add explicit type annotiation: ': [<Type>]`
+      // Add explicit type annotation: ': [<Type>]`
       replacement.typeAnnotation = .init(type: type.with(\.leadingTrivia, .space)
                                                    .with(\.trailingTrivia, .space))
     }
@@ -109,7 +109,7 @@ public final class AlwaysUseLiteralForEmptyCollectionInit : SyntaxFormatRule {
     if replacement.typeAnnotation == nil {
       // Drop trailing trivia after pattern because ':' has to appear connected to it.
       replacement.pattern = node.pattern.with(\.trailingTrivia, [])
-      // Add explicit type annotiation: ': [<Type>]`
+      // Add explicit type annotation: ': [<Type>]`
       replacement.typeAnnotation = .init(type: type.with(\.leadingTrivia, .space)
                                                    .with(\.trailingTrivia, .space))
     }
