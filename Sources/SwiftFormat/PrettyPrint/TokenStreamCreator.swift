@@ -1799,6 +1799,12 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
+  override func visit(_ node: OriginallyDefinedInAttributeArgumentsSyntax) -> SyntaxVisitorContinueKind {
+    after(node.colon.lastToken(viewMode: .sourceAccurate), tokens: .break(.same, size: 1))
+    after(node.comma.lastToken(viewMode: .sourceAccurate), tokens: .break(.same, size: 1))
+    return .visitChildren
+  }
+
   override func visit(_ node: AvailabilityLabeledArgumentSyntax) -> SyntaxVisitorContinueKind {
     before(node.label, tokens: .open)
 
