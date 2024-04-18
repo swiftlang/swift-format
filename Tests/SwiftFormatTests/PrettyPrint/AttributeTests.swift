@@ -43,6 +43,23 @@ final class AttributeTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
   }
 
+  func testAttributeParamSpacingInDocVisibility() {
+    let input =
+      """
+      @_documentation(  visibility   :private )
+      func f() {}
+      """
+
+    let expected =
+      """
+      @_documentation(visibility: private)
+      func f() {}
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
+  }
+
   func testAttributeBinPackedWrapping() {
     let input =
       """
