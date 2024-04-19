@@ -80,7 +80,7 @@ extension Trivia {
       })
   }
 
-  /// Returns `true` if this trivia contains any backslahes (used for multiline string newline
+  /// Returns `true` if this trivia contains any backslashes (used for multiline string newline
   /// suppression).
   var containsBackslashes: Bool {
     return contains(

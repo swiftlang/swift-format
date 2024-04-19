@@ -26,6 +26,40 @@ final class AttributeTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
   }
 
+  func testAttributeParamSpacingInOriginallyDefinedIn() {
+    let input =
+      """
+      @_originallyDefinedIn( module  :"SwiftUI" , iOS 10.0  )
+      func f() {}
+      """
+
+    let expected =
+      """
+      @_originallyDefinedIn(module: "SwiftUI", iOS 10.0)
+      func f() {}
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
+  }
+
+  func testAttributeParamSpacingInDocVisibility() {
+    let input =
+      """
+      @_documentation(  visibility   :private )
+      func f() {}
+      """
+
+    let expected =
+      """
+      @_documentation(visibility: private)
+      func f() {}
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 60)
+  }
+
   func testAttributeBinPackedWrapping() {
     let input =
       """
