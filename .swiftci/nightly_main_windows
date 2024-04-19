@@ -2,6 +2,6 @@ WindowsSwiftPackageWithDockerImageJob {
     docker_image = "swiftlang/swift:nightly-windowsservercore-1809"
     repo = "swift-format"
     branch = "main"
-    sub_dir = "swift-collections"
+    sub_dir = "swift-format"
     label = "windows-server-2019"
 }
