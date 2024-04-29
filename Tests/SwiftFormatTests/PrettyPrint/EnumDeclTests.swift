@@ -559,4 +559,16 @@ final class EnumDeclTests: PrettyPrintTestCase {
     let input = "enum Foo { var bar: Int }"
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 50)
   }
+
+  func testEnumWithPrioritizeKeepingFunctionOutputTogetherFlag() {
+    let input = """
+      enum Error {
+        case alreadyOpen(Int)
+      }
+
+      """
+    var config = Configuration.forTesting
+    config.prioritizeKeepingFunctionOutputTogether = true
+    assertPrettyPrintEqual(input: input, expected: input, linelength: 50, configuration: config)
+  }
 }
