@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import Markdown
 import SwiftSyntax
 
 extension StringProtocol {
@@ -29,7 +30,34 @@ extension StringProtocol {
     }
     return String(String.UnicodeScalarView(scalars[...idx]))
   }
+
+  /// Trims whitespace from the beginning of a string, returning a new string with no leading whitespace.
+  ///
+  /// If the string is only whitespace, an empty string is returned.
+  ///
+  /// - Returns: The string with trailing whitespace removed.
+  func trimmingLeadingWhitespace() -> String {
+    if isEmpty { return String() }
+    let scalars = unicodeScalars
+    var idx = scalars.index(before: scalars.endIndex)
+    while scalars[idx].properties.isWhitespace {
+      if idx == scalars.startIndex { return String() }
+      idx = scalars.index(before: idx)
+    }
+    return String(String.UnicodeScalarView(scalars[...idx]))
+  }
+
+  func trim() -> Self.SubSequence? {
+    guard let startIdx = self.firstIndex(where: { !$0.isWhitespace }),
+          let lastIdx = self.lastIndex(where: { !$0.isWhitespace }) else {
+      return nil
+    }
+    return self[startIdx...lastIdx]
+  }
+
 }
+
+
 
 struct Comment {
   enum Kind {
@@ -85,11 +113,28 @@ struct Comment {
     }
   }
 
-  func print(indent: [Indent]) -> String {
+  func print(indent: [Indent], width: Int, useMarkdown: Bool) -> String {
     switch self.kind {
-    case .line, .docLine:
-      let separator = "\n" + kind.prefix
+    case .line:
+      let separator = "\n" + kind.prefix + indent.indentation()
       return kind.prefix + self.text.joined(separator: separator)
+
+    case .docLine:
+      if !useMarkdown {
+        let indentation = indent.indentation()
+        let usableWidth = width - indentation.count
+        let lineLimit = MarkupFormatter.Options.PreferredLineLimit(maxLength: usableWidth, breakWith: .softBreak)
+        let document = Document(parsing: self.text.joined(separator: "\n"))
+        let options = MarkupFormatter.Options(preferredLineLimit: lineLimit, customLinePrefix: kind.prefix + " ")
+        // FIXME this can't stay, just annoyed by changing to smart quotes
+        let output = document.format(options: options).replacingOccurrences(of: "“", with: "\"").replacingOccurrences(of: "”", with: "\"")
+        // because of the customLinePrefix, blank comment lines have a single space that we should remove
+        let lines = output.split(separator: "\n").map { $0.trimmingTrailingWhitespace() }
+        return String(lines.joined(separator: "\n" + indentation))
+      } else {
+        let separator = "\n" + indent.indentation() + kind.prefix
+        return kind.prefix + self.text.joined(separator: separator)
+      }
     case .block, .docBlock:
       let separator = "\n"
       return kind.prefix + self.text.joined(separator: separator) + "*/"

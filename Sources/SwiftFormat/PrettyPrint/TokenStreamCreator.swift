@@ -3386,12 +3386,25 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   private func appendToken(_ token: Token) {
     if let last = tokens.last {
       switch (last, token) {
-      case (.comment(let c1, _), .comment(let c2, _))
-      where c1.kind == .docLine && c2.kind == .docLine:
-        var newComment = c1
-        newComment.addText(c2.text)
-        tokens[tokens.count - 1] = .comment(newComment, wasEndOfLine: false)
-        return
+      case (.break(.same, _, .soft(let count, _)), .comment(let c2, _))
+        where count == 1 && c2.kind == .docLine:
+        if let nextToLast = tokens.dropLast().last, case let .comment(c1, _) = nextToLast, c1.kind == c2.kind {
+          var newComment = c1
+          newComment.addText(c2.text)
+          tokens.removeLast()
+          tokens[tokens.count - 1] = .comment(newComment, wasEndOfLine: false)
+
+          // need to fix lastBreakIndex because we just removed the last break
+          lastBreakIndex = tokens.lastIndex(where: {
+            switch $0 {
+            case .break: return true
+            default: return false
+            }
+          })
+          canMergeNewlinesIntoLastBreak = false
+
+          return
+        }
 
       // If we see a pair of spaces where one or both are flexible, combine them into a new token
       // with the maximum of their counts.
