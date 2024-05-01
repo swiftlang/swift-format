@@ -30,34 +30,7 @@ extension StringProtocol {
     }
     return String(String.UnicodeScalarView(scalars[...idx]))
   }
-
-  /// Trims whitespace from the beginning of a string, returning a new string with no leading whitespace.
-  ///
-  /// If the string is only whitespace, an empty string is returned.
-  ///
-  /// - Returns: The string with trailing whitespace removed.
-  func trimmingLeadingWhitespace() -> String {
-    if isEmpty { return String() }
-    let scalars = unicodeScalars
-    var idx = scalars.index(before: scalars.endIndex)
-    while scalars[idx].properties.isWhitespace {
-      if idx == scalars.startIndex { return String() }
-      idx = scalars.index(before: idx)
-    }
-    return String(String.UnicodeScalarView(scalars[...idx]))
-  }
-
-  func trim() -> Self.SubSequence? {
-    guard let startIdx = self.firstIndex(where: { !$0.isWhitespace }),
-          let lastIdx = self.lastIndex(where: { !$0.isWhitespace }) else {
-      return nil
-    }
-    return self[startIdx...lastIdx]
-  }
-
 }
-
-
 
 struct Comment {
   enum Kind {
