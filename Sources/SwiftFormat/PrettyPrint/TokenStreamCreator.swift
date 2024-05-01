@@ -1350,14 +1350,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: EnumCaseParameterClauseSyntax) -> SyntaxVisitorContinueKind {
-    // Prioritize keeping ") throws -> <return_type>" together. We can only do this if the function
-    // has arguments.
-    if !node.parameters.isEmpty && config.prioritizeKeepingFunctionOutputTogether {
-      // Due to visitation order, this .open corresponds to a .close added in FunctionDeclSyntax
-      // or SubscriptDeclSyntax.
-      before(node.rightParen, tokens: .open)
-    }
-
     return .visitChildren
   }
 
