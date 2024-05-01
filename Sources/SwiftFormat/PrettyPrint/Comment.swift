@@ -93,7 +93,7 @@ struct Comment {
       return kind.prefix + self.text.joined(separator: separator)
 
     case .docLine:
-      if !useMarkdown {
+      if useMarkdown {
         let indentation = indent.indentation()
         let usableWidth = width - indentation.count
         let lineLimit = MarkupFormatter.Options.PreferredLineLimit(maxLength: usableWidth, breakWith: .softBreak)
