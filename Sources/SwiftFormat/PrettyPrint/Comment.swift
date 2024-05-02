@@ -79,7 +79,7 @@ fileprivate extension Array where Element == String {
 
   func markdownFormat(_ usableWidth: Int, linePrefix: String = "") -> [String] {
     let linePrefix = linePrefix + " "
-    let document = Document(parsing: self.map({ $0.trimmingTrailingWhitespace() }).joined(separator: "  "), options: .disableSmartOpts)
+    let document = Document(parsing: self.map({ $0.trimmingTrailingWhitespace() }).joined(separator: "\n"), options: .disableSmartOpts)
     let lineLimit = MarkupFormatter.Options.PreferredLineLimit(maxLength: usableWidth, breakWith: .softBreak)
     let options = MarkupFormatter.Options(useCodeFence: .onlyWhenLanguageIsPresent, preferredLineLimit: lineLimit, customLinePrefix: linePrefix)
     let output = document.format(options: options)
@@ -153,6 +153,7 @@ struct Comment {
         let indentation = indent.indentation()
         let usableWidth = width - indentation.count
         let wrappedLines = self.text.wrapText(usableWidth, linePrefix: kind.prefix)
+        // let wrappedLines = self.text.markdownFormat(usableWidth, linePrefix: kind.prefix)
         return wrappedLines.joined(separator: "\n" + indentation)
       } else {
         let separator = "\n" + indent.indentation() + kind.prefix
