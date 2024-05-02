@@ -30,6 +30,66 @@ extension StringProtocol {
     }
     return String(String.UnicodeScalarView(scalars[...idx]))
   }
+
+  func findBreakIndex(_ maxWidth: Int) -> Self.Index {
+    let baseIndex = self.index(self.startIndex, offsetBy: maxWidth)
+    let substr = self[..<baseIndex]
+
+    if let sliceIdx = substr.lastIndex(where: { $0.isWhitespace }), sliceIdx != substr.firstIndex(where: { $0.isWhitespace }) {
+      return sliceIdx
+    } else if let sliceIdx = self[endIndex...].firstIndex(where: { $0.isWhitespace }) {
+      return sliceIdx
+    } else {
+      return self.endIndex
+    }
+  }
+}
+
+fileprivate extension Array where Element == String {
+  func wrapText(_ usableWidth: Int, linePrefix: String = "") -> [String] {
+    let usableWidth = usableWidth - linePrefix.count
+    var sourceLines = self
+    var formattedLines: [String] = []
+    while !sourceLines.isEmpty {
+      let line = sourceLines.removeFirst()
+
+      // this line doesn't require any reflowing
+      if line.count <= usableWidth {
+        formattedLines.append(linePrefix + line)
+        continue
+      }
+
+      // search backwards for a match
+      let sliceIndex = line.findBreakIndex(usableWidth)
+      formattedLines.append(linePrefix + line[..<sliceIndex])
+
+      // deal with leftover text from the current line
+      if !sourceLines.isEmpty {
+        let nextLine = String(sourceLines[0])
+        // we need to make sure there is a ' ' character between lines
+        // when we merge them
+        let separator = nextLine.starts(with: " ") ? "" : " "
+        sourceLines[0] = line[sliceIndex...] + separator + nextLine
+      } else {
+        sourceLines.append(String(line[sliceIndex...]))
+      }
+    }
+    return formattedLines
+  }
+
+  func markdownFormat(_ usableWidth: Int, linePrefix: String = "") -> [String] {
+    let linePrefix = linePrefix + " "
+    let document = Document(parsing: self.map({ $0.trimmingTrailingWhitespace() }).joined(separator: "  "), options: .disableSmartOpts)
+    let lineLimit = MarkupFormatter.Options.PreferredLineLimit(maxLength: usableWidth, breakWith: .softBreak)
+    let options = MarkupFormatter.Options(useCodeFence: .onlyWhenLanguageIsPresent, preferredLineLimit: lineLimit, customLinePrefix: linePrefix)
+    let output = document.format(options: options)
+    // because of the customLinePrefix, blank comment lines have a single space that we should remove
+    let lines = output.split(separator: "\n").map { $0.trimmingTrailingWhitespace() }
+    if lines.isEmpty {
+      return [linePrefix]
+    }
+    return lines
+  }
 }
 
 struct Comment {
@@ -86,24 +146,14 @@ struct Comment {
     }
   }
 
-  func print(indent: [Indent], width: Int, useMarkdown: Bool) -> String {
+  func print(indent: [Indent], width: Int, wrap: Bool) -> String {
     switch self.kind {
-    case .line:
-      let separator = "\n" + kind.prefix + indent.indentation()
-      return kind.prefix + self.text.joined(separator: separator)
-
-    case .docLine:
-      if useMarkdown {
+    case .line, .docLine:
+      if wrap {
         let indentation = indent.indentation()
         let usableWidth = width - indentation.count
-        let lineLimit = MarkupFormatter.Options.PreferredLineLimit(maxLength: usableWidth, breakWith: .softBreak)
-        let document = Document(parsing: self.text.joined(separator: "\n"))
-        let options = MarkupFormatter.Options(preferredLineLimit: lineLimit, customLinePrefix: kind.prefix + " ")
-        // FIXME this can't stay, just annoyed by changing to smart quotes
-        let output = document.format(options: options).replacingOccurrences(of: "“", with: "\"").replacingOccurrences(of: "”", with: "\"")
-        // because of the customLinePrefix, blank comment lines have a single space that we should remove
-        let lines = output.split(separator: "\n").map { $0.trimmingTrailingWhitespace() }
-        return String(lines.joined(separator: "\n" + indentation))
+        let wrappedLines = self.text.wrapText(usableWidth, linePrefix: kind.prefix)
+        return wrappedLines.joined(separator: "\n" + indentation)
       } else {
         let separator = "\n" + indent.indentation() + kind.prefix
         return kind.prefix + self.text.joined(separator: separator)

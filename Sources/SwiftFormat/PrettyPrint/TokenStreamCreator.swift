@@ -3387,7 +3387,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     if let last = tokens.last {
       switch (last, token) {
       case (.break(.same, _, .soft(let count, _)), .comment(let c2, _))
-        where count == 1 && c2.kind == .docLine:
+        where count == 1 && (c2.kind == .docLine || c2.kind == .line):
         if let nextToLast = tokens.dropLast().last, case let .comment(c1, _) = nextToLast, c1.kind == c2.kind {
           var newComment = c1
           newComment.addText(c2.text)
