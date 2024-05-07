@@ -64,7 +64,7 @@ struct Comment {
 
     switch kind {
     case .line, .docLine:
-      self.text = [text.trimmingTrailingWhitespace()]
+      self.text = [text]
       self.text[0].removeFirst(kind.prefixLength)
       self.length = self.text.reduce(0, { $0 + $1.count + kind.prefixLength + 1 })
 
@@ -88,8 +88,9 @@ struct Comment {
   func print(indent: [Indent]) -> String {
     switch self.kind {
     case .line, .docLine:
-      let separator = "\n" + kind.prefix
-      return kind.prefix + self.text.joined(separator: separator)
+      let separator = "\n" + indent.indentation() + kind.prefix
+      let trimmedLines = self.text.map { $0.trimmingTrailingWhitespace() }
+      return kind.prefix + trimmedLines.joined(separator: separator)
     case .block, .docBlock:
       let separator = "\n"
       return kind.prefix + self.text.joined(separator: separator) + "*/"
