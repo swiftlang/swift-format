@@ -3903,6 +3903,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         before(clause.poundKeyword, tokens: .break(.contextual, size: 0))
       }
       before(postfixIfExpr.config.poundEndif, tokens: .break(.contextual, size: 0))
+      after(postfixIfExpr.config.poundEndif, tokens: .break(.same, size: 0))
 
       return insertContextualBreaks(base, isTopLevel: false)
     } else if let callingExpr = expr.asProtocol(CallingExprSyntaxProtocol.self) {
