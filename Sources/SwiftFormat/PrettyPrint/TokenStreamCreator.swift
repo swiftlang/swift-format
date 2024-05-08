@@ -3384,10 +3384,14 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   /// This function also handles collapsing neighboring tokens in situations where that is
   /// desired, like merging adjacent comments and newlines.
   private func appendToken(_ token: Token) {
+    func breakAllowsCommentMerge(_ breakKind: BreakKind) -> Bool {
+      return breakKind == .same || breakKind == .continue || breakKind == .contextual
+    }
+
     if let last = tokens.last {
       switch (last, token) {
-      case (.break(.same, _, .soft(let count, _)), .comment(let c2, _))
-        where count == 1 && (c2.kind == .docLine || c2.kind == .line):
+      case (.break(let breakKind, _, .soft(1, _)), .comment(let c2, _))
+        where breakAllowsCommentMerge(breakKind) && (c2.kind == .docLine || c2.kind == .line):
         // we are search for the pattern of [line comment] - [soft break 1] - [line comment]
         // where the comment type is the same; these can be merged into a single comment
         if let nextToLast = tokens.dropLast().last,
