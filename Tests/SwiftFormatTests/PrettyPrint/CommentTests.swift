@@ -1,4 +1,5 @@
 import _SwiftFormatTestSupport
+import SwiftFormat
 
 final class CommentTests: PrettyPrintTestCase {
   func testDocumentationComments() {
@@ -795,6 +796,9 @@ final class CommentTests: PrettyPrintTestCase {
 
       """
     assertPrettyPrintEqual(input: input, expected: input, linelength: 80)
+    var config = Configuration.forTesting
+    config.wrapComments = true
+    assertPrettyPrintEqual(input: input, expected: input, linelength: 80, configuration: config)
   }
 
   func testNonmergeableComments() {
@@ -811,6 +815,9 @@ final class CommentTests: PrettyPrintTestCase {
       """
 
     assertPrettyPrintEqual(input: input, expected: input, linelength: 80)
+    var config = Configuration.forTesting
+    config.wrapComments = true
+    assertPrettyPrintEqual(input: input, expected: input, linelength: 80, configuration: config)
   }
 
   func testMergeableComments() {
