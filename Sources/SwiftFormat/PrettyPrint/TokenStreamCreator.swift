@@ -3384,14 +3384,37 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   /// This function also handles collapsing neighboring tokens in situations where that is
   /// desired, like merging adjacent comments and newlines.
   private func appendToken(_ token: Token) {
+    func breakAllowsCommentMerge(_ breakKind: BreakKind) -> Bool {
+      return breakKind == .same || breakKind == .continue || breakKind == .contextual
+    }
+
     if let last = tokens.last {
       switch (last, token) {
-      case (.comment(let c1, _), .comment(let c2, _))
-      where c1.kind == .docLine && c2.kind == .docLine:
-        var newComment = c1
-        newComment.addText(c2.text)
-        tokens[tokens.count - 1] = .comment(newComment, wasEndOfLine: false)
-        return
+      case (.break(let breakKind, _, .soft(1, _)), .comment(let c2, _))
+        where breakAllowsCommentMerge(breakKind) && (c2.kind == .docLine || c2.kind == .line):
+        // we are search for the pattern of [line comment] - [soft break 1] - [line comment]
+        // where the comment type is the same; these can be merged into a single comment
+        if let nextToLast = tokens.dropLast().last,
+          case let .comment(c1, false) = nextToLast, 
+          c1.kind == c2.kind
+        {
+          var mergedComment = c1
+          mergedComment.addText(c2.text)
+          tokens.removeLast()  // remove the soft break
+          // replace the original comment with the merged one
+          tokens[tokens.count - 1] = .comment(mergedComment, wasEndOfLine: false)
+
+          // need to fix lastBreakIndex because we just removed the last break
+          lastBreakIndex = tokens.lastIndex(where: {
+            switch $0 {
+            case .break: return true
+            default: return false
+            }
+          })
+          canMergeNewlinesIntoLastBreak = false
+
+          return
+        }
 
       // If we see a pair of spaces where one or both are flexible, combine them into a new token
       // with the maximum of their counts.

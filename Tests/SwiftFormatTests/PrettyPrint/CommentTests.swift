@@ -83,6 +83,8 @@ final class CommentTests: PrettyPrintTestCase {
   func testLineComments() {
     let input =
       """
+      // Line Comment0
+
       // Line Comment1
       // Line Comment2
       let a = 123
@@ -93,6 +95,7 @@ final class CommentTests: PrettyPrintTestCase {
       // Comment 4
 
       let reallyLongVariableName = 123 // This comment should not wrap
+      // and should not combine with this comment
 
       func MyFun() {
         // just a comment
@@ -135,6 +138,8 @@ final class CommentTests: PrettyPrintTestCase {
 
     let expected =
       """
+      // Line Comment0
+
       // Line Comment1
       // Line Comment2
       let a = 123
@@ -145,6 +150,7 @@ final class CommentTests: PrettyPrintTestCase {
       // Comment 4
 
       let reallyLongVariableName = 123  // This comment should not wrap
+      // and should not combine with this comment
 
       func MyFun() {
         // just a comment
@@ -208,6 +214,13 @@ final class CommentTests: PrettyPrintTestCase {
       let c = [123, 456  // small comment
       ]
 
+      // Multiline comment
+      let d = [123,
+        // comment line 1
+        // comment line 2
+        456
+      ]
+
       /* Array comment */
       let a = [456, /* small comment */
         789]
@@ -234,6 +247,14 @@ final class CommentTests: PrettyPrintTestCase {
       // Trailing comment
       let c = [
         123, 456,  // small comment
+      ]
+
+      // Multiline comment
+      let d = [
+        123,
+        // comment line 1
+        // comment line 2
+        456,
       ]
 
       /* Array comment */
@@ -759,5 +780,56 @@ final class CommentTests: PrettyPrintTestCase {
         FindingSpec("1️⃣", message: "move end-of-line comment that exceeds the line length"),
       ]
     )
+  }
+
+  func testLineWithDocLineComment() {
+    // none of these should be merged if/when there is comment formatting
+    let input =
+      """
+      /// Doc line comment
+      // Line comment
+      /// Doc line comment
+      // Line comment
+
+      // Another line comment
+
+      """
+    assertPrettyPrintEqual(input: input, expected: input, linelength: 80)
+  }
+
+  func testNonmergeableComments() {
+    // none of these should be merged if/when there is comment formatting
+    let input =
+      """
+      let x = 1  // end of line comment
+      //
+
+      let y =  // eol comment
+        1  // another
+        + 2  // and another
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: input, linelength: 80)
+  }
+
+  func testMergeableComments() {
+    // these examples should be merged and formatted if/when there is comment formatting
+    let input =
+      """
+      let z =
+        // one comment
+        // and another comment
+        1 + 2
+
+      let w = [1, 2, 3]
+        .foo()
+        // this comment
+        // could be merged with this one
+        .bar()
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: input, linelength: 80)
   }
 }
