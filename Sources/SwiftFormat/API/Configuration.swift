@@ -44,6 +44,7 @@ public struct Configuration: Codable, Equatable {
     case noAssignmentInExpressions
     case multiElementCollectionTrailingCommas
     case wrapComments
+    case maximumCommentTextWidth
   }
 
   /// A dictionary containing the default enabled/disabled states of rules, keyed by the rules'
@@ -190,6 +191,10 @@ public struct Configuration: Codable, Equatable {
   /// Determines if comments should wrap onto multiple lines when they exceed the line length.
   public var wrapComments: Bool
 
+  /// The maximum length of the text of a doc comment, after which the formatter will wrap
+  /// (if comment wrapping is enabled), even if the allowable line length is greater.
+  public var maximumCommentTextWidth: Int
+
   /// Creates a new `Configuration` by loading it from a configuration file.
   public init(contentsOf url: URL) throws {
     let data = try Data(contentsOf: url)
@@ -279,6 +284,9 @@ public struct Configuration: Codable, Equatable {
     self.wrapComments =
       try container.decodeIfPresent(Bool.self, forKey: .wrapComments)
     ?? defaults.wrapComments
+    self.maximumCommentTextWidth =
+      try container.decodeIfPresent(Int.self, forKey: .maximumCommentTextWidth)
+    ?? defaults.maximumCommentTextWidth
 
     // If the `rules` key is not present at all, default it to the built-in set
     // so that the behavior is the same as if the configuration had been
@@ -313,6 +321,7 @@ public struct Configuration: Codable, Equatable {
     try container.encode(noAssignmentInExpressions, forKey: .noAssignmentInExpressions)
     try container.encode(multiElementCollectionTrailingCommas, forKey: .multiElementCollectionTrailingCommas)
     try container.encode(wrapComments, forKey: .wrapComments)
+    try container.encode(maximumCommentTextWidth, forKey: .maximumCommentTextWidth)
     try container.encode(rules, forKey: .rules)
   }
 

@@ -108,28 +108,26 @@ struct Comment {
     }
   }
 
-  func print(indent: [Indent], width: Int, wrap: Bool) -> String {
+  func print(indent: [Indent], width: Int, textWidth: Int, wrap: Bool) -> String {
     switch self.kind {
-    case .line, .docLine:
-      if wrap {
-        let indentation = indent.indentation()
-        let usableWidth = width - indentation.count
-        let wrappedLines = markdownFormat(self.text, usableWidth - kind.prefixLength)
-        let emptyLinesTrimmed = wrappedLines.map {
-          if $0.allSatisfy({ $0.isWhitespace }) {
-            return kind.prefix
-          } else {
-            return kind.prefix + $0
-          }
+    case .docLine where wrap:
+      let indentation = indent.indentation()
+      let usableWidth = width - indentation.count
+      let wrappedLines = markdownFormat(self.text, min(usableWidth - kind.prefixLength, textWidth))
+      let emptyLinesTrimmed = wrappedLines.map {
+        if $0.allSatisfy({ $0.isWhitespace }) {
+          return kind.prefix
+        } else {
+          return kind.prefix + $0
         }
-        return emptyLinesTrimmed.joined(separator: "\n" + indentation)
-      } else {
-        let separator = "\n" + indent.indentation() + kind.prefix
-        // trailing whitespace is meaningful in Markdown, so we can't remove it
-        // when formatting comments, but we can here
-        let trimmedLines = self.text.map { $0.trimmingTrailingWhitespace() }
-        return kind.prefix + trimmedLines.joined(separator: separator)
       }
+      return emptyLinesTrimmed.joined(separator: "\n" + indentation)
+    case .line, .docLine:
+      let separator = "\n" + indent.indentation() + kind.prefix
+      // trailing whitespace is meaningful in Markdown, so we can't remove it
+      // when formatting comments, but we can here
+      let trimmedLines = self.text.map { $0.trimmingTrailingWhitespace() }
+      return kind.prefix + trimmedLines.joined(separator: separator)
     case .block, .docBlock:
       let separator = "\n"
       return kind.prefix + self.text.joined(separator: separator) + "*/"

@@ -514,7 +514,7 @@ public class PrettyPrinter {
       lastBreak = false
 
       write(comment.print(
-        indent: currentIndentation, width: configuration.lineLength, wrap: configuration.wrapComments))
+        indent: currentIndentation, width: configuration.lineLength, textWidth: configuration.maximumCommentTextWidth, wrap: configuration.wrapComments))
       if wasEndOfLine {
         if comment.length > spaceRemaining && !isBreakingSuppressed {
           diagnose(.moveEndOfLineComment, category: .endOfLineComment)
@@ -750,7 +750,7 @@ public class PrettyPrinter {
         print("[COMMENT DocBlock Length: \(length) EOL: \(wasEndOfLine) Idx: \(idx)]")
       }
       printDebugIndent()
-      print(comment.print(indent: debugIndent, width: configuration.lineLength, wrap: false))
+      print(comment.print(indent: debugIndent, width: configuration.lineLength, textWidth: configuration.maximumCommentTextWidth,  wrap: false))
 
     case .verbatim(let verbatim):
       printDebugIndent()

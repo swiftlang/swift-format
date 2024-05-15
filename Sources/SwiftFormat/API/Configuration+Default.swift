@@ -39,5 +39,6 @@ extension Configuration {
     self.noAssignmentInExpressions = NoAssignmentInExpressionsConfiguration()
     self.multiElementCollectionTrailingCommas = true
     self.wrapComments = false
+    self.maximumCommentTextWidth = 72
   }
 }
