@@ -41,7 +41,7 @@ fileprivate func markdownFormat(_ lines: [String], _ usableWidth: Int, linePrefi
   )
   let formatterOptions = MarkupFormatter.Options(
     orderedListNumerals: .incrementing(start: 1),
-    useCodeFence: .onlyWhenLanguageIsPresent,
+    useCodeFence: .always,
     condenseAutolinks: false,
     preferredLineLimit: lineLimit,
     customLinePrefix: linePrefix
@@ -51,7 +51,14 @@ fileprivate func markdownFormat(_ lines: [String], _ usableWidth: Int, linePrefi
   if lines.isEmpty {
     return [linePrefix]
   }
-  return lines.map { String($0) }
+  return lines.map {
+    // unfortunately we have to do a bit of post-processing...
+    if let last = $0.last, let secondLast = $0.dropLast().last, last.isWhitespace && secondLast.isWhitespace {
+      return $0.trimmingTrailingWhitespace() + " \\"
+    } else {
+      return $0.trimmingTrailingWhitespace()
+    }
+  }
 }
 
 struct Comment {
