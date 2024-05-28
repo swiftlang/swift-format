@@ -54,7 +54,25 @@ final class DocumentationCommentTextTests: XCTestCase {
       """
     )
   }
-  
+
+  func testIndentedDocBlockCommentWithASCIIArt() throws {
+    let decl: DeclSyntax = """
+        /**
+         * A simple doc comment.
+         */
+        func f() {}
+      """
+    let commentText = try XCTUnwrap(DocumentationCommentText(extractedFrom: decl.leadingTrivia))
+    XCTAssertEqual(commentText.introducer, .block)
+    XCTAssertEqual(
+      commentText.text,
+      """
+      A simple doc comment.
+
+      """
+    )
+  }
+
   func testDocBlockCommentWithoutASCIIArt() throws {
     let decl: DeclSyntax = """
       /**
