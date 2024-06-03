@@ -21,7 +21,6 @@ final class SelectionTests: PrettyPrintTestCase {
       }
       """
 
-    // The line length ends on the last paren of .Stuff()
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
   }
 
@@ -44,7 +43,6 @@ final class SelectionTests: PrettyPrintTestCase {
       }
       """
 
-    // The line length ends on the last paren of .Stuff()
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
   }
 
@@ -67,7 +65,6 @@ final class SelectionTests: PrettyPrintTestCase {
       }
       """
 
-    // The line length ends on the last paren of .Stuff()
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
   }
 
@@ -90,7 +87,6 @@ final class SelectionTests: PrettyPrintTestCase {
       }
       """
 
-    // The line length ends on the last paren of .Stuff()
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
   }
 
@@ -113,7 +109,6 @@ final class SelectionTests: PrettyPrintTestCase {
       }
       """
 
-    // The line length ends on the last paren of .Stuff()
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
   }
 
@@ -164,7 +159,6 @@ final class SelectionTests: PrettyPrintTestCase {
       }
       """
 
-    // The line length ends on the last paren of .Stuff()
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
   }
 
@@ -191,7 +185,50 @@ final class SelectionTests: PrettyPrintTestCase {
       }
       """
 
-    // The line length ends on the last paren of .Stuff()
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
+  }
+
+  func testSingleLineFunc() {
+    let input =
+      """
+      func foo()   ⏩{}⏪
+      """
+
+    let expected =
+      """
+      func foo() {}
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
+  }
+
+  func testSingleLineFunc2() {
+    let input =
+      """
+      func foo() /**/ ⏩{}⏪
+      """
+
+    let expected =
+      """
+      func foo() /**/ {}
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
+  }
+
+  func testSimpleFunc() {
+    let input =
+      """
+      func foo() /**/
+        ⏩{}⏪
+      """
+
+    let expected =
+      """
+      func foo() /**/
+      {}
+      """
+
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
   }
 
@@ -219,7 +256,6 @@ final class SelectionTests: PrettyPrintTestCase {
       }
       """
 
-    // The line length ends on the last paren of .Stuff()
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
   }
 

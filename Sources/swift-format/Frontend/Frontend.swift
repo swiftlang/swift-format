@@ -127,7 +127,7 @@ class Frontend {
 
     var selection: Selection = .infinite
     if let offsets = lintFormatOptions.offsets {
-      selection = Selection(offsetPairs: offsets)
+      selection = Selection(offsetRanges: offsets)
     }
     let fileToProcess = FileToProcess(
       fileHandle: FileHandle.standardInput,
@@ -178,7 +178,7 @@ class Frontend {
 
     var selection: Selection = .infinite
     if let offsets = lintFormatOptions.offsets {
-      selection = Selection(offsetPairs: offsets)
+      selection = Selection(offsetRanges: offsets)
     }
     return FileToProcess(
       fileHandle: sourceFile,

@@ -69,7 +69,7 @@ public class PrettyPrinter {
   private var tokens: [Token]
   private var source: String
 
-  /// keep track of where formatting was disabled in the original source
+  /// Keep track of where formatting was disabled in the original source
   ///
   /// To format a selection, we insert `enableFormatting`/`disableFormatting` tokens into the
   /// stream when entering/exiting a selection range. Those tokens include utf8 offsets into the
@@ -77,8 +77,6 @@ public class PrettyPrinter {
   /// current position to `outputBuffer`. From then on, we continue to format until the next
   /// `disableFormatting` token.
   private var disabledPosition: AbsolutePosition? = nil
-  /// true if we're currently formatting
-  private var writingIsEnabled: Bool { disabledPosition == nil }
 
   private var outputBuffer: String = ""
 
@@ -204,7 +202,9 @@ public class PrettyPrinter {
   ///
   /// No further processing is performed on the string.
   private func writeRaw<S: StringProtocol>(_ str: S) {
-    outputBuffer.append(String(str))
+    if disabledPosition == nil {
+      outputBuffer.append(String(str))
+    }
   }
 
   /// Writes newlines into the output stream, taking into account any preexisting consecutive
@@ -233,9 +233,7 @@ public class PrettyPrinter {
     }
 
     guard numberToPrint > 0 else { return }
-    if writingIsEnabled {
-      writeRaw(String(repeating: "\n", count: numberToPrint))
-    }
+    writeRaw(String(repeating: "\n", count: numberToPrint))
     lineNumber += numberToPrint
     isAtStartOfLine = true
     consecutiveNewlineCount += numberToPrint
@@ -257,17 +255,13 @@ public class PrettyPrinter {
   /// leading spaces that are required before the text itself.
   private func write(_ text: String) {
     if isAtStartOfLine {
-      if writingIsEnabled {
-        writeRaw(currentIndentation.indentation())
-      }
+      writeRaw(currentIndentation.indentation())
       spaceRemaining = maxLineLength - currentIndentation.length(in: configuration)
       isAtStartOfLine = false
-    } else if pendingSpaces > 0 && writingIsEnabled {
+    } else if pendingSpaces > 0  {
       writeRaw(String(repeating: " ", count: pendingSpaces))
     }
-    if writingIsEnabled {
-      writeRaw(text)
-    }
+    writeRaw(text)
     consecutiveNewlineCount = 0
     pendingSpaces = 0
   }
@@ -546,9 +540,7 @@ public class PrettyPrinter {
       }
 
     case .verbatim(let verbatim):
-      if writingIsEnabled {
-        writeRaw(verbatim.print(indent: currentIndentation))
-      }
+      writeRaw(verbatim.print(indent: currentIndentation))
       consecutiveNewlineCount = 0
       pendingSpaces = 0
       lastBreak = false
@@ -596,38 +588,37 @@ public class PrettyPrinter {
       }
 
     case .enableFormatting(let enabledPosition):
-      // if we're not disabled, we ignore the token
-      if let disabledPosition {
-        let start = source.utf8.index(source.utf8.startIndex, offsetBy: disabledPosition.utf8Offset)
-        let end: String.Index
-        if let enabledPosition {
-          end = source.utf8.index(source.utf8.startIndex, offsetBy: enabledPosition.utf8Offset)
-        } else {
-          end = source.endIndex
-        }
-        var text = String(source[start..<end])
-        // strip trailing whitespace so that the next formatting can add the right amount
-        if let nonWhitespace = text.rangeOfCharacter(
-          from: CharacterSet.whitespaces.inverted, options: .backwards) {
-          text = String(text[..<nonWhitespace.upperBound])
-        }
+      guard let disabledPosition else {
+        // if we're not disabled, we ignore the token
+        break
+      }
+      let start = source.utf8.index(source.utf8.startIndex, offsetBy: disabledPosition.utf8Offset)
+      let end: String.Index
+      if let enabledPosition {
+        end = source.utf8.index(source.utf8.startIndex, offsetBy: enabledPosition.utf8Offset)
+      } else {
+        end = source.endIndex
+      }
+      var text = String(source[start..<end])
+      // strip trailing whitespace so that the next formatting can add the right amount
+      if let nonWhitespace = text.rangeOfCharacter(
+        from: CharacterSet.whitespaces.inverted, options: .backwards) {
+        text = String(text[..<nonWhitespace.upperBound])
+      }
 
-        writeRaw(text)
-        if text.hasSuffix("\n") {
-          isAtStartOfLine = true
-          consecutiveNewlineCount = 1
-        } else {
-          isAtStartOfLine = false
-          consecutiveNewlineCount = 0
-        }
-        self.disabledPosition = nil
+      self.disabledPosition = nil
+      writeRaw(text)
+      if text.hasSuffix("\n") {
+        isAtStartOfLine = true
+        consecutiveNewlineCount = 1
+      } else {
+        isAtStartOfLine = false
+        consecutiveNewlineCount = 0
       }
 
     case .disableFormatting(let newPosition):
-      // a second disable is ignored
-      if writingIsEnabled {
-        disabledPosition = newPosition
-      }
+      assert(disabledPosition == nil)
+      disabledPosition = newPosition
     }
   }
 

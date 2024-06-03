@@ -21,9 +21,6 @@ public final class SwiftFormatter {
   /// The configuration settings that control the formatter's behavior.
   public let configuration: Configuration
 
-  /// the ranges of text to format
-  public var selection: Selection = .infinite
-
   /// An optional callback that will be notified with any findings encountered during formatting.
   public let findingConsumer: ((Finding) -> Void)?
 

@@ -49,7 +49,7 @@ public struct MarkedText {
 
     self.markers = markers
     self.textWithoutMarkers = text
-    self.selection = Selection(offsetPairs: offsets)
+    self.selection = Selection(offsetRanges: offsets)
   }
 }
 

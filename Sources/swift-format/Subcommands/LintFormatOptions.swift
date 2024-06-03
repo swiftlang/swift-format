@@ -125,7 +125,7 @@ struct LintFormatOptions: ParsableArguments {
   }
 }
 
-extension [Range<Int>] : @retroactive ExpressibleByArgument {
+extension [Range<Int>] {
   public init?(argument: String) {
     let pairs = argument.components(separatedBy: ",")
     let ranges: [Range<Int>] = pairs.compactMap {
@@ -139,3 +139,9 @@ extension [Range<Int>] : @retroactive ExpressibleByArgument {
     self = ranges
   }
 }
+
+#if compiler(>=6)
+extension [Range<Int>] : @retroactive ExpressibleByArgument {}
+#else
+extension [Range<Int>] : ExpressibleByArgument {}
+#endif

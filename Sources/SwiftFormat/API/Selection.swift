@@ -19,11 +19,11 @@ public enum Selection {
   case ranges([Range<AbsolutePosition>])
 
   /// Create a selection from an array of utf8 ranges. An empty array means an infinite selection.
-  public init(offsetPairs: [Range<Int>]) {
-    if offsetPairs.isEmpty {
+  public init(offsetRanges: [Range<Int>]) {
+    if offsetRanges.isEmpty {
       self = .infinite
     } else {
-      let ranges = offsetPairs.map {
+      let ranges = offsetRanges.map {
         AbsolutePosition(utf8Offset: $0.lowerBound) ..< AbsolutePosition(utf8Offset: $0.upperBound)
       }
       self = .ranges(ranges)
@@ -51,7 +51,7 @@ public enum Selection {
 
 
 public extension Syntax {
-  /// return true if the node is _completely_ inside any range in the selection
+  /// - Returns: `true` if the node is _completely_ inside any range in the selection
   func isInsideSelection(_ selection: Selection) -> Bool {
     switch selection {
     case .infinite:

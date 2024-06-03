@@ -39,7 +39,7 @@ public final class Context {
   /// The configuration for this run of the pipeline, provided by a configuration JSON file.
   let configuration: Configuration
 
-  /// The optional ranges to process
+  /// The selection to process
   let selection: Selection
 
   /// Defines the operators and their precedence relationships that were used during parsing.
@@ -92,7 +92,7 @@ public final class Context {
 
   /// Given a rule's name and the node it is examining, determine if the rule is disabled at this
   /// location or not. Also makes sure the entire node is contained inside any selection.
-  func isRuleEnabled<R: Rule>(_ rule: R.Type, node: Syntax) -> Bool {
+  func shouldFormat<R: Rule>(_ rule: R.Type, node: Syntax) -> Bool {
     guard node.isInsideSelection(selection) else { return false }
 
     let loc = node.startLocation(converter: self.sourceLocationConverter)

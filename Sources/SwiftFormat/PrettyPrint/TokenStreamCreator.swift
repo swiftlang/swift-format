@@ -4071,7 +4071,7 @@ class CommentMovingRewriter: SyntaxRewriter {
     self.selection = selection
   }
 
-  var selection: Selection
+  private let selection: Selection
 
   override func visit(_ node: SourceFileSyntax) -> SourceFileSyntax {
     if shouldFormatterIgnore(file: node) {
