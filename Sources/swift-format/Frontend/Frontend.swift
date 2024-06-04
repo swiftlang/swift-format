@@ -125,15 +125,11 @@ class Frontend {
       return
     }
 
-    var selection: Selection = .infinite
-    if let offsets = lintFormatOptions.offsets {
-      selection = Selection(offsetRanges: offsets)
-    }
     let fileToProcess = FileToProcess(
       fileHandle: FileHandle.standardInput,
       url: URL(fileURLWithPath: lintFormatOptions.assumeFilename ?? "<stdin>"),
       configuration: configuration,
-      selection: selection)
+      selection: Selection(offsetRanges: lintFormatOptions.offsets))
     processFile(fileToProcess)
   }
 
@@ -176,15 +172,11 @@ class Frontend {
       return nil
     }
 
-    var selection: Selection = .infinite
-    if let offsets = lintFormatOptions.offsets {
-      selection = Selection(offsetRanges: offsets)
-    }
     return FileToProcess(
       fileHandle: sourceFile,
       url: url,
       configuration: configuration,
-      selection: selection
+      selection: Selection(offsetRanges: lintFormatOptions.offsets)
     )
   }
 

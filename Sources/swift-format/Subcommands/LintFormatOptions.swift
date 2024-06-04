@@ -32,10 +32,10 @@ struct LintFormatOptions: ParsableArguments {
   @Option(
     name: .long,
     help: """
-      A list of comma-separated "start:end" pairs specifying UTF-8 offsets of the ranges to format.
+      A "start:end" pair specifying UTF-8 offsets of the range to format. Multiple ranges can be
+      formatted by specifying several --offsets arguments.
       """)
-  var offsets: [Range<Int>]?
-
+  var offsets: [Range<Int>] = []
 
   /// The filename for the source code when reading from standard input, to include in diagnostic
   /// messages.
@@ -105,7 +105,7 @@ struct LintFormatOptions: ParsableArguments {
       throw ValidationError("'--assume-filename' is only valid when reading from stdin")
     }
 
-    if offsets?.isEmpty == false && paths.count > 1 {
+    if !offsets.isEmpty && paths.count > 1 {
       throw ValidationError("'--offsets' is only valid when processing a single file")
     }
 
@@ -125,23 +125,19 @@ struct LintFormatOptions: ParsableArguments {
   }
 }
 
-extension [Range<Int>] {
+extension Range<Int> {
   public init?(argument: String) {
-    let pairs = argument.components(separatedBy: ",")
-    let ranges: [Range<Int>] = pairs.compactMap {
-      let pair = $0.components(separatedBy: ":")
-      if pair.count == 2, let start = Int(pair[0]), let end = Int(pair[1]), start <= end {
-        return start ..< end
-      } else {
-        return nil
-      }
+    let pair = argument.components(separatedBy: ":")
+    if pair.count == 2, let start = Int(pair[0]), let end = Int(pair[1]), start <= end {
+      self = start ..< end
+    } else {
+      return nil
     }
-    self = ranges
   }
 }
 
 #if compiler(>=6)
-extension [Range<Int>] : @retroactive ExpressibleByArgument {}
+extension Range<Int> : @retroactive ExpressibleByArgument {}
 #else
-extension [Range<Int>] : ExpressibleByArgument {}
+extension Range<Int> : ExpressibleByArgument {}
 #endif
