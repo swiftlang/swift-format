@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2020 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2024 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -25,6 +25,17 @@ struct LintFormatOptions: ParsableArguments {
       string containing the configuration directly.
       """)
   var configuration: String?
+
+  /// A list of comma-separated "start:end" pairs specifying UTF-8 offsets of the ranges to format.
+  ///
+  /// If not specified, the whole file will be formatted.
+  @Option(
+    name: .long,
+    help: """
+      A "start:end" pair specifying UTF-8 offsets of the range to format. Multiple ranges can be
+      formatted by specifying several --offsets arguments.
+      """)
+  var offsets: [Range<Int>] = []
 
   /// The filename for the source code when reading from standard input, to include in diagnostic
   /// messages.
@@ -94,6 +105,10 @@ struct LintFormatOptions: ParsableArguments {
       throw ValidationError("'--assume-filename' is only valid when reading from stdin")
     }
 
+    if !offsets.isEmpty && paths.count > 1 {
+      throw ValidationError("'--offsets' is only valid when processing a single file")
+    }
+
     if !paths.isEmpty && !recursive {
       for path in paths {
         var isDir: ObjCBool = false
@@ -109,3 +124,20 @@ struct LintFormatOptions: ParsableArguments {
     }
   }
 }
+
+extension Range<Int> {
+  public init?(argument: String) {
+    let pair = argument.components(separatedBy: ":")
+    if pair.count == 2, let start = Int(pair[0]), let end = Int(pair[1]), start <= end {
+      self = start ..< end
+    } else {
+      return nil
+    }
+  }
+}
+
+#if compiler(>=6)
+extension Range<Int> : @retroactive ExpressibleByArgument {}
+#else
+extension Range<Int> : ExpressibleByArgument {}
+#endif
