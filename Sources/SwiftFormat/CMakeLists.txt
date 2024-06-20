@@ -14,6 +14,7 @@ add_library(SwiftFormat
   API/Finding.swift
   API/FindingCategorizing.swift
   API/Indent.swift
+  API/Selection.swift
   API/SwiftFormatError.swift
   API/SwiftFormatter.swift
   API/SwiftLinter.swift
