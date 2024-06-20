@@ -45,7 +45,7 @@ class Frontend {
     lazy var sourceText: String? = {
       let sourceData = fileHandle.readDataToEndOfFile()
       defer { fileHandle.closeFile() }
-      return String(data: sourceData, encoding: .utf8)
+      return String(decoding: sourceData, as: UTF8.self)
     }()
 
     init(
@@ -212,7 +212,7 @@ class Frontend {
       } catch {
         // If we failed to load this from the path, try interpreting the string as configuration
         // data itself because the user might have written something like `--configuration '{...}'`,
-        let data = pathOrString.data(using: .utf8)!
+        let data = Data(pathOrString.utf8)
         if let configuration = try? Configuration(data: data) {
           return configuration
         }
