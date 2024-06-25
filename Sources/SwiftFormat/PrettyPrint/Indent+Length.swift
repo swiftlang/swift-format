@@ -22,10 +22,10 @@ extension Indent {
     return String(repeating: character, count: count)
   }
 
-  func length(in configuration: Configuration) -> Int {
+  func length(tabWidth: Int) -> Int {
     switch self {
     case .spaces(let count): return count
-    case .tabs(let count): return count * configuration.tabWidth
+    case .tabs(let count): return count * tabWidth
     }
   }
 }
@@ -36,6 +36,10 @@ extension Array where Element == Indent {
   }
 
   func length(in configuration: Configuration) -> Int {
-    return reduce(into: 0) { $0 += $1.length(in: configuration) }
+    return self.length(tabWidth: configuration.tabWidth)
+  }
+
+  func length(tabWidth: Int) -> Int {
+    return reduce(into: 0) { $0 += $1.length(tabWidth: tabWidth) }
   }
 }
