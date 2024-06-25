@@ -263,7 +263,7 @@ if someCondition {
 ### Token Generation
 
 Token generation begins with the abstract syntax tree (AST) of the Swift source
-file, provided by the [SwiftSyntax](https://github.com/apple/swift-syntax)
+file, provided by the [SwiftSyntax](https://github.com/swiftlang/swift-syntax)
 library. We have overloaded a `visit` method for each of the different kinds of
 syntax nodes. Most of these nodes are higher-level, and are composed of other
 nodes. For example, `FunctionDeclSyntax` contains
