@@ -61,8 +61,11 @@ For example, if you are using Xcode 13.3 (Swift 5.6), you will need
 ## Getting swift-format
 
 If you are mainly interested in using swift-format (rather than developing it),
-then you can get swift-format either via [Homebrew](https://brew.sh/) or by checking out the
-source and building it.
+then you can get it in three different ways:
+
+### Included in Xcode
+
+Xcode 16 and above include swift-format in the toolchain. You can run `swift-format` from anywhere on the system using `swift format` (notice the space instead of dash). To find the path at which `swift-format` is installed, run `xcrun --find swift-format`.
 
 ### Installing via Homebrew
 
