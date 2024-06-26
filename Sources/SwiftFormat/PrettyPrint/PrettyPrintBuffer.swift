@@ -12,10 +12,18 @@
 
 import Foundation
 
+/// Used by the PrettyPrint class to actually assemble the output string. This struct
+/// tracks state specific to the output (line number, column, etc.) rather than the pretty
+/// printing algorithm itself.
 struct PrettyPrintBuffer {
+  /// The maximum number of consecutive blank lines that may appear in a file.
   let maximumBlankLines: Int
+
+  /// The width of the horizontal tab in spaces.
   let tabWidth: Int
 
+  /// If true, output is generated as normal. If false, the various state variables are
+  /// updated as normal but nothing is appended to the output (used by selection formatting).
   var isEnabled: Bool = true
 
   /// Indicates whether or not the printer is currently at the beginning of a line.
@@ -37,8 +45,10 @@ struct PrettyPrintBuffer {
   /// will still point to the position of the previous line.
   private(set) var column: Int
 
+  /// The current indentation level to be used when text is appended to a new line.
   var currentIndentation: [Indent]
 
+  /// The accumulated output of the pretty printer.
   private(set) var output: String = ""
 
   init(maximumBlankLines: Int, tabWidth: Int, column: Int = 0) {

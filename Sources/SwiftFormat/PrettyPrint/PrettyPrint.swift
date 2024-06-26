@@ -234,7 +234,7 @@ public class PrettyPrinter {
     // the group.
     case .open(let breaktype):
       // Determine if the break tokens in this group need to be forced.
-      if (shouldBreak(length) || lastBreak), case .consistent = breaktype {
+      if (!canFit(length) || lastBreak), case .consistent = breaktype {
         forceBreakStack.append(true)
       } else {
         forceBreakStack.append(false)
@@ -276,7 +276,7 @@ public class PrettyPrinter {
         // scope), so we need the continuation indentation to persist across all the lines in that
         // scope. Additionally, continuation open breaks must indent when the break fires.
         let continuationBreakWillFire = openKind == .continuation
-          && (outputBuffer.isAtStartOfLine || shouldBreak(length) || mustBreak)
+          && (outputBuffer.isAtStartOfLine || !canFit(length) || mustBreak)
         let contributesContinuationIndent = currentLineIsContinuation || continuationBreakWillFire
 
         activeOpenBreaks.append(
@@ -323,7 +323,7 @@ public class PrettyPrinter {
           // If it's a mandatory breaking close, then we must break (regardless of line length) if
           // the break is on a different line than its corresponding open break.
           mustBreak = openedOnDifferentLine
-        } else if shouldBreak(1) {
+        } else if !canFit() {
           // If there is no room left on the line, then we must force this break to fire so that the
           // next token that comes along (typically a closing bracket of some kind) ends up on the
           // next line.
@@ -387,7 +387,7 @@ public class PrettyPrinter {
 
         // Wait for a contextual break to fire and then update the breaking behavior for the rest of
         // the contextual breaks in this scope to match the behavior of the one that fired.
-        let willFire = shouldBreak(length) || mustBreak
+        let willFire = !canFit(length) || mustBreak
         if willFire {
           // Update the active breaking context according to the most recently finished breaking
           // context so all following contextual breaks in this scope to have matching behavior.
@@ -427,7 +427,7 @@ public class PrettyPrinter {
       }
 
       let suppressBreaking = isBreakingSuppressed && !overrideBreakingSuppressed
-      if !suppressBreaking && (shouldBreak(length) || mustBreak) {
+      if !suppressBreaking && (!canFit(length) || mustBreak) {
         currentLineIsContinuation = isContinuationIfBreakFires
         outputBuffer.writeNewlines(newline)
         lastBreak = true
@@ -458,7 +458,7 @@ public class PrettyPrinter {
       lastBreak = false
 
       if wasEndOfLine {
-        if shouldBreak(comment.length) && !isBreakingSuppressed {
+        if !(canFit(comment.length) || isBreakingSuppressed) {
           diagnose(.moveEndOfLineComment, category: .endOfLineComment)
         }
       }
@@ -536,9 +536,11 @@ public class PrettyPrinter {
     }
   }
 
-  private func shouldBreak(_ length: Int) -> Bool {
+  /// Indicates whether the current line can fit a string of the given length. If no length
+  /// is given, it indicates whether the current line can accomodate *any* text.
+  private func canFit(_ length: Int = 1) -> Bool {
     let spaceRemaining = configuration.lineLength - outputBuffer.column
-    return !outputBuffer.isAtStartOfLine && length > spaceRemaining
+    return outputBuffer.isAtStartOfLine || length <= spaceRemaining
   }
 
   /// Scan over the array of Tokens and calculate their lengths.
