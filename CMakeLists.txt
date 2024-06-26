@@ -68,8 +68,8 @@ endif()
 find_package(SwiftSyntax CONFIG)
 if(NOT SwiftSyntax_FOUND)
   FetchContent_Declare(Syntax
-    GIT_REPOSITORY https://github.com/apple/swift-syntax
-    GIT_TAG main)
+    GIT_REPOSITORY https://github.com/swiftlang/swift-syntax
+    GIT_TAG release/6.0)
   list(APPEND _SF_VENDOR_DEPENDENCIES Syntax)
 endif()
 

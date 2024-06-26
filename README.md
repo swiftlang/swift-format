@@ -1,7 +1,7 @@
 # swift-format
 
 `swift-format` provides the formatting technology for
-[SourceKit-LSP](https://github.com/apple/sourcekit-lsp) and the building
+[SourceKit-LSP](https://github.com/swiftlang/sourcekit-lsp) and the building
 blocks for doing code formatting transformations.
 
 This package can be used as a [command line tool](#command-line-usage)
@@ -18,7 +18,7 @@ invoked via an [API](#api-usage).
 ### Swift 5.8 and later
 
 As of Swift 5.8, swift-format depends on the version of
-[SwiftSyntax](https://github.com/apple/swift-syntax) whose parser has been
+[SwiftSyntax](https://github.com/swiftlang/swift-syntax) whose parser has been
 rewritten in Swift and no longer has dependencies on libraries in the
 Swift toolchain.
 
@@ -34,7 +34,7 @@ SwiftSyntax; the 5.8 release of swift-format is `508.0.0`, not `0.50800.0`.
 ### Swift 5.7 and earlier
 
 `swift-format` versions 0.50700.0 and earlier depend on versions of
-[SwiftSyntax](https://github.com/apple/swift-syntax) that used a standalone
+[SwiftSyntax](https://github.com/swiftlang/swift-syntax) that used a standalone
 parsing library distributed as part of the Swift toolchain. When using these
 versions, you should check out and build `swift-format` from the release
 tag or branch that is compatible with the version of Swift you are using.
@@ -74,7 +74,7 @@ Install `swift-format` using the following commands:
 
 ```sh
 VERSION=510.1.0  # replace this with the version you need
-git clone https://github.com/apple/swift-format.git
+git clone https://github.com/swiftlang/swift-format.git
 cd swift-format
 git checkout "tags/$VERSION"
 swift build -c release
