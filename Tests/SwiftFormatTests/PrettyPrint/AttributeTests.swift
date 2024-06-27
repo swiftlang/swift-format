@@ -444,4 +444,28 @@ final class AttributeTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
   }
+
+  func testAttributeParamSpacingInExpose() {
+    let input =
+      """
+      @_expose( wasm  , "foo"  )
+      func f() {}
+
+      @_expose( Cxx  ,   "bar")
+      func b() {}
+
+      """
+
+    let expected =
+      """
+      @_expose(wasm, "foo")
+      func f() {}
+
+      @_expose(Cxx, "bar")
+      func b() {}
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
+  }
 }

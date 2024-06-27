@@ -43,6 +43,7 @@ class PrettyPrintTestCase: DiagnosingTestCase {
     let (formatted, context) = prettyPrintedSource(
       markedInput.textWithoutMarkers,
       configuration: configuration,
+      selection: markedInput.selection,
       whitespaceOnly: whitespaceOnly,
       findingConsumer: { emittedFindings.append($0) })
     assertStringsEqualWithDiff(
@@ -64,14 +65,18 @@ class PrettyPrintTestCase: DiagnosingTestCase {
 
     // Idempotency check: Running the formatter multiple times should not change the outcome.
     // Assert that running the formatter again on the previous result keeps it the same.
-    let (reformatted, _) = prettyPrintedSource(
-      formatted,
-      configuration: configuration,
-      whitespaceOnly: whitespaceOnly,
-      findingConsumer: { _ in }  // Ignore findings during the idempotence check.
-    )
-    assertStringsEqualWithDiff(
-      reformatted, formatted, "Pretty printer is not idempotent", file: file, line: line)
+    // But if we have ranges, they aren't going to be valid for the formatted text.
+    if case .infinite = markedInput.selection {
+      let (reformatted, _) = prettyPrintedSource(
+        formatted,
+        configuration: configuration,
+        selection: markedInput.selection,
+        whitespaceOnly: whitespaceOnly,
+        findingConsumer: { _ in }  // Ignore findings during the idempotence check.
+      )
+      assertStringsEqualWithDiff(
+        reformatted, formatted, "Pretty printer is not idempotent", file: file, line: line)
+    }
   }
 
   /// Returns the given source code reformatted with the pretty printer.
@@ -86,6 +91,7 @@ class PrettyPrintTestCase: DiagnosingTestCase {
   private func prettyPrintedSource(
     _ source: String,
     configuration: Configuration,
+    selection: Selection,
     whitespaceOnly: Bool,
     findingConsumer: @escaping (Finding) -> Void
   ) -> (String, Context) {
@@ -96,9 +102,11 @@ class PrettyPrintTestCase: DiagnosingTestCase {
     let context = makeContext(
       sourceFileSyntax: sourceFileSyntax,
       configuration: configuration,
+      selection: selection,
       findingConsumer: findingConsumer)
     let printer = PrettyPrinter(
       context: context,
+      source: source,
       node: Syntax(sourceFileSyntax),
       printTokenStream: false,
       whitespaceOnly: whitespaceOnly)
