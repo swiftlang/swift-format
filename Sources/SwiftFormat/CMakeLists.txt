@@ -46,6 +46,7 @@ add_library(SwiftFormat
   PrettyPrint/Comment.swift
   PrettyPrint/Indent+Length.swift
   PrettyPrint/PrettyPrint.swift
+  PrettyPrint/PrettyPrintBuffer.swift
   PrettyPrint/PrettyPrintFindingCategory.swift
   PrettyPrint/Token.swift
   PrettyPrint/TokenStreamCreator.swift
