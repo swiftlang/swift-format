@@ -49,6 +49,14 @@ public enum Selection {
   }
 }
 
+extension Range<AbsolutePosition> {
+  // Returns `true` if the intersection between this range and `other` is non-empty or if the two ranges are directly
+  /// adjacent to each other.
+  public func overlapsOrTouches(_ other: Range<AbsolutePosition>) -> Bool {
+    return self.upperBound >= other.lowerBound && self.lowerBound <= other.upperBound
+  }
+}
+
 
 public extension Syntax {
   /// - Returns: `true` if the node is _completely_ inside any range in the selection
