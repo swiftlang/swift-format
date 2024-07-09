@@ -19,6 +19,7 @@ public let ruleNameCache: [ObjectIdentifier: String] = [
   ObjectIdentifier(AlwaysUseLiteralForEmptyCollectionInit.self): "AlwaysUseLiteralForEmptyCollectionInit",
   ObjectIdentifier(AlwaysUseLowerCamelCase.self): "AlwaysUseLowerCamelCase",
   ObjectIdentifier(AmbiguousTrailingClosureOverload.self): "AmbiguousTrailingClosureOverload",
+  ObjectIdentifier(AvoidRetroactiveConformances.self): "AvoidRetroactiveConformances",
   ObjectIdentifier(BeginDocumentationCommentWithOneLineSummary.self): "BeginDocumentationCommentWithOneLineSummary",
   ObjectIdentifier(DoNotUseSemicolons.self): "DoNotUseSemicolons",
   ObjectIdentifier(DontRepeatTypeInStaticProperties.self): "DontRepeatTypeInStaticProperties",

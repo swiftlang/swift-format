@@ -64,6 +64,14 @@ class LintPipeline: SyntaxVisitor {
     onVisitPost(rule: TypeNamesShouldBeCapitalized.self, for: node)
   }
 
+  override func visit(_ node: AttributeSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(AvoidRetroactiveConformances.visit, for: node)
+    return .visitChildren
+  }
+  override func visitPost(_ node: AttributeSyntax) {
+    onVisitPost(rule: AvoidRetroactiveConformances.self, for: node)
+  }
+
   override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
     visitIfEnabled(AlwaysUseLowerCamelCase.visit, for: node)
@@ -193,12 +201,14 @@ class LintPipeline: SyntaxVisitor {
   }
 
   override func visit(_ node: ExtensionDeclSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(AvoidRetroactiveConformances.visit, for: node)
     visitIfEnabled(DontRepeatTypeInStaticProperties.visit, for: node)
     visitIfEnabled(NoAccessLevelOnExtensionDeclaration.visit, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     return .visitChildren
   }
   override func visitPost(_ node: ExtensionDeclSyntax) {
+    onVisitPost(rule: AvoidRetroactiveConformances.self, for: node)
     onVisitPost(rule: DontRepeatTypeInStaticProperties.self, for: node)
     onVisitPost(rule: NoAccessLevelOnExtensionDeclaration.self, for: node)
     onVisitPost(rule: UseTripleSlashForDocumentationComments.self, for: node)
