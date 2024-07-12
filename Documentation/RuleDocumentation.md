@@ -14,6 +14,7 @@ Here's the list of available rules:
 - [AlwaysUseLiteralForEmptyCollectionInit](#AlwaysUseLiteralForEmptyCollectionInit)
 - [AlwaysUseLowerCamelCase](#AlwaysUseLowerCamelCase)
 - [AmbiguousTrailingClosureOverload](#AmbiguousTrailingClosureOverload)
+- [AvoidRetroactiveConformances](#AvoidRetroactiveConformances)
 - [BeginDocumentationCommentWithOneLineSummary](#BeginDocumentationCommentWithOneLineSummary)
 - [DoNotUseSemicolons](#DoNotUseSemicolons)
 - [DontRepeatTypeInStaticProperties](#DontRepeatTypeInStaticProperties)
@@ -92,6 +93,14 @@ Lint: If two overloaded functions with one closure parameter appear in the same 
       error is raised.
 
 `AmbiguousTrailingClosureOverload` is a linter-only rule.
+
+### AvoidRetroactiveConformances
+
+`@retroactive` conformances are forbidden.
+
+Lint: Using `@retroactive` results in a lint error.
+
+`AvoidRetroactiveConformances` is a linter-only rule.
 
 ### BeginDocumentationCommentWithOneLineSummary
 

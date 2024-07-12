@@ -57,6 +57,7 @@ add_library(SwiftFormat
   Rules/AlwaysUseLiteralForEmptyCollectionInit.swift
   Rules/AlwaysUseLowerCamelCase.swift
   Rules/AmbiguousTrailingClosureOverload.swift
+  Rules/AvoidRetroactiveConformances.swift
   Rules/BeginDocumentationCommentWithOneLineSummary.swift
   Rules/DoNotUseSemicolons.swift
   Rules/DontRepeatTypeInStaticProperties.swift
