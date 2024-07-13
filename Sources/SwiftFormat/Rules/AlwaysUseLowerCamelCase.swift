@@ -100,7 +100,11 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
 
     // We allow underscores in test names, because there's an existing convention of using
     // underscores to separate phrases in very detailed test names.
-    let allowUnderscores = testCaseFuncs.contains(node)
+    let allowUnderscores = testCaseFuncs.contains(node) || node.attributes.contains {
+      // Allow underscore for test functions with the `@Test` attribute.
+      $0.as(AttributeSyntax.self)?.attributeName.as(IdentifierTypeSyntax.self)?.name.text == "Test"
+    }
+
     diagnoseLowerCamelCaseViolations(
       node.name, allowUnderscores: allowUnderscores,
       description: identifierDescription(for: node))
