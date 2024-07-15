@@ -57,5 +57,30 @@ final class DoStmtTests: PrettyPrintTestCase {
       """
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
+
+  func testDoTypedThrowsStmt() {
+    let input =
+      """
+      do throws(FooError) {
+        foo()
+      }
+      """
+
+    assertPrettyPrintEqual(input: input, expected:
+      """
+      do
+      throws(FooError) {
+        foo()
+      }
+
+      """, linelength: 18)
+    assertPrettyPrintEqual(input: input, expected:
+      """
+      do throws(FooError) {
+        foo()
+      }
+
+      """, linelength: 25)
+  }
 }
 

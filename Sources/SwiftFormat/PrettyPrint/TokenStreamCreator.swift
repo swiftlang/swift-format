@@ -707,6 +707,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: DoStmtSyntax) -> SyntaxVisitorContinueKind {
+    if node.throwsClause != nil {
+      after(node.doKeyword, tokens: .break(.same, size: 1))
+    }
     arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
     return .visitChildren
   }
