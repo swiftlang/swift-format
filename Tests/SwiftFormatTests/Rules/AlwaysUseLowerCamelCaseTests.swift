@@ -217,7 +217,7 @@ final class AlwaysUseLowerCamelCaseTests: LintOrFormatRuleTestCase {
       """
       @Test
       func function_With_Test_Attribute() {}
-      @Test("Description for test functions",
+      @Testing.Test("Description for test functions",
             .tags(.testTag))
       func function_With_Test_Attribute_And_Args() {}
       func 1️⃣function_Without_Test_Attribute() {}

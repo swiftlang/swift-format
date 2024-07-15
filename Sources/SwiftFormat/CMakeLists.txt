@@ -42,6 +42,7 @@ add_library(SwiftFormat
   Core/SyntaxLintRule.swift
   Core/SyntaxProtocol+Convenience.swift
   Core/Trivia+Convenience.swift
+  Core/WithAttributesSyntax+Convenience.swift
   Core/WithSemicolonSyntax.swift
   PrettyPrint/Comment.swift
   PrettyPrint/Indent+Length.swift
