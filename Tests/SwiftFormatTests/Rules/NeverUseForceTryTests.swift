@@ -38,4 +38,20 @@ final class NeverUseForceTryTests: LintOrFormatRuleTestCase {
       findings: []
     )
   }
+  
+  func testAllowForceTryInTestAttributeFunction() {
+    assertLint(
+      NeverUseForceTry.self,
+      """
+      @Test
+      func testSomeFunc() {
+        let document = try! Document(path: "important.data")
+        func nestedFunc() {
+          let x = try! someThrowingFunction()
+        }
+      }
+      """,
+      findings: []
+    )
+  }
 }

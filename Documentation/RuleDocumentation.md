@@ -189,6 +189,7 @@ Force-unwraps are strongly discouraged and must be documented.
 
 This rule does not apply to test code, defined as code which:
   * Contains the line `import XCTest`
+  * The function is marked with `@Test` attribute
 
 Lint: If a force unwrap is used, a lint warning is raised.
 
@@ -200,6 +201,7 @@ Force-try (`try!`) is forbidden.
 
 This rule does not apply to test code, defined as code which:
   * Contains the line `import XCTest`
+  * The function is marked with `@Test` attribute
 
 Lint: Using `try!` results in a lint error.
 
@@ -215,6 +217,7 @@ Certain properties (e.g. `@IBOutlet`) tied to the UI lifecycle are ignored.
 
 This rule does not apply to test code, defined as code which:
   * Contains the line `import XCTest`
+  * The function is marked with `@Test` attribute
 
 TODO: Create exceptions for other UI elements (ex: viewDidLoad)
 

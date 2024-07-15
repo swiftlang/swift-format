@@ -40,4 +40,23 @@ final class NeverForceUnwrapTests: LintOrFormatRuleTestCase {
       findings: []
     )
   }
+
+  func testIgnoreTestAttributeFunction() {
+    assertLint(
+      NeverForceUnwrap.self,
+      """
+      @Test
+      func testSomeFunc() {
+        var b = a as! Int
+      }
+      @Test
+      func testAnotherFunc() {
+        func nestedFunc() {
+          let c = someValue()!
+        }
+      }
+      """,
+      findings: []
+    )
+  }
 }

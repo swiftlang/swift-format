@@ -35,4 +35,20 @@ final class NeverUseImplicitlyUnwrappedOptionalsTests: LintOrFormatRuleTestCase 
       findings: []
     )
   }
+
+  func testIgnoreTestAttrinuteFunction() {
+    assertLint(
+      NeverUseImplicitlyUnwrappedOptionals.self,
+      """
+      @Test
+      func testSomeFunc() {
+        var s: String!
+        func nestedFunc() {
+          var f: Foo!
+        }
+      }
+      """,
+      findings: []
+    )
+  }
 }
