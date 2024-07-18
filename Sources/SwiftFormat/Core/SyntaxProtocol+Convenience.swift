@@ -154,7 +154,8 @@ extension SyntaxProtocol {
   var hasTestAncestor: Bool {
     var parent = self.parent
     while let existingParent = parent {
-      if let functionDecl = existingParent.as(FunctionDeclSyntax.self), functionDecl.hasAttribute("Test") {
+      if let functionDecl = existingParent.as(FunctionDeclSyntax.self),
+          functionDecl.hasAttribute("Test", inModule: "Testing") {
         return true
       }
       parent = existingParent.parent

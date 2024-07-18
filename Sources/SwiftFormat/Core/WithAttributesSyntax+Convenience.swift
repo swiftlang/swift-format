@@ -13,16 +13,23 @@
 import SwiftSyntax
 
 extension WithAttributesSyntax {
-    /// Indicates whether the node has attribute with the given `name`.
-    ///
-    /// - Parameter name: The name of the attribute to lookup.
-    /// - Returns: True if the node has an attribute with the given `name`, otherwise false.
-    func hasAttribute(_ name: String) -> Bool {
-        attributes.contains { attribute in
-            let attributeName = attribute.as(AttributeSyntax.self)?.attributeName
-            return attributeName?.as(IdentifierTypeSyntax.self)?.name.text == name
-            // support @Module.Attribute syntax as well
-            || attributeName?.as(MemberTypeSyntax.self)?.name.text == name
-        }
+  /// Indicates whether the node has attribute with the given `name`.
+  ///
+  /// - Parameter name: The name of the attribute to lookup.
+  /// - Parameter module: The module name to lookup the attribute in.
+  /// - Returns: True if the node has an attribute with the given `name`, otherwise false.
+  func hasAttribute(_ name: String, inModule module: String) -> Bool {
+    attributes.contains { attribute in
+      let attributeName = attribute.as(AttributeSyntax.self)?.attributeName
+      if let identifier = attributeName?.as(IdentifierTypeSyntax.self) {
+        return identifier.name.text == name
+      }
+      // support @Module.Attribute syntax as well
+      if let memberType = attributeName?.as(MemberTypeSyntax.self) {
+        return memberType.name.text == name
+          && memberType.baseType.as(IdentifierTypeSyntax.self)?.name.text == module
+      }
+      return false
     }
+  }
 }

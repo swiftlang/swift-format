@@ -223,10 +223,13 @@ final class AlwaysUseLowerCamelCaseTests: LintOrFormatRuleTestCase {
       func 1️⃣function_Without_Test_Attribute() {}
       @objc
       func 2️⃣function_With_Non_Test_Attribute() {}
+      @Foo.Test
+      func 3️⃣function_With_Test_Attribute_From_Foo_Module() {}
       """,
       findings: [
         FindingSpec("1️⃣", message: "rename the function 'function_Without_Test_Attribute' using lowerCamelCase"),
         FindingSpec("2️⃣", message: "rename the function 'function_With_Non_Test_Attribute' using lowerCamelCase"),
+        FindingSpec("3️⃣", message: "rename the function 'function_With_Test_Attribute_From_Foo_Module' using lowerCamelCase"),
       ]
     )
   }
