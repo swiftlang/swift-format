@@ -13,7 +13,8 @@
 import SwiftSyntax
 
 extension WithAttributesSyntax {
-  /// Indicates whether the node has attribute with the given `name`.
+  /// Indicates whether the node has attribute with the given `name` and `module`.
+  /// The `module` is only considered if the attribute is written as `@Module.Attribute`.
   ///
   /// - Parameter name: The name of the attribute to lookup.
   /// - Parameter module: The module name to lookup the attribute in.
@@ -22,10 +23,11 @@ extension WithAttributesSyntax {
     attributes.contains { attribute in
       let attributeName = attribute.as(AttributeSyntax.self)?.attributeName
       if let identifier = attributeName?.as(IdentifierTypeSyntax.self) {
+        // @Attribute syntax
         return identifier.name.text == name
       }
-      // support @Module.Attribute syntax as well
       if let memberType = attributeName?.as(MemberTypeSyntax.self) {
+        // @Module.Attribute syntax
         return memberType.name.text == name
           && memberType.baseType.as(IdentifierTypeSyntax.self)?.name.text == module
       }
