@@ -1327,6 +1327,12 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: MacroExpansionDeclSyntax) -> SyntaxVisitorContinueKind {
+    arrangeAttributeList(node.attributes)
+
+    before(
+      node.trailingClosure?.leftBrace,
+      tokens: .break(.same, newlines: .elective(ignoresDiscretionary: true)))
+
     arrangeFunctionCallArgumentList(
       node.arguments,
       leftDelimiter: node.leftParen,
