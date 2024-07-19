@@ -36,6 +36,8 @@ public final class NeverUseForceTry: SyntaxLintRule {
   public override func visit(_ node: TryExprSyntax) -> SyntaxVisitorContinueKind {
     guard context.importsXCTest == .doesNotImportXCTest else { return .skipChildren }
     guard let mark = node.questionOrExclamationMark else { return .visitChildren }
+    // Allow force try if it is in a function marked with @Test attribute.
+    if node.hasTestAncestor { return .skipChildren }
     if mark.tokenKind == .exclamationMark {
       diagnose(.doNotForceTry, on: node.tryKeyword)
     }

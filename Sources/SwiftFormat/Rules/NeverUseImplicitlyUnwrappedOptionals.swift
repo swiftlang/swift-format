@@ -39,6 +39,8 @@ public final class NeverUseImplicitlyUnwrappedOptionals: SyntaxLintRule {
 
   public override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
     guard context.importsXCTest == .doesNotImportXCTest else { return .skipChildren }
+    // Allow implicitly unwrapping if it is in a function marked with @Test attribute.
+    if node.hasTestAncestor { return .skipChildren }
     // Ignores IBOutlet variables
     for attribute in node.attributes {
       if (attribute.as(AttributeSyntax.self))?.attributeName.as(IdentifierTypeSyntax.self)?.name.text == "IBOutlet" {

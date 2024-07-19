@@ -149,6 +149,19 @@ extension SyntaxProtocol {
     }
     return leadingTrivia.hasAnyComments
   }
+
+  /// Indicates whether the node has any function ancestor marked with `@Test` attribute.
+  var hasTestAncestor: Bool {
+    var parent = self.parent
+    while let existingParent = parent {
+      if let functionDecl = existingParent.as(FunctionDeclSyntax.self),
+          functionDecl.hasAttribute("Test", inModule: "Testing") {
+        return true
+      }
+      parent = existingParent.parent
+    }
+    return false
+  }
 }
 
 extension SyntaxCollection {
