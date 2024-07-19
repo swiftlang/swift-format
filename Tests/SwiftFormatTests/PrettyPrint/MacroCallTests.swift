@@ -114,4 +114,16 @@ final class MacroCallTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
+
+  func testMacroDeclWithAttributesAndArguments() {
+    let input = """
+      @nonsenseAttribute
+      @available(iOS 17.0, *)
+      #Preview("Name") {
+        EmptyView()
+      }
+      
+      """
+    assertPrettyPrintEqual(input: input, expected: input, linelength: 45)
+  }
 }
