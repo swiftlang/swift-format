@@ -3171,7 +3171,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       return (
         true,
         [
-          .space(size: 2, flexible: true),
+          .space(size: config.spacesBeforeEndOfLineComments, flexible: true),
           .comment(Comment(kind: .line, text: text), wasEndOfLine: true),
           // There must be a break with a soft newline after the comment, but it's impossible to
           // know which kind of break must be used. Adding this newline is deferred until the

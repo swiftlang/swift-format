@@ -31,6 +31,9 @@ top-level keys and values:
     lines that are allowed to be present in a source file. Any number larger
     than this will be collapsed down to the maximum.
 
+*   `spacesBeforeEndOfLineComments` _(number)_: The number of spaces between 
+    the last token on a non-empty line and a line comment starting with `//`.
+
 *   `respectsExistingLineBreaks` _(boolean)_: Indicates whether or not existing
     line breaks in the source code should be honored (if they are valid
     according to the style guidelines being enforced). If this settings is
