@@ -72,7 +72,7 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
       extraneousInitializers.forEach { diagnose(.removeRedundantInitializer, on: $0) }
     }
 
-    return .skipChildren
+    return .visitChildren
   }
 
   /// Compares the actual access level of an initializer with the access level of a synthesized

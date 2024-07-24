@@ -26,6 +26,26 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
     )
   }
 
+  func testNestedMemberwiseInitializerIsDiagnosed() {
+    assertLint(
+      UseSynthesizedInitializer.self,
+      """
+      public struct MyContainer {
+        public struct Person {
+          public var name: String
+
+          1️⃣init(name: String) {
+            self.name = name
+          }
+        }
+      }
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"),
+      ]
+    )
+  }
+
   func testInternalMemberwiseInitializerIsDiagnosed() {
     assertLint(
       UseSynthesizedInitializer.self,

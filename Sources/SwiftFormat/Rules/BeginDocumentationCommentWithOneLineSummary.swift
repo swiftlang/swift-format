@@ -40,7 +40,7 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
 
   public override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseDocComments(in: DeclSyntax(node))
-    return .skipChildren
+    return .visitChildren
   }
 
   public override func visit(_ node: InitializerDeclSyntax) -> SyntaxVisitorContinueKind {
@@ -60,7 +60,7 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
 
   public override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseDocComments(in: DeclSyntax(node))
-    return .skipChildren
+    return .visitChildren
   }
 
   public override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
@@ -70,7 +70,7 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
 
   public override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseDocComments(in: DeclSyntax(node))
-    return .skipChildren
+    return .visitChildren
   }
 
   public override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {

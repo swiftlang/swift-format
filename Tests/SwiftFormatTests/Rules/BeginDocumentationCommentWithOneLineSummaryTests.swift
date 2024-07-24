@@ -169,4 +169,69 @@ final class BeginDocumentationCommentWithOneLineSummaryTests: LintOrFormatRuleTe
       """
     )
   }
+
+  func testNestedInsideStruct() {
+    assertLint(
+      BeginDocumentationCommentWithOneLineSummary.self,
+      """
+      struct MyContainer {
+        /// This docline should not succeed.
+        /// There are two sentences without a blank line between them.
+        1️⃣struct Test {}
+      }
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: #"add a blank comment line after this sentence: "This docline should not succeed.""#)
+      ]
+    )
+  }
+
+  func testNestedInsideEnum() {
+    assertLint(
+      BeginDocumentationCommentWithOneLineSummary.self,
+      """
+      enum MyContainer {
+        /// This docline should not succeed.
+        /// There are two sentences without a blank line between them.
+        1️⃣struct Test {}
+      }
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: #"add a blank comment line after this sentence: "This docline should not succeed.""#)
+      ]
+    )
+  }
+
+  func testNestedInsideClass() {
+    assertLint(
+      BeginDocumentationCommentWithOneLineSummary.self,
+      """
+      class MyContainer {
+        /// This docline should not succeed.
+        /// There are two sentences without a blank line between them.
+        1️⃣struct Test {}
+      }
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: #"add a blank comment line after this sentence: "This docline should not succeed.""#)
+      ]
+    )
+  }
+
+  func testNestedInsideActor() {
+    assertLint(
+      BeginDocumentationCommentWithOneLineSummary.self,
+      """
+      actor MyContainer {
+        /// This docline should not succeed.
+        /// There are two sentences without a blank line between them.
+        1️⃣struct Test {}
+      }
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: #"add a blank comment line after this sentence: "This docline should not succeed.""#)
+      ]
+    )
+  }
+
 }
