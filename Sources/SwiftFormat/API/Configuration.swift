@@ -67,7 +67,7 @@ public struct Configuration: Codable, Equatable {
   /// The maximum length of a line of source code, after which the formatter will break lines.
   public var lineLength: Int
 
-  // Number of spaces that preceeds line comments.
+  /// Number of spaces that precede line comments.
   public var spacesBeforeEndOfLineComments: Int
 
   /// The width of the horizontal tab in spaces.
