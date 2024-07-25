@@ -531,4 +531,30 @@ final class IfConfigTests: PrettyPrintTestCase {
       """
     assertPrettyPrintEqual(input: input, expected: input, linelength: 45)
   }
+
+  func testNestedPoundIfInSwitchStatement() {
+    let input =
+      """
+      switch self {
+      #if os(iOS) || os(tvOS) || os(watchOS)
+      case .a:
+        return 40
+      #if os(iOS) || os(tvOS)
+      case .e:
+        return 30
+      #endif
+      #if os(iOS)
+      case .g:
+        return 2
+      #endif
+      #endif
+      default:
+        return nil
+      }
+      
+      """
+    var configuration = Configuration.forTesting
+    configuration.indentConditionalCompilationBlocks = false
+    assertPrettyPrintEqual(input: input, expected: input, linelength: 45, configuration: configuration)
+  }
 }
