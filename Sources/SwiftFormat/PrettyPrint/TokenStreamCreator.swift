@@ -1459,6 +1459,8 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: IfConfigDeclSyntax) -> SyntaxVisitorContinueKind {
+    // there has to be a break after an #endif
+    after(node.poundEndif, tokens: .break(.same, size: 0))
     return .visitChildren
   }
 
