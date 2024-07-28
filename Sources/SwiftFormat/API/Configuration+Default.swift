@@ -30,6 +30,7 @@ extension Configuration {
     self.lineBreakBeforeControlFlowKeywords = false
     self.lineBreakBeforeEachArgument = false
     self.lineBreakBeforeEachGenericRequirement = false
+    self.lineBreakBetweenDeclarationAttributes = false
     self.prioritizeKeepingFunctionOutputTogether = false
     self.indentConditionalCompilationBlocks = true
     self.lineBreakAroundMultilineExpressionChainComponents = false
