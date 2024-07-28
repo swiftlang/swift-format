@@ -41,7 +41,8 @@ let package = Package(
   dependencies: dependencies,
   targets: [
     .target(
-      name: "_SwiftFormatInstructionCounter"
+      name: "_SwiftFormatInstructionCounter",
+      exclude: ["CMakeLists.txt"]
     ),
 
     .target(
@@ -53,7 +54,8 @@ let package = Package(
         .product(name: "SwiftOperators", package: "swift-syntax"),
         .product(name: "SwiftParser", package: "swift-syntax"),
         .product(name: "SwiftParserDiagnostics", package: "swift-syntax"),
-      ]
+      ],
+      exclude: ["CMakeLists.txt"]
     ),
     .target(
       name: "_SwiftFormatTestSupport",
@@ -105,6 +107,7 @@ let package = Package(
         .product(name: "SwiftSyntax", package: "swift-syntax"),
         .product(name: "SwiftParser", package: "swift-syntax"),
       ],
+      exclude: ["CMakeLists.txt"],
       linkerSettings: swiftformatLinkSettings
     ),
 
