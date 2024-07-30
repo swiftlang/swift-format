@@ -28,6 +28,7 @@ public struct Configuration: Codable, Equatable {
     case version
     case maximumBlankLines
     case lineLength
+    case spacesBeforeEndOfLineComments
     case tabWidth
     case indentation
     case respectsExistingLineBreaks
@@ -65,6 +66,9 @@ public struct Configuration: Codable, Equatable {
 
   /// The maximum length of a line of source code, after which the formatter will break lines.
   public var lineLength: Int
+
+  /// Number of spaces that precede line comments.
+  public var spacesBeforeEndOfLineComments: Int
 
   /// The width of the horizontal tab in spaces.
   ///
@@ -225,6 +229,9 @@ public struct Configuration: Codable, Equatable {
     self.lineLength =
       try container.decodeIfPresent(Int.self, forKey: .lineLength)
       ?? defaults.lineLength
+    self.spacesBeforeEndOfLineComments =
+      try container.decodeIfPresent(Int.self, forKey: .spacesBeforeEndOfLineComments)
+      ?? defaults.spacesBeforeEndOfLineComments
     self.tabWidth =
       try container.decodeIfPresent(Int.self, forKey: .tabWidth)
       ?? defaults.tabWidth
@@ -288,6 +295,7 @@ public struct Configuration: Codable, Equatable {
     try container.encode(version, forKey: .version)
     try container.encode(maximumBlankLines, forKey: .maximumBlankLines)
     try container.encode(lineLength, forKey: .lineLength)
+    try container.encode(spacesBeforeEndOfLineComments, forKey: .spacesBeforeEndOfLineComments)
     try container.encode(tabWidth, forKey: .tabWidth)
     try container.encode(indentation, forKey: .indentation)
     try container.encode(respectsExistingLineBreaks, forKey: .respectsExistingLineBreaks)

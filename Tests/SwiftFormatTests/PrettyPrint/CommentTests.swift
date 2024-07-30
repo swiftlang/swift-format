@@ -1,4 +1,5 @@
 import _SwiftFormatTestSupport
+import SwiftFormat
 
 final class CommentTests: PrettyPrintTestCase {
   func testDocumentationComments() {
@@ -199,6 +200,152 @@ final class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
 
+  func testLineCommentsWithCustomLeadingSpaces() {
+    let pairs: [(String, String)] = [
+        (
+            """
+            // Line Comment0
+
+            // Line Comment1
+            // Line Comment2
+            let a = 123
+            let b = "456"  // End of line comment
+            let c = "More content"
+
+            """,
+            """
+            // Line Comment0
+
+            // Line Comment1
+            // Line Comment2
+            let a = 123
+            let b = "456"   // End of line comment
+            let c = "More content"
+
+            """
+        ),
+        (
+          """
+          // Comment 3
+          // Comment 4
+
+          let reallyLongVariableName = 123 // This comment should not wrap
+          // and should not combine with this comment
+
+          func MyFun() {
+            // just a comment
+          }
+          """,
+          """
+          // Comment 3
+          // Comment 4
+
+          let reallyLongVariableName = 123   // This comment should not wrap
+          // and should not combine with this comment
+
+          func MyFun() {
+            // just a comment
+          }
+
+          """
+        ),
+        (
+          """
+          func MyFun() {
+            // Comment 1
+            // Comment 2
+            let a = 123
+
+            let b = 456  // Comment 3
+          }
+
+          func MyFun() {
+            let c = 789 // Comment 4
+            // Comment 5
+          }
+          """,
+          """
+          func MyFun() {
+            // Comment 1
+            // Comment 2
+            let a = 123
+
+            let b = 456   // Comment 3
+          }
+
+          func MyFun() {
+            let c = 789   // Comment 4
+            // Comment 5
+          }
+
+          """
+        ),
+        (
+          """
+          let a = myfun(123 // Cmt 7
+          )
+          let a = myfun(var1: 123 // Cmt 7
+          )
+
+          guard condition else { return // Cmt 6
+          }
+
+          switch myvar {
+          case .one, .two, // three
+               .four:
+            dostuff()
+          default: ()
+          }
+
+          """,
+          """
+          let a = myfun(
+            123   // Cmt 7
+          )
+          let a = myfun(
+            var1: 123   // Cmt 7
+          )
+
+          guard condition else {
+            return   // Cmt 6
+          }
+
+          switch myvar {
+          case .one, .two,   // three
+            .four:
+            dostuff()
+          default: ()
+          }
+
+          """
+        ),
+        (
+          """
+          let a = 123 +  // comment
+            b + c
+
+          let d = 123
+          // Trailing Comment
+          """,
+          """
+          let a =
+            123   // comment
+            + b + c
+
+          let d = 123
+          // Trailing Comment
+
+          """
+        ),
+    ]
+
+    var config = Configuration.forTesting
+    config.spacesBeforeEndOfLineComments = 3
+    for (input, expected) in pairs {
+      assertPrettyPrintEqual(input: input, expected: expected, linelength: 45, configuration: config)
+    }
+  }
+
   func testContainerLineComments() {
     let input =
       """
@@ -272,6 +419,82 @@ final class CommentTests: PrettyPrintTestCase {
       """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
+  }
+
+  func testContainerLineCommentsWithCustomLeadingSpaces() {
+    let input =
+      """
+      // Array comment
+      let a = [456, // small comment
+        789]
+
+      // Dictionary comment
+      let b = ["abc": 456, // small comment
+        "def": 789]
+
+      // Trailing comment
+      let c = [123, 456  // small comment
+      ]
+
+      // Multiline comment
+      let d = [123,
+        // comment line 1
+        // comment line 2
+        456
+      ]
+
+      /* Array comment */
+      let a = [456, /* small comment */
+        789]
+
+      /* Dictionary comment */
+      let b = ["abc": 456, /* small comment */
+        "def": 789]
+      """
+
+    let expected =
+      """
+      // Array comment
+      let a = [
+        456, // small comment
+        789,
+      ]
+
+      // Dictionary comment
+      let b = [
+        "abc": 456, // small comment
+        "def": 789,
+      ]
+
+      // Trailing comment
+      let c = [
+        123, 456, // small comment
+      ]
+
+      // Multiline comment
+      let d = [
+        123,
+        // comment line 1
+        // comment line 2
+        456,
+      ]
+
+      /* Array comment */
+      let a = [
+        456, /* small comment */
+        789,
+      ]
+
+      /* Dictionary comment */
+      let b = [
+        "abc": 456, /* small comment */
+        "def": 789,
+      ]
+
+      """
+    var config = Configuration.forTesting
+    config.spacesBeforeEndOfLineComments = 1
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80, configuration: config)
   }
 
   func testDocumentationBlockComments() {

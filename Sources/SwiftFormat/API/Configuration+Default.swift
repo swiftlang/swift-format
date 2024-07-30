@@ -26,6 +26,7 @@ extension Configuration {
     self.lineLength = 100
     self.tabWidth = 8
     self.indentation = .spaces(2)
+    self.spacesBeforeEndOfLineComments = 2
     self.respectsExistingLineBreaks = true
     self.lineBreakBeforeControlFlowKeywords = false
     self.lineBreakBeforeEachArgument = false
