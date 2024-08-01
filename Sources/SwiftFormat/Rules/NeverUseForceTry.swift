@@ -16,6 +16,7 @@ import SwiftSyntax
 ///
 /// This rule does not apply to test code, defined as code which:
 ///   * Contains the line `import XCTest`
+///   * The function is marked with `@Test` attribute
 ///
 /// Lint: Using `try!` results in a lint error.
 ///

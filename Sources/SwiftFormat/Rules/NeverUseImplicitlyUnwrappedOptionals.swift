@@ -18,6 +18,7 @@ import SwiftSyntax
 ///
 /// This rule does not apply to test code, defined as code which:
 ///   * Contains the line `import XCTest`
+///   * The function is marked with `@Test` attribute
 ///
 /// TODO: Create exceptions for other UI elements (ex: viewDidLoad)
 ///

@@ -16,6 +16,7 @@ import SwiftSyntax
 ///
 /// This rule does not apply to test code, defined as code which:
 ///   * Contains the line `import XCTest`
+///   * The function is marked with `@Test` attribute
 ///
 /// Lint: If a force unwrap is used, a lint warning is raised.
 @_spi(Rules)
