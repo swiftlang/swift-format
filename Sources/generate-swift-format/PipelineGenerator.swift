@@ -93,6 +93,7 @@ final class PipelineGenerator: FileGenerator {
         handle.write(
           """
             override func visitPost(_ node: \(nodeType)) {
+          
           """
         )
         for ruleName in lintRules.sorted() {

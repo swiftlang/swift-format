@@ -22,69 +22,28 @@ import SwiftSyntax
 @_spi(Rules)
 public final class DontRepeatTypeInStaticProperties: SyntaxLintRule {
 
-  public override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseStaticMembers(node.memberBlock.members, endingWith: node.name.text)
-    return .skipChildren
-  }
-
-  public override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseStaticMembers(node.memberBlock.members, endingWith: node.name.text)
-    return .skipChildren
-  }
-
-  public override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseStaticMembers(node.memberBlock.members, endingWith: node.name.text)
-    return .skipChildren
-  }
-
-  public override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseStaticMembers(node.memberBlock.members, endingWith: node.name.text)
-    return .skipChildren
-  }
-
-  public override func visit(_ node: ExtensionDeclSyntax) -> SyntaxVisitorContinueKind {
-    let members = node.memberBlock.members
-
-    switch Syntax(node.extendedType).as(SyntaxEnum.self) {
-    case .identifierType(let simpleType):
-      diagnoseStaticMembers(members, endingWith: simpleType.name.text)
-    case .memberType(let memberType):
-      // We don't need to drill recursively into this structure because types with more than two
-      // components are constructed left-heavy; that is, `A.B.C.D` is structured as `((A.B).C).D`,
-      // and the final component of the top type is what we want.
-      diagnoseStaticMembers(members, endingWith: memberType.name.text)
-    default:
-      // Do nothing for non-nominal types. If Swift adds support for extensions on non-nominals,
-      // we'll need to update this if we need to support some subset of those.
-      break
+  /// Visits the static/class properties and diagnoses any where the name has the containing
+  /// type name (excluding possible namespace prefixes, like `NS` or `UI`) as a suffix.
+  public override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
+    guard node.modifiers.contains(anyOf: [.class, .static]),
+      let typeName = Syntax(node).containingDeclName
+    else {
+      return .visitChildren
     }
 
-    return .skipChildren
-  }
+    let bareTypeName = removingPossibleNamespacePrefix(from: typeName)
+    for binding in node.bindings {
+      guard let identifierPattern = binding.pattern.as(IdentifierPatternSyntax.self) else {
+        continue
+      }
 
-  /// Iterates over the static/class properties in the given member list and diagnoses any where the
-  /// name has the containing type name (excluding possible namespace prefixes, like `NS` or `UI`)
-  /// as a suffix.
-  private func diagnoseStaticMembers(_ members: MemberBlockItemListSyntax, endingWith typeName: String) {
-    for member in members {
-      guard
-        let varDecl = member.decl.as(VariableDeclSyntax.self),
-        varDecl.modifiers.contains(anyOf: [.class, .static])
-      else { continue }
-
-      let bareTypeName = removingPossibleNamespacePrefix(from: typeName)
-
-      for binding in varDecl.bindings {
-        guard let identifierPattern = binding.pattern.as(IdentifierPatternSyntax.self) else {
-          continue
-        }
-
-        let varName = identifierPattern.identifier.text
-        if varName.contains(bareTypeName) {
-          diagnose(.removeTypeFromName(name: varName, type: bareTypeName), on: identifierPattern)
-        }
+      let varName = identifierPattern.identifier.text
+      if varName.contains(bareTypeName) {
+        diagnose(.removeTypeFromName(name: varName, type: bareTypeName), on: identifierPattern)
       }
     }
+
+    return .visitChildren
   }
 
   /// Returns the portion of the given string that excludes a possible Objective-C-style capitalized
@@ -108,5 +67,42 @@ public final class DontRepeatTypeInStaticProperties: SyntaxLintRule {
 extension Finding.Message {
   fileprivate static func removeTypeFromName(name: String, type: Substring) -> Finding.Message {
     "remove the suffix '\(type)' from the name of the variable '\(name)'"
+  }
+}
+
+extension Syntax {
+  /// Returns the name of the immediately enclosing type of this decl if there is one,
+  /// otherwise nil.
+  fileprivate var containingDeclName: String? {
+    switch Syntax(self).as(SyntaxEnum.self) {
+    case .actorDecl(let node):
+      return node.name.text
+    case .classDecl(let node):
+      return node.name.text
+    case .enumDecl(let node):
+      return node.name.text
+    case .protocolDecl(let node):
+      return node.name.text
+    case .structDecl(let node):
+      return node.name.text
+    case .extensionDecl(let node):
+      switch Syntax(node.extendedType).as(SyntaxEnum.self) {
+      case .identifierType(let simpleType):
+        return simpleType.name.text
+      case .memberType(let memberType):
+        // the final component of the top type `A.B.C.D` is what we want `D`.
+        return memberType.name.text
+      default:
+        // Do nothing for non-nominal types. If Swift adds support for extensions on non-nominals,
+        // we'll need to update this if we need to support some subset of those.
+        return nil
+      }
+    default:
+      if let parent = self.parent {
+        return parent.containingDeclName
+      }
+
+      return nil
+    }
   }
 }
