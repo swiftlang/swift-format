@@ -35,6 +35,7 @@ public struct Configuration: Codable, Equatable {
     case lineBreakBeforeControlFlowKeywords
     case lineBreakBeforeEachArgument
     case lineBreakBeforeEachGenericRequirement
+    case lineBreakBetweenDeclarationAttributes
     case prioritizeKeepingFunctionOutputTogether
     case indentConditionalCompilationBlocks
     case lineBreakAroundMultilineExpressionChainComponents
@@ -114,6 +115,9 @@ public struct Configuration: Codable, Equatable {
   /// list to be laid out vertically. If false (the default), requirements will be laid out
   /// horizontally first, with line breaks only being fired when the line length would be exceeded.
   public var lineBreakBeforeEachGenericRequirement: Bool
+
+  /// If true, a line break will be added between adjacent attributes.
+  public var lineBreakBetweenDeclarationAttributes: Bool
 
   /// Determines if function-like declaration outputs should be prioritized to be together with the
   /// function signature right (closing) parenthesis.
@@ -250,6 +254,9 @@ public struct Configuration: Codable, Equatable {
     self.lineBreakBeforeEachGenericRequirement =
       try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeEachGenericRequirement)
       ?? defaults.lineBreakBeforeEachGenericRequirement
+    self.lineBreakBetweenDeclarationAttributes =
+      try container.decodeIfPresent(Bool.self, forKey: .lineBreakBetweenDeclarationAttributes)
+      ?? defaults.lineBreakBetweenDeclarationAttributes
     self.prioritizeKeepingFunctionOutputTogether =
       try container.decodeIfPresent(Bool.self, forKey: .prioritizeKeepingFunctionOutputTogether)
       ?? defaults.prioritizeKeepingFunctionOutputTogether
@@ -304,6 +311,7 @@ public struct Configuration: Codable, Equatable {
     try container.encode(lineBreakBeforeEachGenericRequirement, forKey: .lineBreakBeforeEachGenericRequirement)
     try container.encode(prioritizeKeepingFunctionOutputTogether, forKey: .prioritizeKeepingFunctionOutputTogether)
     try container.encode(indentConditionalCompilationBlocks, forKey: .indentConditionalCompilationBlocks)
+    try container.encode(lineBreakBetweenDeclarationAttributes, forKey: .lineBreakBetweenDeclarationAttributes)
     try container.encode(
       lineBreakAroundMultilineExpressionChainComponents,
       forKey: .lineBreakAroundMultilineExpressionChainComponents)

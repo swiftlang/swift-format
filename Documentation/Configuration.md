@@ -61,6 +61,13 @@ top-level keys and values:
     (the default), requirements will be laid out horizontally first, with line breaks 
     only being fired when the line length would be exceeded.
 
+*   `lineBreakBetweenDeclarationAttributes` _(boolean)_:  Determines the 
+    line-breaking behavior for adjacent attributes on declarations.
+    If true, a line break will be added between each attribute, forcing the
+    attribute list to be laid out vertically. If false (the default),
+    attributes will be laid out horizontally first, with line breaks only
+    being fired when the line length would be exceeded.
+
 *   `prioritizeKeepingFunctionOutputTogether` _(boolean)_: Determines if 
     function-like declaration outputs should be prioritized to be together with the
     function signature right (closing) parenthesis. If false (the default), function 

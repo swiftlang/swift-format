@@ -271,7 +271,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     // `arrange*` functions here.
     before(node.firstToken(viewMode: .sourceAccurate), tokens: .open)
 
-    arrangeAttributeList(node.attributes)
+    arrangeAttributeList(node.attributes, separateByLineBreaks: config.lineBreakBeforeEachArgument)
 
     let hasArguments = !node.signature.parameterClause.parameters.isEmpty
 
@@ -326,7 +326,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   ) {
     before(node.firstToken(viewMode: .sourceAccurate), tokens: .open)
 
-    arrangeAttributeList(attributes)
+    arrangeAttributeList(attributes, separateByLineBreaks: config.lineBreakBetweenDeclarationAttributes)
 
     // Prioritize keeping "<modifiers> <keyword> <name>:" together (corresponding group close is
     // below at `lastTokenBeforeBrace`).
@@ -458,7 +458,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       after(node.returnClause.lastToken(viewMode: .sourceAccurate), tokens: .close)
     }
 
-    arrangeAttributeList(node.attributes)
+    arrangeAttributeList(node.attributes, separateByLineBreaks: config.lineBreakBetweenDeclarationAttributes)
 
     if let genericWhereClause = node.genericWhereClause {
       before(genericWhereClause.firstToken(viewMode: .sourceAccurate), tokens: .break(.same), .open)
@@ -513,7 +513,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   ) where BodyContents.Element: SyntaxProtocol {
     before(node.firstToken(viewMode: .sourceAccurate), tokens: .open)
 
-    arrangeAttributeList(attributes)
+    arrangeAttributeList(attributes, separateByLineBreaks: config.lineBreakBetweenDeclarationAttributes)
     arrangeBracesAndContents(of: body, contentsKeyPath: bodyContentsKeyPath)
 
     if let genericWhereClause = genericWhereClause {
@@ -549,7 +549,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: AccessorDeclSyntax) -> SyntaxVisitorContinueKind {
-    arrangeAttributeList(node.attributes)
+    arrangeAttributeList(node.attributes, separateByLineBreaks: config.lineBreakBetweenDeclarationAttributes)
     arrangeBracesAndContents(of: node.body, contentsKeyPath: \.statements)
     return .visitChildren
   }
@@ -1327,7 +1327,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: MacroExpansionDeclSyntax) -> SyntaxVisitorContinueKind {
-    arrangeAttributeList(node.attributes)
+    arrangeAttributeList(node.attributes, separateByLineBreaks: config.lineBreakBetweenDeclarationAttributes)
 
     before(
       node.trailingClosure?.leftBrace,
@@ -1546,7 +1546,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   override func visit(_ node: EnumCaseDeclSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken(viewMode: .sourceAccurate), tokens: .open)
 
-    arrangeAttributeList(node.attributes)
+    arrangeAttributeList(node.attributes, separateByLineBreaks: config.lineBreakBetweenDeclarationAttributes)
 
     after(node.caseKeyword, tokens: .break)
     after(node.lastToken(viewMode: .sourceAccurate), tokens: .close)
@@ -2179,7 +2179,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
-    arrangeAttributeList(node.attributes)
+    arrangeAttributeList(node.attributes, separateByLineBreaks: config.lineBreakBetweenDeclarationAttributes)
 
     if node.bindings.count == 1 {
       // If there is only a single binding, don't allow a break between the `let/var` keyword and
@@ -2285,7 +2285,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: TypeAliasDeclSyntax) -> SyntaxVisitorContinueKind {
-    arrangeAttributeList(node.attributes)
+    arrangeAttributeList(node.attributes, separateByLineBreaks: config.lineBreakBetweenDeclarationAttributes)
 
     after(node.typealiasKeyword, tokens: .break)
 
@@ -2499,7 +2499,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: AssociatedTypeDeclSyntax) -> SyntaxVisitorContinueKind {
-    arrangeAttributeList(node.attributes)
+    arrangeAttributeList(node.attributes, separateByLineBreaks: config.lineBreakBetweenDeclarationAttributes)
 
     after(node.associatedtypeKeyword, tokens: .break)
 
@@ -2890,14 +2890,30 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   /// Applies formatting tokens around and between the attributes in an attribute list.
   private func arrangeAttributeList(
     _ attributes: AttributeListSyntax?,
-    suppressFinalBreak: Bool = false
+    suppressFinalBreak: Bool = false,
+    separateByLineBreaks: Bool = false
   ) {
     if let attributes = attributes {
+      let behavior: NewlineBehavior = separateByLineBreaks ? .hard : .elective
       before(attributes.firstToken(viewMode: .sourceAccurate), tokens: .open)
-      insertTokens(.break(.same), betweenElementsOf: attributes)
+      for element in attributes.dropLast() {
+        if let ifConfig = element.as(IfConfigDeclSyntax.self) {
+            for clause in ifConfig.clauses {
+                if let nestedAttributes = AttributeListSyntax(clause.elements) {
+                    arrangeAttributeList(
+                        nestedAttributes,
+                        suppressFinalBreak: true,
+                        separateByLineBreaks: separateByLineBreaks
+                    )
+                }
+            }
+        } else {
+            after(element.lastToken(viewMode: .sourceAccurate), tokens: .break(.same, newlines: behavior))
+        }
+      }
       var afterAttributeTokens = [Token.close]
       if !suppressFinalBreak {
-        afterAttributeTokens.append(.break(.same))
+        afterAttributeTokens.append(.break(.same, newlines: behavior))
       }
       after(attributes.lastToken(viewMode: .sourceAccurate), tokens: afterAttributeTokens)
     }
