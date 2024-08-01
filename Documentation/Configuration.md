@@ -58,7 +58,7 @@ top-level keys and values:
     (the default), requirements will be laid out horizontally first, with line breaks 
     only being fired when the line length would be exceeded.
 
-*   `lineBreakBetweenDeclartionAttributes` _(boolean)_:  Determines the 
+*   `lineBreakBetweenDeclarationAttributes` _(boolean)_:  Determines the 
     line-breaking behavior for adjacent attributes on declarations.
     If true, a line break will be added between each attribute, forcing the
     attribute list to be laid out vertically. If false (the default),
