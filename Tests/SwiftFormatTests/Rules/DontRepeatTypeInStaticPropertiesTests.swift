@@ -75,4 +75,22 @@ final class DontRepeatTypeInStaticPropertiesTests: LintOrFormatRuleTestCase {
       ]
     )
   }
+
+
+  func testIgnoreSingleDecl() {
+    assertLint(
+      DontRepeatTypeInStaticProperties.self,
+        """
+        struct Foo {
+          // swift-format-ignore: DontRepeatTypeInStaticProperties
+          static let defaultFoo: Int
+          static let 1️⃣alternateFoo: Int
+        }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the suffix 'Foo' from the name of the variable 'alternateFoo'"),
+      ]
+    )
+  }
+
 }

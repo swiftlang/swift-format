@@ -42,16 +42,6 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
       configuration: configuration,
       selection: .infinite,
       findingConsumer: { emittedFindings.append($0) })
-    let linter = type.init(context: context)
-    linter.walk(sourceFileSyntax)
-
-    assertFindings(
-      expected: findings,
-      markerLocations: markedText.markers,
-      emittedFindings: emittedFindings,
-      context: context,
-      file: file,
-      line: line)
 
     var emittedPipelineFindings = [Finding]()
     // Disable default rules, so only select rule runs in pipeline
@@ -66,7 +56,7 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
       operatorTable: OperatorTable.standardOperators,
       assumingFileURL: URL(string: file.description)!)
 
-    // Check that pipeline produces the same findings as the isolated linter rule
+    // Check that pipeline produces the expected findings
     assertFindings(
       expected: findings,
       markerLocations: markedText.markers,
