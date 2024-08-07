@@ -1271,8 +1271,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   override func visit(_ node: ClosureCaptureSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken(viewMode: .sourceAccurate), tokens: .open)
     after(node.specifier?.lastToken(viewMode: .sourceAccurate), tokens: .break)
-    before(node.equal, tokens: .break)
-    after(node.equal, tokens: .break)
     if let trailingComma = node.trailingComma {
       before(trailingComma, tokens: .close)
       after(trailingComma, tokens: .break(.same))
