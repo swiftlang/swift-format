@@ -583,14 +583,14 @@ final class CommentTests: PrettyPrintTestCase {
   func testBlockComments() {
     let input =
       """
-      /* Line Comment1 */
+              /* Line Comment1 */
       /* Line Comment2 */
       let a = 123
       let b = "456"  /* End of line comment */
       let c = "More content"
 
-      /* Comment 3
-         Comment 4 */
+            /* Comment 3
+               Comment 4 */
 
       let reallyLongVariableName = 123  /* This comment should wrap */
 
@@ -603,7 +603,9 @@ final class CommentTests: PrettyPrintTestCase {
       }
 
       let d = 123
-      /* Trailing Comment */
+        /* Trailing Comment */
+        /* Trailing
+           Block Comment */
       """
 
     let expected =
@@ -633,6 +635,8 @@ final class CommentTests: PrettyPrintTestCase {
 
       let d = 123
       /* Trailing Comment */
+      /* Trailing
+         Block Comment */
 
       """
 
