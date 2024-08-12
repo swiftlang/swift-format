@@ -147,6 +147,10 @@ enum NewlineBehavior {
   /// newlines and the configured maximum number of blank lines.
   case hard(count: Int)
 
+  /// Break onto a new line is allowed if neccessary. If a line break is emitted, it will be escaped with a '\', and this breaks whitespace will be printed prior to the
+  /// escaped line break. This is useful in multiline strings where we don't want newlines printed in syntax to appear in the literal.
+  case escaped
+
   /// An elective newline that respects discretionary newlines from the user-entered text.
   static let elective = NewlineBehavior.elective(ignoresDiscretionary: false)
 
