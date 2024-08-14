@@ -117,9 +117,11 @@ class Frontend {
 
   /// Processes source content from standard input.
   private func processStandardInput() {
+    let assumedUrl = lintFormatOptions.assumeFilename.map(URL.init(fileURLWithPath:))
+
     guard let configuration = configuration(
       fromPathOrString: lintFormatOptions.configuration,
-      orInferredFromSwiftFileAt: nil)
+      orInferredFromSwiftFileAt: assumedUrl)
     else {
       // Already diagnosed in the called method.
       return
@@ -127,7 +129,7 @@ class Frontend {
 
     let fileToProcess = FileToProcess(
       fileHandle: FileHandle.standardInput,
-      url: URL(fileURLWithPath: lintFormatOptions.assumeFilename ?? "<stdin>"),
+      url: assumedUrl ?? URL(fileURLWithPath: "<stdin>"),
       configuration: configuration,
       selection: Selection(offsetRanges: lintFormatOptions.offsets))
     processFile(fileToProcess)
