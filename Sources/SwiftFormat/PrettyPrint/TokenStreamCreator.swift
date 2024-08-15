@@ -527,9 +527,9 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   /// Arranges the `async` and `throws` effect specifiers of a function or accessor declaration.
   private func arrangeEffectSpecifiers<Node: EffectSpecifiersSyntax>(_ node: Node) {
     before(node.asyncSpecifier, tokens: .break)
-    before(node.throwsSpecifier, tokens: .break)
+    before(node.throwsClause?.throwsSpecifier, tokens: .break)
     // Keep them together if both `async` and `throws` are present.
-    if let asyncSpecifier = node.asyncSpecifier, let throwsSpecifier = node.throwsSpecifier {
+    if let asyncSpecifier = node.asyncSpecifier, let throwsSpecifier = node.throwsClause?.throwsSpecifier {
       before(asyncSpecifier, tokens: .open)
       after(throwsSpecifier, tokens: .close)
     }
@@ -2302,9 +2302,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: AttributedTypeSyntax) -> SyntaxVisitorContinueKind {
     arrangeAttributeList(node.attributes)
-    after(
-      node.specifier,
-      tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
+    for specifier in node.specifiers {
+      after(
+        specifier.firstToken(viewMode: .sourceAccurate),
+        tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true)))
+    }
     return .visitChildren
   }
 
