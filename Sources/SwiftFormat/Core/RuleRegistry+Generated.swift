@@ -33,6 +33,7 @@
     "NoAssignmentInExpressions": true,
     "NoBlockComments": true,
     "NoCasesWithOnlyFallthrough": true,
+    "NoEmptyLinesOpeningClosingBraces": false,
     "NoEmptyTrailingClosureParentheses": true,
     "NoLabelsInCasePatterns": true,
     "NoLeadingUnderscores": false,

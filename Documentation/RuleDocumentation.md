@@ -29,6 +29,7 @@ Here's the list of available rules:
 - [NoAssignmentInExpressions](#NoAssignmentInExpressions)
 - [NoBlockComments](#NoBlockComments)
 - [NoCasesWithOnlyFallthrough](#NoCasesWithOnlyFallthrough)
+- [NoEmptyLinesOpeningClosingBraces](#NoEmptyLinesOpeningClosingBraces)
 - [NoEmptyTrailingClosureParentheses](#NoEmptyTrailingClosureParentheses)
 - [NoLabelsInCasePatterns](#NoLabelsInCasePatterns)
 - [NoLeadingUnderscores](#NoLeadingUnderscores)
@@ -270,6 +271,16 @@ Format: The fallthrough `case` is added as a prefix to the next case unless the 
         `default`; in that case, the fallthrough `case` is deleted.
 
 `NoCasesWithOnlyFallthrough` rule can format your code automatically.
+
+### NoEmptyLinesOpeningClosingBraces
+
+Empty lines are forbidden after opening braces and before closing braces.
+
+Lint: Empty lines after opening braces and before closing braces yield a lint error.
+
+Format: Empty lines after opening braces and before closing braces will be removed.
+
+`NoEmptyLinesOpeningClosingBraces` rule can format your code automatically.
 
 ### NoEmptyTrailingClosureParentheses
 

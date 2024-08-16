@@ -36,6 +36,14 @@ class LintPipeline: SyntaxVisitor {
     super.init(viewMode: .sourceAccurate)
   }
 
+  override func visit(_ node: AccessorBlockSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(NoEmptyLinesOpeningClosingBraces.visit, for: node)
+    return .visitChildren
+  }
+  override func visitPost(_ node: AccessorBlockSyntax) {
+    onVisitPost(rule: NoEmptyLinesOpeningClosingBraces.self, for: node)
+  }
+
   override func visit(_ node: ActorDeclSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
     visitIfEnabled(TypeNamesShouldBeCapitalized.visit, for: node)
@@ -93,10 +101,12 @@ class LintPipeline: SyntaxVisitor {
   }
 
   override func visit(_ node: ClosureExprSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(NoEmptyLinesOpeningClosingBraces.visit, for: node)
     visitIfEnabled(OmitExplicitReturns.visit, for: node)
     return .visitChildren
   }
   override func visitPost(_ node: ClosureExprSyntax) {
+    onVisitPost(rule: NoEmptyLinesOpeningClosingBraces.self, for: node)
     onVisitPost(rule: OmitExplicitReturns.self, for: node)
   }
 
@@ -134,10 +144,12 @@ class LintPipeline: SyntaxVisitor {
 
   override func visit(_ node: CodeBlockSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AmbiguousTrailingClosureOverload.visit, for: node)
+    visitIfEnabled(NoEmptyLinesOpeningClosingBraces.visit, for: node)
     return .visitChildren
   }
   override func visitPost(_ node: CodeBlockSyntax) {
     onVisitPost(rule: AmbiguousTrailingClosureOverload.self, for: node)
+    onVisitPost(rule: NoEmptyLinesOpeningClosingBraces.self, for: node)
   }
 
   override func visit(_ node: ConditionElementSyntax) -> SyntaxVisitorContinueKind {
@@ -384,10 +396,12 @@ class LintPipeline: SyntaxVisitor {
 
   override func visit(_ node: MemberBlockSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AmbiguousTrailingClosureOverload.visit, for: node)
+    visitIfEnabled(NoEmptyLinesOpeningClosingBraces.visit, for: node)
     return .visitChildren
   }
   override func visitPost(_ node: MemberBlockSyntax) {
     onVisitPost(rule: AmbiguousTrailingClosureOverload.self, for: node)
+    onVisitPost(rule: NoEmptyLinesOpeningClosingBraces.self, for: node)
   }
 
   override func visit(_ node: OptionalBindingConditionSyntax) -> SyntaxVisitorContinueKind {
@@ -411,10 +425,12 @@ class LintPipeline: SyntaxVisitor {
   }
 
   override func visit(_ node: PrecedenceGroupDeclSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(NoEmptyLinesOpeningClosingBraces.visit, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)
     return .visitChildren
   }
   override func visitPost(_ node: PrecedenceGroupDeclSyntax) {
+    onVisitPost(rule: NoEmptyLinesOpeningClosingBraces.self, for: node)
     onVisitPost(rule: NoLeadingUnderscores.self, for: node)
   }
 
@@ -511,10 +527,12 @@ class LintPipeline: SyntaxVisitor {
   }
 
   override func visit(_ node: SwitchExprSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(NoEmptyLinesOpeningClosingBraces.visit, for: node)
     visitIfEnabled(NoParensAroundConditions.visit, for: node)
     return .visitChildren
   }
   override func visitPost(_ node: SwitchExprSyntax) {
+    onVisitPost(rule: NoEmptyLinesOpeningClosingBraces.self, for: node)
     onVisitPost(rule: NoParensAroundConditions.self, for: node)
   }
 
@@ -597,6 +615,7 @@ extension FormatPipeline {
     node = NoAccessLevelOnExtensionDeclaration(context: context).rewrite(node)
     node = NoAssignmentInExpressions(context: context).rewrite(node)
     node = NoCasesWithOnlyFallthrough(context: context).rewrite(node)
+    node = NoEmptyLinesOpeningClosingBraces(context: context).rewrite(node)
     node = NoEmptyTrailingClosureParentheses(context: context).rewrite(node)
     node = NoLabelsInCasePatterns(context: context).rewrite(node)
     node = NoParensAroundConditions(context: context).rewrite(node)
