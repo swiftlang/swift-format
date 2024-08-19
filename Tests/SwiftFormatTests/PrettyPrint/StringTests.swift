@@ -1,3 +1,5 @@
+@_spi(Rules) @_spi(Testing) import SwiftFormat
+
 final class StringTests: PrettyPrintTestCase {
   func testStrings() {
     let input =
@@ -20,6 +22,173 @@ final class StringTests: PrettyPrintTestCase {
       """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 35)
+  }
+
+  func testLongMultilinestringIsWrapped() {
+    let input =
+      #"""
+      let someString = """
+        this string's total lengths will be longer than the column limit even though its individual lines are as well, whoops.
+        """
+      """#
+
+    let expected =
+      #"""
+      let someString = """
+        this string's total \
+        lengths will be longer \
+        than the column limit even \
+        though its individual \
+        lines are as well, whoops.
+        """
+
+      """#
+
+    var config = Configuration()
+    config.reflowMultilineStringLiterals = .onlyLinesOverLength
+    assertPrettyPrintEqual(
+      input: input,
+      expected: expected,
+      linelength: 30,
+      configuration: config)
+  }
+
+  func testMultilineStringIsNotReformattedWithIgnore() {
+    let input =
+      #"""
+      let someString =
+        // swift-format-ignore
+        """
+        lines \
+        are \
+        short.
+        """
+      """#
+
+    let expected =
+      #"""
+      let someString =
+        // swift-format-ignore
+        """
+        lines \
+        are \
+        short.
+        """
+
+      """#
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
+  }
+
+  func testMultilineStringIsNotReformattedWithReflowDisabled() {
+    let input =
+      #"""
+      let someString =
+        """
+        lines \
+        are \
+        short.
+        """
+      """#
+
+    let expected =
+      #"""
+      let someString =
+        """
+        lines \
+        are \
+        short.
+        """
+
+      """#
+
+    var config = Configuration()
+    config.reflowMultilineStringLiterals = .onlyLinesOverLength
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 30, configuration: config)
+  }
+
+  func testMultilineStringWithInterpolations() {
+    let input =
+        #"""
+        if true {
+          guard let opt else {
+            functionCall("""
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec rutrum libero \(2) \(testVariable) ids risus placerat imperdiet. Praesent fringilla vel nisi sed fermentum. In vitae purus feugiat, euismod nulla in, rhoncus leo. Suspendisse feugiat sapien lobortis facilisis malesuada. Aliquam feugiat suscipit accumsan. Praesent tempus fermentum est, vel blandit mi pretium a. Proin in posuere sapien. Nunc tincidunt efficitur ante id fermentum.
+              """)
+          }
+        }
+        """#
+
+    let expected =
+        #"""
+        if true {
+          guard let opt else {
+            functionCall(
+              """
+              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec rutrum libero \(2) \
+              \(testVariable) ids risus placerat imperdiet. Praesent fringilla vel nisi sed fermentum. In \
+              vitae purus feugiat, euismod nulla in, rhoncus leo. Suspendisse feugiat sapien lobortis \
+              facilisis malesuada. Aliquam feugiat suscipit accumsan. Praesent tempus fermentum est, vel \
+              blandit mi pretium a. Proin in posuere sapien. Nunc tincidunt efficitur ante id fermentum.
+              """)
+          }
+        }
+
+        """#
+
+    var config = Configuration()
+    config.reflowMultilineStringLiterals = .onlyLinesOverLength
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 100, configuration: config)
+  }
+
+  func testMutlilineStringsRespectsHardLineBreaks() {
+    let input =
+        #"""
+        """
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec rutrum libero ids risus placerat imperdiet. Praesent fringilla vel nisi sed fermentum. In vitae purus feugiat, euismod nulla in, rhoncus leo.
+        Suspendisse feugiat sapien lobortis facilisis malesuada. Aliquam feugiat suscipit accumsan. Praesent tempus fermentum est, vel blandit mi pretium a. Proin in posuere sapien. Nunc tincidunt efficitur ante id fermentum.
+        """
+        """#
+
+    let expected =
+        #"""
+        """
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec rutrum libero ids risus placerat \
+        imperdiet. Praesent fringilla vel nisi sed fermentum. In vitae purus feugiat, euismod nulla in, \
+        rhoncus leo.
+        Suspendisse feugiat sapien lobortis facilisis malesuada. Aliquam feugiat suscipit accumsan. \
+        Praesent tempus fermentum est, vel blandit mi pretium a. Proin in posuere sapien. Nunc tincidunt \
+        efficitur ante id fermentum.
+        """
+
+        """#
+
+    var config = Configuration()
+    config.reflowMultilineStringLiterals = .onlyLinesOverLength
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 100, configuration: config)
+  }
+
+  func testMultilineStringsWrapAroundInterpolations() {
+    let input =
+      #"""
+      """
+      An interpolation should be treated as a single "word" and can't be broken up \(aLongVariableName + anotherLongVariableName), so no line breaks should be available within the expr.
+      """
+      """#
+
+    let expected =
+      #"""
+      """
+      An interpolation should be treated as a single "word" and can't be broken up \
+      \(aLongVariableName + anotherLongVariableName), so no line breaks should be available within the \
+      expr.
+      """
+
+      """#
+
+    var config = Configuration()
+    config.reflowMultilineStringLiterals = .onlyLinesOverLength
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 100, configuration: config)
   }
 
   func testMultilineStringOpenQuotesDoNotWrapIfStringIsVeryLong() {
@@ -100,6 +269,27 @@ final class StringTests: PrettyPrintTestCase {
       """#
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 25)
+  }
+
+  func testMultilineStringWithWordLongerThanLineLength() {
+    let input =
+          #"""
+          """
+          there isn't an opportunity to break up this long url: https://www.cool-math-games.org/games/id?=01913310-b7c3-77d8-898e-300ccd451ea8
+          """
+          """#
+    let expected =
+          #"""
+          """
+          there isn't an opportunity to break up this long url: \
+          https://www.cool-math-games.org/games/id?=01913310-b7c3-77d8-898e-300ccd451ea8
+          """
+
+          """#
+
+    var config = Configuration()
+    config.reflowMultilineStringLiterals = .onlyLinesOverLength
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 70, configuration: config)
   }
 
   func testMultilineStringInterpolations() {
@@ -218,7 +408,7 @@ final class StringTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 25)
   }
 
-  func testMultilineStringPreservesTrailingBackslashes() {
+  func testMultilineStringReflowsTrailingBackslashes() {
     let input =
       #"""
       let x = """
@@ -235,14 +425,54 @@ final class StringTests: PrettyPrintTestCase {
       let x = """
         there should be \
         backslashes at \
-        the end of \
-        every line \
-        except this one
+        the end of every \
+        line except this \
+        one
         """
 
       """#
 
-    assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
+    var config = Configuration.forTesting
+    config.reflowMultilineStringLiterals = .always
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 20, configuration: config)
+  }
+
+  func testRawMultilineStringIsNotFormatted() {
+    let input =
+      ##"""
+      #"""
+      this is a long line that is not broken.
+      """#
+      """##
+    let expected =
+      ##"""
+      #"""
+      this is a long line that is not broken.
+      """#
+
+      """##
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 10)
+  }
+
+  func testMultilineStringIsNotFormattedWithNeverReflowBehavior() {
+    let input =
+      #"""
+      """
+      this is a long line that is not broken.
+      """
+      """#
+    let expected =
+      #"""
+      """
+      this is a long line that is not broken.
+      """
+
+      """#
+
+    var config = Configuration.forTesting
+    config.reflowMultilineStringLiterals = .never
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 10, configuration: config)
   }
 
   func testMultilineStringInParenthesizedExpression() {
@@ -437,7 +667,7 @@ final class StringTests: PrettyPrintTestCase {
           let x = """
               blah
               blah
-              """.data(using: .utf8) {
+              """.data(using: .utf8) else {
           print(x)
       }
       """#
@@ -449,7 +679,7 @@ final class StringTests: PrettyPrintTestCase {
           blah
           blah
           """.data(using: .utf8)
-      {
+      else {
         print(x)
       }
 

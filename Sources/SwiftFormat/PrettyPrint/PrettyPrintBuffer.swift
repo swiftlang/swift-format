@@ -81,6 +81,8 @@ struct PrettyPrintBuffer {
       numberToPrint = min(count, maximumBlankLines + 1) - consecutiveNewlineCount
     case .hard(let count):
       numberToPrint = count
+    case .escaped:
+      numberToPrint = 1
     }
 
     guard numberToPrint > 0 else { return }

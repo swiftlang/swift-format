@@ -40,5 +40,6 @@ extension Configuration {
     self.spacesAroundRangeFormationOperators = false
     self.noAssignmentInExpressions = NoAssignmentInExpressionsConfiguration()
     self.multiElementCollectionTrailingCommas = true
+    self.reflowMultilineStringLiterals = .never
   }
 }

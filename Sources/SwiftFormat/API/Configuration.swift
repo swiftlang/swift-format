@@ -45,6 +45,7 @@ public struct Configuration: Codable, Equatable {
     case spacesAroundRangeFormationOperators
     case noAssignmentInExpressions
     case multiElementCollectionTrailingCommas
+    case reflowMultilineStringLiterals
   }
 
   /// A dictionary containing the default enabled/disabled states of rules, keyed by the rules'
@@ -194,6 +195,71 @@ public struct Configuration: Codable, Equatable {
   /// ```
   public var multiElementCollectionTrailingCommas: Bool
 
+  /// Determines how multiline string literals should reflow when formatted.
+  public enum MultilineStringReflowBehavior: Codable {
+    /// Never reflow multiline string literals.
+    case never
+    /// Reflow lines in string literal that exceed the maximum line length. For example with a line length of 10:
+    /// ```swift
+    /// """
+    /// an escape\
+    ///  line break
+    /// a hard line break
+    /// """
+    /// ```
+    /// will be formatted as:
+    /// ```swift
+    /// """
+    /// an esacpe\
+    ///  line break
+    /// a hard \
+    /// line break
+    /// """
+    /// ```
+    /// The existing `\` is left in place, but the line over line length is broken.
+    case onlyLinesOverLength
+    /// Always reflow multiline string literals, this will ignore existing escaped newlines in the literal and reflow each line. Hard linebreaks are still respected.
+    /// For example, with a line length of 10:
+    /// ```swift
+    /// """
+    /// one \
+    /// word \
+    /// a line.
+    /// this is too long.
+    /// """
+    /// ```
+    /// will be formatted as:
+    /// ```swift
+    /// """
+    /// one word \
+    /// a line.
+    /// this is \
+    /// too long.
+    /// """
+    /// ```
+    case always
+
+    var isNever: Bool {
+      switch self {
+      case .never:
+        return true
+      default:
+        return false
+      }
+    }
+
+    var isAlways: Bool {
+      switch self {
+      case .always:
+        return true
+      default:
+        return false
+      }
+    }
+  }
+
+  public var reflowMultilineStringLiterals: MultilineStringReflowBehavior
+
   /// Creates a new `Configuration` by loading it from a configuration file.
   public init(contentsOf url: URL) throws {
     let data = try Data(contentsOf: url)
@@ -287,6 +353,10 @@ public struct Configuration: Codable, Equatable {
         Bool.self, forKey: .multiElementCollectionTrailingCommas)
     ?? defaults.multiElementCollectionTrailingCommas
 
+    self.reflowMultilineStringLiterals =
+      try container.decodeIfPresent(MultilineStringReflowBehavior.self, forKey: .reflowMultilineStringLiterals)
+      ?? defaults.reflowMultilineStringLiterals
+
     // If the `rules` key is not present at all, default it to the built-in set
     // so that the behavior is the same as if the configuration had been
     // default-initialized. To get an empty rules dictionary, one can explicitly
@@ -321,6 +391,7 @@ public struct Configuration: Codable, Equatable {
     try container.encode(indentSwitchCaseLabels, forKey: .indentSwitchCaseLabels)
     try container.encode(noAssignmentInExpressions, forKey: .noAssignmentInExpressions)
     try container.encode(multiElementCollectionTrailingCommas, forKey: .multiElementCollectionTrailingCommas)
+    try container.encode(reflowMultilineStringLiterals, forKey: .reflowMultilineStringLiterals)
     try container.encode(rules, forKey: .rules)
   }
 

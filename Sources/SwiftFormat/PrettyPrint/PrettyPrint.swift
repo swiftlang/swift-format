@@ -214,7 +214,6 @@ public class PrettyPrinter {
     switch token {
     case .contextualBreakingStart:
       activeBreakingContexts.append(ActiveBreakingContext(lineNumber: outputBuffer.lineNumber))
-
       // Discard the last finished breaking context to keep it from effecting breaks inside of the
       // new context. The discarded context has already either had an impact on the contextual break
       // after it or there was no relevant contextual break, so it's safe to discard.
@@ -414,7 +413,7 @@ public class PrettyPrinter {
 
       var overrideBreakingSuppressed = false
       switch newline {
-      case .elective: break
+      case .elective, .escaped: break
       case .soft(_, let discretionary):
         // A discretionary newline (i.e. from the source) should create a line break even if the
         // rules for breaking are disabled.
@@ -429,6 +428,10 @@ public class PrettyPrinter {
       let suppressBreaking = isBreakingSuppressed && !overrideBreakingSuppressed
       if !suppressBreaking && (!canFit(length) || mustBreak) {
         currentLineIsContinuation = isContinuationIfBreakFires
+        if case .escaped = newline {
+          outputBuffer.enqueueSpaces(size)
+          outputBuffer.write("\\")
+        }
         outputBuffer.writeNewlines(newline)
         lastBreak = true
       } else {
@@ -594,19 +597,51 @@ public class PrettyPrinter {
       // Break lengths are equal to its size plus the token or group following it. Calculate the
       // length of any prior break tokens.
       case .break(_, let size, let newline):
-        if let index = delimIndexStack.last, case .break = tokens[index] {
-          lengths[index] += total
+        if let index = delimIndexStack.last, case .break(_, _, let lastNewline) = tokens[index] {
+          /// If the last break and this break are both `.escaped` we add an extra 1 to the total for the last `.escaped` break.
+          /// This is to handle situations where adding the `\` for an escaped line break would put us over the line length.
+          /// For example, consider the token sequence:
+          /// `[.syntax("this fits"), .break(.escaped), .syntax("this fits in line length"), .break(.escaped)]`
+          /// The naive layout of these tokens will incorrectly print as:
+          ///  """
+          ///  this fits this fits in line length \
+          ///  """
+          ///  which will be too long because of the '\' character. Instead we have to print it as:
+          ///  """
+          ///  this fits \
+          ///  this fits in line length
+          ///  """
+          ///
+          /// While not prematurely inserting a line in situations where a hard line break is occurring, such as:
+          ///
+          /// `[.syntax("some text"), .break(.escaped), .syntax("this is exactly the right length"), .break(.hard)]`
+          ///
+          /// We want this to print as:
+          /// """
+          /// some text this is exactly the right length
+          /// """
+          /// and not:
+          /// """
+          /// some text \
+          /// this is exactly the right length
+          /// """
+          if case .escaped = newline, case .escaped = lastNewline {
+            lengths[index] += total + 1
+          } else {
+            lengths[index] += total
+          }
           delimIndexStack.removeLast()
         }
         lengths.append(-total)
         delimIndexStack.append(i)
 
-        if case .elective = newline {
-          total += size
-        } else {
-          // `size` is never used in this case, because the break always fires. Use `maxLineLength`
-          // to ensure enclosing groups are large enough to force preceding breaks to fire.
-          total += maxLineLength
+        switch newline {
+        case .elective, .escaped:
+            total += size
+        default:
+            // `size` is never used in this case, because the break always fires. Use `maxLineLength`
+            // to ensure enclosing groups are large enough to force preceding breaks to fire.
+            total += maxLineLength
         }
 
       // Space tokens have a length equal to its size.
