@@ -73,6 +73,7 @@ add_library(SwiftFormat
   Rules/NoAssignmentInExpressions.swift
   Rules/NoBlockComments.swift
   Rules/NoCasesWithOnlyFallthrough.swift
+  Rules/NoEmptyLineOpeningClosingBraces.swift
   Rules/NoEmptyTrailingClosureParentheses.swift
   Rules/NoLabelsInCasePatterns.swift
   Rules/NoLeadingUnderscores.swift
