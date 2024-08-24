@@ -2957,19 +2957,24 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     if let attributes = attributes {
       let behavior: NewlineBehavior = separateByLineBreaks ? .hard : .elective
       before(attributes.firstToken(viewMode: .sourceAccurate), tokens: .open)
-      for element in attributes.dropLast() {
-        if let ifConfig = element.as(IfConfigDeclSyntax.self) {
+      if attributes.dropLast().isEmpty,
+         let ifConfig = attributes.first?.as(IfConfigDeclSyntax.self) {
+        for clause in ifConfig.clauses {
+          if let nestedAttributes = AttributeListSyntax(clause.elements) {
+            arrangeAttributeList(nestedAttributes, suppressFinalBreak: true, separateByLineBreaks: separateByLineBreaks)
+          }
+        }
+      } else {
+        for element in attributes.dropLast() {
+          if let ifConfig = element.as(IfConfigDeclSyntax.self) {
             for clause in ifConfig.clauses {
-                if let nestedAttributes = AttributeListSyntax(clause.elements) {
-                    arrangeAttributeList(
-                        nestedAttributes,
-                        suppressFinalBreak: true,
-                        separateByLineBreaks: separateByLineBreaks
-                    )
-                }
+              if let nestedAttributes = AttributeListSyntax(clause.elements) {
+                arrangeAttributeList(nestedAttributes, suppressFinalBreak: true, separateByLineBreaks: separateByLineBreaks)
+              }
             }
-        } else {
+          } else {
             after(element.lastToken(viewMode: .sourceAccurate), tokens: .break(.same, newlines: behavior))
+          }
         }
       }
       var afterAttributeTokens = [Token.close]

@@ -576,4 +576,27 @@ final class AttributeTests: PrettyPrintTestCase {
       configuration.lineBreakBetweenDeclarationAttributes = true
       assertPrettyPrintEqual(input: input, expected: expected, linelength: 80, configuration: configuration)
   }
+
+  func testAttributesStartWithPoundIf() {
+    let input =
+      """
+      #if os(macOS)
+      @available(macOS, unavailable)
+      @_spi(Foo)
+      #endif
+      public let myVar = "Test"
+      
+      """
+    let expected =
+      """
+      #if os(macOS)
+        @available(macOS, unavailable)
+        @_spi(Foo)
+      #endif
+      public let myVar = "Test"
+      
+      """
+    
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
+  }
 }
