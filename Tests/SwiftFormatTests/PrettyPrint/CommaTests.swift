@@ -143,6 +143,102 @@ final class CommaTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: configuration)
   }
   
+  func testArrayWithCommentCommasPresentEnabled() {
+    let input =
+      """
+      let MyCollection = [
+        1,
+        2 // some comment
+      ]
+
+      """
+    
+    let expected =
+      """
+      let MyCollection = [
+        1,
+        2,  // some comment
+      ]
+      
+      """
+    
+    var configuration = Configuration.forTesting
+    configuration.multiElementCollectionTrailingCommas = true
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: configuration)
+  }
+  
+  func testArrayWithCommentCommasPresentDisabled() {
+    let input =
+      """
+      let MyCollection = [
+        1,
+        2 // some comment
+      ]
+
+      """
+    
+    let expected =
+      """
+      let MyCollection = [
+        1,
+        2  // some comment
+      ]
+      
+      """
+    
+    var configuration = Configuration.forTesting
+    configuration.multiElementCollectionTrailingCommas = false
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: configuration)
+  }
+  
+  func testArrayWithTernaryOperatorAndCommentCommasPresentEnabled() {
+    let input =
+      """
+      let MyCollection = [
+        1,
+        true ? 1 : 2 // some comment
+      ]
+
+      """
+    
+    let expected =
+      """
+      let MyCollection = [
+        1,
+        true ? 1 : 2,  // some comment
+      ]
+      
+      """
+    
+    var configuration = Configuration.forTesting
+    configuration.multiElementCollectionTrailingCommas = true
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: configuration)
+  }
+  
+  func testArrayWithTernaryOperatorAndCommentCommasPresentDisabled() {
+    let input =
+      """
+      let MyCollection = [
+        1,
+        true ? 1 : 2 // some comment
+      ]
+
+      """
+    
+    let expected =
+      """
+      let MyCollection = [
+        1,
+        true ? 1 : 2  // some comment
+      ]
+      
+      """
+    
+    var configuration = Configuration.forTesting
+    configuration.multiElementCollectionTrailingCommas = false
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: configuration)
+  }
+
   func testDictionaryCommasAbsentEnabled() {
     let input =
       """

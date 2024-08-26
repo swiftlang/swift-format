@@ -2929,8 +2929,16 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         var shouldExtractTrailingComment = false
         if wasLineComment && !hasAppendedTrailingComment {
           switch afterToken {
-          case .break, .printerControl: shouldExtractTrailingComment = true
-          default: break
+          case let .break(kind, _, _):
+            if case let .close(mustBreak) = kind {
+              shouldExtractTrailingComment = mustBreak
+            } else {
+              shouldExtractTrailingComment = true
+            }
+          case .printerControl: 
+            shouldExtractTrailingComment = true
+          default: 
+            break
           }
         }
         if shouldExtractTrailingComment {
