@@ -415,7 +415,7 @@ public struct Configuration: Codable, Equatable {
       if FileManager.default.isReadableFile(atPath: candidateFile.path) {
         return candidateFile
       }
-    } while candidateDirectory.path != "/"
+    } while candidateDirectory.pathComponents.count > 1
 
     return nil
   }
