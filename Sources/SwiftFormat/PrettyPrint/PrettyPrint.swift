@@ -432,7 +432,7 @@ public class PrettyPrinter {
           outputBuffer.enqueueSpaces(size)
           outputBuffer.write("\\")
         }
-        outputBuffer.writeNewlines(newline)
+        outputBuffer.writeNewlines(newline, shouldIndentBlankLines: configuration.indentBlankLines)
         lastBreak = true
       } else {
         if outputBuffer.isAtStartOfLine {
@@ -449,7 +449,12 @@ public class PrettyPrinter {
 
     // Print out the number of spaces according to the size, and adjust spaceRemaining.
     case .space(let size, _):
-      outputBuffer.enqueueSpaces(size)
+      if configuration.indentBlankLines, outputBuffer.isAtStartOfLine {
+        // An empty string write is needed to add line-leading indentation that matches the current indentation on a line that contains only whitespaces.
+        outputBuffer.write("")
+      } else {
+        outputBuffer.enqueueSpaces(size)
+      }
 
     // Print any indentation required, followed by the text content of the syntax token.
     case .syntax(let text):
