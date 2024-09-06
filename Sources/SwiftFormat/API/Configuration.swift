@@ -410,12 +410,17 @@ public struct Configuration: Codable, Equatable {
       candidateDirectory.appendPathComponent("placeholder")
     }
     repeat {
+      let previousDirectory = candidateDirectory
       candidateDirectory.deleteLastPathComponent()
+      // if deleting a path component resulted in no change, terminate the loop
+      if candidateDirectory == previousDirectory {
+        break
+      }
       let candidateFile = candidateDirectory.appendingPathComponent(".swift-format")
       if FileManager.default.isReadableFile(atPath: candidateFile.path) {
         return candidateFile
       }
-    } while candidateDirectory.path != "/"
+    } while true
 
     return nil
   }
