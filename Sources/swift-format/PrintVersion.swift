@@ -12,5 +12,5 @@
 
 func printVersionInformation() {
   // TODO: Automate updates to this somehow.
-  print("main")
+  print("600.0.0")
 }
