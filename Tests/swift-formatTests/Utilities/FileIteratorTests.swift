@@ -70,7 +70,12 @@ extension FileIteratorTests {
     let fileURL = tmpURL(path)
     try FileManager.default.createDirectory(
       at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
-    FileManager.default.createFile(atPath: fileURL.path, contents: Data())
+    struct FailedToCreateFileError: Error {
+      let url: URL
+    }
+    if !FileManager.default.createFile(atPath: fileURL.path, contents: Data()) {
+      throw FailedToCreateFileError(url: fileURL)
+    }
   }
 
   /// Create a symlink between files or directories in the test's temporary space.
