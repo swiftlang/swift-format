@@ -490,6 +490,6 @@ sense to place this label on the containing group.
 
 Oppen's algorithm prints the indentation whitespace when `break` tokens are
 encountered. If we have extra blank lines in between source code, this can
-result in hanging or trailing whitespace. Waiting to print the indentation
+result in hanging or trailing whitespace. Waiting to print the indentation <!--# ignore-unacceptable-language -->
 whitespace until encountering a `syntax`, `comment, or `verbatim` tokens
 prevents this.
