@@ -14,7 +14,7 @@ if [[ -z "$SWIFT_SYNTAX_TAG" || -z "$SWIFT_FORMAT_VERSION" ]]; then
 fi
 
 # Without this, we can't perform git operations in GitHub actions.
-git config --global --add safe.directory $(realpath .)
+git config --global --add safe.directory "$(realpath .)"
 
 git config --local user.name 'swift-ci'
 git config --local user.email 'swift-ci@users.noreply.github.com'
