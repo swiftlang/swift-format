@@ -1,6 +1,6 @@
 import SwiftFormat
 
-/// Sanity checks and regression tests for the `respectsExistingLineBreaks` configuration setting
+/// Basic checks and regression tests for the `respectsExistingLineBreaks` configuration setting
 /// in both true and false states.
 final class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
   func testExpressions() {
