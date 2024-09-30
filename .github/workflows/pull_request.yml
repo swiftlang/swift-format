@@ -17,5 +17,6 @@ jobs:
             docs_check_enabled: true
             format_check_enabled: true
             license_header_check_enabled: false
+            license_header_check_project_name: "Swift.org"
             shell_check_enabled: true
             unacceptable_language_check_enabled: true
