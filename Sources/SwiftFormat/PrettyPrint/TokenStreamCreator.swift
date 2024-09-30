@@ -1104,7 +1104,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   ///   - rightDelimiter: The right parenthesis or bracket surrounding the arguments, if any.
   ///   - forcesBreakBeforeRightDelimiter: True if a line break should be forced before the right
   ///     right delimiter if a line break occurred after the left delimiter, or false if the right
-  ///     delimiter is allowed to hang on the same line as the final argument.
+  ///     delimiter is allowed to hang on the same line as the final argument. # ignore-unacceptable-language
   private func arrangeFunctionCallArgumentList(
     _ arguments: LabeledExprListSyntax,
     leftDelimiter: TokenSyntax?,
