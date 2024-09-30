@@ -85,6 +85,8 @@ jobs:
     name: Create Tag
     runs-on: ubuntu-latest
     needs: [check_triggering_actor, test_debug, test_release, define_tags]
+    permissions:
+      contents: write
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
