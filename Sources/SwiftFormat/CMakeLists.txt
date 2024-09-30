@@ -96,7 +96,8 @@ add_library(SwiftFormat
   Rules/UseSynthesizedInitializer.swift
   Rules/UseTripleSlashForDocumentationComments.swift
   Rules/UseWhereClausesInForLoops.swift
-  Rules/ValidateDocumentationComments.swift)
+  Rules/ValidateDocumentationComments.swift
+  Utilities/FileIterator.swift)
 target_link_libraries(SwiftFormat PUBLIC
   SwiftMarkdown::Markdown
   SwiftSyntax::SwiftSyntax
