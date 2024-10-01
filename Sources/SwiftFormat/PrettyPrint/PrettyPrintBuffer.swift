@@ -70,8 +70,11 @@ struct PrettyPrintBuffer {
   /// subtract the previously written newlines during the second call so that we end up with the
   /// correct number overall.
   ///
-  /// - Parameter newlines: The number and type of newlines to write.
-  mutating func writeNewlines(_ newlines: NewlineBehavior) {
+  /// - Parameters:
+  ///   - newlines: The number and type of newlines to write.
+  ///   - shouldIndentBlankLines: A Boolean value indicating whether to insert spaces
+  ///     for blank lines based on the current indentation level.
+  mutating func writeNewlines(_ newlines: NewlineBehavior, shouldIndentBlankLines: Bool) {
     let numberToPrint: Int
     switch newlines {
     case .elective:
@@ -86,7 +89,15 @@ struct PrettyPrintBuffer {
     }
 
     guard numberToPrint > 0 else { return }
-    writeRaw(String(repeating: "\n", count: numberToPrint))
+    (0..<numberToPrint).forEach { number in
+      if shouldIndentBlankLines, number >= 1 {
+        writeRaw(currentIndentation.indentation())
+        writeRaw("\n")
+      } else {
+        writeRaw("\n")
+      }
+    }
+
     lineNumber += numberToPrint
     isAtStartOfLine = true
     consecutiveNewlineCount += numberToPrint
