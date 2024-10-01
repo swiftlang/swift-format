@@ -50,13 +50,16 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
         initializer.attributes.isEmpty,
         matchesPropertyList(
           parameters: initializer.signature.parameterClause.parameters,
-          properties: storedProperties),
+          properties: storedProperties
+        ),
         matchesAssignmentBody(
           variables: storedProperties,
-          initBody: initializer.body),
+          initBody: initializer.body
+        ),
         matchesAccessLevel(
           modifiers: initializer.modifiers,
-          properties: storedProperties)
+          properties: storedProperties
+        )
       else {
         continue
       }
@@ -83,7 +86,8 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
   ///   - properties: The properties from the enclosing type.
   /// - Returns: Whether the initializer has the same access level as the synthesized initializer.
   private func matchesAccessLevel(
-    modifiers: DeclModifierListSyntax?, properties: [VariableDeclSyntax]
+    modifiers: DeclModifierListSyntax?,
+    properties: [VariableDeclSyntax]
   ) -> Bool {
     let synthesizedAccessLevel = synthesizedInitAccessLevel(using: properties)
     let accessLevel = modifiers?.accessLevelModifier
@@ -125,8 +129,11 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
 
       if propertyId.identifier.text != parameter.firstName.text
         || propertyType.description.trimmingCharacters(
-          in: .whitespaces) != parameter.type.description.trimmingCharacters(in: .whitespacesAndNewlines)
-      { return false }
+          in: .whitespaces
+        ) != parameter.type.description.trimmingCharacters(in: .whitespacesAndNewlines)
+      {
+        return false
+      }
     }
     return true
   }
@@ -209,10 +216,10 @@ fileprivate func synthesizedInitAccessLevel(using properties: [VariableDeclSynta
   var hasFileprivate = false
   for property in properties {
     // Private takes precedence, so finding 1 private property defines the access level.
-    if property.modifiers.contains(where: {$0.name.tokenKind == .keyword(.private) && $0.detail == nil}) {
+    if property.modifiers.contains(where: { $0.name.tokenKind == .keyword(.private) && $0.detail == nil }) {
       return .private
     }
-    if property.modifiers.contains(where: {$0.name.tokenKind == .keyword(.fileprivate) && $0.detail == nil}) {
+    if property.modifiers.contains(where: { $0.name.tokenKind == .keyword(.fileprivate) && $0.detail == nil }) {
       hasFileprivate = true
       // Can't break here because a later property might be private.
     }

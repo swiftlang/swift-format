@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class AllPublicDeclarationsHaveDocumentationTests: LintOrFormatRuleTestCase {
   func testPublicDeclsWithoutDocs() {
@@ -21,22 +20,22 @@ final class AllPublicDeclarationsHaveDocumentationTests: LintOrFormatRuleTestCas
       /// Comment.
       public struct Foo {}
       struct Foo {}
-      
+
       4️⃣public actor Bar {}
       /// Comment.
       public actor Bar {}
       actor Bar {}
-      
+
       5️⃣public class Baz {}
       /// Comment.
       public class Baz {}
       class Baz {}
-      
+
       6️⃣public enum Qux {}
       /// Comment.
       public enum Qux {}
       enum Qux {}
-      
+
       7️⃣public typealias MyType = Int
       /// Comment.
       public typealias MyType = Int
@@ -56,7 +55,7 @@ final class AllPublicDeclarationsHaveDocumentationTests: LintOrFormatRuleTestCas
         FindingSpec("4️⃣", message: "add a documentation comment for 'Bar'"),
         FindingSpec("5️⃣", message: "add a documentation comment for 'Baz'"),
         FindingSpec("6️⃣", message: "add a documentation comment for 'Qux'"),
-        FindingSpec("7️⃣", message: "add a documentation comment for 'MyType'")
+        FindingSpec("7️⃣", message: "add a documentation comment for 'MyType'"),
       ]
     )
   }
@@ -111,7 +110,7 @@ final class AllPublicDeclarationsHaveDocumentationTests: LintOrFormatRuleTestCas
         FindingSpec("4️⃣", message: "add a documentation comment for 'Bar'"),
         FindingSpec("5️⃣", message: "add a documentation comment for 'Baz'"),
         FindingSpec("6️⃣", message: "add a documentation comment for 'Qux'"),
-        FindingSpec("7️⃣", message: "add a documentation comment for 'MyType'")
+        FindingSpec("7️⃣", message: "add a documentation comment for 'MyType'"),
       ]
     )
   }
@@ -129,7 +128,7 @@ final class AllPublicDeclarationsHaveDocumentationTests: LintOrFormatRuleTestCas
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "add a documentation comment for 'MyType'"),
+        FindingSpec("1️⃣", message: "add a documentation comment for 'MyType'")
       ]
     )
   }
@@ -147,7 +146,7 @@ final class AllPublicDeclarationsHaveDocumentationTests: LintOrFormatRuleTestCas
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "add a documentation comment for 'MyType'"),
+        FindingSpec("1️⃣", message: "add a documentation comment for 'MyType'")
       ]
     )
   }
@@ -165,7 +164,7 @@ final class AllPublicDeclarationsHaveDocumentationTests: LintOrFormatRuleTestCas
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "add a documentation comment for 'MyType'"),
+        FindingSpec("1️⃣", message: "add a documentation comment for 'MyType'")
       ]
     )
   }
@@ -183,7 +182,7 @@ final class AllPublicDeclarationsHaveDocumentationTests: LintOrFormatRuleTestCas
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "add a documentation comment for 'MyType'"),
+        FindingSpec("1️⃣", message: "add a documentation comment for 'MyType'")
       ]
     )
   }

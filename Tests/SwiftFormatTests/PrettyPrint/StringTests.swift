@@ -50,7 +50,8 @@ final class StringTests: PrettyPrintTestCase {
       input: input,
       expected: expected,
       linelength: 30,
-      configuration: config)
+      configuration: config
+    )
   }
 
   func testMultilineStringIsNotReformattedWithIgnore() {
@@ -109,32 +110,32 @@ final class StringTests: PrettyPrintTestCase {
 
   func testMultilineStringWithInterpolations() {
     let input =
-        #"""
-        if true {
-          guard let opt else {
-            functionCall("""
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec rutrum libero \(2) \(testVariable) ids risus placerat imperdiet. Praesent fringilla vel nisi sed fermentum. In vitae purus feugiat, euismod nulla in, rhoncus leo. Suspendisse feugiat sapien lobortis facilisis malesuada. Aliquam feugiat suscipit accumsan. Praesent tempus fermentum est, vel blandit mi pretium a. Proin in posuere sapien. Nunc tincidunt efficitur ante id fermentum.
-              """)
-          }
+      #"""
+      if true {
+        guard let opt else {
+          functionCall("""
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec rutrum libero \(2) \(testVariable) ids risus placerat imperdiet. Praesent fringilla vel nisi sed fermentum. In vitae purus feugiat, euismod nulla in, rhoncus leo. Suspendisse feugiat sapien lobortis facilisis malesuada. Aliquam feugiat suscipit accumsan. Praesent tempus fermentum est, vel blandit mi pretium a. Proin in posuere sapien. Nunc tincidunt efficitur ante id fermentum.
+            """)
         }
-        """#
+      }
+      """#
 
     let expected =
-        #"""
-        if true {
-          guard let opt else {
-            functionCall(
-              """
-              Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec rutrum libero \(2) \
-              \(testVariable) ids risus placerat imperdiet. Praesent fringilla vel nisi sed fermentum. In \
-              vitae purus feugiat, euismod nulla in, rhoncus leo. Suspendisse feugiat sapien lobortis \
-              facilisis malesuada. Aliquam feugiat suscipit accumsan. Praesent tempus fermentum est, vel \
-              blandit mi pretium a. Proin in posuere sapien. Nunc tincidunt efficitur ante id fermentum.
-              """)
-          }
+      #"""
+      if true {
+        guard let opt else {
+          functionCall(
+            """
+            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec rutrum libero \(2) \
+            \(testVariable) ids risus placerat imperdiet. Praesent fringilla vel nisi sed fermentum. In \
+            vitae purus feugiat, euismod nulla in, rhoncus leo. Suspendisse feugiat sapien lobortis \
+            facilisis malesuada. Aliquam feugiat suscipit accumsan. Praesent tempus fermentum est, vel \
+            blandit mi pretium a. Proin in posuere sapien. Nunc tincidunt efficitur ante id fermentum.
+            """)
         }
+      }
 
-        """#
+      """#
 
     var config = Configuration()
     config.reflowMultilineStringLiterals = .onlyLinesOverLength
@@ -143,25 +144,25 @@ final class StringTests: PrettyPrintTestCase {
 
   func testMutlilineStringsRespectsHardLineBreaks() {
     let input =
-        #"""
-        """
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec rutrum libero ids risus placerat imperdiet. Praesent fringilla vel nisi sed fermentum. In vitae purus feugiat, euismod nulla in, rhoncus leo.
-        Suspendisse feugiat sapien lobortis facilisis malesuada. Aliquam feugiat suscipit accumsan. Praesent tempus fermentum est, vel blandit mi pretium a. Proin in posuere sapien. Nunc tincidunt efficitur ante id fermentum.
-        """
-        """#
+      #"""
+      """
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec rutrum libero ids risus placerat imperdiet. Praesent fringilla vel nisi sed fermentum. In vitae purus feugiat, euismod nulla in, rhoncus leo.
+      Suspendisse feugiat sapien lobortis facilisis malesuada. Aliquam feugiat suscipit accumsan. Praesent tempus fermentum est, vel blandit mi pretium a. Proin in posuere sapien. Nunc tincidunt efficitur ante id fermentum.
+      """
+      """#
 
     let expected =
-        #"""
-        """
-        Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec rutrum libero ids risus placerat \
-        imperdiet. Praesent fringilla vel nisi sed fermentum. In vitae purus feugiat, euismod nulla in, \
-        rhoncus leo.
-        Suspendisse feugiat sapien lobortis facilisis malesuada. Aliquam feugiat suscipit accumsan. \
-        Praesent tempus fermentum est, vel blandit mi pretium a. Proin in posuere sapien. Nunc tincidunt \
-        efficitur ante id fermentum.
-        """
+      #"""
+      """
+      Lorem ipsum dolor sit amet, consectetur adipiscing elit. Donec rutrum libero ids risus placerat \
+      imperdiet. Praesent fringilla vel nisi sed fermentum. In vitae purus feugiat, euismod nulla in, \
+      rhoncus leo.
+      Suspendisse feugiat sapien lobortis facilisis malesuada. Aliquam feugiat suscipit accumsan. \
+      Praesent tempus fermentum est, vel blandit mi pretium a. Proin in posuere sapien. Nunc tincidunt \
+      efficitur ante id fermentum.
+      """
 
-        """#
+      """#
 
     var config = Configuration()
     config.reflowMultilineStringLiterals = .onlyLinesOverLength
@@ -273,19 +274,19 @@ final class StringTests: PrettyPrintTestCase {
 
   func testMultilineStringWithWordLongerThanLineLength() {
     let input =
-          #"""
-          """
-          there isn't an opportunity to break up this long url: https://www.cool-math-games.org/games/id?=01913310-b7c3-77d8-898e-300ccd451ea8
-          """
-          """#
+      #"""
+      """
+      there isn't an opportunity to break up this long url: https://www.cool-math-games.org/games/id?=01913310-b7c3-77d8-898e-300ccd451ea8
+      """
+      """#
     let expected =
-          #"""
-          """
-          there isn't an opportunity to break up this long url: \
-          https://www.cool-math-games.org/games/id?=01913310-b7c3-77d8-898e-300ccd451ea8
-          """
+      #"""
+      """
+      there isn't an opportunity to break up this long url: \
+      https://www.cool-math-games.org/games/id?=01913310-b7c3-77d8-898e-300ccd451ea8
+      """
 
-          """#
+      """#
 
     var config = Configuration()
     config.reflowMultilineStringLiterals = .onlyLinesOverLength

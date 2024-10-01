@@ -228,7 +228,7 @@ final class ClassDeclTests: PrettyPrintTestCase {
 
   func testClassWhereClause_lineBreakAfterGenericWhereClause() {
     let input =
-    """
+      """
       class MyClass<S, T> where S: Collection {
         let A: Int
         let B: Double
@@ -244,7 +244,7 @@ final class ClassDeclTests: PrettyPrintTestCase {
       """
 
     let expected =
-    """
+      """
       class MyClass<S, T> where S: Collection {
         let A: Int
         let B: Double
@@ -304,7 +304,7 @@ final class ClassDeclTests: PrettyPrintTestCase {
 
   func testClassWhereClauseWithInheritance_lineBreakAfterGenericWhereClause() {
     let input =
-    """
+      """
       class MyClass<S, T>: SuperOne where S: Collection {
         let A: Int
         let B: Double
@@ -320,7 +320,7 @@ final class ClassDeclTests: PrettyPrintTestCase {
       """
 
     let expected =
-    """
+      """
       class MyClass<S, T>: SuperOne where S: Collection {
         let A: Int
         let B: Double
@@ -431,7 +431,7 @@ final class ClassDeclTests: PrettyPrintTestCase {
 
   func testClassFullWrap_lineBreakAfterGenericWhereClause() {
     let input =
-    """
+      """
       public class MyContainer<BaseCollection, SecondCollection>: MyContainerSuperclass, MyContainerProtocol, SomeoneElsesContainerProtocol, SomeFrameworkContainerProtocol where BaseCollection: Collection, BaseCollection: P, BaseCollection.Element: Equatable, BaseCollection.Element: SomeOtherProtocol {
         let A: Int
         let B: Double
@@ -440,7 +440,7 @@ final class ClassDeclTests: PrettyPrintTestCase {
 
     let expected =
 
-    """
+      """
       public class MyContainer<
         BaseCollection, SecondCollection
       >: MyContainerSuperclass, MyContainerProtocol,

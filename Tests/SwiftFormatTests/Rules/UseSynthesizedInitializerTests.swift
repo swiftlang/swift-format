@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
   func testMemberwiseInitializerIsDiagnosed() {
@@ -21,7 +20,10 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"),
+        FindingSpec(
+          "1️⃣",
+          message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"
+        )
       ]
     )
   }
@@ -41,7 +43,10 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"),
+        FindingSpec(
+          "1️⃣",
+          message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"
+        )
       ]
     )
   }
@@ -64,7 +69,10 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"),
+        FindingSpec(
+          "1️⃣",
+          message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"
+        )
       ]
     )
   }
@@ -87,7 +95,10 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"),
+        FindingSpec(
+          "1️⃣",
+          message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"
+        )
       ]
     )
   }
@@ -353,7 +364,10 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"),
+        FindingSpec(
+          "1️⃣",
+          message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"
+        )
       ]
     )
   }
@@ -376,7 +390,10 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"),
+        FindingSpec(
+          "1️⃣",
+          message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"
+        )
       ]
     )
   }
@@ -428,9 +445,18 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"),
-        FindingSpec("2️⃣", message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"),
-        FindingSpec("3️⃣", message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"),
+        FindingSpec(
+          "1️⃣",
+          message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"
+        ),
+        FindingSpec(
+          "2️⃣",
+          message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"
+        ),
+        FindingSpec(
+          "3️⃣",
+          message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"
+        ),
       ]
     )
   }

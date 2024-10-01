@@ -216,7 +216,8 @@ public struct DocumentationComment {
   ) -> Parameter? {
     var rewriter = ParameterOutlineMarkupRewriter(
       origin: listItem,
-      expectParameterLabel: expectParameterLabel)
+      expectParameterLabel: expectParameterLabel
+    )
     guard
       let newListItem = listItem.accept(&rewriter) as? ListItem,
       let name = rewriter.parameterName
@@ -275,7 +276,7 @@ private struct ParameterOutlineMarkupRewriter: MarkupRewriter {
     guard listItem.isIdentical(to: origin) else { return listItem }
     return defaultVisit(listItem)
   }
-  
+
   mutating func visitParagraph(_ paragraph: Paragraph) -> Markup? {
     // Only recurse into the first paragraph in the list item.
     guard paragraph.indexInParent == 0 else { return paragraph }

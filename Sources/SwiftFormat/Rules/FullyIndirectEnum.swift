@@ -35,10 +35,15 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
       Finding.Note(
         message: .removeIndirect,
         location: Finding.Location(
-          modifier.startLocation(converter: self.context.sourceLocationConverter)))
+          modifier.startLocation(converter: self.context.sourceLocationConverter)
+        )
+      )
     }
     diagnose(
-      .moveIndirectKeywordToEnumDecl(name: node.name.text), on: node.enumKeyword, notes: notes)
+      .moveIndirectKeywordToEnumDecl(name: node.name.text),
+      on: node.enumKeyword,
+      notes: notes
+    )
 
     // Removes 'indirect' keyword from cases, reformats
     let newMembers = enumMembers.map {
@@ -74,7 +79,12 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
 
     let newModifier = DeclModifierSyntax(
       name: TokenSyntax.identifier(
-        "indirect", leadingTrivia: leadingTrivia, trailingTrivia: .spaces(1)), detail: nil)
+        "indirect",
+        leadingTrivia: leadingTrivia,
+        trailingTrivia: .spaces(1)
+      ),
+      detail: nil
+    )
 
     newEnumDecl.modifiers = newEnumDecl.modifiers + [newModifier]
     newEnumDecl.memberBlock.members = MemberBlockItemListSyntax(newMembers)
@@ -84,15 +94,17 @@ public final class FullyIndirectEnum: SyntaxFormatRule {
   /// Returns a value indicating whether all enum cases in the given list are indirect.
   ///
   /// Note that if the enum has no cases, this returns false.
-  private func indirectModifiersIfAllCasesIndirect(in members: MemberBlockItemListSyntax)
-    -> [DeclModifierSyntax]
-  {
+  private func indirectModifiersIfAllCasesIndirect(
+    in members: MemberBlockItemListSyntax
+  ) -> [DeclModifierSyntax] {
     var indirectModifiers = [DeclModifierSyntax]()
     for member in members {
       if let caseMember = member.decl.as(EnumCaseDeclSyntax.self) {
-        guard let indirectModifier = caseMember.modifiers.first(
-          where: { $0.name.text == "indirect" }
-        ) else {
+        guard
+          let indirectModifier = caseMember.modifiers.first(
+            where: { $0.name.text == "indirect" }
+          )
+        else {
           return []
         }
         indirectModifiers.append(indirectModifier)

@@ -9,6 +9,7 @@ final class CopyExprTests: PrettyPrintTestCase {
           copy y
 
         """,
-      linelength: 13)
+      linelength: 13
+    )
   }
 }

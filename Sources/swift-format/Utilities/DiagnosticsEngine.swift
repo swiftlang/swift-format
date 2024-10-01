@@ -10,9 +10,9 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftDiagnostics
 import SwiftFormat
 import SwiftSyntax
-import SwiftDiagnostics
 
 /// Unifies the handling of findings from the linter, parsing errors from the syntax parser, and
 /// generic errors from the frontend so that they are emitted in a uniform fashion.
@@ -62,7 +62,9 @@ final class DiagnosticsEngine {
       Diagnostic(
         severity: .error,
         location: location.map(Diagnostic.Location.init),
-        message: message))
+        message: message
+      )
+    )
   }
 
   /// Emits a generic warning message.
@@ -76,7 +78,9 @@ final class DiagnosticsEngine {
       Diagnostic(
         severity: .warning,
         location: location.map(Diagnostic.Location.init),
-        message: message))
+        message: message
+      )
+    )
   }
 
   /// Emits a finding from the linter and any of its associated notes as diagnostics.
@@ -90,7 +94,9 @@ final class DiagnosticsEngine {
         Diagnostic(
           severity: .note,
           location: note.location.map(Diagnostic.Location.init),
-          message: "\(note.message)"))
+          message: "\(note.message)"
+        )
+      )
     }
   }
 
@@ -115,13 +121,14 @@ final class DiagnosticsEngine {
     case .error: severity = .error
     case .warning: severity = .warning
     case .note: severity = .note
-    case .remark: severity = .note // should we model this?
+    case .remark: severity = .note  // should we model this?
     }
     return Diagnostic(
       severity: severity,
       location: Diagnostic.Location(location),
       category: nil,
-      message: message.message)
+      message: message.message
+    )
   }
 
   /// Converts a lint finding into a diagnostic message that can be used by the `TSCBasic`
@@ -138,6 +145,7 @@ final class DiagnosticsEngine {
       severity: severity,
       location: finding.location.map(Diagnostic.Location.init),
       category: "\(finding.category)",
-      message: "\(finding.message.text)")
+      message: "\(finding.message.text)"
+    )
   }
 }

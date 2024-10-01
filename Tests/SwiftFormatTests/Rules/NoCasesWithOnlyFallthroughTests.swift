@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
   func testFallthroughCases() {
@@ -330,7 +329,7 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         }
         """,
       findings: [
-        FindingSpec("1️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("1️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'")
       ]
     )
   }
@@ -352,7 +351,7 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
         }
         """,
       findings: [
-        FindingSpec("1️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'"),
+        FindingSpec("1️⃣", message: "combine this fallthrough-only 'case' and the following 'case' into a single 'case'")
       ]
     )
   }

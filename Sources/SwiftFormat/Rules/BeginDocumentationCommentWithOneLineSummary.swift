@@ -11,10 +11,11 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import SwiftSyntax
+
 #if os(macOS)
 import NaturalLanguage
 #endif
-import SwiftSyntax
 
 /// All documentation comments must begin with a one-line summary of the declaration.
 ///
@@ -123,50 +124,50 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
   ///   actual text).
   private func sentences(in text: String) -> (sentences: [String], trailingText: Substring) {
     #if os(macOS)
-      if BeginDocumentationCommentWithOneLineSummary._forcesFallbackModeForTesting {
-        return nonLinguisticSentenceApproximations(in: text)
-      }
-
-      var sentences = [String]()
-      var tags = [NLTag]()
-      var tokenRanges = [Range<String.Index>]()
-      
-      let tagger = NLTagger(tagSchemes: [.lexicalClass])
-      tagger.string = text
-      tagger.enumerateTags(
-        in: text.startIndex..<text.endIndex,
-        unit: .word,
-        scheme: .lexicalClass
-      ) { tag, range in
-        if let tag {
-          tags.append(tag)
-          tokenRanges.append(range)
-        }
-        return true
-      }
-
-      var isInsideQuotes = false
-      let sentenceTerminatorIndices = tags.enumerated().filter {
-        if $0.element == NLTag.openQuote {
-          isInsideQuotes = true
-        } else if $0.element == NLTag.closeQuote {
-          isInsideQuotes = false
-        }
-        return !isInsideQuotes && $0.element == NLTag.sentenceTerminator
-      }.map {
-        tokenRanges[$0.offset].lowerBound
-      }
-
-      var previous = text.startIndex
-      for index in sentenceTerminatorIndices {
-        let sentenceRange = previous...index
-        sentences.append(text[sentenceRange].trimmingCharacters(in: .whitespaces))
-        previous = text.index(after: index)
-      }
-
-      return (sentences: sentences, trailingText: text[previous..<text.endIndex])
-    #else
+    if BeginDocumentationCommentWithOneLineSummary._forcesFallbackModeForTesting {
       return nonLinguisticSentenceApproximations(in: text)
+    }
+
+    var sentences = [String]()
+    var tags = [NLTag]()
+    var tokenRanges = [Range<String.Index>]()
+
+    let tagger = NLTagger(tagSchemes: [.lexicalClass])
+    tagger.string = text
+    tagger.enumerateTags(
+      in: text.startIndex..<text.endIndex,
+      unit: .word,
+      scheme: .lexicalClass
+    ) { tag, range in
+      if let tag {
+        tags.append(tag)
+        tokenRanges.append(range)
+      }
+      return true
+    }
+
+    var isInsideQuotes = false
+    let sentenceTerminatorIndices = tags.enumerated().filter {
+      if $0.element == NLTag.openQuote {
+        isInsideQuotes = true
+      } else if $0.element == NLTag.closeQuote {
+        isInsideQuotes = false
+      }
+      return !isInsideQuotes && $0.element == NLTag.sentenceTerminator
+    }.map {
+      tokenRanges[$0.offset].lowerBound
+    }
+
+    var previous = text.startIndex
+    for index in sentenceTerminatorIndices {
+      let sentenceRange = previous...index
+      sentences.append(text[sentenceRange].trimmingCharacters(in: .whitespaces))
+      previous = text.index(after: index)
+    }
+
+    return (sentences: sentences, trailingText: text[previous..<text.endIndex])
+    #else
+    return nonLinguisticSentenceApproximations(in: text)
     #endif
   }
 
@@ -177,7 +178,9 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
   /// support `NaturalLanguage` and its related APIs. It will fail to catch certain kinds of
   /// sentences (such as those containing abbreviations that are followed by a period, like "Dr.")
   /// that the more advanced API can handle.
-  private func nonLinguisticSentenceApproximations(in text: String) -> (
+  private func nonLinguisticSentenceApproximations(
+    in text: String
+  ) -> (
     sentences: [String], trailingText: Substring
   ) {
     // If we find a period followed by a space, then there is definitely one (approximate) sentence;
@@ -216,15 +219,15 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
 }
 
 extension Finding.Message {
-  fileprivate static func terminateSentenceWithPeriod<Sentence: StringProtocol>(_ text: Sentence)
-    -> Finding.Message
-  {
+  fileprivate static func terminateSentenceWithPeriod<Sentence: StringProtocol>(
+    _ text: Sentence
+  ) -> Finding.Message {
     "terminate this sentence with a period: \"\(text)\""
   }
 
-  fileprivate static func addBlankLineAfterFirstSentence<Sentence: StringProtocol>(_ text: Sentence)
-    -> Finding.Message
-  {
+  fileprivate static func addBlankLineAfterFirstSentence<Sentence: StringProtocol>(
+    _ text: Sentence
+  ) -> Finding.Message {
     "add a blank comment line after this sentence: \"\(text)\""
   }
 }

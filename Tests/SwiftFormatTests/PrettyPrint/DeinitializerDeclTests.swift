@@ -83,7 +83,7 @@ final class DeinitializerDeclTests: PrettyPrintTestCase {
       }
       """
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 50)
-    
+
     let wrapped = """
       class X {
         //

@@ -277,7 +277,6 @@ final class SwitchStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 35)
   }
 
-
   func testSwitchExpression2() {
     let input =
       """
@@ -555,6 +554,10 @@ final class SwitchStmtTests: PrettyPrintTestCase {
     var configuration = Configuration.forTesting
     configuration.indentSwitchCaseLabels = true
     assertPrettyPrintEqual(
-      input: input, expected: expected, linelength: 40, configuration: configuration)
+      input: input,
+      expected: expected,
+      linelength: 40,
+      configuration: configuration
+    )
   }
 }

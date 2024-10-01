@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class OneCasePerLineTests: LintOrFormatRuleTestCase {
 
@@ -68,7 +67,7 @@ final class OneCasePerLineTests: LintOrFormatRuleTestCase {
         }
         """,
       findings: [
-        FindingSpec("1️⃣", message: "move 'a' to its own 'case' declaration"),
+        FindingSpec("1️⃣", message: "move 'a' to its own 'case' declaration")
       ]
     )
   }

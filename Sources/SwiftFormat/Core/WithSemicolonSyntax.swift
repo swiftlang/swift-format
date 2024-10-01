@@ -29,4 +29,3 @@ extension SyntaxProtocol {
     return self.asProtocol(WithSemicolonSyntax.self) != nil
   }
 }
-

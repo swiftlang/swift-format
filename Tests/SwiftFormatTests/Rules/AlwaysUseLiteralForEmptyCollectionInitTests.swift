@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class AlwaysUseLiteralForEmptyCollectionInitTests: LintOrFormatRuleTestCase {
   func testArray() {

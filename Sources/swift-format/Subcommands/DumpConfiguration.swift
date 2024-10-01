@@ -18,7 +18,8 @@ extension SwiftFormatCommand {
   /// Dumps the tool's default configuration in JSON format to standard output.
   struct DumpConfiguration: ParsableCommand {
     static var configuration = CommandConfiguration(
-      abstract: "Dump the default configuration in JSON format to standard output")
+      abstract: "Dump the default configuration in JSON format to standard output"
+    )
 
     func run() throws {
       let configuration = Configuration()
@@ -34,7 +35,8 @@ extension SwiftFormatCommand {
           // This should never happen, but let's make sure we fail more gracefully than crashing, just
           // in case.
           throw FormatError(
-            message: "Could not dump the default configuration: the JSON was not valid UTF-8")
+            message: "Could not dump the default configuration: the JSON was not valid UTF-8"
+          )
         }
         print(jsonString)
       } catch {

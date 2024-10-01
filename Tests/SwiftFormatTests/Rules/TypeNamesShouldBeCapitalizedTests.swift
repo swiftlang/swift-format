@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class TypeNamesShouldBeCapitalizedTests: LintOrFormatRuleTestCase {
   func testConstruction() {
@@ -112,7 +111,10 @@ final class TypeNamesShouldBeCapitalizedTests: LintOrFormatRuleTestCase {
         FindingSpec("2️⃣", message: "rename the associated type '_value' using UpperCamelCase; for example, '_Value'"),
         FindingSpec("3️⃣", message: "rename the struct '_data' using UpperCamelCase; for example, '_Data'"),
         FindingSpec("4️⃣", message: "rename the type alias '_x' using UpperCamelCase; for example, '_X'"),
-        FindingSpec("5️⃣", message: "rename the actor '_internalActor' using UpperCamelCase; for example, '_InternalActor'"),
+        FindingSpec(
+          "5️⃣",
+          message: "rename the actor '_internalActor' using UpperCamelCase; for example, '_InternalActor'"
+        ),
         FindingSpec("6️⃣", message: "rename the enum '__e' using UpperCamelCase; for example, '__E'"),
         FindingSpec("7️⃣", message: "rename the class '_myClass' using UpperCamelCase; for example, '_MyClass'"),
         FindingSpec("8️⃣", message: "rename the actor '__greeter' using UpperCamelCase; for example, '__Greeter'"),

@@ -1,10 +1,9 @@
 import SwiftFormat
+@_spi(Rules) @_spi(Testing) import SwiftFormat
 import SwiftOperators
 import SwiftParser
 import SwiftSyntax
 import XCTest
-
-@_spi(Rules) @_spi(Testing) import SwiftFormat
 @_spi(Testing) import _SwiftFormatTestSupport
 
 class LintOrFormatRuleTestCase: DiagnosingTestCase {
@@ -41,20 +40,23 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
       sourceFileSyntax: sourceFileSyntax,
       configuration: configuration,
       selection: .infinite,
-      findingConsumer: { emittedFindings.append($0) })
+      findingConsumer: { emittedFindings.append($0) }
+    )
 
     var emittedPipelineFindings = [Finding]()
     // Disable default rules, so only select rule runs in pipeline
     configuration.rules = [type.ruleName: true]
     let pipeline = SwiftLinter(
       configuration: configuration,
-      findingConsumer: { emittedPipelineFindings.append($0) })
+      findingConsumer: { emittedPipelineFindings.append($0) }
+    )
     pipeline.debugOptions.insert(.disablePrettyPrint)
     try! pipeline.lint(
       syntax: sourceFileSyntax,
       source: unmarkedSource,
       operatorTable: OperatorTable.standardOperators,
-      assumingFileURL: URL(string: file.description)!)
+      assumingFileURL: URL(string: file.description)!
+    )
 
     // Check that pipeline produces the expected findings
     assertFindings(
@@ -63,7 +65,8 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
       emittedFindings: emittedPipelineFindings,
       context: context,
       file: file,
-      line: line)
+      line: line
+    )
   }
 
   /// Asserts that the result of applying a formatter to the provided input code yields the output.
@@ -103,7 +106,8 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
       sourceFileSyntax: sourceFileSyntax,
       configuration: configuration,
       selection: .infinite,
-      findingConsumer: { emittedFindings.append($0) })
+      findingConsumer: { emittedFindings.append($0) }
+    )
 
     let formatter = formatType.init(context: context)
     let actual = formatter.visit(sourceFileSyntax)
@@ -115,7 +119,8 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
       emittedFindings: emittedFindings,
       context: context,
       file: file,
-      line: line)
+      line: line
+    )
 
     // Verify that the pretty printer can consume the transformed tree (e.g., it does not contain
     // any unfolded `SequenceExpr`s). Then do a whitespace-insensitive comparison of the two trees
@@ -134,22 +139,36 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
       whitespaceInsensitiveText(of: actual),
       whitespaceInsensitiveText(of: prettyPrintedTree),
       "After pretty-printing and removing fluid whitespace, the files did not match",
-      file: file, line: line)
+      file: file,
+      line: line
+    )
 
     var emittedPipelineFindings = [Finding]()
     // Disable default rules, so only select rule runs in pipeline
     configuration.rules = [formatType.ruleName: true]
     let pipeline = SwiftFormatter(
-      configuration: configuration, findingConsumer: { emittedPipelineFindings.append($0) })
+      configuration: configuration,
+      findingConsumer: { emittedPipelineFindings.append($0) }
+    )
     pipeline.debugOptions.insert(.disablePrettyPrint)
     var pipelineActual = ""
     try! pipeline.format(
-      syntax: sourceFileSyntax, source: originalSource, operatorTable: OperatorTable.standardOperators,
-      assumingFileURL: nil, selection: .infinite, to: &pipelineActual)
+      syntax: sourceFileSyntax,
+      source: originalSource,
+      operatorTable: OperatorTable.standardOperators,
+      assumingFileURL: nil,
+      selection: .infinite,
+      to: &pipelineActual
+    )
     assertStringsEqualWithDiff(pipelineActual, expected)
     assertFindings(
-      expected: findings, markerLocations: markedInput.markers,
-      emittedFindings: emittedPipelineFindings, context: context, file: file, line: line)
+      expected: findings,
+      markerLocations: markedInput.markers,
+      emittedFindings: emittedPipelineFindings,
+      context: context,
+      file: file,
+      line: line
+    )
   }
 }
 

@@ -92,7 +92,7 @@ final class InitializerDeclTests: PrettyPrintTestCase {
 
   func testInitializerOptionality() {
     let input =
-    """
+      """
       struct Struct {
         init? (var1: Int, var2: Double) {
             print("Hello World")
@@ -106,9 +106,9 @@ final class InitializerDeclTests: PrettyPrintTestCase {
         init!() { let a = "AAAA BBBB CCCC DDDD EEEE FFFF" }
       }
       """
-    
+
     let expected =
-    """
+      """
       struct Struct {
         init?(var1: Int, var2: Double) {
           print("Hello World")
@@ -128,7 +128,7 @@ final class InitializerDeclTests: PrettyPrintTestCase {
       }
 
       """
-    
+
     var config = Configuration.forTesting
     config.lineBreakBeforeEachArgument = false
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
@@ -170,80 +170,80 @@ final class InitializerDeclTests: PrettyPrintTestCase {
 
   func testInitializerGenericParameters() {
     let input =
-    """
-    struct Struct {
-      init<S, T>(var1: S, var2: T) {
-        let a = 123
-        print("Hello World")
+      """
+      struct Struct {
+        init<S, T>(var1: S, var2: T) {
+          let a = 123
+          print("Hello World")
+        }
+        init<ReallyLongTypeName: Conform, TypeName>(var1: ReallyLongTypeName, var2: TypeName) {
+          let a = 123
+          let b = 456
+        }
       }
-      init<ReallyLongTypeName: Conform, TypeName>(var1: ReallyLongTypeName, var2: TypeName) {
-        let a = 123
-        let b = 456
-      }
-    }
-    """
+      """
 
     let expected =
-    """
-    struct Struct {
-      init<S, T>(var1: S, var2: T) {
-        let a = 123
-        print("Hello World")
+      """
+      struct Struct {
+        init<S, T>(var1: S, var2: T) {
+          let a = 123
+          print("Hello World")
+        }
+        init<
+          ReallyLongTypeName: Conform,
+          TypeName
+        >(
+          var1: ReallyLongTypeName,
+          var2: TypeName
+        ) {
+          let a = 123
+          let b = 456
+        }
       }
-      init<
-        ReallyLongTypeName: Conform,
-        TypeName
-      >(
-        var1: ReallyLongTypeName,
-        var2: TypeName
-      ) {
-        let a = 123
-        let b = 456
-      }
-    }
 
-    """
+      """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
 
   func testInitializerWhereClause() {
     let input =
-    """
-    struct Struct {
-      public init<Elements: Collection, Element>(element: Element, in collection: Elements) where Elements.Element == Element {
-        let a = 123
-        let b = "abc"
+      """
+      struct Struct {
+        public init<Elements: Collection, Element>(element: Element, in collection: Elements) where Elements.Element == Element {
+          let a = 123
+          let b = "abc"
+        }
+        public init<Elements: Collection, Element>(element: Element, in collection: Elements) where Elements.Element == Element, Element: P, Element: Equatable {
+          let a = 123
+          let b = "abc"
+        }
       }
-      public init<Elements: Collection, Element>(element: Element, in collection: Elements) where Elements.Element == Element, Element: P, Element: Equatable {
-        let a = 123
-        let b = "abc"
-      }
-    }
-    """
+      """
 
     let expected =
-    """
-    struct Struct {
-      public init<Elements: Collection, Element>(
-        element: Element, in collection: Elements
-      ) where Elements.Element == Element {
-        let a = 123
-        let b = "abc"
+      """
+      struct Struct {
+        public init<Elements: Collection, Element>(
+          element: Element, in collection: Elements
+        ) where Elements.Element == Element {
+          let a = 123
+          let b = "abc"
+        }
+        public init<Elements: Collection, Element>(
+          element: Element, in collection: Elements
+        )
+        where
+          Elements.Element == Element, Element: P,
+          Element: Equatable
+        {
+          let a = 123
+          let b = "abc"
+        }
       }
-      public init<Elements: Collection, Element>(
-        element: Element, in collection: Elements
-      )
-      where
-        Elements.Element == Element, Element: P,
-        Element: Equatable
-      {
-        let a = 123
-        let b = "abc"
-      }
-    }
 
-    """
+      """
 
     var config = Configuration.forTesting
     config.lineBreakBeforeEachArgument = false
@@ -252,42 +252,42 @@ final class InitializerDeclTests: PrettyPrintTestCase {
 
   func testInitializerWhereClause_lineBreakBeforeEachGenericRequirement() {
     let input =
-    """
-    struct Struct {
-      public init<Elements: Collection, Element>(element: Element, in collection: Elements) where Elements.Element == Element {
-        let a = 123
-        let b = "abc"
+      """
+      struct Struct {
+        public init<Elements: Collection, Element>(element: Element, in collection: Elements) where Elements.Element == Element {
+          let a = 123
+          let b = "abc"
+        }
+        public init<Elements: Collection, Element>(element: Element, in collection: Elements) where Elements.Element == Element, Element: P, Element: Equatable {
+          let a = 123
+          let b = "abc"
+        }
       }
-      public init<Elements: Collection, Element>(element: Element, in collection: Elements) where Elements.Element == Element, Element: P, Element: Equatable {
-        let a = 123
-        let b = "abc"
-      }
-    }
-    """
+      """
 
     let expected =
-    """
-    struct Struct {
-      public init<Elements: Collection, Element>(
-        element: Element, in collection: Elements
-      ) where Elements.Element == Element {
-        let a = 123
-        let b = "abc"
+      """
+      struct Struct {
+        public init<Elements: Collection, Element>(
+          element: Element, in collection: Elements
+        ) where Elements.Element == Element {
+          let a = 123
+          let b = "abc"
+        }
+        public init<Elements: Collection, Element>(
+          element: Element, in collection: Elements
+        )
+        where
+          Elements.Element == Element,
+          Element: P,
+          Element: Equatable
+        {
+          let a = 123
+          let b = "abc"
+        }
       }
-      public init<Elements: Collection, Element>(
-        element: Element, in collection: Elements
-      )
-      where
-        Elements.Element == Element,
-        Element: P,
-        Element: Equatable
-      {
-        let a = 123
-        let b = "abc"
-      }
-    }
 
-    """
+      """
 
     var config = Configuration.forTesting
     config.lineBreakBeforeEachArgument = false
@@ -376,7 +376,7 @@ final class InitializerDeclTests: PrettyPrintTestCase {
 
   func testInitializerFullWrap_lineBreakBeforeEachGenericRequirement() {
     let input =
-    """
+      """
       struct Struct {
         @objc @inlinable public init<Elements: Collection, Element>(element: Element, in collection: Elements) where Elements.Element == Element, Element: Equatable, Element: P {
           let a = 123
@@ -386,7 +386,7 @@ final class InitializerDeclTests: PrettyPrintTestCase {
       """
 
     let expected =
-    """
+      """
       struct Struct {
         @objc @inlinable
         public init<
@@ -422,7 +422,7 @@ final class InitializerDeclTests: PrettyPrintTestCase {
       }
       """
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 50)
-    
+
     let wrapped = """
       struct X {
         //

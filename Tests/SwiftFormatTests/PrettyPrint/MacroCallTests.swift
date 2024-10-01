@@ -122,7 +122,7 @@ final class MacroCallTests: PrettyPrintTestCase {
       #Preview("Name") {
         EmptyView()
       }
-      
+
       """
     assertPrettyPrintEqual(input: input, expected: input, linelength: 45)
   }

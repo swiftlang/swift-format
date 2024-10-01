@@ -11,8 +11,8 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import SwiftSyntax
 import SwiftParser
+import SwiftSyntax
 
 /// Never use `[<Type>]()` syntax. In call sites that should be replaced with `[]`,
 /// for initializations use explicit type combined with empty array literal `let _: [<Type>] = []`
@@ -21,12 +21,13 @@ import SwiftParser
 /// Lint:  Non-literal empty array initialization will yield a lint error.
 /// Format: All invalid use sites would be related with empty literal (with or without explicit type annotation).
 @_spi(Rules)
-public final class AlwaysUseLiteralForEmptyCollectionInit : SyntaxFormatRule {
+public final class AlwaysUseLiteralForEmptyCollectionInit: SyntaxFormatRule {
   public override class var isOptIn: Bool { return true }
 
   public override func visit(_ node: PatternBindingSyntax) -> PatternBindingSyntax {
     guard let initializer = node.initializer,
-          let type = isRewritable(initializer) else {
+      let type = isRewritable(initializer)
+    else {
       return node
     }
 
@@ -43,7 +44,8 @@ public final class AlwaysUseLiteralForEmptyCollectionInit : SyntaxFormatRule {
 
   public override func visit(_ param: FunctionParameterSyntax) -> FunctionParameterSyntax {
     guard let initializer = param.defaultValue,
-          let type = isRewritable(initializer) else {
+      let type = isRewritable(initializer)
+    else {
       return param
     }
 
@@ -62,7 +64,8 @@ public final class AlwaysUseLiteralForEmptyCollectionInit : SyntaxFormatRule {
   /// Return a type of the collection.
   public func isRewritable(_ initializer: InitializerClauseSyntax) -> TypeSyntax? {
     guard let initCall = initializer.value.as(FunctionCallExprSyntax.self),
-          initCall.arguments.isEmpty else {
+      initCall.arguments.isEmpty
+    else {
       return nil
     }
 
@@ -77,8 +80,10 @@ public final class AlwaysUseLiteralForEmptyCollectionInit : SyntaxFormatRule {
     return nil
   }
 
-  private func rewrite(_ node: PatternBindingSyntax,
-                       type: ArrayTypeSyntax) -> PatternBindingSyntax {
+  private func rewrite(
+    _ node: PatternBindingSyntax,
+    type: ArrayTypeSyntax
+  ) -> PatternBindingSyntax {
     var replacement = node
 
     diagnose(node, type: type)
@@ -87,8 +92,10 @@ public final class AlwaysUseLiteralForEmptyCollectionInit : SyntaxFormatRule {
       // Drop trailing trivia after pattern because ':' has to appear connected to it.
       replacement.pattern = node.pattern.with(\.trailingTrivia, [])
       // Add explicit type annotation: ': [<Type>]`
-      replacement.typeAnnotation = .init(type: type.with(\.leadingTrivia, .space)
-                                                   .with(\.trailingTrivia, .space))
+      replacement.typeAnnotation = .init(
+        type: type.with(\.leadingTrivia, .space)
+          .with(\.trailingTrivia, .space)
+      )
     }
 
     let initializer = node.initializer!
@@ -100,8 +107,10 @@ public final class AlwaysUseLiteralForEmptyCollectionInit : SyntaxFormatRule {
     return replacement
   }
 
-  private func rewrite(_ node: PatternBindingSyntax,
-                       type: DictionaryTypeSyntax) -> PatternBindingSyntax {
+  private func rewrite(
+    _ node: PatternBindingSyntax,
+    type: DictionaryTypeSyntax
+  ) -> PatternBindingSyntax {
     var replacement = node
 
     diagnose(node, type: type)
@@ -110,8 +119,10 @@ public final class AlwaysUseLiteralForEmptyCollectionInit : SyntaxFormatRule {
       // Drop trailing trivia after pattern because ':' has to appear connected to it.
       replacement.pattern = node.pattern.with(\.trailingTrivia, [])
       // Add explicit type annotation: ': [<Type>]`
-      replacement.typeAnnotation = .init(type: type.with(\.leadingTrivia, .space)
-                                                   .with(\.trailingTrivia, .space))
+      replacement.typeAnnotation = .init(
+        type: type.with(\.leadingTrivia, .space)
+          .with(\.trailingTrivia, .space)
+      )
     }
 
     let initializer = node.initializer!
@@ -121,8 +132,10 @@ public final class AlwaysUseLiteralForEmptyCollectionInit : SyntaxFormatRule {
     return replacement
   }
 
-  private func rewrite(_ param: FunctionParameterSyntax,
-                       type: ArrayTypeSyntax) -> FunctionParameterSyntax {
+  private func rewrite(
+    _ param: FunctionParameterSyntax,
+    type: ArrayTypeSyntax
+  ) -> FunctionParameterSyntax {
     guard let initializer = param.defaultValue else {
       return param
     }
@@ -131,8 +144,10 @@ public final class AlwaysUseLiteralForEmptyCollectionInit : SyntaxFormatRule {
     return param.with(\.defaultValue, initializer.with(\.value, getEmptyArrayLiteral()))
   }
 
-  private func rewrite(_ param: FunctionParameterSyntax,
-                       type: DictionaryTypeSyntax) -> FunctionParameterSyntax {
+  private func rewrite(
+    _ param: FunctionParameterSyntax,
+    type: DictionaryTypeSyntax
+  ) -> FunctionParameterSyntax {
     guard let initializer = param.defaultValue else {
       return param
     }
@@ -201,9 +216,10 @@ public final class AlwaysUseLiteralForEmptyCollectionInit : SyntaxFormatRule {
 }
 
 extension Finding.Message {
-  fileprivate static func refactorIntoEmptyLiteral(replace: String, with: String)
-    -> Finding.Message
-  {
+  fileprivate static func refactorIntoEmptyLiteral(
+    replace: String,
+    with: String
+  ) -> Finding.Message {
     "replace '\(replace)' with '\(with)'"
   }
 }

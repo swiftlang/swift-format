@@ -227,7 +227,7 @@ final class IgnoreNodeTests: PrettyPrintTestCase {
 
       """
 
-       assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
   func testValidComment() {

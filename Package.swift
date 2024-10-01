@@ -18,7 +18,7 @@ let package = Package(
   name: "swift-format",
   platforms: [
     .macOS("12.0"),
-    .iOS("13.0")
+    .iOS("13.0"),
   ],
   products: [
     .executable(
@@ -131,7 +131,7 @@ let package = Package(
         .product(name: "SwiftSyntax", package: "swift-syntax"),
         .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
       ]
-    )
+    ),
   ]
 )
 
@@ -167,15 +167,12 @@ var dependencies: [Package.Dependency] {
   }
 }
 
-
-
 // MARK: - Compute custom build settings
 
-var swiftformatLinkSettings: [LinkerSetting]  {
+var swiftformatLinkSettings: [LinkerSetting] {
   if installAction {
     return [.unsafeFlags(["-no-toolchain-stdlib-rpath"], .when(platforms: [.linux, .android]))]
   } else {
     return []
   }
 }
-

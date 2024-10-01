@@ -189,7 +189,7 @@ final class ClosureExprTests: PrettyPrintTestCase {
 
   func testClosuresWithIfs() {
     let input =
-    """
+      """
       let a = afunc() {
         if condition1 {
           return true
@@ -209,7 +209,7 @@ final class ClosureExprTests: PrettyPrintTestCase {
       """
 
     let expected =
-    """
+      """
       let a = afunc() {
         if condition1 {
           return true
@@ -482,7 +482,11 @@ final class ClosureExprTests: PrettyPrintTestCase {
     var config = Configuration.forTesting
     config.prioritizeKeepingFunctionOutputTogether = true
     assertPrettyPrintEqual(
-      input: input, expected: expectedKeepingOutputTogether, linelength: 50, configuration: config)
+      input: input,
+      expected: expectedKeepingOutputTogether,
+      linelength: 50,
+      configuration: config
+    )
   }
 
   func testClosureSignatureAttributes() {

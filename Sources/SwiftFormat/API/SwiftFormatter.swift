@@ -72,7 +72,8 @@ public final class SwiftFormatter {
       assumingFileURL: url,
       selection: .infinite,
       to: &outputStream,
-      parsingDiagnosticHandler: parsingDiagnosticHandler)
+      parsingDiagnosticHandler: parsingDiagnosticHandler
+    )
   }
 
   /// Formats the given Swift source code and writes the result to an output stream.
@@ -109,10 +110,16 @@ public final class SwiftFormatter {
       source: source,
       operatorTable: .standardOperators,
       assumingFileURL: url,
-      parsingDiagnosticHandler: parsingDiagnosticHandler)
+      parsingDiagnosticHandler: parsingDiagnosticHandler
+    )
     try format(
-      syntax: sourceFile, source: source, operatorTable: .standardOperators, assumingFileURL: url,
-      selection: selection, to: &outputStream)
+      syntax: sourceFile,
+      source: source,
+      operatorTable: .standardOperators,
+      assumingFileURL: url,
+      selection: selection,
+      to: &outputStream
+    )
   }
 
   /// Formats the given Swift syntax tree and writes the result to an output stream.
@@ -137,14 +144,24 @@ public final class SwiftFormatter {
   ///     be written.
   /// - Throws: If an unrecoverable error occurs when formatting the code.
   public func format<Output: TextOutputStream>(
-    syntax: SourceFileSyntax, source: String, operatorTable: OperatorTable,
-    assumingFileURL url: URL?, selection: Selection, to outputStream: inout Output
+    syntax: SourceFileSyntax,
+    source: String,
+    operatorTable: OperatorTable,
+    assumingFileURL url: URL?,
+    selection: Selection,
+    to outputStream: inout Output
   ) throws {
     let assumedURL = url ?? URL(fileURLWithPath: "source")
     let context = Context(
-      configuration: configuration, operatorTable: operatorTable, findingConsumer: findingConsumer,
-      fileURL: assumedURL, selection: selection, sourceFileSyntax: syntax, source: source,
-      ruleNameCache: ruleNameCache)
+      configuration: configuration,
+      operatorTable: operatorTable,
+      findingConsumer: findingConsumer,
+      fileURL: assumedURL,
+      selection: selection,
+      sourceFileSyntax: syntax,
+      source: source,
+      ruleNameCache: ruleNameCache
+    )
     let pipeline = FormatPipeline(context: context)
     let transformedSyntax = pipeline.rewrite(Syntax(syntax))
 
@@ -158,7 +175,8 @@ public final class SwiftFormatter {
       source: source,
       node: transformedSyntax,
       printTokenStream: debugOptions.contains(.dumpTokenStream),
-      whitespaceOnly: false)
+      whitespaceOnly: false
+    )
     outputStream.write(printer.prettyPrint())
   }
 }

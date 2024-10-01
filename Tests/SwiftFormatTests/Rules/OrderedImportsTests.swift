@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class OrderedImportsTests: LintOrFormatRuleTestCase {
   func testInvalidImportsOrder() {
@@ -55,7 +54,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       ]
     )
   }
-  
+
   func testImportsOrderWithoutModuleType() {
     assertFormatting(
       OrderedImports.self,
@@ -84,7 +83,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       ]
     )
   }
-  
+
   func testImportsOrderWithDocComment() {
     assertFormatting(
       OrderedImports.self,
@@ -119,11 +118,11 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         let a = 3
         """,
       findings: [
-        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
       ]
     )
   }
-  
+
   func testValidOrderedImport() {
     assertFormatting(
       OrderedImports.self,
@@ -214,7 +213,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       input: input,
       expected: expected,
       findings: [
-        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
       ]
     )
   }
@@ -235,7 +234,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         foo();bar();baz();quxxe();
         """,
       findings: [
-        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
       ]
     )
   }
@@ -255,7 +254,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         foo();bar();baz();quxxe();
         """,
       findings: [
-        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
       ]
     )
   }
@@ -390,7 +389,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
           zeta
         """,
       findings: [
-        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
       ]
     )
   }
@@ -413,7 +412,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         bar()
         """,
       findings: [
-        FindingSpec("1️⃣", message: "remove this duplicate import"),
+        FindingSpec("1️⃣", message: "remove this duplicate import")
       ]
     )
   }
@@ -614,7 +613,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         baz()
         """,
       findings: [
-        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
       ]
     )
   }
@@ -648,7 +647,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         bar()  // calls the bar
         """,
       findings: [
-        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
       ]
     )
   }

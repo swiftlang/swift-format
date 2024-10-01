@@ -89,7 +89,6 @@ final class ProtocolDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
-
   func testProtocolAttributes() {
     let input =
       """
@@ -152,7 +151,7 @@ final class ProtocolDeclTests: PrettyPrintTestCase {
         func doStuff(firstArg: Foo, second second: Bar, third third: Baz) -> Output
       }
       """
-    
+
     let expected =
       """
       protocol MyProtocol {
@@ -177,7 +176,7 @@ final class ProtocolDeclTests: PrettyPrintTestCase {
       }
 
       """
-    
+
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
 
@@ -189,7 +188,7 @@ final class ProtocolDeclTests: PrettyPrintTestCase {
         init(reallyLongLabel: Int, anotherLongLabel: Bool)
       }
       """
-    
+
     let expected =
       """
       protocol MyProtocol {
@@ -200,7 +199,7 @@ final class ProtocolDeclTests: PrettyPrintTestCase {
       }
 
       """
-    
+
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
 

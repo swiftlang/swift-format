@@ -148,4 +148,3 @@ final class DeclNameArgumentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
 }
-

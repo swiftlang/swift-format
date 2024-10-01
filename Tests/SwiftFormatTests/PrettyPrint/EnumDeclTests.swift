@@ -285,7 +285,7 @@ final class EnumDeclTests: PrettyPrintTestCase {
 
   func testEnumWhereClause_lineBreakBeforeEachGenericRequirement() {
     let input =
-    """
+      """
       enum MyEnum<S, T> where S: Collection {
         case firstCase
         let B: Double
@@ -301,7 +301,7 @@ final class EnumDeclTests: PrettyPrintTestCase {
       """
 
     let expected =
-    """
+      """
       enum MyEnum<S, T> where S: Collection {
         case firstCase
         let B: Double
@@ -373,7 +373,7 @@ final class EnumDeclTests: PrettyPrintTestCase {
 
   func testEnumWhereClauseWithInheritance_lineBreakBeforeEachGenericRequirement() {
     let input =
-    """
+      """
       enum MyEnum<S, T>: ProtoOne where S: Collection {
         case firstCase
         let B: Double
@@ -389,7 +389,7 @@ final class EnumDeclTests: PrettyPrintTestCase {
       """
 
     let expected =
-    """
+      """
       enum MyEnum<S, T>: ProtoOne where S: Collection {
         case firstCase
         let B: Double
@@ -501,7 +501,7 @@ final class EnumDeclTests: PrettyPrintTestCase {
 
   func testEnumFullWrap_lineBreakBeforeEachGenericRequirement() {
     let input =
-    """
+      """
       public enum MyEnum<BaseCollection, SecondCollection>: MyContainerProtocolOne, MyContainerProtocolTwo, SomeoneElsesContainerProtocol, SomeFrameworkContainerProtocol where BaseCollection: Collection, BaseCollection: P, BaseCollection.Element: Equatable, BaseCollection.Element: SomeOtherProtocol {
         case firstCase
         let B: Double
@@ -510,7 +510,7 @@ final class EnumDeclTests: PrettyPrintTestCase {
 
     let expected =
 
-    """
+      """
       public enum MyEnum<
         BaseCollection, SecondCollection
       >: MyContainerProtocolOne, MyContainerProtocolTwo,

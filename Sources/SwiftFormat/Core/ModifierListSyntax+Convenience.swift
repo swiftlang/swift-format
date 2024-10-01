@@ -18,7 +18,7 @@ extension DeclModifierListSyntax {
     for modifier in self {
       switch modifier.name.tokenKind {
       case .keyword(.public), .keyword(.private), .keyword(.fileprivate), .keyword(.internal),
-          .keyword(.package):
+        .keyword(.package):
         return modifier
       default:
         continue

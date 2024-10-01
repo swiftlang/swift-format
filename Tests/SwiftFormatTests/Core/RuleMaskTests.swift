@@ -1,8 +1,7 @@
-import SwiftSyntax
-import SwiftParser
-import XCTest
-
 @_spi(Testing) import SwiftFormat
+import SwiftParser
+import SwiftSyntax
+import XCTest
 
 final class RuleMaskTests: XCTestCase {
   /// The source converter for the text in the current test. This is implicitly unwrapped because

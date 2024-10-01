@@ -1,10 +1,9 @@
 import SwiftFormat
-import SwiftOperators
-import SwiftSyntax
-import SwiftParser
-import XCTest
-
 @_spi(Rules) @_spi(Testing) import SwiftFormat
+import SwiftOperators
+import SwiftParser
+import SwiftSyntax
+import XCTest
 @_spi(Testing) import _SwiftFormatTestSupport
 
 class PrettyPrintTestCase: DiagnosingTestCase {
@@ -45,11 +44,15 @@ class PrettyPrintTestCase: DiagnosingTestCase {
       configuration: configuration,
       selection: markedInput.selection,
       whitespaceOnly: whitespaceOnly,
-      findingConsumer: { emittedFindings.append($0) })
+      findingConsumer: { emittedFindings.append($0) }
+    )
     assertStringsEqualWithDiff(
-      formatted, expected,
+      formatted,
+      expected,
       "Pretty-printed result was not what was expected",
-      file: file, line: line)
+      file: file,
+      line: line
+    )
 
     // FIXME: It would be nice to check findings when whitespaceOnly == false, but their locations
     // are wrong.
@@ -60,7 +63,8 @@ class PrettyPrintTestCase: DiagnosingTestCase {
         emittedFindings: emittedFindings,
         context: context,
         file: file,
-        line: line)
+        line: line
+      )
     }
 
     // Idempotency check: Running the formatter multiple times should not change the outcome.
@@ -75,7 +79,12 @@ class PrettyPrintTestCase: DiagnosingTestCase {
         findingConsumer: { _ in }  // Ignore findings during the idempotence check.
       )
       assertStringsEqualWithDiff(
-        reformatted, formatted, "Pretty printer is not idempotent", file: file, line: line)
+        reformatted,
+        formatted,
+        "Pretty printer is not idempotent",
+        file: file,
+        line: line
+      )
     }
   }
 
@@ -98,18 +107,20 @@ class PrettyPrintTestCase: DiagnosingTestCase {
     // Ignore folding errors for unrecognized operators so that we fallback to a reasonable default.
     let sourceFileSyntax =
       OperatorTable.standardOperators.foldAll(Parser.parse(source: source)) { _ in }
-        .as(SourceFileSyntax.self)!
+      .as(SourceFileSyntax.self)!
     let context = makeContext(
       sourceFileSyntax: sourceFileSyntax,
       configuration: configuration,
       selection: selection,
-      findingConsumer: findingConsumer)
+      findingConsumer: findingConsumer
+    )
     let printer = PrettyPrinter(
       context: context,
       source: source,
       node: Syntax(sourceFileSyntax),
       printTokenStream: false,
-      whitespaceOnly: whitespaceOnly)
+      whitespaceOnly: whitespaceOnly
+    )
     return (printer.prettyPrint(), context)
   }
 }

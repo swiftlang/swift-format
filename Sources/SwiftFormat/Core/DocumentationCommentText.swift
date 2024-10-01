@@ -157,7 +157,8 @@ public struct DocumentationCommentText {
 private func indentationDistance(of text: Substring) -> Int {
   return text.distance(
     from: text.startIndex,
-    to: text.firstIndex { !$0.isWhitespace } ?? text.endIndex)
+    to: text.firstIndex { !$0.isWhitespace } ?? text.endIndex
+  )
 }
 
 /// Returns the number of contiguous whitespace characters (spaces and tabs only) that precede the
@@ -215,18 +216,16 @@ private func findCommentStartIndex(_ triviaArray: Array<TriviaPiece>) -> Array<T
     }) ?? slice.endIndex
   }
 
-  if
-    let lastNonDocCommentIndex = triviaArray.lastIndex(where: {
-      switch $0 {
-      case .docBlockComment, .docLineComment,
-          .newlines(1), .carriageReturns(1), .carriageReturnLineFeeds(1),
-          .spaces, .tabs:
-        return false
-      default:
-        return true
-      }
-    })
-  {
+  if let lastNonDocCommentIndex = triviaArray.lastIndex(where: {
+    switch $0 {
+    case .docBlockComment, .docLineComment,
+      .newlines(1), .carriageReturns(1), .carriageReturnLineFeeds(1),
+      .spaces, .tabs:
+      return false
+    default:
+      return true
+    }
+  }) {
     let nextIndex = triviaArray.index(after: lastNonDocCommentIndex)
     return firstCommentIndex(triviaArray[nextIndex...])
   } else {

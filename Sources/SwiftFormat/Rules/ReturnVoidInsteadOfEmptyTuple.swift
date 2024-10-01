@@ -35,7 +35,8 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
     // still diagnose it as a lint error but we don't replace it because it's not obvious where the
     // comment should go.
     if hasNonWhitespaceTrivia(returnType.leftParen, at: .trailing)
-        || hasNonWhitespaceTrivia(returnType.rightParen, at: .leading) {
+      || hasNonWhitespaceTrivia(returnType.rightParen, at: .leading)
+    {
       return super.visit(node)
     }
 
@@ -64,7 +65,8 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
     // still diagnose it as a lint error but we don't replace it because it's not obvious where the
     // comment should go.
     if hasNonWhitespaceTrivia(returnType.leftParen, at: .trailing)
-        || hasNonWhitespaceTrivia(returnType.rightParen, at: .leading) {
+      || hasNonWhitespaceTrivia(returnType.rightParen, at: .leading)
+    {
       return super.visit(node)
     }
 
@@ -107,14 +109,15 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
 
   /// Returns a type syntax node with the identifier `Void` whose leading and trailing trivia have
   /// been copied from the tuple type syntax node it is replacing.
-  private func makeVoidIdentifierType(toReplace node: TupleTypeSyntax) -> IdentifierTypeSyntax
-  {
+  private func makeVoidIdentifierType(toReplace node: TupleTypeSyntax) -> IdentifierTypeSyntax {
     return IdentifierTypeSyntax(
       name: TokenSyntax.identifier(
         "Void",
         leadingTrivia: node.firstToken(viewMode: .sourceAccurate)?.leadingTrivia ?? [],
-        trailingTrivia: node.lastToken(viewMode: .sourceAccurate)?.trailingTrivia ?? []),
-      genericArgumentClause: nil)
+        trailingTrivia: node.lastToken(viewMode: .sourceAccurate)?.trailingTrivia ?? []
+      ),
+      genericArgumentClause: nil
+    )
   }
 }
 

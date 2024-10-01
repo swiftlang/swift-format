@@ -35,9 +35,9 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
   ///
   /// - Parameter codeBlockItems: The list of code block items to rewrite.
   /// - Returns: A new `CodeBlockItemListSyntax` that has possibly been rewritten.
-  private func rewrittenCodeBlockItems(_ codeBlockItems: CodeBlockItemListSyntax)
-    -> CodeBlockItemListSyntax
-  {
+  private func rewrittenCodeBlockItems(
+    _ codeBlockItems: CodeBlockItemListSyntax
+  ) -> CodeBlockItemListSyntax {
     let newCodeBlockItems = codeBlockItems.map { codeBlockItem -> CodeBlockItemSyntax in
       switch codeBlockItem.item {
       case .decl(let decl):

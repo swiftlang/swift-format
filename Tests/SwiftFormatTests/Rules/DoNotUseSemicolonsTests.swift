@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class DoNotUseSemicolonsTests: LintOrFormatRuleTestCase {
   func testSemicolonUse() {
@@ -120,7 +119,7 @@ final class DoNotUseSemicolonsTests: LintOrFormatRuleTestCase {
       ]
     )
   }
-  
+
   func testBlockCommentAtEndOfBlock() {
     assertFormatting(
       DoNotUseSemicolons.self,
@@ -131,7 +130,7 @@ final class DoNotUseSemicolonsTests: LintOrFormatRuleTestCase {
         print("hello") /* block comment */
         """,
       findings: [
-        FindingSpec("1️⃣", message: "remove ';'"),
+        FindingSpec("1️⃣", message: "remove ';'")
       ]
     )
 
@@ -148,7 +147,7 @@ final class DoNotUseSemicolonsTests: LintOrFormatRuleTestCase {
         }
         """,
       findings: [
-        FindingSpec("1️⃣", message: "remove ';'"),
+        FindingSpec("1️⃣", message: "remove ';'")
       ]
     )
   }
@@ -164,7 +163,7 @@ final class DoNotUseSemicolonsTests: LintOrFormatRuleTestCase {
         /* block comment */ print("world")
         """,
       findings: [
-        FindingSpec("1️⃣", message: "remove ';' and move the next statement to a new line"),
+        FindingSpec("1️⃣", message: "remove ';' and move the next statement to a new line")
       ]
     )
 
@@ -181,7 +180,7 @@ final class DoNotUseSemicolonsTests: LintOrFormatRuleTestCase {
         }
         """,
       findings: [
-        FindingSpec("1️⃣", message: "remove ';'"),
+        FindingSpec("1️⃣", message: "remove ';'")
       ]
     )
   }
@@ -222,7 +221,7 @@ final class DoNotUseSemicolonsTests: LintOrFormatRuleTestCase {
         for _ in 0..<10 { g() }
         """,
       findings: [
-        FindingSpec("1️⃣", message: "remove ';'"),
+        FindingSpec("1️⃣", message: "remove ';'")
       ]
     )
   }

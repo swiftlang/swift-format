@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class OnlyOneTrailingClosureArgumentTests: LintOrFormatRuleTestCase {
   func testInvalidTrailingClosureCall() {
@@ -16,7 +15,10 @@ final class OnlyOneTrailingClosureArgumentTests: LintOrFormatRuleTestCase {
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "revise this function call to avoid using both closure arguments and a trailing closure"),
+        FindingSpec(
+          "1️⃣",
+          message: "revise this function call to avoid using both closure arguments and a trailing closure"
+        )
       ]
     )
   }

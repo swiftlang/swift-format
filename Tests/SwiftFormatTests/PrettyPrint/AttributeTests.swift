@@ -127,7 +127,11 @@ final class AttributeTests: PrettyPrintTestCase {
     var configuration = Configuration.forTesting
     configuration.lineBreakBeforeEachArgument = true
     assertPrettyPrintEqual(
-      input: input, expected: expected, linelength: 32, configuration: configuration)
+      input: input,
+      expected: expected,
+      linelength: 32,
+      configuration: configuration
+    )
   }
 
   func testAttributeFormattingRespectsDiscretionaryLineBreaks() {
@@ -203,7 +207,11 @@ final class AttributeTests: PrettyPrintTestCase {
     var configuration = Configuration.forTesting
     configuration.lineBreakBeforeEachArgument = true
     assertPrettyPrintEqual(
-      input: input, expected: expected, linelength: 40, configuration: configuration)
+      input: input,
+      expected: expected,
+      linelength: 40,
+      configuration: configuration
+    )
   }
 
   func testObjCBinPackedAttributes() {
@@ -240,43 +248,47 @@ final class AttributeTests: PrettyPrintTestCase {
   }
 
   func testObjCAttributesPerLineBreaking() {
-     let input =
-       """
-       @objc func f() {}
-       @objc(foo:bar:baz)
-       func f() {}
-       @objc(thisMethodHasAVeryLongName:foo:bar:)
-       func f() {}
-       @objc(thisMethodHasAVeryLongName:andThisArgumentHasANameToo:soDoesThisOne:bar:)
-       func f() {}
-       """
+    let input =
+      """
+      @objc func f() {}
+      @objc(foo:bar:baz)
+      func f() {}
+      @objc(thisMethodHasAVeryLongName:foo:bar:)
+      func f() {}
+      @objc(thisMethodHasAVeryLongName:andThisArgumentHasANameToo:soDoesThisOne:bar:)
+      func f() {}
+      """
 
-     let expected =
-       """
-       @objc func f() {}
-       @objc(foo:bar:baz)
-       func f() {}
-       @objc(
-         thisMethodHasAVeryLongName:
-         foo:
-         bar:
-       )
-       func f() {}
-       @objc(
-         thisMethodHasAVeryLongName:
-         andThisArgumentHasANameToo:
-         soDoesThisOne:
-         bar:
-       )
-       func f() {}
+    let expected =
+      """
+      @objc func f() {}
+      @objc(foo:bar:baz)
+      func f() {}
+      @objc(
+        thisMethodHasAVeryLongName:
+        foo:
+        bar:
+      )
+      func f() {}
+      @objc(
+        thisMethodHasAVeryLongName:
+        andThisArgumentHasANameToo:
+        soDoesThisOne:
+        bar:
+      )
+      func f() {}
 
-       """
+      """
 
-     var configuration = Configuration.forTesting
-     configuration.lineBreakBeforeEachArgument = true
-     assertPrettyPrintEqual(
-       input: input, expected: expected, linelength: 40, configuration: configuration)
-   }
+    var configuration = Configuration.forTesting
+    configuration.lineBreakBeforeEachArgument = true
+    assertPrettyPrintEqual(
+      input: input,
+      expected: expected,
+      linelength: 40,
+      configuration: configuration
+    )
+  }
 
   func testObjCAttributesDiscretionaryLineBreaking() {
     // The discretionary newlines in the 3rd function declaration are invalid, because new lines
@@ -572,9 +584,9 @@ final class AttributeTests: PrettyPrintTestCase {
       }
 
       """
-      var configuration = Configuration.forTesting
-      configuration.lineBreakBetweenDeclarationAttributes = true
-      assertPrettyPrintEqual(input: input, expected: expected, linelength: 80, configuration: configuration)
+    var configuration = Configuration.forTesting
+    configuration.lineBreakBetweenDeclarationAttributes = true
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80, configuration: configuration)
   }
 
   func testAttributesStartWithPoundIf() {
@@ -585,7 +597,7 @@ final class AttributeTests: PrettyPrintTestCase {
       @_spi(Foo)
       #endif
       public let myVar = "Test"
-      
+
       """
     let expected =
       """
@@ -594,9 +606,9 @@ final class AttributeTests: PrettyPrintTestCase {
         @_spi(Foo)
       #endif
       public let myVar = "Test"
-      
+
       """
-    
+
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
 }

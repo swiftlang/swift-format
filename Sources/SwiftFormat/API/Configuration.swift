@@ -278,9 +278,11 @@ public struct Configuration: Codable, Equatable {
     self.version = try container.decodeIfPresent(Int.self, forKey: .version) ?? 1
     guard version <= highestSupportedConfigurationVersion else {
       throw DecodingError.dataCorruptedError(
-        forKey: .version, in: container,
+        forKey: .version,
+        in: container,
         debugDescription:
-          "This version of the formatter does not support configuration version \(version).")
+          "This version of the formatter does not support configuration version \(version)."
+      )
     }
 
     // If we ever introduce a new version, this is where we should switch on the decoded version
@@ -328,30 +330,40 @@ public struct Configuration: Codable, Equatable {
       ?? defaults.prioritizeKeepingFunctionOutputTogether
     self.indentConditionalCompilationBlocks =
       try container.decodeIfPresent(Bool.self, forKey: .indentConditionalCompilationBlocks)
-    ?? defaults.indentConditionalCompilationBlocks
+      ?? defaults.indentConditionalCompilationBlocks
     self.lineBreakAroundMultilineExpressionChainComponents =
       try container.decodeIfPresent(
-        Bool.self, forKey: .lineBreakAroundMultilineExpressionChainComponents)
+        Bool.self,
+        forKey: .lineBreakAroundMultilineExpressionChainComponents
+      )
       ?? defaults.lineBreakAroundMultilineExpressionChainComponents
     self.spacesAroundRangeFormationOperators =
       try container.decodeIfPresent(
-        Bool.self, forKey: .spacesAroundRangeFormationOperators)
+        Bool.self,
+        forKey: .spacesAroundRangeFormationOperators
+      )
       ?? defaults.spacesAroundRangeFormationOperators
     self.fileScopedDeclarationPrivacy =
       try container.decodeIfPresent(
-        FileScopedDeclarationPrivacyConfiguration.self, forKey: .fileScopedDeclarationPrivacy)
+        FileScopedDeclarationPrivacyConfiguration.self,
+        forKey: .fileScopedDeclarationPrivacy
+      )
       ?? defaults.fileScopedDeclarationPrivacy
     self.indentSwitchCaseLabels =
       try container.decodeIfPresent(Bool.self, forKey: .indentSwitchCaseLabels)
-    ?? defaults.indentSwitchCaseLabels
+      ?? defaults.indentSwitchCaseLabels
     self.noAssignmentInExpressions =
       try container.decodeIfPresent(
-        NoAssignmentInExpressionsConfiguration.self, forKey: .noAssignmentInExpressions)
+        NoAssignmentInExpressionsConfiguration.self,
+        forKey: .noAssignmentInExpressions
+      )
       ?? defaults.noAssignmentInExpressions
     self.multiElementCollectionTrailingCommas =
       try container.decodeIfPresent(
-        Bool.self, forKey: .multiElementCollectionTrailingCommas)
-    ?? defaults.multiElementCollectionTrailingCommas
+        Bool.self,
+        forKey: .multiElementCollectionTrailingCommas
+      )
+      ?? defaults.multiElementCollectionTrailingCommas
 
     self.reflowMultilineStringLiterals =
       try container.decodeIfPresent(MultilineStringReflowBehavior.self, forKey: .reflowMultilineStringLiterals)
@@ -384,9 +396,12 @@ public struct Configuration: Codable, Equatable {
     try container.encode(lineBreakBetweenDeclarationAttributes, forKey: .lineBreakBetweenDeclarationAttributes)
     try container.encode(
       lineBreakAroundMultilineExpressionChainComponents,
-      forKey: .lineBreakAroundMultilineExpressionChainComponents)
+      forKey: .lineBreakAroundMultilineExpressionChainComponents
+    )
     try container.encode(
-      spacesAroundRangeFormationOperators, forKey: .spacesAroundRangeFormationOperators)
+      spacesAroundRangeFormationOperators,
+      forKey: .spacesAroundRangeFormationOperators
+    )
     try container.encode(fileScopedDeclarationPrivacy, forKey: .fileScopedDeclarationPrivacy)
     try container.encode(indentSwitchCaseLabels, forKey: .indentSwitchCaseLabels)
     try container.encode(noAssignmentInExpressions, forKey: .noAssignmentInExpressions)

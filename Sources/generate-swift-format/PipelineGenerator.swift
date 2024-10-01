@@ -73,14 +73,16 @@ final class PipelineGenerator: FileGenerator {
 
           override func visit(_ node: \(nodeType)) -> SyntaxVisitorContinueKind {
 
-        """)
+        """
+      )
 
       for ruleName in lintRules.sorted() {
         handle.write(
           """
               visitIfEnabled(\(ruleName).visit, for: node)
 
-          """)
+          """
+        )
       }
 
       handle.write(
@@ -88,27 +90,29 @@ final class PipelineGenerator: FileGenerator {
             return .visitChildren
           }
 
-        """)
+        """
+      )
 
+      handle.write(
+        """
+          override func visitPost(_ node: \(nodeType)) {
+
+        """
+      )
+      for ruleName in lintRules.sorted() {
         handle.write(
           """
-            override func visitPost(_ node: \(nodeType)) {
-          
-          """
-        )
-        for ruleName in lintRules.sorted() {
-          handle.write(
-            """
-                onVisitPost(rule: \(ruleName).self, for: node)
-
-            """)
-        }
-        handle.write(
-          """
-            }
+              onVisitPost(rule: \(ruleName).self, for: node)
 
           """
         )
+      }
+      handle.write(
+        """
+          }
+
+        """
+      )
     }
 
     handle.write(
@@ -128,7 +132,8 @@ final class PipelineGenerator: FileGenerator {
         """
             node = \(ruleName)(context: context).rewrite(node)
 
-        """)
+        """
+      )
     }
 
     handle.write(
@@ -137,6 +142,7 @@ final class PipelineGenerator: FileGenerator {
         }
       }
 
-      """)
+      """
+    )
   }
 }

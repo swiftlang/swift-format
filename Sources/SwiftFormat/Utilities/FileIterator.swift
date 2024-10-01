@@ -86,7 +86,8 @@ public struct FileIterator: Sequence, IteratorProtocol {
           dirIterator = FileManager.default.enumerator(
             at: next,
             includingPropertiesForKeys: nil,
-            options: [.skipsHiddenFiles])
+            options: [.skipsHiddenFiles]
+          )
           currentDirectory = next
 
         default:
@@ -114,7 +115,7 @@ public struct FileIterator: Sequence, IteratorProtocol {
         break
       }
       #if os(Windows)
-      // Windows does not consider files and directories starting with `.` as hidden but we don't want to traverse 
+      // Windows does not consider files and directories starting with `.` as hidden but we don't want to traverse
       // into eg. `.build`. Manually skip any items starting with `.`.
       if item.lastPathComponent.hasPrefix(".") {
         dirIterator?.skipDescendants()

@@ -29,13 +29,19 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
 
   public override func visit(_ node: InitializerDeclSyntax) -> SyntaxVisitorContinueKind {
     return checkFunctionLikeDocumentation(
-      DeclSyntax(node), name: "init", signature: node.signature)
+      DeclSyntax(node),
+      name: "init",
+      signature: node.signature
+    )
   }
 
   public override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
     return checkFunctionLikeDocumentation(
-      DeclSyntax(node), name: node.name.text, signature: node.signature,
-      returnClause: node.signature.returnClause)
+      DeclSyntax(node),
+      name: node.name.text,
+      signature: node.signature,
+      returnClause: node.signature.returnClause
+    )
   }
 
   private func checkFunctionLikeDocumentation(
@@ -65,12 +71,14 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
       signature.effectSpecifiers?.throwsClause?.throwsSpecifier,
       name: name,
       throwsDescription: docComment.throws,
-      node: node)
+      node: node
+    )
     validateReturn(
       returnClause,
       name: name,
       returnsDescription: docComment.returns,
-      node: node)
+      node: node
+    )
     let funcParameters = funcParametersIdentifiers(in: signature.parameterClause.parameters)
 
     // If the documentation of the parameters is wrong 'docCommentInfo' won't
@@ -107,7 +115,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
       diagnose(.removeReturnComment(funcName: name), on: node)
     } else if let returnClause = returnClause, returnsDescription == nil {
       if let returnTypeIdentifier = returnClause.type.as(IdentifierTypeSyntax.self),
-         returnTypeIdentifier.name.text == "Never"
+        returnTypeIdentifier.name.text == "Never"
       {
         return
       }
@@ -131,7 +139,8 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
     if !needsThrowsDesc && throwsDescription != nil {
       diagnose(
         .removeThrowsComment(funcName: name),
-        on: throwsOrRethrowsKeyword ?? node.firstToken(viewMode: .sourceAccurate))
+        on: throwsOrRethrowsKeyword ?? node.firstToken(viewMode: .sourceAccurate)
+      )
     } else if needsThrowsDesc && throwsDescription == nil {
       diagnose(.documentErrorsThrown(funcName: name), on: throwsOrRethrowsKeyword)
     }
