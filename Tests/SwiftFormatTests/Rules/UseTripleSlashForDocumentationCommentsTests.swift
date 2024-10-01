@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class UseTripleSlashForDocumentationCommentsTests: LintOrFormatRuleTestCase {
   func testRemoveDocBlockComments() {
@@ -37,7 +36,7 @@ final class UseTripleSlashForDocumentationCommentsTests: LintOrFormatRuleTestCas
       ]
     )
   }
-  
+
   func testRemoveDocBlockCommentsWithoutStars() {
     assertFormatting(
       UseTripleSlashForDocumentationComments.self,

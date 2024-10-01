@@ -10,8 +10,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SwiftSyntax
 import Foundation
+import SwiftSyntax
 
 /// PrettyPrinter takes a Syntax node and outputs a well-formatted, re-indented reproduction of the
 /// code as a String.
@@ -151,7 +151,8 @@ public class PrettyPrinter {
   private var currentIndentation: [Indent] {
     let indentation = configuration.indentation
     var totalIndentation: [Indent] = activeOpenBreaks.flatMap { (open) -> [Indent] in
-      let count = (open.contributesBlockIndent ? 1 : 0)
+      let count =
+        (open.contributesBlockIndent ? 1 : 0)
         + (open.contributesContinuationIndent ? 1 : 0)
       return Array(repeating: indentation, count: count)
     }
@@ -187,11 +188,15 @@ public class PrettyPrinter {
     self.tokens = node.makeTokenStream(
       configuration: configuration,
       selection: context.selection,
-      operatorTable: context.operatorTable)
+      operatorTable: context.operatorTable
+    )
     self.maxLineLength = configuration.lineLength
     self.printTokenStream = printTokenStream
     self.whitespaceOnly = whitespaceOnly
-    self.outputBuffer = PrettyPrintBuffer(maximumBlankLines: configuration.maximumBlankLines, tabWidth: configuration.tabWidth)
+    self.outputBuffer = PrettyPrintBuffer(
+      maximumBlankLines: configuration.maximumBlankLines,
+      tabWidth: configuration.tabWidth
+    )
   }
 
   /// Print out the provided token, and apply line-wrapping and indentation as needed.
@@ -274,7 +279,8 @@ public class PrettyPrinter {
         // lines within it (unless they are themselves continuations within that particular
         // scope), so we need the continuation indentation to persist across all the lines in that
         // scope. Additionally, continuation open breaks must indent when the break fires.
-        let continuationBreakWillFire = openKind == .continuation
+        let continuationBreakWillFire =
+          openKind == .continuation
           && (outputBuffer.isAtStartOfLine || !canFit(length) || mustBreak)
         let contributesContinuationIndent = currentLineIsContinuation || continuationBreakWillFire
 
@@ -284,7 +290,9 @@ public class PrettyPrinter {
             kind: openKind,
             lineNumber: currentLineNumber,
             contributesContinuationIndent: contributesContinuationIndent,
-            contributesBlockIndent: openKind == .block))
+            contributesBlockIndent: openKind == .block
+          )
+        )
 
         continuationStack.append(currentLineIsContinuation)
 
@@ -298,8 +306,7 @@ public class PrettyPrinter {
           fatalError("Unmatched closing break")
         }
 
-        let openedOnDifferentLine
-          = openCloseBreakCompensatingLineNumber != matchingOpenBreak.lineNumber
+        let openedOnDifferentLine = openCloseBreakCompensatingLineNumber != matchingOpenBreak.lineNumber
 
         if matchingOpenBreak.contributesBlockIndent {
           // The actual line number is used, instead of the compensating line number. When the close
@@ -350,12 +357,14 @@ public class PrettyPrinter {
           //
           // Likewise, we need to do this if we popped an old continuation state off the stack,
           // even if the break *doesn't* fire.
-          let matchingOpenBreakIndented = matchingOpenBreak.contributesContinuationIndent
+          let matchingOpenBreakIndented =
+            matchingOpenBreak.contributesContinuationIndent
             || matchingOpenBreak.contributesBlockIndent
           currentLineIsContinuation = matchingOpenBreakIndented && openedOnDifferentLine
         }
 
-        let wasContinuationWhenOpened = (continuationStack.popLast() ?? false)
+        let wasContinuationWhenOpened =
+          (continuationStack.popLast() ?? false)
           || matchingOpenBreak.contributesContinuationIndent
           // This ensures a continuation indent is propagated to following scope when an initial
           // scope would've indented if the leading break wasn't at the start of a line.
@@ -499,7 +508,8 @@ public class PrettyPrinter {
       // We never want to add a trailing comma in an initializer so we disable trailing commas on
       // single element collections.
       let shouldHaveTrailingComma =
-        startLineNumber != openCloseBreakCompensatingLineNumber && !isSingleElement && configuration.multiElementCollectionTrailingCommas
+        startLineNumber != openCloseBreakCompensatingLineNumber && !isSingleElement
+        && configuration.multiElementCollectionTrailingCommas
       if shouldHaveTrailingComma && !hasTrailingComma {
         diagnose(.addTrailingComma, category: .trailingComma)
       } else if !shouldHaveTrailingComma && hasTrailingComma {
@@ -526,7 +536,9 @@ public class PrettyPrinter {
       var text = String(source[start..<end])
       // strip trailing whitespace so that the next formatting can add the right amount
       if let nonWhitespace = text.rangeOfCharacter(
-        from: CharacterSet.whitespaces.inverted, options: .backwards) {
+        from: CharacterSet.whitespaces.inverted,
+        options: .backwards
+      ) {
         text = String(text[..<nonWhitespace.upperBound])
       }
 
@@ -637,11 +649,11 @@ public class PrettyPrinter {
 
         switch newline {
         case .elective, .escaped:
-            total += size
+          total += size
         default:
-            // `size` is never used in this case, because the break always fires. Use `maxLineLength`
-            // to ensure enclosing groups are large enough to force preceding breaks to fire.
-            total += maxLineLength
+          // `size` is never used in this case, because the break always fires. Use `maxLineLength`
+          // to ensure enclosing groups are large enough to force preceding breaks to fire.
+          total += maxLineLength
         }
 
       // Space tokens have a length equal to its size.
@@ -803,7 +815,8 @@ public class PrettyPrinter {
     context.findingEmitter.emit(
       message,
       category: category,
-      location: Finding.Location(file: context.fileURL.path, line: outputBuffer.lineNumber, column: column))
+      location: Finding.Location(file: context.fileURL.path, line: outputBuffer.lineNumber, column: column)
+    )
   }
 }
 

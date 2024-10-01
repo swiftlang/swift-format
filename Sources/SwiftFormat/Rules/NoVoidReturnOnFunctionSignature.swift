@@ -42,9 +42,9 @@ public final class NoVoidReturnOnFunctionSignature: SyntaxFormatRule {
   }
 
   /// Returns a copy of the given function signature with the return clause removed.
-  private func removingReturnClause(from signature: FunctionSignatureSyntax)
-    -> FunctionSignatureSyntax
-  {
+  private func removingReturnClause(
+    from signature: FunctionSignatureSyntax
+  ) -> FunctionSignatureSyntax {
     var result = signature
     result.returnClause = nil
     return result

@@ -55,7 +55,7 @@ public final class UseWhereClausesInForLoops: SyntaxFormatRule {
     case .expressionStmt(let exprStmt):
       switch Syntax(exprStmt.expression).as(SyntaxEnum.self) {
       case .ifExpr(let ifExpr)
-        where ifExpr.conditions.count == 1
+      where ifExpr.conditions.count == 1
         && ifExpr.elseKeyword == nil
         && forInStmt.body.statements.count == 1:
         // Extract the condition of the IfExpr.
@@ -105,7 +105,8 @@ fileprivate func updateWithWhereCondition(
   if lastToken?.trailingTrivia.containsSpaces == false {
     whereLeadingTrivia = .spaces(1)
   }
-  let whereKeyword = TokenSyntax.keyword(.where,
+  let whereKeyword = TokenSyntax.keyword(
+    .where,
     leadingTrivia: whereLeadingTrivia,
     trailingTrivia: .spaces(1)
   )

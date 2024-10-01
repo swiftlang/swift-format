@@ -56,6 +56,8 @@ final class FindingEmitter {
         message: message,
         severity: category.defaultSeverity,
         location: location,
-        notes: notes))
+        notes: notes
+      )
+    )
   }
 }

@@ -65,14 +65,14 @@ final class SubscriptExprTests: PrettyPrintTestCase {
 
   func testSubscriptSettersWithTrailingClosures() {
     let input =
-    """
+      """
       myCollection[index] { $0 < $1 } = someValue
       myCollection[label: index] { arg1, arg2 in foo() } = someValue
       myCollection[index, default: someDefaultValue] { arg1, arg2 in foo() } = someValue
       """
 
     let expected =
-    """
+      """
       myCollection[index] { $0 < $1 } = someValue
       myCollection[label: index] { arg1, arg2 in
         foo()

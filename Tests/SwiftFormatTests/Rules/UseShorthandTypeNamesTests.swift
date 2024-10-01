@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class UseShorthandTypeNamesTests: LintOrFormatRuleTestCase {
   func testNamesInTypeContextsAreShortened() {
@@ -560,7 +559,7 @@ final class UseShorthandTypeNamesTests: LintOrFormatRuleTestCase {
         let c: Int?
         """,
       findings: [
-        FindingSpec("1️⃣", message: "use shorthand syntax for this 'Optional' type"),
+        FindingSpec("1️⃣", message: "use shorthand syntax for this 'Optional' type")
       ]
     )
   }

@@ -51,7 +51,8 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
       var splitter = VariableDeclSplitter {
         CodeBlockItemSyntax(
           item: .decl(DeclSyntax($0)),
-          semicolon: nil)
+          semicolon: nil
+        )
       }
       newItems.append(contentsOf: splitter.nodes(bySplitting: visitedDecl))
     }
@@ -214,4 +215,3 @@ private struct VariableDeclSplitter<Node: SyntaxProtocol> {
     bindingQueue = []
   }
 }
-

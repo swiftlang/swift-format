@@ -24,7 +24,7 @@ public enum Selection {
       self = .infinite
     } else {
       let ranges = offsetRanges.map {
-        AbsolutePosition(utf8Offset: $0.lowerBound) ..< AbsolutePosition(utf8Offset: $0.upperBound)
+        AbsolutePosition(utf8Offset: $0.lowerBound)..<AbsolutePosition(utf8Offset: $0.upperBound)
       }
       self = .ranges(ranges)
     }
@@ -48,7 +48,6 @@ public enum Selection {
     }
   }
 }
-
 
 public extension Syntax {
   /// - Returns: `true` if the node is _completely_ inside any range in the selection

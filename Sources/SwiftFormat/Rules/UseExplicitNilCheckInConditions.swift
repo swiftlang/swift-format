@@ -49,7 +49,8 @@ public final class UseExplicitNilCheckInConditions: SyntaxFormatRule {
       var inequalExpr = InfixOperatorExprSyntax(
         leftOperand: addingParenthesesIfNecessary(to: value),
         operator: operatorExpr,
-        rightOperand: NilLiteralExprSyntax())
+        rightOperand: NilLiteralExprSyntax()
+      )
       inequalExpr.leadingTrivia = node.leadingTrivia
       inequalExpr.trailingTrivia = trailingTrivia
 
@@ -103,8 +104,7 @@ public final class UseExplicitNilCheckInConditions: SyntaxFormatRule {
       // Note that we could also cover the `tryExpr` and `ternaryExpr` cases above with this, but
       // this reparsing trick is going to be slower so we should avoid it whenever we can.
       let reparsedExpr = "\(expr) != nil" as ExprSyntax
-      if
-        let infixExpr = reparsedExpr.as(InfixOperatorExprSyntax.self),
+      if let infixExpr = reparsedExpr.as(InfixOperatorExprSyntax.self),
         let binOp = infixExpr.operator.as(BinaryOperatorExprSyntax.self),
         binOp.operator.text == "!=",
         infixExpr.rightOperand.is(NilLiteralExprSyntax.self)

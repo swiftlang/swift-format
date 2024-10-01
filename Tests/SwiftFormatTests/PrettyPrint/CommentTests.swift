@@ -1,5 +1,5 @@
-import _SwiftFormatTestSupport
 import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class CommentTests: PrettyPrintTestCase {
   func testDocumentationComments() {
@@ -202,141 +202,141 @@ final class CommentTests: PrettyPrintTestCase {
 
   func testLineCommentsWithCustomLeadingSpaces() {
     let pairs: [(String, String)] = [
-        (
-            """
-            // Line Comment0
+      (
+        """
+        // Line Comment0
 
-            // Line Comment1
-            // Line Comment2
-            let a = 123
-            let b = "456"  // End of line comment
-            let c = "More content"
+        // Line Comment1
+        // Line Comment2
+        let a = 123
+        let b = "456"  // End of line comment
+        let c = "More content"
 
-            """,
-            """
-            // Line Comment0
+        """,
+        """
+        // Line Comment0
 
-            // Line Comment1
-            // Line Comment2
-            let a = 123
-            let b = "456"   // End of line comment
-            let c = "More content"
+        // Line Comment1
+        // Line Comment2
+        let a = 123
+        let b = "456"   // End of line comment
+        let c = "More content"
 
-            """
-        ),
-        (
-          """
-          // Comment 3
-          // Comment 4
+        """
+      ),
+      (
+        """
+        // Comment 3
+        // Comment 4
 
-          let reallyLongVariableName = 123 // This comment should not wrap
-          // and should not combine with this comment
+        let reallyLongVariableName = 123 // This comment should not wrap
+        // and should not combine with this comment
 
-          func MyFun() {
-            // just a comment
-          }
-          """,
-          """
-          // Comment 3
-          // Comment 4
+        func MyFun() {
+          // just a comment
+        }
+        """,
+        """
+        // Comment 3
+        // Comment 4
 
-          let reallyLongVariableName = 123   // This comment should not wrap
-          // and should not combine with this comment
+        let reallyLongVariableName = 123   // This comment should not wrap
+        // and should not combine with this comment
 
-          func MyFun() {
-            // just a comment
-          }
+        func MyFun() {
+          // just a comment
+        }
 
-          """
-        ),
-        (
-          """
-          func MyFun() {
-            // Comment 1
-            // Comment 2
-            let a = 123
+        """
+      ),
+      (
+        """
+        func MyFun() {
+          // Comment 1
+          // Comment 2
+          let a = 123
 
-            let b = 456  // Comment 3
-          }
+          let b = 456  // Comment 3
+        }
 
-          func MyFun() {
-            let c = 789 // Comment 4
-            // Comment 5
-          }
-          """,
-          """
-          func MyFun() {
-            // Comment 1
-            // Comment 2
-            let a = 123
+        func MyFun() {
+          let c = 789 // Comment 4
+          // Comment 5
+        }
+        """,
+        """
+        func MyFun() {
+          // Comment 1
+          // Comment 2
+          let a = 123
 
-            let b = 456   // Comment 3
-          }
+          let b = 456   // Comment 3
+        }
 
-          func MyFun() {
-            let c = 789   // Comment 4
-            // Comment 5
-          }
+        func MyFun() {
+          let c = 789   // Comment 4
+          // Comment 5
+        }
 
-          """
-        ),
-        (
-          """
-          let a = myfun(123 // Cmt 7
-          )
-          let a = myfun(var1: 123 // Cmt 7
-          )
+        """
+      ),
+      (
+        """
+        let a = myfun(123 // Cmt 7
+        )
+        let a = myfun(var1: 123 // Cmt 7
+        )
 
-          guard condition else { return // Cmt 6
-          }
+        guard condition else { return // Cmt 6
+        }
 
-          switch myvar {
-          case .one, .two, // three
-               .four:
-            dostuff()
-          default: ()
-          }
+        switch myvar {
+        case .one, .two, // three
+             .four:
+          dostuff()
+        default: ()
+        }
 
-          """,
-          """
-          let a = myfun(
-            123   // Cmt 7
-          )
-          let a = myfun(
-            var1: 123   // Cmt 7
-          )
+        """,
+        """
+        let a = myfun(
+          123   // Cmt 7
+        )
+        let a = myfun(
+          var1: 123   // Cmt 7
+        )
 
-          guard condition else {
-            return   // Cmt 6
-          }
+        guard condition else {
+          return   // Cmt 6
+        }
 
-          switch myvar {
-          case .one, .two,   // three
-            .four:
-            dostuff()
-          default: ()
-          }
+        switch myvar {
+        case .one, .two,   // three
+          .four:
+          dostuff()
+        default: ()
+        }
 
-          """
-        ),
-        (
-          """
-          let a = 123 +  // comment
-            b + c
+        """
+      ),
+      (
+        """
+        let a = 123 +  // comment
+          b + c
 
-          let d = 123
-          // Trailing Comment
-          """,
-          """
-          let a =
-            123   // comment
-            + b + c
+        let d = 123
+        // Trailing Comment
+        """,
+        """
+        let a =
+          123   // comment
+          + b + c
 
-          let d = 123
-          // Trailing Comment
+        let d = 123
+        // Trailing Comment
 
-          """
-        ),
+        """
+      ),
     ]
 
     var config = Configuration.forTesting
@@ -1004,7 +1004,7 @@ final class CommentTests: PrettyPrintTestCase {
       linelength: 45,
       whitespaceOnly: true,
       findings: [
-        FindingSpec("1️⃣", message: "move end-of-line comment that exceeds the line length"),
+        FindingSpec("1️⃣", message: "move end-of-line comment that exceeds the line length")
       ]
     )
   }

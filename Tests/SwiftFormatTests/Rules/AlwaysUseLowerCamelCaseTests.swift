@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class AlwaysUseLowerCamelCaseTests: LintOrFormatRuleTestCase {
   func testInvalidVariableCasing() {
@@ -57,7 +56,7 @@ final class AlwaysUseLowerCamelCaseTests: LintOrFormatRuleTestCase {
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "rename the enum case 'UpperCamelCase' using lowerCamelCase"),
+        FindingSpec("1️⃣", message: "rename the enum case 'UpperCamelCase' using lowerCamelCase")
       ]
     )
 
@@ -229,7 +228,10 @@ final class AlwaysUseLowerCamelCaseTests: LintOrFormatRuleTestCase {
       findings: [
         FindingSpec("1️⃣", message: "rename the function 'function_Without_Test_Attribute' using lowerCamelCase"),
         FindingSpec("2️⃣", message: "rename the function 'function_With_Non_Test_Attribute' using lowerCamelCase"),
-        FindingSpec("3️⃣", message: "rename the function 'function_With_Test_Attribute_From_Foo_Module' using lowerCamelCase"),
+        FindingSpec(
+          "3️⃣",
+          message: "rename the function 'function_With_Test_Attribute_From_Foo_Module' using lowerCamelCase"
+        ),
       ]
     )
   }

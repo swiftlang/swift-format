@@ -17,14 +17,16 @@ extension SwiftFormatCommand {
   struct Format: ParsableCommand {
     static var configuration = CommandConfiguration(
       abstract: "Format Swift source code",
-      discussion: "When no files are specified, it expects the source from standard input.")
+      discussion: "When no files are specified, it expects the source from standard input."
+    )
 
     /// Whether or not to format the Swift file in-place.
     ///
     /// If specified, the current file is overwritten when formatting.
     @Flag(
       name: .shortAndLong,
-      help: "Overwrite the current file when formatting.")
+      help: "Overwrite the current file when formatting."
+    )
     var inPlace: Bool = false
 
     @OptionGroup()

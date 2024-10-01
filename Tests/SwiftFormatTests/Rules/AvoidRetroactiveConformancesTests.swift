@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class AvoidRetroactiveConformancesTests: LintOrFormatRuleTestCase {
   func testRetroactiveConformanceIsDiagnosed() {
@@ -10,7 +9,7 @@ final class AvoidRetroactiveConformancesTests: LintOrFormatRuleTestCase {
       extension Int: 1️⃣@retroactive Identifiable {}
       """,
       findings: [
-        FindingSpec("1️⃣", message: "do not declare retroactive conformances"),
+        FindingSpec("1️⃣", message: "do not declare retroactive conformances")
       ]
     )
   }

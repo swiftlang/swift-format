@@ -551,7 +551,7 @@ final class IfConfigTests: PrettyPrintTestCase {
       default:
         return nil
       }
-      
+
       """
     var configuration = Configuration.forTesting
     configuration.indentConditionalCompilationBlocks = false

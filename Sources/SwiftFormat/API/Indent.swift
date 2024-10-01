@@ -36,7 +36,9 @@ public enum Indent: Hashable, Codable {
       throw DecodingError.dataCorrupted(
         DecodingError.Context(
           codingPath: decoder.codingPath,
-          debugDescription: "Only one of \"tabs\" or \"spaces\" may be specified"))
+          debugDescription: "Only one of \"tabs\" or \"spaces\" may be specified"
+        )
+      )
     }
     if let spacesCount = spacesCount {
       self = .spaces(spacesCount)
@@ -50,7 +52,9 @@ public enum Indent: Hashable, Codable {
     throw DecodingError.dataCorrupted(
       DecodingError.Context(
         codingPath: decoder.codingPath,
-        debugDescription: "One of \"tabs\" or \"spaces\" must be specified"))
+        debugDescription: "One of \"tabs\" or \"spaces\" must be specified"
+      )
+    )
   }
 
   public func encode(to encoder: Encoder) throws {

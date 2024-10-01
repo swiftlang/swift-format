@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class NoAccessLevelOnExtensionDeclarationTests: LintOrFormatRuleTestCase {
   func testExtensionDeclarationAccessLevel() {
@@ -55,7 +54,7 @@ final class NoAccessLevelOnExtensionDeclarationTests: LintOrFormatRuleTestCase {
             NoteSpec("9️⃣", message: "add 'public' access modifier to this declaration"),
             NoteSpec("🔟", message: "add 'public' access modifier to this declaration"),
           ]
-        ),
+        )
       ]
     )
   }
@@ -76,7 +75,7 @@ final class NoAccessLevelOnExtensionDeclarationTests: LintOrFormatRuleTestCase {
         }
         """,
       findings: [
-        FindingSpec("1️⃣", message: "remove this redundant 'internal' access modifier from this extension"),
+        FindingSpec("1️⃣", message: "remove this redundant 'internal' access modifier from this extension")
       ]
     )
   }
@@ -146,9 +145,9 @@ final class NoAccessLevelOnExtensionDeclarationTests: LintOrFormatRuleTestCase {
           "1️⃣",
           message: "move this 'package' access modifier to precede each member inside this extension",
           notes: [
-            NoteSpec("2️⃣", message: "add 'package' access modifier to this declaration"),
+            NoteSpec("2️⃣", message: "add 'package' access modifier to this declaration")
           ]
-        ),
+        )
       ]
     )
   }
@@ -169,11 +168,12 @@ final class NoAccessLevelOnExtensionDeclarationTests: LintOrFormatRuleTestCase {
       findings: [
         FindingSpec(
           "1️⃣",
-          message: "remove this 'private' access modifier and declare each member inside this extension as 'fileprivate'",
+          message:
+            "remove this 'private' access modifier and declare each member inside this extension as 'fileprivate'",
           notes: [
-            NoteSpec("2️⃣", message: "add 'fileprivate' access modifier to this declaration"),
+            NoteSpec("2️⃣", message: "add 'fileprivate' access modifier to this declaration")
           ]
-        ),
+        )
       ]
     )
   }
@@ -192,7 +192,7 @@ final class NoAccessLevelOnExtensionDeclarationTests: LintOrFormatRuleTestCase {
         }
         """,
       findings: [
-        FindingSpec("1️⃣", message: "move this 'public' access modifier to precede each member inside this extension"),
+        FindingSpec("1️⃣", message: "move this 'public' access modifier to precede each member inside this extension")
       ]
     )
   }
@@ -250,7 +250,7 @@ final class NoAccessLevelOnExtensionDeclarationTests: LintOrFormatRuleTestCase {
             NoteSpec("8️⃣", message: "add 'public' access modifier to this declaration"),
             NoteSpec("9️⃣", message: "add 'public' access modifier to this declaration"),
           ]
-        ),
+        )
       ]
     )
   }
@@ -340,7 +340,7 @@ final class NoAccessLevelOnExtensionDeclarationTests: LintOrFormatRuleTestCase {
             NoteSpec("8️⃣", message: "add 'public' access modifier to this declaration"),
             NoteSpec("9️⃣", message: "add 'public' access modifier to this declaration"),
           ]
-        ),
+        )
       ]
     )
   }

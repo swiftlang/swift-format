@@ -44,27 +44,30 @@ final class RuleDocumentationGenerator: FileGenerator {
     )
 
     for detectedRule in ruleCollector.allLinters.sorted(by: { $0.typeName < $1.typeName }) {
-      handle.write("""
-      - [\(detectedRule.typeName)](#\(detectedRule.typeName))
+      handle.write(
+        """
+        - [\(detectedRule.typeName)](#\(detectedRule.typeName))
 
-      """)
+        """
+      )
     }
 
     for detectedRule in ruleCollector.allLinters.sorted(by: { $0.typeName < $1.typeName }) {
-      handle.write("""
+      handle.write(
+        """
 
-      ### \(detectedRule.typeName)
+        ### \(detectedRule.typeName)
 
-      \(detectedRule.description ?? "")
-      \(ruleFormatSupportDescription(for: detectedRule))
+        \(detectedRule.description ?? "")
+        \(ruleFormatSupportDescription(for: detectedRule))
 
-      """)
+        """
+      )
     }
   }
 
   private func ruleFormatSupportDescription(for rule: RuleCollector.DetectedRule) -> String {
-    return rule.canFormat ?
-      "`\(rule.typeName)` rule can format your code automatically." :
-      "`\(rule.typeName)` is a linter-only rule."
+    return rule.canFormat
+      ? "`\(rule.typeName)` rule can format your code automatically." : "`\(rule.typeName)` is a linter-only rule."
   }
 }

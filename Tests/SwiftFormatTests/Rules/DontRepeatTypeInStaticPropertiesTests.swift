@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class DontRepeatTypeInStaticPropertiesTests: LintOrFormatRuleTestCase {
   func testRepetitiveProperties() {
@@ -71,24 +70,23 @@ final class DontRepeatTypeInStaticPropertiesTests: LintOrFormatRuleTestCase {
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "remove the suffix 'Thing' from the name of the variable 'defaultThing'"),
+        FindingSpec("1️⃣", message: "remove the suffix 'Thing' from the name of the variable 'defaultThing'")
       ]
     )
   }
 
-
   func testIgnoreSingleDecl() {
     assertLint(
       DontRepeatTypeInStaticProperties.self,
-        """
-        struct Foo {
-          // swift-format-ignore: DontRepeatTypeInStaticProperties
-          static let defaultFoo: Int
-          static let 1️⃣alternateFoo: Int
-        }
-        """,
+      """
+      struct Foo {
+        // swift-format-ignore: DontRepeatTypeInStaticProperties
+        static let defaultFoo: Int
+        static let 1️⃣alternateFoo: Int
+      }
+      """,
       findings: [
-        FindingSpec("1️⃣", message: "remove the suffix 'Foo' from the name of the variable 'alternateFoo'"),
+        FindingSpec("1️⃣", message: "remove the suffix 'Foo' from the name of the variable 'alternateFoo'")
       ]
     )
   }

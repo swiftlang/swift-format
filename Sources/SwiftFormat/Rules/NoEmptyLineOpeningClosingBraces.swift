@@ -20,54 +20,54 @@ import SwiftSyntax
 @_spi(Rules)
 public final class NoEmptyLinesOpeningClosingBraces: SyntaxFormatRule {
   public override class var isOptIn: Bool { return true }
-  
+
   public override func visit(_ node: AccessorBlockSyntax) -> AccessorBlockSyntax {
     var result = node
     switch node.accessors {
-      case .accessors(let accessors):
-        result.accessors = .init(rewritten(accessors))
-      case .getter(let getter):
-        result.accessors = .init(rewritten(getter))
+    case .accessors(let accessors):
+      result.accessors = .init(rewritten(accessors))
+    case .getter(let getter):
+      result.accessors = .init(rewritten(getter))
     }
     result.rightBrace = rewritten(node.rightBrace)
     return result
   }
-  
+
   public override func visit(_ node: CodeBlockSyntax) -> CodeBlockSyntax {
     var result = node
     result.statements = rewritten(node.statements)
     result.rightBrace = rewritten(node.rightBrace)
     return result
   }
-  
+
   public override func visit(_ node: MemberBlockSyntax) -> MemberBlockSyntax {
     var result = node
     result.members = rewritten(node.members)
     result.rightBrace = rewritten(node.rightBrace)
     return result
   }
-  
+
   public override func visit(_ node: ClosureExprSyntax) -> ExprSyntax {
     var result = node
     result.statements = rewritten(node.statements)
     result.rightBrace = rewritten(node.rightBrace)
     return ExprSyntax(result)
   }
-  
+
   public override func visit(_ node: SwitchExprSyntax) -> ExprSyntax {
     var result = node
     result.cases = rewritten(node.cases)
     result.rightBrace = rewritten(node.rightBrace)
     return ExprSyntax(result)
   }
-  
+
   public override func visit(_ node: PrecedenceGroupDeclSyntax) -> DeclSyntax {
     var result = node
     result.attributes = rewritten(node.attributes)
     result.rightBrace = rewritten(node.rightBrace)
     return DeclSyntax(result)
   }
-  
+
   func rewritten(_ token: TokenSyntax) -> TokenSyntax {
     let (trimmedLeadingTrivia, count) = token.leadingTrivia.trimmingSuperfluousNewlines()
     if trimmedLeadingTrivia.sourceLength != token.leadingTriviaLength {
@@ -77,11 +77,11 @@ public final class NoEmptyLinesOpeningClosingBraces: SyntaxFormatRule {
       return token
     }
   }
-  
+
   func rewritten<C: SyntaxCollection>(_ collection: C) -> C {
     var result = collection
     if let first = collection.first, first.leadingTrivia.containsNewlines,
-       let index = collection.index(of: first)
+      let index = collection.index(of: first)
     {
       let (trimmedLeadingTrivia, count) = first.leadingTrivia.trimmingSuperfluousNewlines()
       if trimmedLeadingTrivia.sourceLength != first.leadingTriviaLength {
@@ -115,7 +115,7 @@ extension Trivia {
       // Retain other trivia pieces
       return partialResult + [piece]
     }
-    
+
     return (Trivia(pieces: pieces), trimmmed)
   }
 }
@@ -124,7 +124,7 @@ extension Finding.Message {
   fileprivate static func removeEmptyLinesAfter(_ count: Int) -> Finding.Message {
     "remove empty \(count > 1 ? "lines" : "line") after '{'"
   }
-  
+
   fileprivate static func removeEmptyLinesBefore(_ count: Int) -> Finding.Message {
     "remove empty \(count > 1 ? "lines" : "line") before '}'"
   }

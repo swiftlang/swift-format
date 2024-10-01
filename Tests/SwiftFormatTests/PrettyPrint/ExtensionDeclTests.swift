@@ -122,7 +122,7 @@ final class ExtensionDeclTests: PrettyPrintTestCase {
 
   func testExtensionWhereClause_lineBreakBeforeEachGenericRequirement() {
     let input =
-    """
+      """
       extension MyExtension where S: Collection {
         let A: Int
         let B: Double
@@ -138,7 +138,7 @@ final class ExtensionDeclTests: PrettyPrintTestCase {
       """
 
     let expected =
-    """
+      """
       extension MyExtension where S: Collection {
         let A: Int
         let B: Double
@@ -210,7 +210,7 @@ final class ExtensionDeclTests: PrettyPrintTestCase {
 
   func testExtensionWhereClauseWithInheritance_lineBreakBeforeEachGenericRequirement() {
     let input =
-    """
+      """
       extension MyExtension: ProtoOne where S: Collection {
         let A: Int
         let B: Double
@@ -226,7 +226,7 @@ final class ExtensionDeclTests: PrettyPrintTestCase {
       """
 
     let expected =
-    """
+      """
       extension MyExtension: ProtoOne where S: Collection {
         let A: Int
         let B: Double
@@ -336,7 +336,7 @@ final class ExtensionDeclTests: PrettyPrintTestCase {
 
   func testExtensionFullWrap_lineBreakBeforeEachGenericRequirement() {
     let input =
-    """
+      """
       public extension MyContainer: MyContainerProtocolOne, MyContainerProtocolTwo, SomeoneElsesContainerProtocol, SomeFrameworkContainerProtocol where BaseCollection: Collection, BaseCollection: P, BaseCollection.Element: Equatable, BaseCollection.Element: SomeOtherProtocol {
         let A: Int
         let B: Double
@@ -345,7 +345,7 @@ final class ExtensionDeclTests: PrettyPrintTestCase {
 
     let expected =
 
-    """
+      """
       public extension MyContainer:
         MyContainerProtocolOne, MyContainerProtocolTwo,
         SomeoneElsesContainerProtocol,

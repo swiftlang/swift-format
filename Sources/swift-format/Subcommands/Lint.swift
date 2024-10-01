@@ -17,11 +17,12 @@ extension SwiftFormatCommand {
   struct Lint: ParsableCommand {
     static var configuration = CommandConfiguration(
       abstract: "Diagnose style issues in Swift source code",
-      discussion: "When no files are specified, it expects the source from standard input.")
+      discussion: "When no files are specified, it expects the source from standard input."
+    )
 
     @OptionGroup()
     var lintOptions: LintFormatOptions
-    
+
     @Flag(
       name: .shortAndLong,
       help: "Fail on warnings."
@@ -35,7 +36,7 @@ extension SwiftFormatCommand {
       try performanceMeasurementOptions.printingInstructionCountIfRequested {
         let frontend = LintFrontend(lintFormatOptions: lintOptions)
         frontend.run()
-        
+
         if frontend.diagnosticsEngine.hasErrors || strict && frontend.diagnosticsEngine.hasWarnings {
           throw ExitCode.failure
         }

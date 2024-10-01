@@ -10,8 +10,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SwiftSyntax
 import SwiftFormat
+import SwiftSyntax
 
 /// Encapsulates the locations of emoji markers extracted from source text.
 public struct MarkedText {
@@ -38,7 +38,7 @@ public struct MarkedText {
       if marker.name == "⏩" {
         lastRangeStart = text.utf8.count
       } else if marker.name == "⏪" {
-        offsets.append(lastRangeStart ..< text.utf8.count)
+        offsets.append(lastRangeStart..<text.utf8.count)
       } else {
         assert(markers[marker.name] == nil, "Marker names must be unique")
         markers[marker.name] = text.utf8.count

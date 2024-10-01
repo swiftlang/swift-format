@@ -1,9 +1,8 @@
 import Markdown
+@_spi(Testing) import SwiftFormat
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import XCTest
-
-@_spi(Testing) import SwiftFormat
 
 final class DocumentationCommentTests: XCTestCase {
   func testBriefSummaryOnly() throws {
@@ -17,14 +16,15 @@ final class DocumentationCommentTests: XCTestCase {
       """
       Paragraph
       └─ Text "A brief summary."
-      """)
+      """
+    )
     XCTAssertTrue(comment.bodyNodes.isEmpty)
     XCTAssertNil(comment.parameterLayout)
     XCTAssertTrue(comment.parameters.isEmpty)
     XCTAssertNil(comment.returns)
     XCTAssertNil(comment.throws)
   }
-  
+
   func testBriefSummaryAndAdditionalParagraphs() throws {
     let decl: DeclSyntax = """
       /// A brief summary.
@@ -40,7 +40,8 @@ final class DocumentationCommentTests: XCTestCase {
       """
       Paragraph
       └─ Text "A brief summary."
-      """)
+      """
+    )
     XCTAssertEqual(
       comment.bodyNodes.map { $0.debugDescription() },
       [
@@ -59,7 +60,7 @@ final class DocumentationCommentTests: XCTestCase {
     XCTAssertNil(comment.returns)
     XCTAssertNil(comment.throws)
   }
-  
+
   func testParameterOutline() throws {
     let decl: DeclSyntax = """
       /// - Parameters:
@@ -91,7 +92,7 @@ final class DocumentationCommentTests: XCTestCase {
     XCTAssertNil(comment.returns)
     XCTAssertNil(comment.throws)
   }
-  
+
   func testSeparatedParameters() throws {
     let decl: DeclSyntax = """
       /// - Parameter x: A value.
@@ -122,7 +123,7 @@ final class DocumentationCommentTests: XCTestCase {
     XCTAssertNil(comment.returns)
     XCTAssertNil(comment.throws)
   }
-  
+
   func testMalformedTagsGoIntoBodyNodes() throws {
     let decl: DeclSyntax = """
       /// - Parameter: A value.
@@ -165,7 +166,7 @@ final class DocumentationCommentTests: XCTestCase {
     XCTAssertNil(comment.parameterLayout)
     XCTAssertTrue(comment.parameters.isEmpty)
   }
-  
+
   func testReturnsField() throws {
     let decl: DeclSyntax = """
       /// - Returns: A value.
@@ -187,7 +188,7 @@ final class DocumentationCommentTests: XCTestCase {
     )
     XCTAssertNil(comment.throws)
   }
-  
+
   func testThrowsField() throws {
     let decl: DeclSyntax = """
       /// - Throws: An error.
@@ -199,7 +200,7 @@ final class DocumentationCommentTests: XCTestCase {
     XCTAssertNil(comment.parameterLayout)
     XCTAssertTrue(comment.parameters.isEmpty)
     XCTAssertNil(comment.returns)
-    
+
     let throwsField = try XCTUnwrap(comment.throws)
     XCTAssertEqual(
       throwsField.debugDescription(),
@@ -209,7 +210,7 @@ final class DocumentationCommentTests: XCTestCase {
       """
     )
   }
-  
+
   func testUnrecognizedFieldsGoIntoBodyNodes() throws {
     let decl: DeclSyntax = """
       /// - Blahblah: Blah.

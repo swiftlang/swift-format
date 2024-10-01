@@ -12,8 +12,8 @@
 
 import Foundation
 import SwiftOperators
-import SwiftSyntax
 import SwiftParser
+import SwiftSyntax
 
 /// Context contains the bits that each formatter and linter will need access to.
 ///
@@ -102,7 +102,8 @@ public final class Context {
       """
       Missing cached rule name for '\(rule)'! \
       Ensure `generate-swift-format` has been run and `ruleNameCache` was injected.
-      """)
+      """
+    )
 
     let ruleName = ruleNameCache[ObjectIdentifier(rule)] ?? R.ruleName
     switch ruleMask.ruleState(ruleName, at: loc) {

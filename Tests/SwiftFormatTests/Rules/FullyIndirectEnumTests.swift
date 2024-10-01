@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 class FullyIndirectEnumTests: LintOrFormatRuleTestCase {
   func testAllIndirectCases() {
@@ -35,7 +34,7 @@ class FullyIndirectEnumTests: LintOrFormatRuleTestCase {
             NoteSpec("3️⃣", message: "remove 'indirect' here"),
             NoteSpec("4️⃣", message: "remove 'indirect' here"),
           ]
-        ),
+        )
       ]
     )
   }
@@ -72,7 +71,7 @@ class FullyIndirectEnumTests: LintOrFormatRuleTestCase {
             NoteSpec("3️⃣", message: "remove 'indirect' here"),
             NoteSpec("4️⃣", message: "remove 'indirect' here"),
           ]
-        ),
+        )
       ]
     )
   }

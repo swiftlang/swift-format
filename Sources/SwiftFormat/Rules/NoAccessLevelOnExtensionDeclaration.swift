@@ -89,11 +89,13 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
 
       // Create a note associated with each declaration that needs to have an access level modifier
       // added to it.
-      notes.append(Finding.Note(
-        message: .addModifierToExtensionMember(keyword: modifier.name.text),
-        location:
-          Finding.Location(decl.startLocation(converter: context.sourceLocationConverter))
-      ))
+      notes.append(
+        Finding.Note(
+          message: .addModifierToExtensionMember(keyword: modifier.name.text),
+          location:
+            Finding.Location(decl.startLocation(converter: context.sourceLocationConverter))
+        )
+      )
 
       var newItem = memberItem
       newItem.decl = applyingAccessModifierIfNone(modifier, to: decl)
@@ -142,16 +144,28 @@ private func applyingAccessModifierIfNone(
     return applyingAccessModifierIfNone(modifier, to: funcDecl, declKeywordKeyPath: \.funcKeyword)
   case .structDecl(let structDecl):
     return applyingAccessModifierIfNone(
-      modifier, to: structDecl, declKeywordKeyPath: \.structKeyword)
+      modifier,
+      to: structDecl,
+      declKeywordKeyPath: \.structKeyword
+    )
   case .subscriptDecl(let subscriptDecl):
     return applyingAccessModifierIfNone(
-      modifier, to: subscriptDecl, declKeywordKeyPath: \.subscriptKeyword)
+      modifier,
+      to: subscriptDecl,
+      declKeywordKeyPath: \.subscriptKeyword
+    )
   case .typeAliasDecl(let typeAliasDecl):
     return applyingAccessModifierIfNone(
-      modifier, to: typeAliasDecl, declKeywordKeyPath: \.typealiasKeyword)
+      modifier,
+      to: typeAliasDecl,
+      declKeywordKeyPath: \.typealiasKeyword
+    )
   case .variableDecl(let varDecl):
     return applyingAccessModifierIfNone(
-      modifier, to: varDecl, declKeywordKeyPath: \.bindingSpecifier)
+      modifier,
+      to: varDecl,
+      declKeywordKeyPath: \.bindingSpecifier
+    )
   default:
     return decl
   }

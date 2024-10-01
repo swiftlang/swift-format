@@ -154,7 +154,10 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
     }
 
     let sourceRange = node.sourceRange(
-      converter: sourceLocationConverter, afterLeadingTrivia: false, afterTrailingTrivia: true)
+      converter: sourceLocationConverter,
+      afterLeadingTrivia: false,
+      afterTrailingTrivia: true
+    )
     allRulesIgnoredRanges.append(sourceRange)
     return .skipChildren
   }
@@ -181,9 +184,10 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
   /// - Parameters:
   ///   - token: A token that may have comments that modify the status of rules.
   ///   - node: The node to which the token belongs.
-  private func appendRuleStatusDirectives(from token: TokenSyntax, of node: Syntax)
-    -> SyntaxVisitorContinueKind
-  {
+  private func appendRuleStatusDirectives(
+    from token: TokenSyntax,
+    of node: Syntax
+  ) -> SyntaxVisitorContinueKind {
     let isFirstInFile = token.previousToken(viewMode: .sourceAccurate) == nil
     let matches = loneLineComments(in: token.leadingTrivia, isFirstToken: isFirstInFile)
       .compactMap(ruleStatusDirectiveMatch)

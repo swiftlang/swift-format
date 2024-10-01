@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class NeverUseForceTryTests: LintOrFormatRuleTestCase {
   func testInvalidTryExpression() {
@@ -38,7 +37,7 @@ final class NeverUseForceTryTests: LintOrFormatRuleTestCase {
       findings: []
     )
   }
-  
+
   func testAllowForceTryInTestAttributeFunction() {
     assertLint(
       NeverUseForceTry.self,

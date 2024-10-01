@@ -1,6 +1,5 @@
-import XCTest
-
 @_spi(Internal) import SwiftFormat
+import XCTest
 
 final class FileIteratorTests: XCTestCase {
   private var tmpdir: URL!
@@ -10,7 +9,8 @@ final class FileIteratorTests: XCTestCase {
       for: .itemReplacementDirectory,
       in: .userDomainMask,
       appropriateFor: FileManager.default.temporaryDirectory,
-      create: true)
+      create: true
+    )
 
     // Create a simple file tree used by the tests below.
     try touch("project/real1.swift")
@@ -43,7 +43,8 @@ final class FileIteratorTests: XCTestCase {
   func testTraversesHiddenFilesIfExplicitlySpecified() {
     let seen = allFilesSeen(
       iteratingOver: [tmpURL("project/.build"), tmpURL("project/.hidden.swift")],
-      followSymlinks: false)
+      followSymlinks: false
+    )
     XCTAssertEqual(seen.count, 2)
     XCTAssertTrue(seen.contains { $0.hasSuffix("project/.build/generated.swift") })
     XCTAssertTrue(seen.contains { $0.hasSuffix("project/.hidden.swift") })
@@ -69,7 +70,9 @@ extension FileIteratorTests {
   private func touch(_ path: String) throws {
     let fileURL = tmpURL(path)
     try FileManager.default.createDirectory(
-      at: fileURL.deletingLastPathComponent(), withIntermediateDirectories: true)
+      at: fileURL.deletingLastPathComponent(),
+      withIntermediateDirectories: true
+    )
     struct FailedToCreateFileError: Error {
       let url: URL
     }
@@ -81,7 +84,9 @@ extension FileIteratorTests {
   /// Create a symlink between files or directories in the test's temporary space.
   private func symlink(_ source: String, to target: String) throws {
     try FileManager.default.createSymbolicLink(
-      at: tmpURL(source), withDestinationURL: tmpURL(target))
+      at: tmpURL(source),
+      withDestinationURL: tmpURL(target)
+    )
   }
 
   /// Computes the list of all files seen by using `FileIterator` to iterate over the given URLs.

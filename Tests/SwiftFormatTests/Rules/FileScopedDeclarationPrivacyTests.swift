@@ -1,8 +1,7 @@
 import SwiftFormat
+@_spi(Rules) import SwiftFormat
 import SwiftSyntax
 import _SwiftFormatTestSupport
-
-@_spi(Rules) import SwiftFormat
 
 private typealias TestConfiguration = (
   original: String,
@@ -154,7 +153,7 @@ final class FileScopedDeclarationPrivacyTests: LintOrFormatRuleTestCase {
       testConfigurations: changingTestConfigurations
     ) { original, expected in
       [
-        FindingSpec("1️⃣", message: "replace '\(original)' with '\(expected)' on file-scoped declarations"),
+        FindingSpec("1️⃣", message: "replace '\(original)' with '\(expected)' on file-scoped declarations")
       ]
     }
   }
@@ -175,7 +174,9 @@ final class FileScopedDeclarationPrivacyTests: LintOrFormatRuleTestCase {
 
       let markedSource = MarkedText(textWithMarkers: source)
       let substitutedExpected = markedSource.textWithoutMarkers.replacingOccurrences(
-        of: "$access$", with: testConfig.expected)
+        of: "$access$",
+        with: testConfig.expected
+      )
 
       // Only use the findings if the output was expected to change. If it didn't change, then the
       // rule wouldn't have emitted anything.
@@ -193,7 +194,8 @@ final class FileScopedDeclarationPrivacyTests: LintOrFormatRuleTestCase {
         findings: findingSpecs,
         configuration: configuration,
         file: file,
-        line: line)
+        line: line
+      )
     }
   }
 }

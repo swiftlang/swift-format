@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class OneVariableDeclarationPerLineTests: LintOrFormatRuleTestCase {
   func testMultipleVariableBindings() {
@@ -157,7 +156,7 @@ final class OneVariableDeclarationPerLineTests: LintOrFormatRuleTestCase {
         let c: Int
         """,
       findings: [
-        FindingSpec("1️⃣", message: "split this variable declaration to introduce only one variable per 'let'"),
+        FindingSpec("1️⃣", message: "split this variable declaration to introduce only one variable per 'let'")
       ]
     )
   }
@@ -174,7 +173,7 @@ final class OneVariableDeclarationPerLineTests: LintOrFormatRuleTestCase {
         let /* c */ c: Int
         """,
       findings: [
-        FindingSpec("1️⃣", message: "split this variable declaration to introduce only one variable per 'let'"),
+        FindingSpec("1️⃣", message: "split this variable declaration to introduce only one variable per 'let'")
       ]
     )
   }
@@ -220,7 +219,7 @@ final class OneVariableDeclarationPerLineTests: LintOrFormatRuleTestCase {
         var y = "foo" { didSet { print("changed") } }
         """,
       findings: [
-        FindingSpec("1️⃣", message: "split this variable declaration to introduce only one variable per 'var'"),
+        FindingSpec("1️⃣", message: "split this variable declaration to introduce only one variable per 'var'")
       ]
     )
   }

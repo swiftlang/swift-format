@@ -9,6 +9,7 @@ final class ConsumeExprTests: PrettyPrintTestCase {
           consume y
 
         """,
-      linelength: 16)
+      linelength: 16
+    )
   }
 }

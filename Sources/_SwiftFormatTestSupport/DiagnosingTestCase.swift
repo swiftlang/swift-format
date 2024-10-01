@@ -1,8 +1,7 @@
 import SwiftFormat
+@_spi(Rules) @_spi(Testing) import SwiftFormat
 import SwiftSyntax
 import XCTest
-
-@_spi(Rules) @_spi(Testing) import SwiftFormat
 
 /// DiagnosingTestCase is an XCTestCase subclass meant to inject diagnostic-specific testing
 /// routines into specific formatting test cases.
@@ -25,7 +24,8 @@ open class DiagnosingTestCase: XCTestCase {
       fileURL: URL(fileURLWithPath: "/tmp/test.swift"),
       selection: selection,
       sourceFileSyntax: sourceFileSyntax,
-      ruleNameCache: ruleNameCache)
+      ruleNameCache: ruleNameCache
+    )
     return context
   }
 
@@ -49,7 +49,8 @@ open class DiagnosingTestCase: XCTestCase {
         emittedFindings: &emittedFindings,
         context: context,
         file: file,
-        line: line)
+        line: line
+      )
     }
 
     // Emit test failures for any findings that did not have matches.
@@ -63,7 +64,8 @@ open class DiagnosingTestCase: XCTestCase {
       XCTFail(
         "Unexpected finding '\(finding.message)' was emitted (\(locationString))",
         file: file,
-        line: line)
+        line: line
+      )
     }
   }
 
@@ -97,7 +99,8 @@ open class DiagnosingTestCase: XCTestCase {
         (line:col \(markerLocation.line):\(markerLocation.column), offset \(utf8Offset))
         """,
         file: file,
-        line: line)
+        line: line
+      )
       return
     }
 
@@ -112,7 +115,8 @@ open class DiagnosingTestCase: XCTestCase {
       had the wrong message
       """,
       file: file,
-      line: line)
+      line: line
+    )
 
     // Assert that a note exists for each of the expected nodes in the finding.
     var emittedNotes = matchedFinding.notes
@@ -123,7 +127,8 @@ open class DiagnosingTestCase: XCTestCase {
         emittedNotes: &emittedNotes,
         context: context,
         file: file,
-        line: line)
+        line: line
+      )
     }
 
     // Emit test failures for any notes that weren't specified.
@@ -137,7 +142,8 @@ open class DiagnosingTestCase: XCTestCase {
       XCTFail(
         "Unexpected note '\(note.message)' was emitted (\(locationString))",
         file: file,
-        line: line)
+        line: line
+      )
     }
   }
 
@@ -170,7 +176,8 @@ open class DiagnosingTestCase: XCTestCase {
         (line:col \(markerLocation.line):\(markerLocation.column), offset \(utf8Offset))
         """,
         file: file,
-        line: line)
+        line: line
+      )
       return
     }
 
@@ -185,7 +192,8 @@ open class DiagnosingTestCase: XCTestCase {
       had the wrong message
       """,
       file: file,
-      line: line)
+      line: line
+    )
   }
 
   /// Asserts that the two strings are equal, providing Unix `diff`-style output if they are not.

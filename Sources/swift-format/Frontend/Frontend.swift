@@ -12,8 +12,8 @@
 
 import Foundation
 @_spi(Internal) import SwiftFormat
-import SwiftSyntax
 import SwiftParser
+import SwiftSyntax
 
 class Frontend {
   /// Represents a file to be processed by the frontend and any file-specific options associated
@@ -89,7 +89,8 @@ class Frontend {
     self.lintFormatOptions = lintFormatOptions
 
     self.diagnosticPrinter = StderrDiagnosticPrinter(
-      colorMode: lintFormatOptions.colorDiagnostics.map { $0 ? .on : .off } ?? .auto)
+      colorMode: lintFormatOptions.colorDiagnostics.map { $0 ? .on : .off } ?? .auto
+    )
     self.diagnosticsEngine =
       DiagnosticsEngine(diagnosticsHandlers: [diagnosticPrinter.printDiagnostic])
   }
@@ -101,7 +102,8 @@ class Frontend {
     } else {
       processURLs(
         lintFormatOptions.paths.map(URL.init(fileURLWithPath:)),
-        parallel: lintFormatOptions.parallel)
+        parallel: lintFormatOptions.parallel
+      )
     }
   }
 
@@ -119,9 +121,11 @@ class Frontend {
   private func processStandardInput() {
     let assumedUrl = lintFormatOptions.assumeFilename.map(URL.init(fileURLWithPath:))
 
-    guard let configuration = configuration(
-      fromPathOrString: lintFormatOptions.configuration,
-      orInferredFromSwiftFileAt: assumedUrl)
+    guard
+      let configuration = configuration(
+        fromPathOrString: lintFormatOptions.configuration,
+        orInferredFromSwiftFileAt: assumedUrl
+      )
     else {
       // Already diagnosed in the called method.
       return
@@ -131,7 +135,8 @@ class Frontend {
       fileHandle: FileHandle.standardInput,
       url: assumedUrl ?? URL(fileURLWithPath: "<stdin>"),
       configuration: configuration,
-      selection: Selection(offsetRanges: lintFormatOptions.offsets))
+      selection: Selection(offsetRanges: lintFormatOptions.offsets)
+    )
     processFile(fileToProcess)
   }
 
@@ -139,7 +144,8 @@ class Frontend {
   private func processURLs(_ urls: [URL], parallel: Bool) {
     precondition(
       !urls.isEmpty,
-      "processURLs(_:) should only be called when 'urls' is non-empty.")
+      "processURLs(_:) should only be called when 'urls' is non-empty."
+    )
 
     if parallel {
       let filesToProcess =
@@ -161,14 +167,16 @@ class Frontend {
   private func openAndPrepareFile(at url: URL) -> FileToProcess? {
     guard let sourceFile = try? FileHandle(forReadingFrom: url) else {
       diagnosticsEngine.emitError(
-        "Unable to open \(url.relativePath): file is not readable or does not exist")
+        "Unable to open \(url.relativePath): file is not readable or does not exist"
+      )
       return nil
     }
 
     guard
       let configuration = configuration(
         fromPathOrString: lintFormatOptions.configuration,
-        orInferredFromSwiftFileAt: url)
+        orInferredFromSwiftFileAt: url
+      )
     else {
       // Already diagnosed in the called method.
       return nil
@@ -237,7 +245,8 @@ class Frontend {
         // Fall through to the default return at the end of the function.
       } catch {
         diagnosticsEngine.emitError(
-          "Unable to read configuration for \(swiftFileURL.path): \(error.localizedDescription)")
+          "Unable to read configuration for \(swiftFileURL.path): \(error.localizedDescription)"
+        )
         return nil
       }
     } else {
@@ -253,7 +262,8 @@ class Frontend {
         }
       } catch {
         diagnosticsEngine.emitError(
-          "Unable to read configuration for \(cwd): \(error.localizedDescription)")
+          "Unable to read configuration for \(cwd): \(error.localizedDescription)"
+        )
         return nil
       }
     }

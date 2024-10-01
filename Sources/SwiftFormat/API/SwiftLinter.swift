@@ -67,7 +67,8 @@ public final class SwiftLinter {
     try lint(
       source: String(contentsOf: url, encoding: .utf8),
       assumingFileURL: url,
-      parsingDiagnosticHandler: parsingDiagnosticHandler)
+      parsingDiagnosticHandler: parsingDiagnosticHandler
+    )
   }
 
   /// Lints the given Swift source code.
@@ -97,9 +98,14 @@ public final class SwiftLinter {
       source: source,
       operatorTable: .standardOperators,
       assumingFileURL: url,
-      parsingDiagnosticHandler: parsingDiagnosticHandler)
+      parsingDiagnosticHandler: parsingDiagnosticHandler
+    )
     try lint(
-      syntax: sourceFile, operatorTable: .standardOperators, assumingFileURL: url, source: source)
+      syntax: sourceFile,
+      operatorTable: .standardOperators,
+      assumingFileURL: url,
+      source: source
+    )
   }
 
   /// Lints the given Swift syntax tree.
@@ -133,8 +139,14 @@ public final class SwiftLinter {
     source: String
   ) throws {
     let context = Context(
-      configuration: configuration, operatorTable: operatorTable, findingConsumer: findingConsumer,
-      fileURL: url, sourceFileSyntax: syntax, source: source, ruleNameCache: ruleNameCache)
+      configuration: configuration,
+      operatorTable: operatorTable,
+      findingConsumer: findingConsumer,
+      fileURL: url,
+      sourceFileSyntax: syntax,
+      source: source,
+      ruleNameCache: ruleNameCache
+    )
     let pipeline = LintPipeline(context: context)
     pipeline.walk(Syntax(syntax))
 
@@ -149,7 +161,8 @@ public final class SwiftLinter {
       source: source,
       node: Syntax(syntax),
       printTokenStream: debugOptions.contains(.dumpTokenStream),
-      whitespaceOnly: true)
+      whitespaceOnly: true
+    )
     let formatted = printer.prettyPrint()
     let ws = WhitespaceLinter(user: syntax.description, formatted: formatted, context: context)
     ws.lint()

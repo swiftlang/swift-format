@@ -35,7 +35,7 @@ final class WhitespaceLintTests: WhitespaceTestCase {
 
         """,
       findings: [
-        FindingSpec("1️⃣", message: "use spaces for spacing"),
+        FindingSpec("1️⃣", message: "use spaces for spacing")
       ]
     )
   }
