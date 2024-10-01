@@ -113,6 +113,14 @@ public struct FileIterator: Sequence, IteratorProtocol {
       guard let item = dirIterator?.nextObject() as? URL else {
         break
       }
+      #if os(Windows)
+      // Windows does not consider files and directories starting with `.` as hidden but we don't want to traverse 
+      // into eg. `.build`. Manually skip any items starting with `.`.
+      if item.lastPathComponent.hasPrefix(".") {
+        dirIterator?.skipDescendants()
+        continue
+      }
+      #endif
 
       guard item.lastPathComponent.hasSuffix(fileSuffix), let fileType = fileType(at: item) else {
         continue
