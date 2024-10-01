@@ -131,11 +131,7 @@ let package = Package(
         .product(name: "SwiftSyntax", package: "swift-syntax"),
         .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
       ]
-    ),
-    .testTarget(
-      name: "swift-formatTests",
-      dependencies: ["swift-format"]
-    ),
+    )
   ]
 )
 

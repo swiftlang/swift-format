@@ -14,7 +14,7 @@ import Foundation
 
 /// Iterator for looping over lists of files and directories. Directories are automatically
 /// traversed recursively, and we check for files with a ".swift" extension.
-@_spi(Testing)
+@_spi(Internal)
 public struct FileIterator: Sequence, IteratorProtocol {
 
   /// List of file and directory URLs to iterate over.

@@ -1,6 +1,6 @@
 import XCTest
 
-@_spi(Testing) import swift_format
+@_spi(Internal) import SwiftFormat
 
 final class FileIteratorTests: XCTestCase {
   private var tmpdir: URL!
