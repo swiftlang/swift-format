@@ -1,0 +1,4 @@
+[flake8]
+
+# Match the maximum line length in Swift files.
+max-line-length = 120
