@@ -31,7 +31,7 @@ The available cases are: `syntax`, `break`, `spaces`, `open`, `close`,
 `newlines`, `comment`, and `verbatim`. The behavior of each of them is
 described below with pseudocode examples.
 
-See: [`Token.swift`](../Sources/SwiftFormatPrettyPrint/Token.swift)
+See: [`Token.swift`](../Sources/SwiftFormat/PrettyPrint/Token.swift)
 
 #### Syntax
 
@@ -326,7 +326,7 @@ beginning of a source file).
 When we have visited all nodes in the AST, the array of printing tokens is then
 passed on to the *scan* phase of the pretty-printer.
 
-See: [`TokenStreamCreator.swift`](../Sources/SwiftFormatPrettyPrint/TokenStreamCreator.swift)
+See: [`TokenStreamCreator.swift`](../Sources/SwiftFormat/PrettyPrint/TokenStreamCreator.swift)
 
 ## Scan
 
@@ -346,7 +346,7 @@ After having iterated over the entire list of tokens and calculated their
 lengths, we then loop over the tokens and call `print` for each token with its
 corresponding length.
 
-See: [`PrettyPrint.swift:prettyPrint()`](../Sources/SwiftFormatPrettyPrint/PrettyPrint.swift)
+See: [`PrettyPrint.swift:prettyPrint()`](../Sources/SwiftFormat/PrettyPrint/PrettyPrint.swift)
 
 ### Syntax Tokens
 
@@ -421,7 +421,7 @@ The logic for the `print` function is fairly complex and varies depending on
 the kind of token or break being printed. Rather than explain it here, we
 recommend viewing its documented source directly.
 
-See: [`PrettyPrint.swift:printToken(...)`](../Sources/SwiftFormatPrettyPrint/PrettyPrint.swift)
+See: [`PrettyPrint.swift:printToken(...)`](../Sources/SwiftFormat/PrettyPrint/PrettyPrint.swift)
 
 ## Differences from Oppen's Algorithm
 
