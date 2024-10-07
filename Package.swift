@@ -14,123 +14,143 @@
 import Foundation
 import PackageDescription
 
+var products: [Product] = [
+  .executable(
+    name: "swift-format",
+    targets: ["swift-format"]
+  ),
+  .library(
+    name: "SwiftFormat",
+    targets: ["SwiftFormat"]
+  ),
+  .plugin(
+    name: "FormatPlugin",
+    targets: ["Format Source Code"]
+  ),
+  .plugin(
+    name: "LintPlugin",
+    targets: ["Lint Source Code"]
+  ),
+]
+
+var targets: [Target] = [
+  .target(
+    name: "_SwiftFormatInstructionCounter",
+    exclude: ["CMakeLists.txt"]
+  ),
+
+  .target(
+    name: "SwiftFormat",
+    dependencies: [
+      .product(name: "Markdown", package: "swift-markdown"),
+      .product(name: "SwiftSyntax", package: "swift-syntax"),
+      .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
+      .product(name: "SwiftOperators", package: "swift-syntax"),
+      .product(name: "SwiftParser", package: "swift-syntax"),
+      .product(name: "SwiftParserDiagnostics", package: "swift-syntax"),
+    ],
+    exclude: ["CMakeLists.txt"]
+  ),
+  .target(
+    name: "_SwiftFormatTestSupport",
+    dependencies: [
+      "SwiftFormat",
+      .product(name: "SwiftOperators", package: "swift-syntax"),
+    ]
+  ),
+  .plugin(
+    name: "Format Source Code",
+    capability: .command(
+      intent: .sourceCodeFormatting(),
+      permissions: [
+        .writeToPackageDirectory(reason: "This command formats the Swift source files")
+      ]
+    ),
+    dependencies: [
+      .target(name: "swift-format")
+    ],
+    path: "Plugins/FormatPlugin"
+  ),
+  .plugin(
+    name: "Lint Source Code",
+    capability: .command(
+      intent: .custom(
+        verb: "lint-source-code",
+        description: "Lint source code for a specified target."
+      )
+    ),
+    dependencies: [
+      .target(name: "swift-format")
+    ],
+    path: "Plugins/LintPlugin"
+  ),
+  .executableTarget(
+    name: "generate-swift-format",
+    dependencies: [
+      "SwiftFormat"
+    ]
+  ),
+  .executableTarget(
+    name: "swift-format",
+    dependencies: [
+      "_SwiftFormatInstructionCounter",
+      "SwiftFormat",
+      .product(name: "ArgumentParser", package: "swift-argument-parser"),
+      .product(name: "SwiftSyntax", package: "swift-syntax"),
+      .product(name: "SwiftParser", package: "swift-syntax"),
+    ],
+    exclude: ["CMakeLists.txt"],
+    linkerSettings: swiftformatLinkSettings
+  ),
+
+  .testTarget(
+    name: "SwiftFormatPerformanceTests",
+    dependencies: [
+      "SwiftFormat",
+      "_SwiftFormatTestSupport",
+      .product(name: "SwiftSyntax", package: "swift-syntax"),
+      .product(name: "SwiftParser", package: "swift-syntax"),
+    ]
+  ),
+  .testTarget(
+    name: "SwiftFormatTests",
+    dependencies: [
+      "SwiftFormat",
+      "_SwiftFormatTestSupport",
+      .product(name: "Markdown", package: "swift-markdown"),
+      .product(name: "SwiftOperators", package: "swift-syntax"),
+      .product(name: "SwiftParser", package: "swift-syntax"),
+      .product(name: "SwiftSyntax", package: "swift-syntax"),
+      .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
+    ]
+  ),
+]
+
+if buildOnlyTests {
+  products = []
+  targets = targets.compactMap { target in
+    guard target.isTest || target.name == "_SwiftFormatTestSupport" else {
+      return nil
+    }
+    target.dependencies = target.dependencies.filter { dependency in
+      if case .byNameItem(name: "_SwiftFormatTestSupport", _) = dependency {
+        return true
+      }
+      return false
+    }
+    return target
+  }
+}
+
 let package = Package(
   name: "swift-format",
   platforms: [
     .macOS("12.0"),
     .iOS("13.0"),
   ],
-  products: [
-    .executable(
-      name: "swift-format",
-      targets: ["swift-format"]
-    ),
-    .library(
-      name: "SwiftFormat",
-      targets: ["SwiftFormat"]
-    ),
-    .plugin(
-      name: "FormatPlugin",
-      targets: ["Format Source Code"]
-    ),
-    .plugin(
-      name: "LintPlugin",
-      targets: ["Lint Source Code"]
-    ),
-  ],
+  products: products,
   dependencies: dependencies,
-  targets: [
-    .target(
-      name: "_SwiftFormatInstructionCounter",
-      exclude: ["CMakeLists.txt"]
-    ),
-
-    .target(
-      name: "SwiftFormat",
-      dependencies: omittingExternalDependenciesIfNecessary([
-        .product(name: "Markdown", package: "swift-markdown"),
-        .product(name: "SwiftSyntax", package: "swift-syntax"),
-        .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
-        .product(name: "SwiftOperators", package: "swift-syntax"),
-        .product(name: "SwiftParser", package: "swift-syntax"),
-        .product(name: "SwiftParserDiagnostics", package: "swift-syntax"),
-      ]),
-      exclude: ["CMakeLists.txt"]
-    ),
-    .target(
-      name: "_SwiftFormatTestSupport",
-      dependencies: omittingExternalDependenciesIfNecessary([
-        "SwiftFormat",
-        .product(name: "SwiftOperators", package: "swift-syntax"),
-      ])
-    ),
-    .plugin(
-      name: "Format Source Code",
-      capability: .command(
-        intent: .sourceCodeFormatting(),
-        permissions: [
-          .writeToPackageDirectory(reason: "This command formats the Swift source files")
-        ]
-      ),
-      dependencies: [
-        .target(name: "swift-format")
-      ],
-      path: "Plugins/FormatPlugin"
-    ),
-    .plugin(
-      name: "Lint Source Code",
-      capability: .command(
-        intent: .custom(
-          verb: "lint-source-code",
-          description: "Lint source code for a specified target."
-        )
-      ),
-      dependencies: [
-        .target(name: "swift-format")
-      ],
-      path: "Plugins/LintPlugin"
-    ),
-    .executableTarget(
-      name: "generate-swift-format",
-      dependencies: [
-        "SwiftFormat"
-      ]
-    ),
-    .executableTarget(
-      name: "swift-format",
-      dependencies: omittingExternalDependenciesIfNecessary([
-        "_SwiftFormatInstructionCounter",
-        "SwiftFormat",
-        .product(name: "ArgumentParser", package: "swift-argument-parser"),
-        .product(name: "SwiftSyntax", package: "swift-syntax"),
-        .product(name: "SwiftParser", package: "swift-syntax"),
-      ]),
-      exclude: ["CMakeLists.txt"],
-      linkerSettings: swiftformatLinkSettings
-    ),
-
-    .testTarget(
-      name: "SwiftFormatPerformanceTests",
-      dependencies: omittingExternalDependenciesIfNecessary([
-        "SwiftFormat",
-        "_SwiftFormatTestSupport",
-        .product(name: "SwiftSyntax", package: "swift-syntax"),
-        .product(name: "SwiftParser", package: "swift-syntax"),
-      ])
-    ),
-    .testTarget(
-      name: "SwiftFormatTests",
-      dependencies: omittingExternalDependenciesIfNecessary([
-        "SwiftFormat",
-        "_SwiftFormatTestSupport",
-        .product(name: "Markdown", package: "swift-markdown"),
-        .product(name: "SwiftOperators", package: "swift-syntax"),
-        .product(name: "SwiftParser", package: "swift-syntax"),
-        .product(name: "SwiftSyntax", package: "swift-syntax"),
-        .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
-      ])
-    ),
-  ]
+  targets: targets
 )
 
 // MARK: - Parse build arguments
@@ -147,26 +167,17 @@ var installAction: Bool { hasEnvironmentVariable("SWIFTFORMAT_CI_INSTALL") }
 /// remote dependency.
 var useLocalDependencies: Bool { hasEnvironmentVariable("SWIFTCI_USE_LOCAL_DEPS") }
 
-var omitExternalDependencies: Bool { hasEnvironmentVariable("SWIFTFORMAT_OMIT_EXTERNAL_DEPENDENCIES") }
-
-func omittingExternalDependenciesIfNecessary(
-  _ dependencies: [Target.Dependency]
-) -> [Target.Dependency] {
-  guard omitExternalDependencies else {
-    return dependencies
-  }
-  return dependencies.filter { dependency in
-    if case .productItem(_, let package, _, _) = dependency {
-      return package == nil
-    }
-    return true
-  }
-}
+/// Build only tests targets and test support modules.
+///
+/// This is used to test swift-format on Windows, where the modules required for the `swift-format` executable are
+/// built using CMake. When using this setting, the caller is responsible for passing the required search paths to
+/// the `swift test` invocation so that all pre-built modules can be found.
+var buildOnlyTests: Bool { hasEnvironmentVariable("SWIFTFORMAT_BUILD_ONLY_TESTS") }
 
 // MARK: - Dependencies
 
 var dependencies: [Package.Dependency] {
-  if omitExternalDependencies {
+  if buildOnlyTests {
     return []
   } else if useLocalDependencies {
     return [
