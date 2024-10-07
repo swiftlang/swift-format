@@ -86,7 +86,9 @@ public final class NoEmptyLinesOpeningClosingBraces: SyntaxFormatRule {
       let (trimmedLeadingTrivia, count) = first.leadingTrivia.trimmingSuperfluousNewlines()
       if trimmedLeadingTrivia.sourceLength != first.leadingTriviaLength {
         diagnose(.removeEmptyLinesAfter(count), on: first, anchor: .leadingTrivia(0))
-        result[index] = first.with(\.leadingTrivia, trimmedLeadingTrivia)
+        var first = first
+        first.leadingTrivia = trimmedLeadingTrivia
+        result[index] = first
       }
     }
     return rewrite(result).as(C.self)!
