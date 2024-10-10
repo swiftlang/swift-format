@@ -425,17 +425,12 @@ public struct Configuration: Codable, Equatable {
       candidateDirectory.appendPathComponent("placeholder")
     }
     repeat {
-      let previousDirectory = candidateDirectory
       candidateDirectory.deleteLastPathComponent()
-      // if deleting a path component resulted in no change, terminate the loop
-      if candidateDirectory == previousDirectory {
-        break
-      }
       let candidateFile = candidateDirectory.appendingPathComponent(".swift-format")
       if FileManager.default.isReadableFile(atPath: candidateFile.path) {
         return candidateFile
       }
-    } while true
+    } while !candidateDirectory.isRoot
 
     return nil
   }
@@ -476,4 +471,16 @@ public struct NoAssignmentInExpressionsConfiguration: Codable, Equatable {
   ]
 
   public init() {}
+}
+
+fileprivate extension URL {
+  var isRoot: Bool {
+    #if os(Windows)
+    // FIXME: We should call into Windows' native check to check if this path is a root once https://github.com/swiftlang/swift-foundation/issues/976 is fixed.
+    // https://github.com/swiftlang/swift-format/issues/844
+    return self.pathComponents.count == 1
+    #else
+    return self.path == "/"
+    #endif
+  }
 }
