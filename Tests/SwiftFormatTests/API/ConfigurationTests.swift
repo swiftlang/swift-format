@@ -26,4 +26,21 @@ final class ConfigurationTests: XCTestCase {
     #endif
     XCTAssertNil(Configuration.url(forConfigurationFileApplyingTo: URL(fileURLWithPath: path)))
   }
+
+  func testMissingConfigurationFileInSubdirectory() {
+    #if os(Windows)
+    let path = #"C:\whatever\test.swift"#
+    #else
+    let path = "/whatever/test.swift"
+    #endif
+    XCTAssertNil(Configuration.url(forConfigurationFileApplyingTo: URL(fileURLWithPath: path)))
+  }
+
+  func testMissingConfigurationFileMountedDirectory() throws {
+    #if !os(Windows)
+    try XCTSkipIf(true, #"\\ file mounts are only a concept on Windows"#)
+    #endif
+    let path = #"\\mount\test.swift"#
+    XCTAssertNil(Configuration.url(forConfigurationFileApplyingTo: URL(fileURLWithPath: path)))
+  }
 }

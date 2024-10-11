@@ -480,7 +480,9 @@ fileprivate extension URL {
     // https://github.com/swiftlang/swift-format/issues/844
     return self.pathComponents.count == 1
     #else
-    return self.path == "/"
+    // On Linux, we may end up with an string for the path due to https://github.com/swiftlang/swift-foundation/issues/980
+    // TODO: Remove the check for "" once https://github.com/swiftlang/swift-foundation/issues/980 is fixed.
+    return self.path == "/" || self.path == ""
     #endif
   }
 }
