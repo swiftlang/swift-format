@@ -328,7 +328,7 @@ public struct Configuration: Codable, Equatable {
       if FileManager.default.isReadableFile(atPath: candidateFile.path) {
         return candidateFile
       }
-    } while candidateDirectory.path != "/"
+    } while !candidateDirectory.isRoot
 
     return nil
   }
@@ -369,4 +369,18 @@ public struct NoAssignmentInExpressionsConfiguration: Codable, Equatable {
   ]
 
   public init() {}
+}
+
+fileprivate extension URL {
+  var isRoot: Bool {
+    #if os(Windows)
+    // FIXME: We should call into Windows' native check to check if this path is a root once https://github.com/swiftlang/swift-foundation/issues/976 is fixed.
+    // https://github.com/swiftlang/swift-format/issues/844
+    return self.pathComponents.count == 1
+    #else
+    // On Linux, we may end up with an string for the path due to https://github.com/swiftlang/swift-foundation/issues/980
+    // TODO: Remove the check for "" once https://github.com/swiftlang/swift-foundation/issues/980 is fixed.
+    return self.path == "/" || self.path == ""
+    #endif
+  }
 }
