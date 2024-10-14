@@ -42,21 +42,21 @@ var targets: [Target] = [
   .target(
     name: "SwiftFormat",
     dependencies: [
-      .product(name: "Markdown", package: "swift-markdown"),
-      .product(name: "SwiftSyntax", package: "swift-syntax"),
-      .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
-      .product(name: "SwiftOperators", package: "swift-syntax"),
-      .product(name: "SwiftParser", package: "swift-syntax"),
-      .product(name: "SwiftParserDiagnostics", package: "swift-syntax"),
-    ],
+      .product(name: "Markdown", package: "swift-markdown")
+    ]
+      + swiftSyntaxDependencies([
+        "SwiftOperators", "SwiftParser", "SwiftParserDiagnostics", "SwiftSyntax", "SwiftSyntaxBuilder",
+      ]),
     exclude: ["CMakeLists.txt"]
   ),
   .target(
     name: "_SwiftFormatTestSupport",
     dependencies: [
-      "SwiftFormat",
-      .product(name: "SwiftOperators", package: "swift-syntax"),
+      "SwiftFormat"
     ]
+      + swiftSyntaxDependencies([
+        "SwiftOperators", "SwiftParser", "SwiftParserDiagnostics", "SwiftSyntax", "SwiftSyntaxBuilder",
+      ])
   ),
   .plugin(
     name: "Format Source Code",
@@ -98,7 +98,7 @@ var targets: [Target] = [
       .product(name: "ArgumentParser", package: "swift-argument-parser"),
       .product(name: "SwiftSyntax", package: "swift-syntax"),
       .product(name: "SwiftParser", package: "swift-syntax"),
-    ],
+    ] + swiftSyntaxDependencies(["SwiftParser", "SwiftSyntax"]),
     exclude: ["CMakeLists.txt"],
     linkerSettings: swiftformatLinkSettings
   ),
@@ -110,7 +110,7 @@ var targets: [Target] = [
       "_SwiftFormatTestSupport",
       .product(name: "SwiftSyntax", package: "swift-syntax"),
       .product(name: "SwiftParser", package: "swift-syntax"),
-    ]
+    ] + swiftSyntaxDependencies(["SwiftParser", "SwiftSyntax"])
   ),
   .testTarget(
     name: "SwiftFormatTests",
@@ -153,6 +153,14 @@ let package = Package(
   targets: targets
 )
 
+func swiftSyntaxDependencies(_ names: [String]) -> [Target.Dependency] {
+  if buildDynamicSwiftSyntaxLibrary {
+    return [.product(name: "_SwiftSyntaxDynamic", package: "swift-syntax")]
+  } else {
+    return names.map { .product(name: $0, package: "swift-syntax") }
+  }
+}
+
 // MARK: - Parse build arguments
 
 func hasEnvironmentVariable(_ name: String) -> Bool {
@@ -173,6 +181,15 @@ var useLocalDependencies: Bool { hasEnvironmentVariable("SWIFTCI_USE_LOCAL_DEPS"
 /// built using CMake. When using this setting, the caller is responsible for passing the required search paths to
 /// the `swift test` invocation so that all pre-built modules can be found.
 var buildOnlyTests: Bool { hasEnvironmentVariable("SWIFTFORMAT_BUILD_ONLY_TESTS") }
+
+/// Whether swift-syntax is being built as a single dynamic library instead of as a separate library per module.
+///
+/// This means that the swift-syntax symbols don't need to be statically linked, which alles us to stay below the
+/// maximum number of exported symbols on Windows, in turn allowing us to build sourcekit-lsp using SwiftPM on Windows
+/// and run its tests.
+var buildDynamicSwiftSyntaxLibrary: Bool {
+  hasEnvironmentVariable("SWIFTSYNTAX_BUILD_DYNAMIC_LIBRARY")
+}
 
 // MARK: - Dependencies
 
