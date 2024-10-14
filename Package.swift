@@ -96,8 +96,6 @@ var targets: [Target] = [
       "_SwiftFormatInstructionCounter",
       "SwiftFormat",
       .product(name: "ArgumentParser", package: "swift-argument-parser"),
-      .product(name: "SwiftSyntax", package: "swift-syntax"),
-      .product(name: "SwiftParser", package: "swift-syntax"),
     ] + swiftSyntaxDependencies(["SwiftParser", "SwiftSyntax"]),
     exclude: ["CMakeLists.txt"],
     linkerSettings: swiftformatLinkSettings
@@ -108,8 +106,6 @@ var targets: [Target] = [
     dependencies: [
       "SwiftFormat",
       "_SwiftFormatTestSupport",
-      .product(name: "SwiftSyntax", package: "swift-syntax"),
-      .product(name: "SwiftParser", package: "swift-syntax"),
     ] + swiftSyntaxDependencies(["SwiftParser", "SwiftSyntax"])
   ),
   .testTarget(
@@ -118,11 +114,7 @@ var targets: [Target] = [
       "SwiftFormat",
       "_SwiftFormatTestSupport",
       .product(name: "Markdown", package: "swift-markdown"),
-      .product(name: "SwiftOperators", package: "swift-syntax"),
-      .product(name: "SwiftParser", package: "swift-syntax"),
-      .product(name: "SwiftSyntax", package: "swift-syntax"),
-      .product(name: "SwiftSyntaxBuilder", package: "swift-syntax"),
-    ]
+    ] + swiftSyntaxDependencies(["SwiftOperators", "SwiftParser", "SwiftSyntax", "SwiftSyntaxBuilder"])
   ),
 ]
 
