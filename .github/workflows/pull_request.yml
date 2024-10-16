@@ -6,7 +6,7 @@ on:
 
 jobs:
   tests:
-    name: Test
+    name: Test test
     uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@windows-support
   soundness:
     name: Soundness
