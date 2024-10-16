@@ -135,7 +135,7 @@ public struct FileIterator: Sequence, IteratorProtocol {
         else {
           break
         }
-        path = URL(fileURLWithPath: destination, isDirectory: false, relativeTo: item).path
+        path = URL(fileURLWithPath: destination, relativeTo: item).path
         fallthrough
 
       case .typeRegular:
