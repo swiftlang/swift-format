@@ -24,14 +24,20 @@ final class FileIteratorTests: XCTestCase {
     try FileManager.default.removeItem(at: tmpdir)
   }
 
-  func testNoFollowSymlinks() {
+  func testNoFollowSymlinks() throws {
+    #if os(Windows) && compiler(<5.10)
+    try XCTSkipIf(true, "Foundation does not follow symlinks on Windows")
+    #endif
     let seen = allFilesSeen(iteratingOver: [tmpdir], followSymlinks: false)
     XCTAssertEqual(seen.count, 2)
     XCTAssertTrue(seen.contains { $0.hasSuffix("project/real1.swift") })
     XCTAssertTrue(seen.contains { $0.hasSuffix("project/real2.swift") })
   }
 
-  func testFollowSymlinks() {
+  func testFollowSymlinks() throws {
+    #if os(Windows) && compiler(<5.10)
+    try XCTSkipIf(true, "Foundation does not follow symlinks on Windows")
+    #endif
     let seen = allFilesSeen(iteratingOver: [tmpdir], followSymlinks: true)
     XCTAssertEqual(seen.count, 3)
     XCTAssertTrue(seen.contains { $0.hasSuffix("project/real1.swift") })
@@ -40,7 +46,10 @@ final class FileIteratorTests: XCTestCase {
     XCTAssertTrue(seen.contains { $0.hasSuffix("project/.hidden.swift") })
   }
 
-  func testTraversesHiddenFilesIfExplicitlySpecified() {
+  func testTraversesHiddenFilesIfExplicitlySpecified() throws {
+    #if os(Windows) && compiler(<5.10)
+    try XCTSkipIf(true, "Foundation does not follow symlinks on Windows")
+    #endif
     let seen = allFilesSeen(
       iteratingOver: [tmpURL("project/.build"), tmpURL("project/.hidden.swift")],
       followSymlinks: false

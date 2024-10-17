@@ -55,7 +55,7 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
       syntax: sourceFileSyntax,
       source: unmarkedSource,
       operatorTable: OperatorTable.standardOperators,
-      assumingFileURL: URL(string: file.description)!
+      assumingFileURL: URL(fileURLWithPath: file.description)
     )
 
     // Check that pipeline produces the expected findings
