@@ -97,12 +97,12 @@ public struct FileIterator: Sequence, IteratorProtocol {
           output = next
         }
       }
-      if let out = output, visited.contains(out.absoluteURL.standardized.standardizedFileURL.path) {
+      if let out = output, visited.contains(out.standardizedFileURL.path) {
         output = nil
       }
     }
     if let out = output {
-      visited.insert(out.absoluteURL.standardized.standardizedFileURL.path)
+      visited.insert(out.standardizedFileURL.path)
     }
     return output
   }
