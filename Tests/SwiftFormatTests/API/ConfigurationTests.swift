@@ -18,8 +18,11 @@ final class ConfigurationTests: XCTestCase {
     XCTAssertEqual(defaultInitConfig, emptyJSONConfig)
   }
 
-  func testMissingConfigurationFile() {
+  func testMissingConfigurationFile() throws {
     #if os(Windows)
+    #if compiler(<6.0.2)
+    try XCTSkipIf(true, "Requires https://github.com/swiftlang/swift-foundation/pull/983")
+    #endif
     let path = #"C:\test.swift"#
     #else
     let path = "/test.swift"
@@ -27,8 +30,11 @@ final class ConfigurationTests: XCTestCase {
     XCTAssertNil(Configuration.url(forConfigurationFileApplyingTo: URL(fileURLWithPath: path)))
   }
 
-  func testMissingConfigurationFileInSubdirectory() {
+  func testMissingConfigurationFileInSubdirectory() throws {
     #if os(Windows)
+    #if compiler(<6.0.2)
+    try XCTSkipIf(true, "Requires https://github.com/swiftlang/swift-foundation/pull/983")
+    #endif
     let path = #"C:\whatever\test.swift"#
     #else
     let path = "/whatever/test.swift"
@@ -37,7 +43,11 @@ final class ConfigurationTests: XCTestCase {
   }
 
   func testMissingConfigurationFileMountedDirectory() throws {
-    #if !os(Windows)
+    #if os(Windows)
+    #if compiler(<6.0.2)
+    try XCTSkipIf(true, "Requires https://github.com/swiftlang/swift-foundation/pull/983")
+    #endif
+    #else
     try XCTSkipIf(true, #"\\ file mounts are only a concept on Windows"#)
     #endif
     let path = #"\\mount\test.swift"#
