@@ -18,6 +18,7 @@ final class FileIteratorTests: XCTestCase {
     try touch("project/.hidden.swift")
     try touch("project/.build/generated.swift")
     try symlink("project/link.swift", to: "project/.hidden.swift")
+    try symlink("project/rellink.swift", relativeTo: ".hidden.swift")
   }
 
   override func tearDownWithError() throws {
@@ -64,7 +65,10 @@ final class FileIteratorTests: XCTestCase {
     // passed to the iterator. This is meant to avoid situations where a symlink could be hidden by
     // shell expansion; for example, if the user writes `swift-format --no-follow-symlinks *`, if
     // the current directory contains a symlink, they would probably *not* expect it to be followed.
-    let seen = allFilesSeen(iteratingOver: [tmpURL("project/link.swift")], followSymlinks: false)
+    let seen = allFilesSeen(
+      iteratingOver: [tmpURL("project/link.swift"), tmpURL("project/rellink.swift")],
+      followSymlinks: false
+    )
     XCTAssertTrue(seen.isEmpty)
   }
 }
@@ -90,11 +94,19 @@ extension FileIteratorTests {
     }
   }
 
-  /// Create a symlink between files or directories in the test's temporary space.
+  /// Create a absolute symlink between files or directories in the test's temporary space.
   private func symlink(_ source: String, to target: String) throws {
     try FileManager.default.createSymbolicLink(
       at: tmpURL(source),
       withDestinationURL: tmpURL(target)
+    )
+  }
+
+  /// Create a relative symlink between files or directories in the test's temporary space.
+  private func symlink(_ source: String, relativeTo target: String) throws {
+    try FileManager.default.createSymbolicLink(
+      atPath: tmpURL(source).path,
+      withDestinationPath: target
     )
   }
 
