@@ -557,4 +557,19 @@ final class IfConfigTests: PrettyPrintTestCase {
     configuration.indentConditionalCompilationBlocks = false
     assertPrettyPrintEqual(input: input, expected: input, linelength: 45, configuration: configuration)
   }
+
+  func testIfConfigDeclPartOfImport() {
+    let input =
+      """
+      #if os(Foo)
+      @_spiOnly
+      #endif
+      @_spi(Foo) import Foundation
+      
+      """
+    var configuration = Configuration.forTesting
+    configuration.indentConditionalCompilationBlocks = false
+    assertPrettyPrintEqual(input: input, expected: input, linelength: 80, configuration: configuration)
+
+  }
 }
