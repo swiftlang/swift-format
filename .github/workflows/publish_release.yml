@@ -90,10 +90,14 @@ jobs:
             git format-patch "$BASE_COMMIT"..HEAD --stdout
             echo EOF
           } >> "$GITHUB_OUTPUT"
-  test_debug:
-    name: Test in Debug configuration
-    uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@windows-pre-build
+  test:
+    name: Test in ${{ matrix.release && 'Release' || 'Debug' }} configuration
+    uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@main
     needs: create_release_commits
+    strategy:
+      fail-fast: false
+      matrix:
+        release: [true, false]
     with:
       linux_pre_build_command: |
         git config --global --add safe.directory "$(realpath .)"
@@ -112,36 +116,12 @@ jobs:
         # fatal: empty ident name (for <>) not allowed
         cmd /c "type $env:TEMP\patch.diff | git am || (exit /b 1)"
       # We require that releases of swift-format build without warnings
-      linux_build_command: swift test -Xswiftc -warnings-as-errors
-      windows_build_command: swift test -Xswiftc -warnings-as-errors
-  test_release:
-    name: Test in Release configuration
-    uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@windows-pre-build
-    needs: create_release_commits
-    with:
-      linux_pre_build_command: |
-        git config --global --add safe.directory "$(realpath .)"
-        git config --local user.name 'swift-ci'
-        git config --local user.email 'swift-ci@users.noreply.github.com'
-        git am << EOF
-        ${{ needs.create_release_commits.outputs.release_commit_patch }}
-        EOF
-      windows_pre_build_command: |
-        git config --local user.name "swift-ci"
-        git config --local user.email "swift-ci@users.noreply.github.com"
-        echo @"
-        ${{ needs.create_release_commits.outputs.release_commit_patch }}
-        "@ > $env:TEMP\patch.diff
-        # For some reason `git am` fails in Powershell with the following error. Executing it in cmd works...
-        # fatal: empty ident name (for <>) not allowed
-        cmd /c "type $env:TEMP\patch.diff | git am || (exit /b 1)"
-      # We require that releases of swift-format build without warnings
-      linux_build_command: swift test -Xswiftc -warnings-as-errors
-      windows_build_command: swift test -Xswiftc -warnings-as-errors
+      linux_build_command: swift test -Xswiftc -warnings-as-errors ${{ matrix.release && '-c release' }}
+      windows_build_command: swift test -Xswiftc -warnings-as-errors ${{ matrix.release && '-c release' }}
   create_tag:
     name: Create Tag
     runs-on: ubuntu-latest
-    needs: [check_triggering_actor, test_debug, create_release_commits]
+    needs: [check_triggering_actor, test, create_release_commits]
     permissions:
       contents: write
     steps:
