@@ -47,24 +47,28 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 
     switch node.name.text {
     case "Array":
-      guard let typeArgument = genericArgumentList.firstAndOnly else {
+      guard let argument = genericArgumentList.firstAndOnly,
+            case .type(let typeArgument) = argument else {
         newNode = nil
         break
       }
+
       newNode = shorthandArrayType(
-        element: typeArgument.argument,
+        element: typeArgument,
         leadingTrivia: leadingTrivia,
         trailingTrivia: trailingTrivia
       )
 
     case "Dictionary":
-      guard let typeArguments = exactlyTwoChildren(of: genericArgumentList) else {
+      guard let arguments = exactlyTwoChildren(of: genericArgumentList),
+            case .type(let type0Argument) = arguments.0.argument,
+            caes .type(let type1Argument) = arguments.1.argument else {
         newNode = nil
         break
       }
       newNode = shorthandDictionaryType(
-        key: typeArguments.0.argument,
-        value: typeArguments.1.argument,
+        key: type0Argument,
+        value: type1Argument,
         leadingTrivia: leadingTrivia,
         trailingTrivia: trailingTrivia
       )
@@ -74,12 +78,13 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         newNode = nil
         break
       }
-      guard let typeArgument = genericArgumentList.firstAndOnly else {
+      guard let argument = genericArgumentList.firstAndOnly,
+            case .type(let typeArgument) = argument else {
         newNode = nil
         break
       }
       newNode = shorthandOptionalType(
-        wrapping: typeArgument.argument,
+        wrapping: typeArgument,
         leadingTrivia: leadingTrivia,
         trailingTrivia: trailingTrivia
       )
@@ -137,25 +142,28 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 
     switch expression.baseName.text {
     case "Array":
-      guard let typeArgument = genericArgumentList.firstAndOnly else {
+      guard let argument = genericArgumentList.firstAndOnly,
+            case .type(let typeArgument) = argument else {
         newNode = nil
         break
       }
       let arrayTypeExpr = makeArrayTypeExpression(
-        elementType: typeArgument.argument,
+        elementType: typeArgument,
         leftSquare: TokenSyntax.leftSquareToken(leadingTrivia: leadingTrivia),
         rightSquare: TokenSyntax.rightSquareToken(trailingTrivia: trailingTrivia)
       )
       newNode = ExprSyntax(arrayTypeExpr)
 
     case "Dictionary":
-      guard let typeArguments = exactlyTwoChildren(of: genericArgumentList) else {
+      guard let arguments = exactlyTwoChildren(of: genericArgumentList),
+            case .type(let type0Argument) = arguments.0.argument,
+            case .type(let type1Argument) = arguments.1.argument else {
         newNode = nil
         break
       }
       let dictTypeExpr = makeDictionaryTypeExpression(
-        keyType: typeArguments.0.argument,
-        valueType: typeArguments.1.argument,
+        keyType: type0Argument,
+        valueType: type1Argument,
         leftSquare: TokenSyntax.leftSquareToken(leadingTrivia: leadingTrivia),
         colon: TokenSyntax.colonToken(trailingTrivia: .spaces(1)),
         rightSquare: TokenSyntax.rightSquareToken(trailingTrivia: trailingTrivia)
@@ -163,12 +171,13 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       newNode = ExprSyntax(dictTypeExpr)
 
     case "Optional":
-      guard let typeArgument = genericArgumentList.firstAndOnly else {
+      guard let argument = genericArgumentList.firstAndOnly,
+            case .type(let typeArgument) = argument else {
         newNode = nil
         break
       }
       let optionalTypeExpr = makeOptionalTypeExpression(
-        wrapping: typeArgument.argument,
+        wrapping: typeArgument,
         leadingTrivia: leadingTrivia,
         questionMark: TokenSyntax.postfixQuestionMarkToken(trailingTrivia: trailingTrivia)
       )
