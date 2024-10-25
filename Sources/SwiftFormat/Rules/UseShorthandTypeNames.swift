@@ -47,12 +47,10 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 
     switch node.name.text {
     case "Array":
-      guard let argument = genericArgumentList.firstAndOnly,
-            case .type(let typeArgument) = argument else {
+      guard case .type(let typeArgument) = genericArgumentList.firstAndOnly else {
         newNode = nil
         break
       }
-
       newNode = shorthandArrayType(
         element: typeArgument,
         leadingTrivia: leadingTrivia,
@@ -60,9 +58,8 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       )
 
     case "Dictionary":
-      guard let arguments = exactlyTwoChildren(of: genericArgumentList),
-            case .type(let type0Argument) = arguments.0.argument,
-            caes .type(let type1Argument) = arguments.1.argument else {
+      guard case (.type(let type0Argument), .type(let type1Argument)) = exactlyTwoChildren(of: genericArgumentList)
+      else {
         newNode = nil
         break
       }
@@ -78,8 +75,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         newNode = nil
         break
       }
-      guard let argument = genericArgumentList.firstAndOnly,
-            case .type(let typeArgument) = argument else {
+      guard case .type(let typeArgument) = genericArgumentList.firstAndOnly else {
         newNode = nil
         break
       }
@@ -142,8 +138,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 
     switch expression.baseName.text {
     case "Array":
-      guard let argument = genericArgumentList.firstAndOnly,
-            case .type(let typeArgument) = argument else {
+      guard case .type(let typeArgument) = genericArgumentList.firstAndOnly else {
         newNode = nil
         break
       }
@@ -155,9 +150,8 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       newNode = ExprSyntax(arrayTypeExpr)
 
     case "Dictionary":
-      guard let arguments = exactlyTwoChildren(of: genericArgumentList),
-            case .type(let type0Argument) = arguments.0.argument,
-            case .type(let type1Argument) = arguments.1.argument else {
+      guard case (.type(let type0Argument), .type(let type1Argument)) = exactlyTwoChildren(of: genericArgumentList)
+      else {
         newNode = nil
         break
       }
@@ -171,8 +165,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       newNode = ExprSyntax(dictTypeExpr)
 
     case "Optional":
-      guard let argument = genericArgumentList.firstAndOnly,
-            case .type(let typeArgument) = argument else {
+      guard case .type(let typeArgument) = genericArgumentList.firstAndOnly else {
         newNode = nil
         break
       }
