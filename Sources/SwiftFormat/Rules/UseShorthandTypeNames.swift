@@ -47,7 +47,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 
     switch node.name.text {
     case "Array":
-      guard case .type(let typeArgument) = genericArgumentList.firstAndOnly.argument else {
+      guard case .type(let typeArgument) = genericArgumentList.firstAndOnly?.argument else {
         newNode = nil
         break
       }
@@ -76,7 +76,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         newNode = nil
         break
       }
-      guard case .type(let typeArgument) = genericArgumentList.firstAndOnly.argument else {
+      guard case .type(let typeArgument) = genericArgumentList.firstAndOnly?.argument else {
         newNode = nil
         break
       }
@@ -139,7 +139,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 
     switch expression.baseName.text {
     case "Array":
-      guard case .type(let typeArgument) = genericArgumentList.firstAndOnly.argument else {
+      guard case .type(let typeArgument) = genericArgumentList.firstAndOnly?.argument else {
         newNode = nil
         break
       }
@@ -167,7 +167,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       newNode = ExprSyntax(dictTypeExpr)
 
     case "Optional":
-      guard case .type(let typeArgument) = genericArgumentList.firstAndOnly.argument else {
+      guard case .type(let typeArgument) = genericArgumentList.firstAndOnly?.argument else {
         newNode = nil
         break
       }
