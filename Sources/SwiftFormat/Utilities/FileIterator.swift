@@ -21,10 +21,10 @@ import WinSDK
 @_spi(Internal)
 public struct FileIterator: Sequence, IteratorProtocol {
 
-  /// Name of the suppression file to look for.
+  /// Name of the ignore file to look for.
   /// The presence of this file in a directory will cause the formatter
   /// to skip formatting files in that directory and its subdirectories.
-  private static let suppressionFileName = ".swift-format-ignore"
+  fileprivate static let ignoreFileName = ".swift-format-ignore"
 
   /// List of file and directory URLs to iterate over.
   private let urls: [URL]
@@ -62,7 +62,7 @@ public struct FileIterator: Sequence, IteratorProtocol {
   ///   - workingDirectory: `URL` that indicates the current working directory. Used for testing.
   public init(urls: [URL], followSymlinks: Bool, workingDirectory: URL = URL(fileURLWithPath: ".")) {
     self.workingDirectory = workingDirectory
-    self.urls = urls
+    self.urls = urls.filter(inputShouldBeProcessed(at:))
     self.urlIterator = self.urls.makeIterator()
     self.followSymlinks = followSymlinks
   }
@@ -97,8 +97,8 @@ public struct FileIterator: Sequence, IteratorProtocol {
           fallthrough
 
         case .typeDirectory:
-          let suppressionFile = next.appendingPathComponent(Self.suppressionFileName)
-          if FileManager.default.fileExists(atPath: suppressionFile.path) {
+          let ignoreFile = next.appendingPathComponent(Self.ignoreFileName)
+          if FileManager.default.fileExists(atPath: ignoreFile.path) {
             continue
           }
 
@@ -188,4 +188,38 @@ private func fileType(at url: URL) -> FileAttributeType? {
   // We cannot use `URL.resourceValues(forKeys:)` here because it appears to behave incorrectly on
   // Linux.
   return try? FileManager.default.attributesOfItem(atPath: url.path)[.type] as? FileAttributeType
+}
+
+/// Returns true if the file should be processed.
+/// Directories are always processed.
+/// Other files are processed if there is not a 
+/// ignore file in the containing directory or any of its parents.
+private func inputShouldBeProcessed(at url: URL) -> Bool {
+  guard fileType(at: url) != .typeDirectory else {
+    return true
+  }
+      
+  var containingDirectory = url.absoluteURL.standardized.deletingLastPathComponent()
+  repeat {
+    containingDirectory.deleteLastPathComponent()
+    let candidateFile = containingDirectory.appendingPathComponent(FileIterator.ignoreFileName)
+    if FileManager.default.isReadableFile(atPath: candidateFile.path) {
+      return false
+    }
+  } while !containingDirectory.isRoot
+  return true
+}
+
+fileprivate extension URL {
+  var isRoot: Bool {
+    #if os(Windows)
+    // FIXME: We should call into Windows' native check to check if this path is a root once https://github.com/swiftlang/swift-foundation/issues/976 is fixed.
+    // https://github.com/swiftlang/swift-format/issues/844
+    return self.pathComponents.count <= 1
+    #else
+    // On Linux, we may end up with an string for the path due to https://github.com/swiftlang/swift-foundation/issues/980
+    // TODO: Remove the check for "" once https://github.com/swiftlang/swift-foundation/issues/980 is fixed.
+    return self.path == "/" || self.path == ""
+    #endif
+  }
 }
