@@ -99,6 +99,11 @@ public final class SwiftLinter {
     // also does not touch an empty file even if the setting to add trailing newlines is enabled.)
     guard !source.isEmpty else { return }
 
+    // If allDisabled is set, do nothing.
+    guard !configuration.allDisabled else {
+      return
+    }
+    
     let sourceFile = try parseAndEmitDiagnostics(
       source: source,
       operatorTable: .standardOperators,
