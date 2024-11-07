@@ -97,7 +97,8 @@ public final class SwiftLinter {
     // If the file or input string is completely empty, do nothing. This prevents even a trailing
     // newline from being diagnosed for an empty file. (This is consistent with clang-format, which
     // also does not touch an empty file even if the setting to add trailing newlines is enabled.)
-    guard !source.isEmpty else { return }    
+    guard !source.isEmpty else { return }
+
     let sourceFile = try parseAndEmitDiagnostics(
       source: source,
       operatorTable: .standardOperators,
