@@ -98,11 +98,6 @@ public final class SwiftLinter {
     // newline from being diagnosed for an empty file. (This is consistent with clang-format, which
     // also does not touch an empty file even if the setting to add trailing newlines is enabled.)
     guard !source.isEmpty else { return }
-
-    // If skipAll is set, do nothing.
-    guard !configuration.skipAll else {
-      return
-    }
     
     let sourceFile = try parseAndEmitDiagnostics(
       source: source,

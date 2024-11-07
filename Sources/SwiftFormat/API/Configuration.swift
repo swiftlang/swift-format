@@ -24,19 +24,9 @@ internal let highestSupportedConfigurationVersion = 1
 /// Holds the complete set of configured values and defaults.
 public struct Configuration: Codable, Equatable {
 
-  /// Name of the configuration file to look for.
-  /// The presence of this file in a directory will cause the formatter
-  /// to use the configuration specified in that file.
-  private static let configurationFileName = ".swift-format"
-
-  /// Name of the suppression file to look for.
-  /// The presence of this file in a directory will cause the formatter
-  /// to skip formatting files in that directory and its subdirectories.
-  private static let suppressionFileName = ".swift-format-ignore"
 
   private enum CodingKeys: CodingKey {
     case version
-    case skipAll
     case maximumBlankLines
     case lineLength
     case spacesBeforeEndOfLineComments
@@ -70,9 +60,6 @@ public struct Configuration: Codable, Equatable {
   private var version: Int = highestSupportedConfigurationVersion
 
   /// MARK: Common configuration
-
-  /// Is all formatting disbled?
-  public var skipAll = false
 
   /// The dictionary containing the rule names that we wish to run on. A rule is not used if it is
   /// marked as `false`, or if it is missing from the dictionary.
@@ -284,13 +271,6 @@ public struct Configuration: Codable, Equatable {
 
   /// Creates a new `Configuration` by loading it from a configuration file.
   public init(contentsOf url: URL) throws {
-    if url.lastPathComponent == Self.suppressionFileName {
-      var config = Configuration()
-      config.skipAll = true
-      self = config
-      return
-    }
-
     let data = try Data(contentsOf: url)
     try self.init(data: data)
   }
@@ -324,9 +304,6 @@ public struct Configuration: Codable, Equatable {
     // default-initialized instance.
     let defaults = Configuration()
 
-    self.skipAll = 
-      try container.decodeIfPresent(Bool.self, forKey: .skipAll) 
-      ?? false
     self.maximumBlankLines =
       try container.decodeIfPresent(Int.self, forKey: .maximumBlankLines)
       ?? defaults.maximumBlankLines
@@ -420,7 +397,6 @@ public struct Configuration: Codable, Equatable {
     var container = encoder.container(keyedBy: CodingKeys.self)
 
     try container.encode(version, forKey: .version)
-    try container.encode(skipAll, forKey: .skipAll)
     try container.encode(maximumBlankLines, forKey: .maximumBlankLines)
     try container.encode(lineLength, forKey: .lineLength)
     try container.encode(spacesBeforeEndOfLineComments, forKey: .spacesBeforeEndOfLineComments)
@@ -465,11 +441,7 @@ public struct Configuration: Codable, Equatable {
     }
     repeat {
       candidateDirectory.deleteLastPathComponent()
-      let suppressingFile = candidateDirectory.appendingPathComponent(Self.suppressionFileName)
-      if FileManager.default.isReadableFile(atPath: suppressingFile.path) {
-        return suppressingFile
-      }
-      let candidateFile = candidateDirectory.appendingPathComponent(Self.configurationFileName)
+      let candidateFile = candidateDirectory.appendingPathComponent(".swift-format")
       if FileManager.default.isReadableFile(atPath: candidateFile.path) {
         return candidateFile
       }

@@ -21,6 +21,11 @@ import WinSDK
 @_spi(Internal)
 public struct FileIterator: Sequence, IteratorProtocol {
 
+  /// Name of the suppression file to look for.
+  /// The presence of this file in a directory will cause the formatter
+  /// to skip formatting files in that directory and its subdirectories.
+  private static let suppressionFileName = ".swift-format-ignore"
+
   /// List of file and directory URLs to iterate over.
   private let urls: [URL]
 
@@ -92,6 +97,11 @@ public struct FileIterator: Sequence, IteratorProtocol {
           fallthrough
 
         case .typeDirectory:
+          let suppressionFile = next.appendingPathComponent(Self.suppressionFileName)
+          if FileManager.default.fileExists(atPath: suppressionFile.path) {
+            continue
+          }
+
           dirIterator = FileManager.default.enumerator(
             at: next,
             includingPropertiesForKeys: nil,

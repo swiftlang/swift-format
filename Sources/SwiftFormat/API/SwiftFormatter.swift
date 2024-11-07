@@ -111,12 +111,6 @@ public final class SwiftFormatter {
     // also does not touch an empty file even if the setting to add trailing newlines is enabled.)
     guard !source.isEmpty else { return }
 
-    // If skipAll is set, just emit the source as-is.
-    guard !configuration.skipAll else {
-      outputStream.write(source)
-      return
-    }
-
     let sourceFile = try parseAndEmitDiagnostics(
       source: source,
       operatorTable: .standardOperators,
