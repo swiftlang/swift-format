@@ -32,7 +32,7 @@ public struct Configuration: Codable, Equatable {
   /// Name of the suppression file to look for.
   /// The presence of this file in a directory will cause the formatter
   /// to skip formatting files in that directory and its subdirectories.
-  private static let suppressionFileName = ".no-swift-format"
+  private static let suppressionFileName = ".swift-format-ignore"
 
   private enum CodingKeys: CodingKey {
     case version
