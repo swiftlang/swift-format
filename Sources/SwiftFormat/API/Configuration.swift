@@ -72,7 +72,7 @@ public struct Configuration: Codable, Equatable {
   /// MARK: Common configuration
 
   /// Is all formatting disbled?
-  public var allDisabled: Bool
+  public var allDisabled = false
 
   /// The dictionary containing the rule names that we wish to run on. A rule is not used if it is
   /// marked as `false`, or if it is missing from the dictionary.
@@ -285,7 +285,9 @@ public struct Configuration: Codable, Equatable {
   /// Creates a new `Configuration` by loading it from a configuration file.
   public init(contentsOf url: URL) throws {
     if url.lastPathComponent == Self.suppressionFileName {
-      self = Configuration(allDisabled: true)
+      var config = Configuration()
+      config.allDisabled = true
+      self = config
       return
     }
 
@@ -323,7 +325,7 @@ public struct Configuration: Codable, Equatable {
     let defaults = Configuration()
 
     self.allDisabled = 
-      try container.decideIfPresent(Bool.self, forKey: .allDisabled) 
+      try container.decodeIfPresent(Bool.self, forKey: .allDisabled) 
       ?? false
     self.maximumBlankLines =
       try container.decodeIfPresent(Int.self, forKey: .maximumBlankLines)
