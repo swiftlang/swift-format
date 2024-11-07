@@ -182,6 +182,11 @@ class Frontend {
       return nil
     }
 
+    guard !configuration.allDisabled else {
+      // Formatting is suppressed for this file.
+      return nil
+    }
+
     return FileToProcess(
       fileHandle: sourceFile,
       url: url,
