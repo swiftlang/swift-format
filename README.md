@@ -201,13 +201,13 @@ configuration, by redirecting it to a file and editing it.
 ### Configuring the Command Line Tool
 
 For any source file being checked or formatted, `swift-format` looks for a
-JSON-formatted file named `.swift-format` in the same directory. If one is
-found, then that file is loaded to determine the tool's configuration. 
+JSON-formatted file named `.no-swift-format` in the same directory. 
+The presence of this file will disable all formatting and linting. 
+The contents of `.no-swift-format`  are ignored - it can be an empty file.
 
 If the file is not found, then it looks in the same directory for a file
-called `.no-swift-format`. The presence of this file will 
-disable all formatting and linting. The contents of `.no-swift-format` 
-are ignored - it can be an empty file.
+called `.swift-format`. If one is found, then that file is loaded to 
+determine the tool's configuration. 
 
 If neither configuration file is found, the search for files continues 
 in the parent directory, and so on.

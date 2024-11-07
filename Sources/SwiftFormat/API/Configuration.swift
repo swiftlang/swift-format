@@ -465,13 +465,13 @@ public struct Configuration: Codable, Equatable {
     }
     repeat {
       candidateDirectory.deleteLastPathComponent()
-      let candidateFile = candidateDirectory.appendingPathComponent(Self.configurationFileName)
-      if FileManager.default.isReadableFile(atPath: candidateFile.path) {
-        return candidateFile
-      }
       let suppressingFile = candidateDirectory.appendingPathComponent(Self.suppressionFileName)
       if FileManager.default.isReadableFile(atPath: suppressingFile.path) {
         return suppressingFile
+      }
+      let candidateFile = candidateDirectory.appendingPathComponent(Self.configurationFileName)
+      if FileManager.default.isReadableFile(atPath: candidateFile.path) {
+        return candidateFile
       }
     } while !candidateDirectory.isRoot
 
