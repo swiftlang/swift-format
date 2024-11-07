@@ -24,7 +24,6 @@ internal let highestSupportedConfigurationVersion = 1
 /// Holds the complete set of configured values and defaults.
 public struct Configuration: Codable, Equatable {
 
-
   private enum CodingKeys: CodingKey {
     case version
     case maximumBlankLines
