@@ -199,7 +199,7 @@ private func inputShouldBeProcessed(at url: URL) -> Bool {
     return true
   }
       
-  var containingDirectory = url.absoluteURL.standardized.deletingLastPathComponent()
+  var containingDirectory = url.absoluteURL.standardized
   repeat {
     containingDirectory.deleteLastPathComponent()
     let candidateFile = containingDirectory.appendingPathComponent(FileIterator.ignoreFileName)
