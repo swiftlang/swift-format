@@ -11,6 +11,9 @@ top-level keys and values:
 *   `version` _(number)_: The version of the configuration file. For now, this
     should always be `1`.
 
+*   `allDisabled` _(boolean)_: If this is true, all other configuration 
+    options are ignored, and formatting is disabled.
+    
 *   `lineLength` _(number)_: The maximum allowed length of a line, in
     characters.
 
