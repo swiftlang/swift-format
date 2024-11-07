@@ -36,7 +36,7 @@ public struct Configuration: Codable, Equatable {
 
   private enum CodingKeys: CodingKey {
     case version
-    case allDisabled
+    case skipAll
     case maximumBlankLines
     case lineLength
     case spacesBeforeEndOfLineComments
@@ -72,7 +72,7 @@ public struct Configuration: Codable, Equatable {
   /// MARK: Common configuration
 
   /// Is all formatting disbled?
-  public var allDisabled = false
+  public var skipAll = false
 
   /// The dictionary containing the rule names that we wish to run on. A rule is not used if it is
   /// marked as `false`, or if it is missing from the dictionary.
@@ -286,7 +286,7 @@ public struct Configuration: Codable, Equatable {
   public init(contentsOf url: URL) throws {
     if url.lastPathComponent == Self.suppressionFileName {
       var config = Configuration()
-      config.allDisabled = true
+      config.skipAll = true
       self = config
       return
     }
@@ -324,8 +324,8 @@ public struct Configuration: Codable, Equatable {
     // default-initialized instance.
     let defaults = Configuration()
 
-    self.allDisabled = 
-      try container.decodeIfPresent(Bool.self, forKey: .allDisabled) 
+    self.skipAll = 
+      try container.decodeIfPresent(Bool.self, forKey: .skipAll) 
       ?? false
     self.maximumBlankLines =
       try container.decodeIfPresent(Int.self, forKey: .maximumBlankLines)
@@ -420,7 +420,7 @@ public struct Configuration: Codable, Equatable {
     var container = encoder.container(keyedBy: CodingKeys.self)
 
     try container.encode(version, forKey: .version)
-    try container.encode(allDisabled, forKey: .allDisabled)
+    try container.encode(skipAll, forKey: .skipAll)
     try container.encode(maximumBlankLines, forKey: .maximumBlankLines)
     try container.encode(lineLength, forKey: .lineLength)
     try container.encode(spacesBeforeEndOfLineComments, forKey: .spacesBeforeEndOfLineComments)
