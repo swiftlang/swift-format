@@ -205,16 +205,17 @@ JSON-formatted file named `.swift-format` in the same directory. If one is
 found, then that file is loaded to determine the tool's configuration. 
 
 If the file is not found, then it looks in the same directory for a file
-called `.no-swift-format`. The presence of this file, if found, will 
-disable all formatting (the contents of the file are ignored).
+called `.no-swift-format`. The presence of this file will 
+disable all formatting and linting. The contents of `.no-swift-format` 
+are ignored - it can be an empty file.
 
-If neither file is found, the search for files continues in the parent
-directory, and so on.
+If neither configuration file is found, the search for files continues 
+in the parent directory, and so on.
 
-If no configuration file is found, a default configuration is used. The
-settings in the default configuration can be viewed by running
-`swift-format dump-configuration`, which will dump it to standard
-output.
+If no configuration file is found at any level, a default configuration 
+is used. The settings in the default configuration can be viewed by
+running `swift-format dump-configuration`, which will dump it to 
+standard output.
 
 If the `--configuration <file>` option is passed to `swift-format`, then that
 configuration will be used unconditionally and the file system will not be
