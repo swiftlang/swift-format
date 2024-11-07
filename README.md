@@ -203,8 +203,9 @@ configuration, by redirecting it to a file and editing it.
 For any source file being checked or formatted, `swift-format` looks for 
 configuration files in the same directory, and parent directories. 
 
-If it finds a file named `.swift-format-ignore`, it will disable all 
-formatting and linting. 
+If it finds a file named `.swift-format-ignore`, its contents will determine
+which files in that directory will be ignored by `swift-format`. Currently
+the only supported option is `*`, which ignores all files.
 
 If it finds a JSON-formatted file called `.swift-format`, then that
 file is loaded to determine the tool's configuration. 
@@ -216,14 +217,11 @@ standard output.
 
 If the `--configuration <file>` option is passed to `swift-format`, then that
 configuration will be used unconditionally and the file system will not be
-searched.
+searched for `.swift-format` files.
 
 See [Documentation/Configuration.md](Documentation/Configuration.md) for a
 description of the configuration file format and the settings that are
 available.
-
-Note that the contents of any `.swift-format-ignore`  are ignored; the
-file can be empty.
 
 ### Miscellaneous
 
