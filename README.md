@@ -200,17 +200,14 @@ configuration, by redirecting it to a file and editing it.
 
 ### Configuring the Command Line Tool
 
-For any source file being checked or formatted, `swift-format` looks for a
-JSON-formatted file named `.swift-format-ignore` in the same directory. 
-The presence of this file will disable all formatting and linting. 
-The contents of `.swift-format-ignore`  are ignored - it can be an empty file.
+For any source file being checked or formatted, `swift-format` looks for 
+configuration files in the same directory, and parent directories. 
 
-If the file is not found, then it looks in the same directory for a file
-called `.swift-format`. If one is found, then that file is loaded to 
-determine the tool's configuration. 
+If it finds a file named `.swift-format-ignore`, it will disable all 
+formatting and linting. 
 
-If neither configuration file is found, the search for files continues 
-in the parent directory, and so on.
+If it finds a JSON-formatted file called `.swift-format`, then that
+file is loaded to determine the tool's configuration. 
 
 If no configuration file is found at any level, a default configuration 
 is used. The settings in the default configuration can be viewed by
@@ -224,6 +221,9 @@ searched.
 See [Documentation/Configuration.md](Documentation/Configuration.md) for a
 description of the configuration file format and the settings that are
 available.
+
+Note that the contents of any `.swift-format-ignore`  are ignored; the
+file can be empty.
 
 ### Miscellaneous
 
