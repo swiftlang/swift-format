@@ -81,12 +81,17 @@ public final class SwiftLinter {
   /// - Parameters:
   ///   - source: The Swift source code to be linted.
   ///   - url: A file URL denoting the filename/path that should be assumed for this source code.
+  ///   - experimentalFeatures: The set of experimental features that should be enabled in the
+  ///     parser. These names must be from the set of parser-recognized experimental language
+  ///     features in `SwiftParser`'s `Parser.ExperimentalFeatures` enum, which match the spelling
+  ///     defined in the compiler's `Features.def` file.
   ///   - parsingDiagnosticHandler: An optional callback that will be notified if there are any
   ///     errors when parsing the source code.
   /// - Throws: If an unrecoverable error occurs when formatting the code.
   public func lint(
     source: String,
     assumingFileURL url: URL,
+    experimentalFeatures: Set<String> = [],
     parsingDiagnosticHandler: ((Diagnostic, SourceLocation) -> Void)? = nil
   ) throws {
     // If the file or input string is completely empty, do nothing. This prevents even a trailing
@@ -98,6 +103,7 @@ public final class SwiftLinter {
       source: source,
       operatorTable: .standardOperators,
       assumingFileURL: url,
+      experimentalFeatures: experimentalFeatures,
       parsingDiagnosticHandler: parsingDiagnosticHandler
     )
     try lint(

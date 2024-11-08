@@ -89,6 +89,10 @@ public final class SwiftFormatter {
   ///     which is associated with any diagnostics emitted during formatting. If this is nil, a
   ///     dummy value will be used.
   ///   - selection: The ranges to format
+  ///   - experimentalFeatures: The set of experimental features that should be enabled in the
+  ///     parser. These names must be from the set of parser-recognized experimental language
+  ///     features in `SwiftParser`'s `Parser.ExperimentalFeatures` enum, which match the spelling
+  ///     defined in the compiler's `Features.def` file.
   ///   - outputStream: A value conforming to `TextOutputStream` to which the formatted output will
   ///     be written.
   ///   - parsingDiagnosticHandler: An optional callback that will be notified if there are any
@@ -98,6 +102,7 @@ public final class SwiftFormatter {
     source: String,
     assumingFileURL url: URL?,
     selection: Selection,
+    experimentalFeatures: Set<String> = [],
     to outputStream: inout Output,
     parsingDiagnosticHandler: ((Diagnostic, SourceLocation) -> Void)? = nil
   ) throws {
@@ -110,6 +115,7 @@ public final class SwiftFormatter {
       source: source,
       operatorTable: .standardOperators,
       assumingFileURL: url,
+      experimentalFeatures: experimentalFeatures,
       parsingDiagnosticHandler: parsingDiagnosticHandler
     )
     try format(
