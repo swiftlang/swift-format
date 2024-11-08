@@ -121,14 +121,20 @@ You can also run this command to see the list of rules in the default
 ## Global Configuration
 
 If no `.swift-format` can be found for the current project/file, the configuration directories
-are searched for a `swift-format/config.json` file. While the filename is different,the
+are searched for a `swift-format/config.json` file. While the filename is different, the
 configuration format stays the same.
 
 Locations that are searched, in this order:
 
-- `~/Library/Application Support/swift-format/config.json`
 - `$XDG_CONFIG_HOME/swift-format/config.json`
-- `~/.config/swift-format/config.json`
+- `$HOME/Library/Application Support/swift-format/config.json`
+- each path in `$XDG_CONFIG_DIRS` (system wide configuration)
+- `/Library/Application Support/swift-format/config.json` (system wide configuration)
+
+or on windows:
+
+- `%LOCALAPPDATA%/swift-format/config.json`
+- `%PROGRAMDATA%/swift-format/config.json` (system wide configuration)
 
 ## API Configuration
 

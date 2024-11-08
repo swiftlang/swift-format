@@ -12,8 +12,8 @@
 
 import Foundation
 @_spi(Internal) import SwiftFormat
-import SwiftSyntax
 import SwiftParser
+import SwiftSyntax
 
 class Frontend {
   /// Represents a file to be processed by the frontend and any file-specific options associated
@@ -245,36 +245,40 @@ class Frontend {
 
     // Load global configuration file
     // First URLs are created, then they are queried. First match is loaded
-    var configLocations: [URL] = []
+    var configLocations: [URL?] = []
 
-    if #available(macOS 13.0, iOS 16.0, *) {
-      // From "~/Library/Application Support/" directory
-      configLocations.append(URL.applicationSupportDirectory)
-      // From $XDG_CONFIG_HOME directory
-      if let xdgConfig: String = ProcessInfo.processInfo.environment["XDG_CONFIG_HOME"] {
-        configLocations.append(URL(filePath: xdgConfig, directoryHint: .isDirectory))
+    #if os(Windows)
+      if let localAppData = ProcessInfo.processInfo.environment["LOCALAPPDATA"] {
+        configLocations.append(URL(fileURLWithPath: localAppData))
       }
-      // From "~/.config/" directory
-      var dotconfig: URL = URL.homeDirectory
-      dotconfig.append(component: ".config", directoryHint: .isDirectory)
-      configLocations.append(dotconfig)
-    } else {
-      // From "~/Library/Application Support/" directory
-      var appSupport: URL = FileManager.default.homeDirectoryForCurrentUser
-      appSupport.appendPathComponent("Library", isDirectory: true)
-      appSupport.appendPathComponent("Application Support", isDirectory: true)
-      configLocations.append(appSupport)
-      // From $XDG_CONFIG_HOME directory
-      if let xdgConfig: String = ProcessInfo.processInfo.environment["XDG_CONFIG_HOME"] {
-        configLocations.append(URL(fileURLWithPath: xdgConfig))
+      if let programData = ProcessInfo.processInfo.environment["PROGRAMDATA"] {
+        configLocations.append(URL(fileURLWithPath: programData))
       }
-      // From "~/.config/" directory
-      var dotconfig: URL = FileManager.default.homeDirectoryForCurrentUser
-      dotconfig.appendPathComponent(".config")
-      configLocations.append(dotconfig)
-    }
+    #else
+      if let xdgConfigHome = ProcessInfo.processInfo.environment["XDG_CONFIG_HOME"] {
+        configLocations.append(URL(fileURLWithPath: xdgConfigHome))
+      }
 
-    for var location: URL in configLocations {
+      if let libraryUrl = FileManager.default.urls(
+        for: .applicationSupportDirectory, in: .userDomainMask
+      ).first {
+        configLocations.append(libraryUrl)
+      }
+
+      if let xdgConfigDirs = ProcessInfo.processInfo.environment["XDG_CONFIG_DIRS"] {
+        configLocations += xdgConfigDirs.split(separator: ":").map { xdgConfigDir in
+          URL(fileURLWithPath: String(xdgConfigDir))
+        }
+      }
+
+      if let libraryUrl = FileManager.default.urls(
+        for: .applicationSupportDirectory, in: .systemDomainMask
+      ).first {
+        configLocations.append(libraryUrl)
+      }
+    #endif
+
+    for case var location? in configLocations {
       if #available(macOS 13.0, iOS 16.0, *) {
         location.append(components: "swift-format", "config.json")
       } else {
@@ -307,7 +311,8 @@ class Frontend {
     // That way they will be printed out, but we'll continue execution on the valid rules.
     let invalidRules = configuration.rules.filter { !RuleRegistry.rules.keys.contains($0.key) }
     for rule in invalidRules {
-      diagnosticsEngine.emitWarning("Configuration contains an unrecognized rule: \(rule.key)", location: nil)
+      diagnosticsEngine.emitWarning(
+        "Configuration contains an unrecognized rule: \(rule.key)", location: nil)
     }
   }
 }
