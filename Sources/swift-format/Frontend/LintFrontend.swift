@@ -35,7 +35,8 @@ class LintFrontend: Frontend {
     do {
       try linter.lint(
         source: source,
-        assumingFileURL: url
+        assumingFileURL: url,
+        experimentalFeatures: Set(lintFormatOptions.experimentalFeatures)
       ) { (diagnostic, location) in
         guard !self.lintFormatOptions.ignoreUnparsableFiles else {
           // No diagnostics should be emitted in this mode.
@@ -43,22 +44,15 @@ class LintFrontend: Frontend {
         }
         self.diagnosticsEngine.consumeParserDiagnostic(diagnostic, location)
       }
-
-    } catch SwiftFormatError.fileNotReadable {
-      diagnosticsEngine.emitError(
-        "Unable to lint \(url.relativePath): file is not readable or does not exist."
-      )
-      return
     } catch SwiftFormatError.fileContainsInvalidSyntax {
       guard !lintFormatOptions.ignoreUnparsableFiles else {
         // The caller wants to silently ignore this error.
         return
       }
-      // Otherwise, relevant diagnostics about the problematic nodes have been emitted.
-      return
+      // Otherwise, relevant diagnostics about the problematic nodes have already been emitted; we
+      // don't need to print anything else.
     } catch {
-      diagnosticsEngine.emitError("Unable to lint \(url.relativePath): \(error)")
-      return
+      diagnosticsEngine.emitError("Unable to lint \(url.relativePath): \(error.localizedDescription).")
     }
   }
 }

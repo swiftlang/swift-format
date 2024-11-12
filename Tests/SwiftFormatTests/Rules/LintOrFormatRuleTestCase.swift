@@ -1,7 +1,7 @@
 import SwiftFormat
 @_spi(Rules) @_spi(Testing) import SwiftFormat
 import SwiftOperators
-import SwiftParser
+@_spi(ExperimentalLanguageFeatures) import SwiftParser
 import SwiftSyntax
 import XCTest
 @_spi(Testing) import _SwiftFormatTestSupport
@@ -16,18 +16,21 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
   ///     where findings are expected to be emitted.
   ///   - findings: A list of `FindingSpec` values that describe the findings that are expected to
   ///     be emitted.
+  ///   - experimentalFeatures: The set of experimental features that should be enabled in the
+  ///     parser.
   ///   - file: The file the test resides in (defaults to the current caller's file).
   ///   - line: The line the test resides in (defaults to the current caller's line).
   final func assertLint<LintRule: SyntaxLintRule>(
     _ type: LintRule.Type,
     _ markedSource: String,
     findings: [FindingSpec] = [],
+    experimentalFeatures: Parser.ExperimentalFeatures = [],
     file: StaticString = #file,
     line: UInt = #line
   ) {
     let markedText = MarkedText(textWithMarkers: markedSource)
     let unmarkedSource = markedText.textWithoutMarkers
-    let tree = Parser.parse(source: unmarkedSource)
+    let tree = Parser.parse(source: unmarkedSource, experimentalFeatures: experimentalFeatures)
     let sourceFileSyntax =
       try! OperatorTable.standardOperators.foldAll(tree).as(SourceFileSyntax.self)!
 
@@ -80,6 +83,8 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
   ///   - findings: A list of `FindingSpec` values that describe the findings that are expected to
   ///     be emitted.
   ///   - configuration: The configuration to use when formatting (or nil to use the default).
+  ///   - experimentalFeatures: The set of experimental features that should be enabled in the
+  ///     parser.
   ///   - file: The file the test resides in (defaults to the current caller's file)
   ///   - line:  The line the test resides in (defaults to the current caller's line)
   final func assertFormatting(
@@ -88,12 +93,13 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
     expected: String,
     findings: [FindingSpec] = [],
     configuration: Configuration? = nil,
+    experimentalFeatures: Parser.ExperimentalFeatures = [],
     file: StaticString = #file,
     line: UInt = #line
   ) {
     let markedInput = MarkedText(textWithMarkers: input)
     let originalSource: String = markedInput.textWithoutMarkers
-    let tree = Parser.parse(source: originalSource)
+    let tree = Parser.parse(source: originalSource, experimentalFeatures: experimentalFeatures)
     let sourceFileSyntax =
       try! OperatorTable.standardOperators.foldAll(tree).as(SourceFileSyntax.self)!
 
@@ -134,7 +140,7 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
       printTokenStream: false,
       whitespaceOnly: false
     ).prettyPrint()
-    let prettyPrintedTree = Parser.parse(source: prettyPrintedSource)
+    let prettyPrintedTree = Parser.parse(source: prettyPrintedSource, experimentalFeatures: experimentalFeatures)
     XCTAssertEqual(
       whitespaceInsensitiveText(of: actual),
       whitespaceInsensitiveText(of: prettyPrintedTree),

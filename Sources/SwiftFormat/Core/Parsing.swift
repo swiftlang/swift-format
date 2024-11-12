@@ -13,7 +13,7 @@
 import Foundation
 import SwiftDiagnostics
 import SwiftOperators
-import SwiftParser
+@_spi(ExperimentalLanguageFeatures) import SwiftParser
 import SwiftParserDiagnostics
 import SwiftSyntax
 
@@ -25,10 +25,14 @@ import SwiftSyntax
 ///
 /// - Parameters:
 ///   - source: The Swift source code to be formatted.
+///   - operatorTable: The operator table to use for sequence folding.
 ///   - url: A file URL denoting the filename/path that should be assumed for this syntax tree,
 ///     which is associated with any diagnostics emitted during formatting. If this is nil, a
 ///     dummy value will be used.
-///   - operatorTable: The operator table to use for sequence folding.
+///   - experimentalFeatures: The set of experimental features that should be enabled in the parser.
+///     These names must be from the set of parser-recognized experimental language features in
+///     `SwiftParser`'s `Parser.ExperimentalFeatures` enum, which match the spelling defined in the
+///     compiler's `Features.def` file.
 ///   - parsingDiagnosticHandler: An optional callback that will be notified if there are any
 ///     errors when parsing the source code.
 /// - Throws: If an unrecoverable error occurs when formatting the code.
@@ -36,11 +40,21 @@ func parseAndEmitDiagnostics(
   source: String,
   operatorTable: OperatorTable,
   assumingFileURL url: URL?,
+  experimentalFeatures: Set<String>,
   parsingDiagnosticHandler: ((Diagnostic, SourceLocation) -> Void)? = nil
 ) throws -> SourceFileSyntax {
-  let sourceFile =
-    operatorTable.foldAll(Parser.parse(source: source)) { _ in }.as(SourceFileSyntax.self)!
-
+  var experimentalFeaturesSet: Parser.ExperimentalFeatures = []
+  for featureName in experimentalFeatures {
+    guard let featureValue = Parser.ExperimentalFeatures(name: featureName) else {
+      throw SwiftFormatError.unrecognizedExperimentalFeature(featureName)
+    }
+    experimentalFeaturesSet.formUnion(featureValue)
+  }
+  var source = source
+  let sourceFile = source.withUTF8 { sourceBytes in
+    operatorTable.foldAll(Parser.parse(source: sourceBytes, experimentalFeatures: experimentalFeaturesSet)) { _ in }
+      .as(SourceFileSyntax.self)!
+  }
   let diagnostics = ParseDiagnosticsGenerator.diagnostics(for: sourceFile)
   var hasErrors = false
   if let parsingDiagnosticHandler = parsingDiagnosticHandler {

@@ -98,6 +98,15 @@ struct LintFormatOptions: ParsableArguments {
   )
   var followSymlinks: Bool = false
 
+  @Option(
+    name: .customLong("enable-experimental-feature"),
+    help: """
+      The name of an experimental swift-syntax parser feature that should be enabled by \
+      swift-format. Multiple features can be enabled by specifying this flag multiple times.
+      """
+  )
+  var experimentalFeatures: [String] = []
+
   /// The list of paths to Swift source files that should be formatted or linted.
   @Argument(help: "Zero or more input filenames.")
   var paths: [String] = []
