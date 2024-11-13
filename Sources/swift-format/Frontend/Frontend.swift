@@ -259,10 +259,14 @@ class Frontend {
         configLocations.append(URL(fileURLWithPath: xdgConfigHome))
       }
 
-      if let libraryUrl = FileManager.default.urls(
-        for: .applicationSupportDirectory, in: .userDomainMask
-      ).first {
-        configLocations.append(libraryUrl)
+      if let homeLocation = ProcessInfo.processInfo.environment["HOME"] {
+        configLocations.append(URL(fileURLWithPath: homeLocation + "/.config/"))
+      }
+
+      for supportDirectoryUrl in FileManager.default.urls(
+        for: .applicationSupportDirectory, in: .userDomainMask)
+      {
+        configLocations.append(supportDirectoryUrl)
       }
 
       if let xdgConfigDirs = ProcessInfo.processInfo.environment["XDG_CONFIG_DIRS"] {
@@ -279,12 +283,8 @@ class Frontend {
     #endif
 
     for case var location? in configLocations {
-      if #available(macOS 13.0, iOS 16.0, *) {
-        location.append(components: "swift-format", "config.json")
-      } else {
-        location.appendPathComponent("swift-format", isDirectory: true)
-        location.appendPathComponent("config.json", isDirectory: false)
-      }
+      location.appendPathComponent("swift-format", isDirectory: true)
+      location.appendPathComponent("config.json", isDirectory: false)
       if FileManager.default.fileExists(atPath: location.path) {
         do {
           let configuration = try configurationLoader.configuration(at: location)
