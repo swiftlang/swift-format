@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class GroupNumericLiteralsTests: LintOrFormatRuleTestCase {
   func testNumericGrouping() {

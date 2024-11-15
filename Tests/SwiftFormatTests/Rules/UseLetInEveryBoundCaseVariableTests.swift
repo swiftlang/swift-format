@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class UseLetInEveryBoundCaseVariableTests: LintOrFormatRuleTestCase {
   func testSwitchCase() {
@@ -19,11 +18,26 @@ final class UseLetInEveryBoundCaseVariableTests: LintOrFormatRuleTestCase {
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
-        FindingSpec("2️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
-        FindingSpec("3️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
-        FindingSpec("4️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
-        FindingSpec("5️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec(
+          "1️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "2️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "3️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "4️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "5️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
       ]
     )
   }
@@ -42,11 +56,26 @@ final class UseLetInEveryBoundCaseVariableTests: LintOrFormatRuleTestCase {
       if case let x as SomeType = someValue {}
       """,
       findings: [
-        FindingSpec("1️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
-        FindingSpec("2️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
-        FindingSpec("3️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
-        FindingSpec("4️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
-        FindingSpec("5️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec(
+          "1️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "2️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "3️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "4️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "5️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
       ]
     )
   }
@@ -65,11 +94,26 @@ final class UseLetInEveryBoundCaseVariableTests: LintOrFormatRuleTestCase {
       guard case let x as SomeType = someValue else {}
       """,
       findings: [
-        FindingSpec("1️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
-        FindingSpec("2️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
-        FindingSpec("3️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
-        FindingSpec("4️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
-        FindingSpec("5️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec(
+          "1️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "2️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "3️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "4️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "5️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
       ]
     )
   }
@@ -88,11 +132,26 @@ final class UseLetInEveryBoundCaseVariableTests: LintOrFormatRuleTestCase {
       for case let x as SomeType in {}
       """,
       findings: [
-        FindingSpec("1️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
-        FindingSpec("2️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
-        FindingSpec("3️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
-        FindingSpec("4️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
-        FindingSpec("5️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec(
+          "1️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "2️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "3️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "4️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "5️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
       ]
     )
   }
@@ -111,11 +170,26 @@ final class UseLetInEveryBoundCaseVariableTests: LintOrFormatRuleTestCase {
       while case let x as SomeType = iter.next() {}
       """,
       findings: [
-        FindingSpec("1️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
-        FindingSpec("2️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
-        FindingSpec("3️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
-        FindingSpec("4️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
-        FindingSpec("5️⃣", message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"),
+        FindingSpec(
+          "1️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "2️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "3️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "4️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "5️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
       ]
     )
   }

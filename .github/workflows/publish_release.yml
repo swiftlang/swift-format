@@ -1,0 +1,109 @@
+name: Publish Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      prerelease:
+        type: boolean
+        description: "Prerelease"
+        # Whether to create a prerelease or proper release
+        default: true
+        required: true
+      swift_format_version:
+        type: string
+        default: 601.0.0
+        description: "swift-format version"
+        # The version of swift-format to tag. If this is a prerelease, `-prerelease-<date>` is added to this version.
+        required: true
+      swift_syntax_tag:
+        type: string
+        default: 601.0.0
+        description: "swift-syntax version"
+        # The swift-syntax version to depend on. If this is a prerelease, the latest swift-syntax prerelease tag for this version is used.
+        required: true
+
+jobs:
+  check_triggering_actor:
+    name: Check user is allowed to create release
+    # Only a single user should be allowed to create releases to avoid two people triggering the creation of a release
+    # at the same time. If the release manager changes between users, update this condition.
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          if [[ "${{ github.triggering_actor }}" != "ahoppen" ]]; then
+            echo "${{ github.triggering_actor }} is not allowed to create a release"
+            exit 1
+          fi
+  define_tags:
+    name: Determine dependent swift-syntax version and prerelease date
+    runs-on: ubuntu-latest
+    outputs:
+      swift_syntax_tag: ${{ steps.swift_syntax_tag.outputs.swift_syntax_tag }}
+      swift_format_version: ${{ steps.swift_format_version.outputs.swift_format_version }}
+    steps:
+      - name: Determine swift-syntax tag to depend on
+        id: swift_syntax_tag
+        shell: bash
+        run: |
+          if [[ "${{ github.event.inputs.prerelease }}" == "false" ]]; then
+            SWIFT_SYNTAX_TAG="${{ github.event.inputs.swift_syntax_tag }}"
+          else
+            git clone https://github.com/swiftlang/swift-syntax.git
+            cd swift-syntax
+            SWIFT_SYNTAX_TAG="$(git tag | grep ${{ github.event.inputs.swift_syntax_tag }}-prerelease | sort -r | head -1)"
+          fi
+
+          echo "Using swift-syntax tag: $SWIFT_SYNTAX_TAG"
+          echo "swift_syntax_tag=$SWIFT_SYNTAX_TAG" >> "$GITHUB_OUTPUT"
+      - name: Determine swift-format prerelease version
+        id: swift_format_version
+        run: |
+          if [[ "${{ github.event.inputs.prerelease }}" == "false" ]]; then
+            SWIFT_FORMAT_VERSION="${{ github.event.inputs.swift_format_version }}"
+          else
+            SWIFT_FORMAT_VERSION="${{ github.event.inputs.swift_format_version }}-prerelease-$(date +'%Y-%m-%d')"
+          fi
+          echo "Using swift-format version: $SWIFT_FORMAT_VERSION"
+          echo "swift_format_version=$SWIFT_FORMAT_VERSION" >> "$GITHUB_OUTPUT"
+  test_debug:
+    name: Test in Debug configuration
+    uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@main
+    needs: define_tags
+    with:
+      pre_build_command: bash .github/workflows/create-release-commits.sh '${{ needs.define_tags.outputs.swift_syntax_tag }}' '${{ needs.define_tags.outputs.swift_format_version }}'
+      # We require that releases of swift-format build without warnings
+      build_command: swift test -Xswiftc -warnings-as-errors
+  test_release:
+    name: Test in Release configuration
+    uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@main
+    needs: define_tags
+    with:
+      pre_build_command: bash .github/workflows/create-release-commits.sh '${{ needs.define_tags.outputs.swift_syntax_tag }}' '${{ needs.define_tags.outputs.swift_format_version }}'
+      # We require that releases of swift-format build without warnings
+      build_command: swift test -c release -Xswiftc -warnings-as-errors
+  create_tag:
+    name: Create Tag
+    runs-on: ubuntu-latest
+    needs: [check_triggering_actor, test_debug, test_release, define_tags]
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Create release commits
+        run: bash .github/workflows/create-release-commits.sh '${{ needs.define_tags.outputs.swift_syntax_tag }}' '${{ needs.define_tags.outputs.swift_format_version }}'
+      - name: Tag release
+        run: |
+          git tag "${{ needs.define_tags.outputs.swift_format_version }}"
+          git push origin "${{ needs.define_tags.outputs.swift_format_version }}"
+      - name: Create release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ "${{ github.event.inputs.prerelease }}" != "true" ]]; then
+            # Only create a release automatically for prereleases. For real releases, release notes should be crafted by hand.
+            exit
+          fi
+          gh release create "${{ needs.define_tags.outputs.swift_format_version }}" \
+            --title "${{ needs.define_tags.outputs.swift_format_version }}" \
+            --prerelease

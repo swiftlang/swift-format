@@ -14,6 +14,7 @@ Here's the list of available rules:
 - [AlwaysUseLiteralForEmptyCollectionInit](#AlwaysUseLiteralForEmptyCollectionInit)
 - [AlwaysUseLowerCamelCase](#AlwaysUseLowerCamelCase)
 - [AmbiguousTrailingClosureOverload](#AmbiguousTrailingClosureOverload)
+- [AvoidRetroactiveConformances](#AvoidRetroactiveConformances)
 - [BeginDocumentationCommentWithOneLineSummary](#BeginDocumentationCommentWithOneLineSummary)
 - [DoNotUseSemicolons](#DoNotUseSemicolons)
 - [DontRepeatTypeInStaticProperties](#DontRepeatTypeInStaticProperties)
@@ -28,6 +29,7 @@ Here's the list of available rules:
 - [NoAssignmentInExpressions](#NoAssignmentInExpressions)
 - [NoBlockComments](#NoBlockComments)
 - [NoCasesWithOnlyFallthrough](#NoCasesWithOnlyFallthrough)
+- [NoEmptyLinesOpeningClosingBraces](#NoEmptyLinesOpeningClosingBraces)
 - [NoEmptyTrailingClosureParentheses](#NoEmptyTrailingClosureParentheses)
 - [NoLabelsInCasePatterns](#NoLabelsInCasePatterns)
 - [NoLeadingUnderscores](#NoLeadingUnderscores)
@@ -78,6 +80,7 @@ Underscores (except at the beginning of an identifier) are disallowed.
 
 This rule does not apply to test code, defined as code which:
   * Contains the line `import XCTest`
+  * The function is marked with `@Test` attribute
 
 Lint: If an identifier contains underscores or begins with a capital letter, a lint error is
       raised.
@@ -92,6 +95,14 @@ Lint: If two overloaded functions with one closure parameter appear in the same 
       error is raised.
 
 `AmbiguousTrailingClosureOverload` is a linter-only rule.
+
+### AvoidRetroactiveConformances
+
+`@retroactive` conformances are forbidden.
+
+Lint: Using `@retroactive` results in a lint error.
+
+`AvoidRetroactiveConformances` is a linter-only rule.
 
 ### BeginDocumentationCommentWithOneLineSummary
 
@@ -179,6 +190,7 @@ Force-unwraps are strongly discouraged and must be documented.
 
 This rule does not apply to test code, defined as code which:
   * Contains the line `import XCTest`
+  * The function is marked with `@Test` attribute
 
 Lint: If a force unwrap is used, a lint warning is raised.
 
@@ -190,6 +202,7 @@ Force-try (`try!`) is forbidden.
 
 This rule does not apply to test code, defined as code which:
   * Contains the line `import XCTest`
+  * The function is marked with `@Test` attribute
 
 Lint: Using `try!` results in a lint error.
 
@@ -205,6 +218,7 @@ Certain properties (e.g. `@IBOutlet`) tied to the UI lifecycle are ignored.
 
 This rule does not apply to test code, defined as code which:
   * Contains the line `import XCTest`
+  * The function is marked with `@Test` attribute
 
 TODO: Create exceptions for other UI elements (ex: viewDidLoad)
 
@@ -257,6 +271,16 @@ Format: The fallthrough `case` is added as a prefix to the next case unless the 
         `default`; in that case, the fallthrough `case` is deleted.
 
 `NoCasesWithOnlyFallthrough` rule can format your code automatically.
+
+### NoEmptyLinesOpeningClosingBraces
+
+Empty lines are forbidden after opening braces and before closing braces.
+
+Lint: Empty lines after opening braces and before closing braces yield a lint error.
+
+Format: Empty lines after opening braces and before closing braces will be removed.
+
+`NoEmptyLinesOpeningClosingBraces` rule can format your code automatically.
 
 ### NoEmptyTrailingClosureParentheses
 

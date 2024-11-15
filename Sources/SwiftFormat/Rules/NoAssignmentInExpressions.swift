@@ -60,8 +60,8 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
         var assignmentItem = CodeBlockItemSyntax(item: .expr(ExprSyntax(assignmentExpr)))
         assignmentItem.leadingTrivia =
           returnStmt.leadingTrivia
-            + returnStmt.returnKeyword.trailingTrivia.withoutLeadingSpaces()
-            + assignmentExpr.leadingTrivia
+          + returnStmt.returnKeyword.trailingTrivia.withoutLeadingSpaces()
+          + assignmentExpr.leadingTrivia
         assignmentItem.trailingTrivia = []
 
         let trailingTrivia = returnStmt.trailingTrivia
@@ -120,8 +120,7 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
   /// `CodeBlockItem` parent.
   private func isStandaloneAssignmentStatement(_ node: InfixOperatorExprSyntax) -> Bool {
     var node = Syntax(node)
-    while
-      let parent = node.parent,
+    while let parent = node.parent,
       parent.is(TryExprSyntax.self) || parent.is(AwaitExprSyntax.self)
     {
       node = parent

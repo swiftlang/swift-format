@@ -19,6 +19,10 @@ protocol FileGenerator {
   func write(into handle: FileHandle) throws
 }
 
+private struct FailedToCreateFileError: Error {
+  let url: URL
+}
+
 extension FileGenerator {
   /// Generates a file at the given URL, overwriting it if it already exists.
   func generateFile(at url: URL) throws {
@@ -27,7 +31,9 @@ extension FileGenerator {
       try fm.removeItem(at: url)
     }
 
-    fm.createFile(atPath: url.path, contents: nil, attributes: nil)
+    if !fm.createFile(atPath: url.path, contents: nil, attributes: nil) {
+      throw FailedToCreateFileError(url: url)
+    }
     let handle = try FileHandle(forWritingTo: url)
     defer { handle.closeFile() }
 
@@ -35,7 +41,7 @@ extension FileGenerator {
   }
 }
 
-extension FileHandle: TextOutputStream {
+extension FileHandle {
   /// Writes the provided string as data to a file output stream.
   public func write(_ string: String) {
     guard let data = string.data(using: .utf8) else { return }

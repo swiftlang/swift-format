@@ -8,6 +8,7 @@ final class DiscardStmtTests: PrettyPrintTestCase {
         discard self
 
         """,
-      linelength: 9)
+      linelength: 9
+    )
   }
 }

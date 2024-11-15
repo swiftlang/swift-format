@@ -53,7 +53,11 @@ final class BinaryOperatorExprTests: PrettyPrintTestCase {
     var configuration = Configuration.forTesting
     configuration.spacesAroundRangeFormationOperators = false
     assertPrettyPrintEqual(
-      input: input, expected: expected, linelength: 80, configuration: configuration)
+      input: input,
+      expected: expected,
+      linelength: 80,
+      configuration: configuration
+    )
   }
 
   func testRangeFormationOperatorCompaction_spacesAroundRangeFormation() {
@@ -81,7 +85,11 @@ final class BinaryOperatorExprTests: PrettyPrintTestCase {
     var configuration = Configuration.forTesting
     configuration.spacesAroundRangeFormationOperators = true
     assertPrettyPrintEqual(
-      input: input, expected: expected, linelength: 80, configuration: configuration)
+      input: input,
+      expected: expected,
+      linelength: 80,
+      configuration: configuration
+    )
   }
 
   func testRangeFormationOperatorsAreNotCompactedWhenFollowingAPostfixOperator() {

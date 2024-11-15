@@ -14,7 +14,8 @@ final class ParameterPackTests: PrettyPrintTestCase {
         > {}
 
         """,
-      linelength: 22)
+      linelength: 22
+    )
   }
 
   func testPackExpansionsAndElements() {
@@ -27,7 +28,8 @@ final class ParameterPackTests: PrettyPrintTestCase {
           of: each value)
 
         """,
-      linelength: 25)
+      linelength: 25
+    )
 
     assertPrettyPrintEqual(
       input: """
@@ -41,6 +43,7 @@ final class ParameterPackTests: PrettyPrintTestCase {
           )
 
         """,
-      linelength: 7)
+      linelength: 7
+    )
   }
 }

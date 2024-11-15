@@ -27,8 +27,9 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
 
     // func <name>() -> <Type> { return ... }
     guard var funcDecl = decl.as(FunctionDeclSyntax.self),
-          let body = funcDecl.body,
-          let returnStmt = containsSingleReturn(body.statements) else {
+      let body = funcDecl.body,
+      let returnStmt = containsSingleReturn(body.statements)
+    else {
       return decl
     }
 
@@ -41,10 +42,11 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
     let decl = super.visit(node)
 
     guard var subscriptDecl = decl.as(SubscriptDeclSyntax.self),
-          let accessorBlock = subscriptDecl.accessorBlock,
-          // We are assuming valid Swift code here where only
-          // one `get { ... }` is allowed.
-          let transformed = transformAccessorBlock(accessorBlock) else {
+      let accessorBlock = subscriptDecl.accessorBlock,
+      // We are assuming valid Swift code here where only
+      // one `get { ... }` is allowed.
+      let transformed = transformAccessorBlock(accessorBlock)
+    else {
       return decl
     }
 
@@ -56,7 +58,8 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
     var binding = node
 
     guard let accessorBlock = binding.accessorBlock,
-          let transformed = transformAccessorBlock(accessorBlock) else {
+      let transformed = transformAccessorBlock(accessorBlock)
+    else {
       return node
     }
 
@@ -69,8 +72,9 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
 
     // test { return ... }
     guard var closureExpr = expr.as(ClosureExprSyntax.self),
-          let returnStmt = containsSingleReturn(closureExpr.statements) else {
-       return expr
+      let returnStmt = containsSingleReturn(closureExpr.statements)
+    else {
+      return expr
     }
 
     closureExpr.statements = rewrapReturnedExpression(returnStmt)
@@ -83,20 +87,25 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
     // one `get { ... }` is allowed.
     switch accessorBlock.accessors {
     case .accessors(var accessors):
-      guard var getter = accessors.filter({
-        $0.accessorSpecifier.tokenKind == .keyword(.get)
-      }).first else {
+      guard
+        var getter = accessors.filter({
+          $0.accessorSpecifier.tokenKind == .keyword(.get)
+        }).first
+      else {
         return nil
       }
 
       guard let body = getter.body,
-            let returnStmt = containsSingleReturn(body.statements) else {
+        let returnStmt = containsSingleReturn(body.statements)
+      else {
         return nil
       }
 
-      guard let getterAt = accessors.firstIndex(where: {
-        $0.accessorSpecifier.tokenKind == .keyword(.get)
-      }) else {
+      guard
+        let getterAt = accessors.firstIndex(where: {
+          $0.accessorSpecifier.tokenKind == .keyword(.get)
+        })
+      else {
         return nil
       }
 
@@ -124,8 +133,8 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
 
   private func containsSingleReturn(_ body: CodeBlockItemListSyntax) -> ReturnStmtSyntax? {
     guard let element = body.firstAndOnly,
-       let returnStmt = element.item.as(ReturnStmtSyntax.self) else
-        {
+      let returnStmt = element.item.as(ReturnStmtSyntax.self)
+    else {
       return nil
     }
 
@@ -138,7 +147,8 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
         leadingTrivia: returnStmt.leadingTrivia,
         item: .expr(returnStmt.expression!),
         semicolon: nil,
-        trailingTrivia: returnStmt.trailingTrivia)
+        trailingTrivia: returnStmt.trailingTrivia
+      )
     ])
   }
 }

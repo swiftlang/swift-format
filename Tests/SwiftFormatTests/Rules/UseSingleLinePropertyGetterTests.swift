@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class UseSingleLinePropertyGetterTests: LintOrFormatRuleTestCase {
   func testMultiLinePropertyGetter() {
@@ -65,7 +64,10 @@ final class UseSingleLinePropertyGetterTests: LintOrFormatRuleTestCase {
         }
         """,
       findings: [
-        FindingSpec("1️⃣", message: "remove 'get {...}' around the accessor and move its body directly into the computed property"),
+        FindingSpec(
+          "1️⃣",
+          message: "remove 'get {...}' around the accessor and move its body directly into the computed property"
+        )
       ]
     )
   }

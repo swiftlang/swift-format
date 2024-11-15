@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class UseExplicitNilCheckInConditionsTests: LintOrFormatRuleTestCase {
   func testIfExpressions() {
@@ -124,7 +123,7 @@ final class UseExplicitNilCheckInConditionsTests: LintOrFormatRuleTestCase {
         if (x ? y : z) != nil {}
         """,
       findings: [
-        FindingSpec("1️⃣", message: "compare this value using `!= nil` instead of binding and discarding it"),
+        FindingSpec("1️⃣", message: "compare this value using `!= nil` instead of binding and discarding it")
       ]
     )
   }

@@ -10,6 +10,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftSyntax
+
 enum GroupBreakStyle {
   /// A consistent break indicates that the break will always be finalized as a newline
   /// if wrapping occurs.
@@ -145,6 +147,10 @@ enum NewlineBehavior {
   /// newlines and the configured maximum number of blank lines.
   case hard(count: Int)
 
+  /// Break onto a new line is allowed if neccessary. If a line break is emitted, it will be escaped with a '\', and this breaks whitespace will be printed prior to the
+  /// escaped line break. This is useful in multiline strings where we don't want newlines printed in syntax to appear in the literal.
+  case escaped
+
   /// An elective newline that respects discretionary newlines from the user-entered text.
   static let elective = NewlineBehavior.elective(ignoresDiscretionary: false)
 
@@ -195,6 +201,13 @@ enum Token {
 
   /// Ends a scope where `contextual` breaks have consistent behavior.
   case contextualBreakingEnd
+
+  /// Turn formatting back on at the given position in the original file
+  /// nil is used to indicate the rest of the file should be output
+  case enableFormatting(AbsolutePosition?)
+
+  /// Turn formatting off at the given position in the original file.
+  case disableFormatting(AbsolutePosition)
 
   // Convenience overloads for the enum types
   static let open = Token.open(.inconsistent, 0)

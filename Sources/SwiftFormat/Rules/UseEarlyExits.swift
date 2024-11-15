@@ -69,12 +69,14 @@ public final class UseEarlyExits: SyntaxFormatRule {
       let guardKeyword = TokenSyntax.keyword(
         .guard,
         leadingTrivia: ifStatement.ifKeyword.leadingTrivia,
-        trailingTrivia: .spaces(1))
+        trailingTrivia: .spaces(1)
+      )
       let guardStatement = GuardStmtSyntax(
         guardKeyword: guardKeyword,
         conditions: ifStatement.conditions,
         elseKeyword: TokenSyntax.keyword(.else, trailingTrivia: .spaces(1)),
-        body: visit(elseBody))
+        body: visit(elseBody)
+      )
 
       newItems.append(CodeBlockItemSyntax(item: .stmt(StmtSyntax(guardStatement))))
 

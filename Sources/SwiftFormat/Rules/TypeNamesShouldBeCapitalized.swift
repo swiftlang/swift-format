@@ -16,7 +16,7 @@ import SwiftSyntax
 ///
 /// Lint:  Types with un-capitalized names will yield a lint error.
 @_spi(Rules)
-public final class TypeNamesShouldBeCapitalized : SyntaxLintRule {
+public final class TypeNamesShouldBeCapitalized: SyntaxLintRule {
   public override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseNameConventionMismatch(node, name: node.name, kind: "struct")
     return .visitChildren
@@ -59,7 +59,8 @@ public final class TypeNamesShouldBeCapitalized : SyntaxLintRule {
   ) {
     let leadingUnderscores = name.text.prefix { $0 == "_" }
     if let firstChar = name.text[leadingUnderscores.endIndex...].first,
-       firstChar.uppercased() != String(firstChar) {
+      firstChar.uppercased() != String(firstChar)
+    {
       diagnose(.capitalizeTypeName(name: name.text, kind: kind), on: name, severity: .convention)
     }
   }

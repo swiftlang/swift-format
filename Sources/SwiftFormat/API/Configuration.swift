@@ -28,12 +28,14 @@ public struct Configuration: Codable, Equatable {
     case version
     case maximumBlankLines
     case lineLength
+    case spacesBeforeEndOfLineComments
     case tabWidth
     case indentation
     case respectsExistingLineBreaks
     case lineBreakBeforeControlFlowKeywords
     case lineBreakBeforeEachArgument
     case lineBreakBeforeEachGenericRequirement
+    case lineBreakBetweenDeclarationAttributes
     case prioritizeKeepingFunctionOutputTogether
     case indentConditionalCompilationBlocks
     case lineBreakAroundMultilineExpressionChainComponents
@@ -43,6 +45,7 @@ public struct Configuration: Codable, Equatable {
     case spacesAroundRangeFormationOperators
     case noAssignmentInExpressions
     case multiElementCollectionTrailingCommas
+    case reflowMultilineStringLiterals
   }
 
   /// A dictionary containing the default enabled/disabled states of rules, keyed by the rules'
@@ -65,6 +68,9 @@ public struct Configuration: Codable, Equatable {
 
   /// The maximum length of a line of source code, after which the formatter will break lines.
   public var lineLength: Int
+
+  /// Number of spaces that precede line comments.
+  public var spacesBeforeEndOfLineComments: Int
 
   /// The width of the horizontal tab in spaces.
   ///
@@ -110,6 +116,9 @@ public struct Configuration: Codable, Equatable {
   /// list to be laid out vertically. If false (the default), requirements will be laid out
   /// horizontally first, with line breaks only being fired when the line length would be exceeded.
   public var lineBreakBeforeEachGenericRequirement: Bool
+
+  /// If true, a line break will be added between adjacent attributes.
+  public var lineBreakBetweenDeclarationAttributes: Bool
 
   /// Determines if function-like declaration outputs should be prioritized to be together with the
   /// function signature right (closing) parenthesis.
@@ -186,6 +195,71 @@ public struct Configuration: Codable, Equatable {
   /// ```
   public var multiElementCollectionTrailingCommas: Bool
 
+  /// Determines how multiline string literals should reflow when formatted.
+  public enum MultilineStringReflowBehavior: Codable {
+    /// Never reflow multiline string literals.
+    case never
+    /// Reflow lines in string literal that exceed the maximum line length. For example with a line length of 10:
+    /// ```swift
+    /// """
+    /// an escape\
+    ///  line break
+    /// a hard line break
+    /// """
+    /// ```
+    /// will be formatted as:
+    /// ```swift
+    /// """
+    /// an esacpe\
+    ///  line break
+    /// a hard \
+    /// line break
+    /// """
+    /// ```
+    /// The existing `\` is left in place, but the line over line length is broken.
+    case onlyLinesOverLength
+    /// Always reflow multiline string literals, this will ignore existing escaped newlines in the literal and reflow each line. Hard linebreaks are still respected.
+    /// For example, with a line length of 10:
+    /// ```swift
+    /// """
+    /// one \
+    /// word \
+    /// a line.
+    /// this is too long.
+    /// """
+    /// ```
+    /// will be formatted as:
+    /// ```swift
+    /// """
+    /// one word \
+    /// a line.
+    /// this is \
+    /// too long.
+    /// """
+    /// ```
+    case always
+
+    var isNever: Bool {
+      switch self {
+      case .never:
+        return true
+      default:
+        return false
+      }
+    }
+
+    var isAlways: Bool {
+      switch self {
+      case .always:
+        return true
+      default:
+        return false
+      }
+    }
+  }
+
+  public var reflowMultilineStringLiterals: MultilineStringReflowBehavior
+
   /// Creates a new `Configuration` by loading it from a configuration file.
   public init(contentsOf url: URL) throws {
     let data = try Data(contentsOf: url)
@@ -204,9 +278,11 @@ public struct Configuration: Codable, Equatable {
     self.version = try container.decodeIfPresent(Int.self, forKey: .version) ?? 1
     guard version <= highestSupportedConfigurationVersion else {
       throw DecodingError.dataCorruptedError(
-        forKey: .version, in: container,
+        forKey: .version,
+        in: container,
         debugDescription:
-          "This version of the formatter does not support configuration version \(version).")
+          "This version of the formatter does not support configuration version \(version)."
+      )
     }
 
     // If we ever introduce a new version, this is where we should switch on the decoded version
@@ -225,6 +301,9 @@ public struct Configuration: Codable, Equatable {
     self.lineLength =
       try container.decodeIfPresent(Int.self, forKey: .lineLength)
       ?? defaults.lineLength
+    self.spacesBeforeEndOfLineComments =
+      try container.decodeIfPresent(Int.self, forKey: .spacesBeforeEndOfLineComments)
+      ?? defaults.spacesBeforeEndOfLineComments
     self.tabWidth =
       try container.decodeIfPresent(Int.self, forKey: .tabWidth)
       ?? defaults.tabWidth
@@ -243,35 +322,52 @@ public struct Configuration: Codable, Equatable {
     self.lineBreakBeforeEachGenericRequirement =
       try container.decodeIfPresent(Bool.self, forKey: .lineBreakBeforeEachGenericRequirement)
       ?? defaults.lineBreakBeforeEachGenericRequirement
+    self.lineBreakBetweenDeclarationAttributes =
+      try container.decodeIfPresent(Bool.self, forKey: .lineBreakBetweenDeclarationAttributes)
+      ?? defaults.lineBreakBetweenDeclarationAttributes
     self.prioritizeKeepingFunctionOutputTogether =
       try container.decodeIfPresent(Bool.self, forKey: .prioritizeKeepingFunctionOutputTogether)
       ?? defaults.prioritizeKeepingFunctionOutputTogether
     self.indentConditionalCompilationBlocks =
       try container.decodeIfPresent(Bool.self, forKey: .indentConditionalCompilationBlocks)
-    ?? defaults.indentConditionalCompilationBlocks
+      ?? defaults.indentConditionalCompilationBlocks
     self.lineBreakAroundMultilineExpressionChainComponents =
       try container.decodeIfPresent(
-        Bool.self, forKey: .lineBreakAroundMultilineExpressionChainComponents)
+        Bool.self,
+        forKey: .lineBreakAroundMultilineExpressionChainComponents
+      )
       ?? defaults.lineBreakAroundMultilineExpressionChainComponents
     self.spacesAroundRangeFormationOperators =
       try container.decodeIfPresent(
-        Bool.self, forKey: .spacesAroundRangeFormationOperators)
+        Bool.self,
+        forKey: .spacesAroundRangeFormationOperators
+      )
       ?? defaults.spacesAroundRangeFormationOperators
     self.fileScopedDeclarationPrivacy =
       try container.decodeIfPresent(
-        FileScopedDeclarationPrivacyConfiguration.self, forKey: .fileScopedDeclarationPrivacy)
+        FileScopedDeclarationPrivacyConfiguration.self,
+        forKey: .fileScopedDeclarationPrivacy
+      )
       ?? defaults.fileScopedDeclarationPrivacy
     self.indentSwitchCaseLabels =
       try container.decodeIfPresent(Bool.self, forKey: .indentSwitchCaseLabels)
-    ?? defaults.indentSwitchCaseLabels
+      ?? defaults.indentSwitchCaseLabels
     self.noAssignmentInExpressions =
       try container.decodeIfPresent(
-        NoAssignmentInExpressionsConfiguration.self, forKey: .noAssignmentInExpressions)
+        NoAssignmentInExpressionsConfiguration.self,
+        forKey: .noAssignmentInExpressions
+      )
       ?? defaults.noAssignmentInExpressions
     self.multiElementCollectionTrailingCommas =
       try container.decodeIfPresent(
-        Bool.self, forKey: .multiElementCollectionTrailingCommas)
-    ?? defaults.multiElementCollectionTrailingCommas
+        Bool.self,
+        forKey: .multiElementCollectionTrailingCommas
+      )
+      ?? defaults.multiElementCollectionTrailingCommas
+
+    self.reflowMultilineStringLiterals =
+      try container.decodeIfPresent(MultilineStringReflowBehavior.self, forKey: .reflowMultilineStringLiterals)
+      ?? defaults.reflowMultilineStringLiterals
 
     // If the `rules` key is not present at all, default it to the built-in set
     // so that the behavior is the same as if the configuration had been
@@ -288,6 +384,7 @@ public struct Configuration: Codable, Equatable {
     try container.encode(version, forKey: .version)
     try container.encode(maximumBlankLines, forKey: .maximumBlankLines)
     try container.encode(lineLength, forKey: .lineLength)
+    try container.encode(spacesBeforeEndOfLineComments, forKey: .spacesBeforeEndOfLineComments)
     try container.encode(tabWidth, forKey: .tabWidth)
     try container.encode(indentation, forKey: .indentation)
     try container.encode(respectsExistingLineBreaks, forKey: .respectsExistingLineBreaks)
@@ -296,15 +393,20 @@ public struct Configuration: Codable, Equatable {
     try container.encode(lineBreakBeforeEachGenericRequirement, forKey: .lineBreakBeforeEachGenericRequirement)
     try container.encode(prioritizeKeepingFunctionOutputTogether, forKey: .prioritizeKeepingFunctionOutputTogether)
     try container.encode(indentConditionalCompilationBlocks, forKey: .indentConditionalCompilationBlocks)
+    try container.encode(lineBreakBetweenDeclarationAttributes, forKey: .lineBreakBetweenDeclarationAttributes)
     try container.encode(
       lineBreakAroundMultilineExpressionChainComponents,
-      forKey: .lineBreakAroundMultilineExpressionChainComponents)
+      forKey: .lineBreakAroundMultilineExpressionChainComponents
+    )
     try container.encode(
-      spacesAroundRangeFormationOperators, forKey: .spacesAroundRangeFormationOperators)
+      spacesAroundRangeFormationOperators,
+      forKey: .spacesAroundRangeFormationOperators
+    )
     try container.encode(fileScopedDeclarationPrivacy, forKey: .fileScopedDeclarationPrivacy)
     try container.encode(indentSwitchCaseLabels, forKey: .indentSwitchCaseLabels)
     try container.encode(noAssignmentInExpressions, forKey: .noAssignmentInExpressions)
     try container.encode(multiElementCollectionTrailingCommas, forKey: .multiElementCollectionTrailingCommas)
+    try container.encode(reflowMultilineStringLiterals, forKey: .reflowMultilineStringLiterals)
     try container.encode(rules, forKey: .rules)
   }
 
@@ -328,7 +430,7 @@ public struct Configuration: Codable, Equatable {
       if FileManager.default.isReadableFile(atPath: candidateFile.path) {
         return candidateFile
       }
-    } while candidateDirectory.path != "/"
+    } while !candidateDirectory.isRoot
 
     return nil
   }
@@ -369,4 +471,18 @@ public struct NoAssignmentInExpressionsConfiguration: Codable, Equatable {
   ]
 
   public init() {}
+}
+
+fileprivate extension URL {
+  var isRoot: Bool {
+    #if os(Windows)
+    // FIXME: We should call into Windows' native check to check if this path is a root once https://github.com/swiftlang/swift-foundation/issues/976 is fixed.
+    // https://github.com/swiftlang/swift-format/issues/844
+    return self.pathComponents.count <= 1
+    #else
+    // On Linux, we may end up with an string for the path due to https://github.com/swiftlang/swift-foundation/issues/980
+    // TODO: Remove the check for "" once https://github.com/swiftlang/swift-foundation/issues/980 is fixed.
+    return self.path == "/" || self.path == ""
+    #endif
+  }
 }

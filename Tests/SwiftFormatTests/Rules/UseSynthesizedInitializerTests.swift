@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
   func testMemberwiseInitializerIsDiagnosed() {
@@ -21,7 +20,33 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"),
+        FindingSpec(
+          "1️⃣",
+          message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"
+        )
+      ]
+    )
+  }
+
+  func testNestedMemberwiseInitializerIsDiagnosed() {
+    assertLint(
+      UseSynthesizedInitializer.self,
+      """
+      public struct MyContainer {
+        public struct Person {
+          public var name: String
+
+          1️⃣init(name: String) {
+            self.name = name
+          }
+        }
+      }
+      """,
+      findings: [
+        FindingSpec(
+          "1️⃣",
+          message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"
+        )
       ]
     )
   }
@@ -44,7 +69,10 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"),
+        FindingSpec(
+          "1️⃣",
+          message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"
+        )
       ]
     )
   }
@@ -67,7 +95,10 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"),
+        FindingSpec(
+          "1️⃣",
+          message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"
+        )
       ]
     )
   }
@@ -333,7 +364,10 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"),
+        FindingSpec(
+          "1️⃣",
+          message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"
+        )
       ]
     )
   }
@@ -356,7 +390,10 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"),
+        FindingSpec(
+          "1️⃣",
+          message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"
+        )
       ]
     )
   }
@@ -408,9 +445,18 @@ final class UseSynthesizedInitializerTests: LintOrFormatRuleTestCase {
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"),
-        FindingSpec("2️⃣", message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"),
-        FindingSpec("3️⃣", message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"),
+        FindingSpec(
+          "1️⃣",
+          message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"
+        ),
+        FindingSpec(
+          "2️⃣",
+          message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"
+        ),
+        FindingSpec(
+          "3️⃣",
+          message: "remove this explicit initializer, which is identical to the compiler-synthesized initializer"
+        ),
       ]
     )
   }

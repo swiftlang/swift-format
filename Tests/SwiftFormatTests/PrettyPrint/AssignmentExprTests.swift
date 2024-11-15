@@ -47,93 +47,101 @@ final class AssignmentExprTests: PrettyPrintTestCase {
 
   func testAssignmentOperatorFromSequenceWithFunctionCalls() {
     let input =
-        """
-        result = firstOp + secondOp + someOpFetchingFunc(foo, bar: bar, baz: baz)
-        result = someOpFetchingFunc(foo, bar: bar, baz: baz)
-        result += someOpFetchingFunc(foo, bar: bar, baz: baz)
-        result = someOpFetchingFunc(foo, bar: bar, baz: baz) + someOtherOperand + andAThirdOneForReasons
-        result = firstOp + secondOp + thirdOp + someOpFetchingFunc(foo, bar, baz) + nextOp + lastOp
-        result += firstOp + secondOp + thirdOp + someOpFetchingFunc(foo, bar, baz) + nextOp + lastOp
-        """
+      """
+      result = firstOp + secondOp + someOpFetchingFunc(foo, bar: bar, baz: baz)
+      result = someOpFetchingFunc(foo, bar: bar, baz: baz)
+      result += someOpFetchingFunc(foo, bar: bar, baz: baz)
+      result = someOpFetchingFunc(foo, bar: bar, baz: baz) + someOtherOperand + andAThirdOneForReasons
+      result = firstOp + secondOp + thirdOp + someOpFetchingFunc(foo, bar, baz) + nextOp + lastOp
+      result += firstOp + secondOp + thirdOp + someOpFetchingFunc(foo, bar, baz) + nextOp + lastOp
+      """
 
-      let expectedWithArgBinPacking =
-        """
-        result =
-          firstOp + secondOp
-          + someOpFetchingFunc(
-            foo, bar: bar, baz: baz)
-        result = someOpFetchingFunc(
+    let expectedWithArgBinPacking =
+      """
+      result =
+        firstOp + secondOp
+        + someOpFetchingFunc(
           foo, bar: bar, baz: baz)
-        result += someOpFetchingFunc(
+      result = someOpFetchingFunc(
+        foo, bar: bar, baz: baz)
+      result += someOpFetchingFunc(
+        foo, bar: bar, baz: baz)
+      result =
+        someOpFetchingFunc(
           foo, bar: bar, baz: baz)
-        result =
-          someOpFetchingFunc(
-            foo, bar: bar, baz: baz)
-          + someOtherOperand
-          + andAThirdOneForReasons
-        result =
-          firstOp + secondOp + thirdOp
-          + someOpFetchingFunc(
-            foo, bar, baz) + nextOp
-          + lastOp
-        result +=
-          firstOp + secondOp + thirdOp
-          + someOpFetchingFunc(
-            foo, bar, baz) + nextOp
-          + lastOp
+        + someOtherOperand
+        + andAThirdOneForReasons
+      result =
+        firstOp + secondOp + thirdOp
+        + someOpFetchingFunc(
+          foo, bar, baz) + nextOp
+        + lastOp
+      result +=
+        firstOp + secondOp + thirdOp
+        + someOpFetchingFunc(
+          foo, bar, baz) + nextOp
+        + lastOp
 
-        """
+      """
 
-      var config = Configuration.forTesting
-      config.lineBreakBeforeEachArgument = false
-      assertPrettyPrintEqual(
-        input: input, expected: expectedWithArgBinPacking, linelength: 35, configuration: config)
+    var config = Configuration.forTesting
+    config.lineBreakBeforeEachArgument = false
+    assertPrettyPrintEqual(
+      input: input,
+      expected: expectedWithArgBinPacking,
+      linelength: 35,
+      configuration: config
+    )
 
-      let expectedWithBreakBeforeEachArg =
-        """
-        result =
-          firstOp + secondOp
-          + someOpFetchingFunc(
-            foo,
-            bar: bar,
-            baz: baz
-          )
-        result = someOpFetchingFunc(
+    let expectedWithBreakBeforeEachArg =
+      """
+      result =
+        firstOp + secondOp
+        + someOpFetchingFunc(
           foo,
           bar: bar,
           baz: baz
         )
-        result += someOpFetchingFunc(
+      result = someOpFetchingFunc(
+        foo,
+        bar: bar,
+        baz: baz
+      )
+      result += someOpFetchingFunc(
+        foo,
+        bar: bar,
+        baz: baz
+      )
+      result =
+        someOpFetchingFunc(
           foo,
           bar: bar,
           baz: baz
-        )
-        result =
-          someOpFetchingFunc(
-            foo,
-            bar: bar,
-            baz: baz
-          ) + someOtherOperand
-          + andAThirdOneForReasons
-        result =
-          firstOp + secondOp + thirdOp
-          + someOpFetchingFunc(
-            foo,
-            bar,
-            baz
-          ) + nextOp + lastOp
-        result +=
-          firstOp + secondOp + thirdOp
-          + someOpFetchingFunc(
-            foo,
-            bar,
-            baz
-          ) + nextOp + lastOp
+        ) + someOtherOperand
+        + andAThirdOneForReasons
+      result =
+        firstOp + secondOp + thirdOp
+        + someOpFetchingFunc(
+          foo,
+          bar,
+          baz
+        ) + nextOp + lastOp
+      result +=
+        firstOp + secondOp + thirdOp
+        + someOpFetchingFunc(
+          foo,
+          bar,
+          baz
+        ) + nextOp + lastOp
 
-        """
-      config.lineBreakBeforeEachArgument = true
-      assertPrettyPrintEqual(
-        input: input, expected: expectedWithBreakBeforeEachArg, linelength: 35, configuration: config)
+      """
+    config.lineBreakBeforeEachArgument = true
+    assertPrettyPrintEqual(
+      input: input,
+      expected: expectedWithBreakBeforeEachArg,
+      linelength: 35,
+      configuration: config
+    )
   }
 
   func testAssignmentPatternBindingFromSequenceWithFunctionCalls() {
@@ -169,7 +177,11 @@ final class AssignmentExprTests: PrettyPrintTestCase {
     var config = Configuration.forTesting
     config.lineBreakBeforeEachArgument = false
     assertPrettyPrintEqual(
-      input: input, expected: expectedWithArgBinPacking, linelength: 35, configuration: config)
+      input: input,
+      expected: expectedWithArgBinPacking,
+      linelength: 35,
+      configuration: config
+    )
 
     let expectedWithBreakBeforeEachArg =
       """
@@ -203,6 +215,10 @@ final class AssignmentExprTests: PrettyPrintTestCase {
       """
     config.lineBreakBeforeEachArgument = true
     assertPrettyPrintEqual(
-      input: input, expected: expectedWithBreakBeforeEachArg, linelength: 35, configuration: config)
+      input: input,
+      expected: expectedWithBreakBeforeEachArg,
+      linelength: 35,
+      configuration: config
+    )
   }
 }

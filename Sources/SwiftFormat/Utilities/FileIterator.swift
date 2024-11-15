@@ -14,7 +14,7 @@ import Foundation
 
 /// Iterator for looping over lists of files and directories. Directories are automatically
 /// traversed recursively, and we check for files with a ".swift" extension.
-@_spi(Testing)
+@_spi(Internal)
 public struct FileIterator: Sequence, IteratorProtocol {
 
   /// List of file and directory URLs to iterate over.
@@ -79,14 +79,15 @@ public struct FileIterator: Sequence, IteratorProtocol {
           else {
             break
           }
-          next = URL(fileURLWithPath: destination)
+          next = URL(fileURLWithPath: destination, relativeTo: next)
           fallthrough
 
         case .typeDirectory:
           dirIterator = FileManager.default.enumerator(
             at: next,
             includingPropertiesForKeys: nil,
-            options: [.skipsHiddenFiles])
+            options: [.skipsHiddenFiles]
+          )
           currentDirectory = next
 
         default:
@@ -96,12 +97,12 @@ public struct FileIterator: Sequence, IteratorProtocol {
           output = next
         }
       }
-      if let out = output, visited.contains(out.absoluteURL.standardized.path) {
+      if let out = output, visited.contains(out.standardizedFileURL.path) {
         output = nil
       }
     }
     if let out = output {
-      visited.insert(out.absoluteURL.standardized.path)
+      visited.insert(out.standardizedFileURL.path)
     }
     return output
   }
@@ -113,6 +114,14 @@ public struct FileIterator: Sequence, IteratorProtocol {
       guard let item = dirIterator?.nextObject() as? URL else {
         break
       }
+      #if os(Windows)
+      // Windows does not consider files and directories starting with `.` as hidden but we don't want to traverse
+      // into eg. `.build`. Manually skip any items starting with `.`.
+      if item.lastPathComponent.hasPrefix(".") {
+        dirIterator?.skipDescendants()
+        continue
+      }
+      #endif
 
       guard item.lastPathComponent.hasSuffix(fileSuffix), let fileType = fileType(at: item) else {
         continue
@@ -126,7 +135,7 @@ public struct FileIterator: Sequence, IteratorProtocol {
         else {
           break
         }
-        path = destination
+        path = URL(fileURLWithPath: destination, relativeTo: item).path
         fallthrough
 
       case .typeRegular:

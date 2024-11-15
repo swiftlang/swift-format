@@ -1,6 +1,6 @@
 import SwiftFormat
 
-/// Sanity checks and regression tests for the `respectsExistingLineBreaks` configuration setting
+/// Basic checks and regression tests for the `respectsExistingLineBreaks` configuration setting
 /// in both true and false states.
 final class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
   func testExpressions() {
@@ -24,8 +24,11 @@ final class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
       """
 
     assertPrettyPrintEqual(
-      input: input, expected: expectedRespecting, linelength: 12,
-      configuration: configuration(respectingExistingLineBreaks: true))
+      input: input,
+      expected: expectedRespecting,
+      linelength: 12,
+      configuration: configuration(respectingExistingLineBreaks: true)
+    )
 
     let expectedNotRespecting =
       """
@@ -36,8 +39,11 @@ final class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
       """
 
     assertPrettyPrintEqual(
-      input: input, expected: expectedNotRespecting, linelength: 25,
-      configuration: configuration(respectingExistingLineBreaks: false))
+      input: input,
+      expected: expectedNotRespecting,
+      linelength: 25,
+      configuration: configuration(respectingExistingLineBreaks: false)
+    )
   }
 
   func testCodeBlocksAndMemberDecls() {
@@ -82,8 +88,11 @@ final class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
 
     // No changes expected when respecting existing newlines.
     assertPrettyPrintEqual(
-      input: input, expected: input + "\n", linelength: 80,
-      configuration: configuration(respectingExistingLineBreaks: true))
+      input: input,
+      expected: input + "\n",
+      linelength: 80,
+      configuration: configuration(respectingExistingLineBreaks: true)
+    )
 
     let expectedNotRespecting =
       """
@@ -110,8 +119,11 @@ final class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
       """
 
     assertPrettyPrintEqual(
-      input: input, expected: expectedNotRespecting, linelength: 80,
-      configuration: configuration(respectingExistingLineBreaks: false))
+      input: input,
+      expected: expectedNotRespecting,
+      linelength: 80,
+      configuration: configuration(respectingExistingLineBreaks: false)
+    )
   }
 
   func testSemicolons() {
@@ -130,8 +142,11 @@ final class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
     // the same line if they were originally like that and likewise preserve newlines after
     // semicolons if present.
     assertPrettyPrintEqual(
-      input: input, expected: input + "\n", linelength: 80,
-      configuration: configuration(respectingExistingLineBreaks: true))
+      input: input,
+      expected: input + "\n",
+      linelength: 80,
+      configuration: configuration(respectingExistingLineBreaks: true)
+    )
 
     let expectedNotRespecting =
       """
@@ -150,8 +165,11 @@ final class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
     // When not respecting newlines every semicolon-delimited statement or declaration should end up
     // on its own line.
     assertPrettyPrintEqual(
-      input: input, expected: expectedNotRespecting, linelength: 80,
-      configuration: configuration(respectingExistingLineBreaks: false))
+      input: input,
+      expected: expectedNotRespecting,
+      linelength: 80,
+      configuration: configuration(respectingExistingLineBreaks: false)
+    )
   }
 
   func testInvalidBreaksAreAlwaysRejected() {
@@ -176,8 +194,11 @@ final class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
       """
 
     assertPrettyPrintEqual(
-      input: input, expected: expectedRespecting, linelength: 80,
-      configuration: configuration(respectingExistingLineBreaks: true))
+      input: input,
+      expected: expectedRespecting,
+      linelength: 80,
+      configuration: configuration(respectingExistingLineBreaks: true)
+    )
 
     let expectedNotRespecting =
       """
@@ -186,8 +207,11 @@ final class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
       """
 
     assertPrettyPrintEqual(
-      input: input, expected: expectedNotRespecting, linelength: 80,
-      configuration: configuration(respectingExistingLineBreaks: false))
+      input: input,
+      expected: expectedNotRespecting,
+      linelength: 80,
+      configuration: configuration(respectingExistingLineBreaks: false)
+    )
   }
 
   /// Creates a new configuration with the given value for `respectsExistingLineBreaks` and default

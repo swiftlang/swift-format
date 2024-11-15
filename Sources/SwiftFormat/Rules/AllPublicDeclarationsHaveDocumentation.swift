@@ -46,7 +46,7 @@ public final class AllPublicDeclarationsHaveDocumentation: SyntaxLintRule {
 
   public override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseMissingDocComment(DeclSyntax(node), name: node.name.text, modifiers: node.modifiers)
-    return .skipChildren
+    return .visitChildren
   }
 
   public override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
@@ -57,7 +57,17 @@ public final class AllPublicDeclarationsHaveDocumentation: SyntaxLintRule {
 
   public override func visit(_ node: StructDeclSyntax) -> SyntaxVisitorContinueKind {
     diagnoseMissingDocComment(DeclSyntax(node), name: node.name.text, modifiers: node.modifiers)
-    return .skipChildren
+    return .visitChildren
+  }
+
+  public override func visit(_ node: EnumDeclSyntax) -> SyntaxVisitorContinueKind {
+    diagnoseMissingDocComment(DeclSyntax(node), name: node.name.text, modifiers: node.modifiers)
+    return .visitChildren
+  }
+
+  public override func visit(_ node: ActorDeclSyntax) -> SyntaxVisitorContinueKind {
+    diagnoseMissingDocComment(DeclSyntax(node), name: node.name.text, modifiers: node.modifiers)
+    return .visitChildren
   }
 
   public override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {

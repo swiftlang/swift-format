@@ -1,8 +1,7 @@
+@_spi(Testing) import SwiftFormat
 import SwiftSyntax
 import SwiftSyntaxBuilder
 import XCTest
-
-@_spi(Testing) import SwiftFormat
 
 final class DocumentationCommentTextTests: XCTestCase {
   func testSimpleDocLineComment() throws {
@@ -16,11 +15,11 @@ final class DocumentationCommentTextTests: XCTestCase {
       commentText.text,
       """
       A simple doc comment.
-      
+
       """
     )
   }
-  
+
   func testOneLineDocBlockComment() throws {
     let decl: DeclSyntax = """
       /** A simple doc comment. */
@@ -32,11 +31,11 @@ final class DocumentationCommentTextTests: XCTestCase {
       commentText.text,
       """
       A simple doc comment.\u{0020}
-      
+
       """
     )
   }
-  
+
   func testDocBlockCommentWithASCIIArt() throws {
     let decl: DeclSyntax = """
       /**
@@ -50,11 +49,29 @@ final class DocumentationCommentTextTests: XCTestCase {
       commentText.text,
       """
       A simple doc comment.
-      
+
       """
     )
   }
-  
+
+  func testIndentedDocBlockCommentWithASCIIArt() throws {
+    let decl: DeclSyntax = """
+        /**
+         * A simple doc comment.
+         */
+        func f() {}
+      """
+    let commentText = try XCTUnwrap(DocumentationCommentText(extractedFrom: decl.leadingTrivia))
+    XCTAssertEqual(commentText.introducer, .block)
+    XCTAssertEqual(
+      commentText.text,
+      """
+      A simple doc comment.
+
+      """
+    )
+  }
+
   func testDocBlockCommentWithoutASCIIArt() throws {
     let decl: DeclSyntax = """
       /**
@@ -68,11 +85,11 @@ final class DocumentationCommentTextTests: XCTestCase {
       commentText.text,
       """
       A simple doc comment.
-      
+
       """
     )
   }
-  
+
   func testMultilineDocLineComment() throws {
     let decl: DeclSyntax = """
       /// A doc comment.
@@ -90,21 +107,21 @@ final class DocumentationCommentTextTests: XCTestCase {
       commentText.text,
       """
       A doc comment.
-      
+
       This is a longer paragraph,
       containing more detail.
-      
+
       - Parameter x: A parameter.
       - Returns: A value.
-      
+
       """
     )
   }
-  
+
   func testDocLineCommentStopsAtBlankLine() throws {
     let decl: DeclSyntax = """
       /// This should not be part of the comment.
-      
+
       /// A doc comment.
       func f(x: Int) -> Int {}
       """
@@ -114,15 +131,15 @@ final class DocumentationCommentTextTests: XCTestCase {
       commentText.text,
       """
       A doc comment.
-      
+
       """
     )
   }
-  
+
   func testDocBlockCommentStopsAtBlankLine() throws {
     let decl: DeclSyntax = """
       /** This should not be part of the comment. */
-      
+
       /**
        * This is part of the comment.
        */
@@ -136,7 +153,7 @@ final class DocumentationCommentTextTests: XCTestCase {
       """
       This is part of the comment.
        so is this\u{0020}
-      
+
       """
     )
   }

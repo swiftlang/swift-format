@@ -14,6 +14,7 @@ add_library(SwiftFormat
   API/Finding.swift
   API/FindingCategorizing.swift
   API/Indent.swift
+  API/Selection.swift
   API/SwiftFormatError.swift
   API/SwiftFormatter.swift
   API/SwiftLinter.swift
@@ -41,10 +42,12 @@ add_library(SwiftFormat
   Core/SyntaxLintRule.swift
   Core/SyntaxProtocol+Convenience.swift
   Core/Trivia+Convenience.swift
+  Core/WithAttributesSyntax+Convenience.swift
   Core/WithSemicolonSyntax.swift
   PrettyPrint/Comment.swift
   PrettyPrint/Indent+Length.swift
   PrettyPrint/PrettyPrint.swift
+  PrettyPrint/PrettyPrintBuffer.swift
   PrettyPrint/PrettyPrintFindingCategory.swift
   PrettyPrint/Token.swift
   PrettyPrint/TokenStreamCreator.swift
@@ -55,6 +58,7 @@ add_library(SwiftFormat
   Rules/AlwaysUseLiteralForEmptyCollectionInit.swift
   Rules/AlwaysUseLowerCamelCase.swift
   Rules/AmbiguousTrailingClosureOverload.swift
+  Rules/AvoidRetroactiveConformances.swift
   Rules/BeginDocumentationCommentWithOneLineSummary.swift
   Rules/DoNotUseSemicolons.swift
   Rules/DontRepeatTypeInStaticProperties.swift
@@ -69,6 +73,7 @@ add_library(SwiftFormat
   Rules/NoAssignmentInExpressions.swift
   Rules/NoBlockComments.swift
   Rules/NoCasesWithOnlyFallthrough.swift
+  Rules/NoEmptyLineOpeningClosingBraces.swift
   Rules/NoEmptyTrailingClosureParentheses.swift
   Rules/NoLabelsInCasePatterns.swift
   Rules/NoLeadingUnderscores.swift
@@ -91,7 +96,8 @@ add_library(SwiftFormat
   Rules/UseSynthesizedInitializer.swift
   Rules/UseTripleSlashForDocumentationComments.swift
   Rules/UseWhereClausesInForLoops.swift
-  Rules/ValidateDocumentationComments.swift)
+  Rules/ValidateDocumentationComments.swift
+  Utilities/FileIterator.swift)
 target_link_libraries(SwiftFormat PUBLIC
   SwiftMarkdown::Markdown
   SwiftSyntax::SwiftSyntax

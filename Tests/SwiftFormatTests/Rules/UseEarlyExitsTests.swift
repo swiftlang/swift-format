@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class UseEarlyExitsTests: LintOrFormatRuleTestCase {
   func testBasicIfElse() {
@@ -25,7 +24,7 @@ final class UseEarlyExitsTests: LintOrFormatRuleTestCase {
           trueBlock()
         """,
       findings: [
-        FindingSpec("1️⃣", message: "replace this 'if/else' block with a 'guard' statement containing the early exit"),
+        FindingSpec("1️⃣", message: "replace this 'if/else' block with a 'guard' statement containing the early exit")
       ]
     )
   }
@@ -51,7 +50,7 @@ final class UseEarlyExitsTests: LintOrFormatRuleTestCase {
           return
         """,
       findings: [
-        FindingSpec("1️⃣", message: "replace this 'if/else' block with a 'guard' statement containing the early exit"),
+        FindingSpec("1️⃣", message: "replace this 'if/else' block with a 'guard' statement containing the early exit")
       ]
     )
   }

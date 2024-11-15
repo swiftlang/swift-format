@@ -73,10 +73,14 @@ extension Rule {
         syntaxLocation = node.startLocation(converter: context.sourceLocationConverter)
       case .leadingTrivia(let index):
         syntaxLocation = node.startLocation(
-          ofLeadingTriviaAt: index, converter: context.sourceLocationConverter)
+          ofLeadingTriviaAt: index,
+          converter: context.sourceLocationConverter
+        )
       case .trailingTrivia(let index):
         syntaxLocation = node.startLocation(
-          ofTrailingTriviaAt: index, converter: context.sourceLocationConverter)
+          ofTrailingTriviaAt: index,
+          converter: context.sourceLocationConverter
+        )
       }
     } else {
       syntaxLocation = nil
@@ -87,6 +91,7 @@ extension Rule {
       message,
       category: category,
       location: syntaxLocation.flatMap(Finding.Location.init),
-      notes: notes)
+      notes: notes
+    )
   }
 }

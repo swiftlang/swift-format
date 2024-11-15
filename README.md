@@ -1,7 +1,7 @@
 # swift-format
 
 `swift-format` provides the formatting technology for
-[SourceKit-LSP](https://github.com/apple/sourcekit-lsp) and the building
+[SourceKit-LSP](https://github.com/swiftlang/sourcekit-lsp) and the building
 blocks for doing code formatting transformations.
 
 This package can be used as a [command line tool](#command-line-usage)
@@ -18,7 +18,7 @@ invoked via an [API](#api-usage).
 ### Swift 5.8 and later
 
 As of Swift 5.8, swift-format depends on the version of
-[SwiftSyntax](https://github.com/apple/swift-syntax) whose parser has been
+[SwiftSyntax](https://github.com/swiftlang/swift-syntax) whose parser has been
 rewritten in Swift and no longer has dependencies on libraries in the
 Swift toolchain.
 
@@ -34,7 +34,7 @@ SwiftSyntax; the 5.8 release of swift-format is `508.0.0`, not `0.50800.0`.
 ### Swift 5.7 and earlier
 
 `swift-format` versions 0.50700.0 and earlier depend on versions of
-[SwiftSyntax](https://github.com/apple/swift-syntax) that used a standalone
+[SwiftSyntax](https://github.com/swiftlang/swift-syntax) that used a standalone
 parsing library distributed as part of the Swift toolchain. When using these
 versions, you should check out and build `swift-format` from the release
 tag or branch that is compatible with the version of Swift you are using.
@@ -61,8 +61,11 @@ For example, if you are using Xcode 13.3 (Swift 5.6), you will need
 ## Getting swift-format
 
 If you are mainly interested in using swift-format (rather than developing it),
-then you can get swift-format either via [Homebrew](https://brew.sh/) or by checking out the
-source and building it.
+then you can get it in three different ways:
+
+### Included in the Swift Toolchain
+
+Swift 6 (included with Xcode 16) and above include swift-format in the toolchain. You can run `swift-format` from anywhere on the system using `swift format` (notice the space instead of dash). To find the path at which `swift-format` is installed in Xcode, run `xcrun --find swift-format`.
 
 ### Installing via Homebrew
 
@@ -74,7 +77,7 @@ Install `swift-format` using the following commands:
 
 ```sh
 VERSION=510.1.0  # replace this with the version you need
-git clone https://github.com/apple/swift-format.git
+git clone https://github.com/swiftlang/swift-format.git
 cd swift-format
 git checkout "tags/$VERSION"
 swift build -c release
@@ -257,3 +260,24 @@ been merged into `main`.
 
 If you are interested in developing `swift-format`, there is additional
 documentation about that [here](Documentation/Development.md).
+
+## Contributing
+
+Contributions to Swift are welcomed and encouraged! Please see the
+[Contributing to Swift guide](https://swift.org/contributing/).
+
+Before submitting the pull request, please make sure you have [tested your
+ changes](https://github.com/apple/swift/blob/main/docs/ContinuousIntegration.md)
+ and that they follow the Swift project [guidelines for contributing
+ code](https://swift.org/contributing/#contributing-code).
+
+To be a truly great community, [Swift.org](https://swift.org/) needs to welcome
+developers from all walks of life, with different backgrounds, and with a wide
+range of experience. A diverse and friendly community will have more great
+ideas, more unique perspectives, and produce more great code. We will work
+diligently to make the Swift community welcoming to everyone.
+
+To give clarity of what is expected of our members, Swift has adopted the
+code of conduct defined by the Contributor Covenant. This document is used
+across many open source communities, and we think it articulates our values
+well. For more, see the [Code of Conduct](https://swift.org/code-of-conduct/).

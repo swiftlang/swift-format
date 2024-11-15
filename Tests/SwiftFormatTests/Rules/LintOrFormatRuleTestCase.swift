@@ -1,10 +1,9 @@
 import SwiftFormat
+@_spi(Rules) @_spi(Testing) import SwiftFormat
 import SwiftOperators
-import SwiftParser
+@_spi(ExperimentalLanguageFeatures) import SwiftParser
 import SwiftSyntax
 import XCTest
-
-@_spi(Rules) @_spi(Testing) import SwiftFormat
 @_spi(Testing) import _SwiftFormatTestSupport
 
 class LintOrFormatRuleTestCase: DiagnosingTestCase {
@@ -17,17 +16,21 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
   ///     where findings are expected to be emitted.
   ///   - findings: A list of `FindingSpec` values that describe the findings that are expected to
   ///     be emitted.
+  ///   - experimentalFeatures: The set of experimental features that should be enabled in the
+  ///     parser.
   ///   - file: The file the test resides in (defaults to the current caller's file).
   ///   - line: The line the test resides in (defaults to the current caller's line).
   final func assertLint<LintRule: SyntaxLintRule>(
     _ type: LintRule.Type,
     _ markedSource: String,
     findings: [FindingSpec] = [],
+    experimentalFeatures: Parser.ExperimentalFeatures = [],
     file: StaticString = #file,
     line: UInt = #line
   ) {
     let markedText = MarkedText(textWithMarkers: markedSource)
-    let tree = Parser.parse(source: markedText.textWithoutMarkers)
+    let unmarkedSource = markedText.textWithoutMarkers
+    let tree = Parser.parse(source: unmarkedSource, experimentalFeatures: experimentalFeatures)
     let sourceFileSyntax =
       try! OperatorTable.standardOperators.foldAll(tree).as(SourceFileSyntax.self)!
 
@@ -39,38 +42,34 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
     let context = makeContext(
       sourceFileSyntax: sourceFileSyntax,
       configuration: configuration,
-      findingConsumer: { emittedFindings.append($0) })
-    let linter = type.init(context: context)
-    linter.walk(sourceFileSyntax)
-
-    assertFindings(
-      expected: findings,
-      markerLocations: markedText.markers,
-      emittedFindings: emittedFindings,
-      context: context,
-      file: file,
-      line: line)
+      selection: .infinite,
+      findingConsumer: { emittedFindings.append($0) }
+    )
 
     var emittedPipelineFindings = [Finding]()
     // Disable default rules, so only select rule runs in pipeline
     configuration.rules = [type.ruleName: true]
     let pipeline = SwiftLinter(
       configuration: configuration,
-      findingConsumer: { emittedPipelineFindings.append($0) })
+      findingConsumer: { emittedPipelineFindings.append($0) }
+    )
     pipeline.debugOptions.insert(.disablePrettyPrint)
     try! pipeline.lint(
       syntax: sourceFileSyntax,
+      source: unmarkedSource,
       operatorTable: OperatorTable.standardOperators,
-      assumingFileURL: URL(string: file.description)!)
+      assumingFileURL: URL(fileURLWithPath: file.description)
+    )
 
-    // Check that pipeline produces the same findings as the isolated linter rule
+    // Check that pipeline produces the expected findings
     assertFindings(
       expected: findings,
       markerLocations: markedText.markers,
       emittedFindings: emittedPipelineFindings,
       context: context,
       file: file,
-      line: line)
+      line: line
+    )
   }
 
   /// Asserts that the result of applying a formatter to the provided input code yields the output.
@@ -84,6 +83,8 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
   ///   - findings: A list of `FindingSpec` values that describe the findings that are expected to
   ///     be emitted.
   ///   - configuration: The configuration to use when formatting (or nil to use the default).
+  ///   - experimentalFeatures: The set of experimental features that should be enabled in the
+  ///     parser.
   ///   - file: The file the test resides in (defaults to the current caller's file)
   ///   - line:  The line the test resides in (defaults to the current caller's line)
   final func assertFormatting(
@@ -92,11 +93,13 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
     expected: String,
     findings: [FindingSpec] = [],
     configuration: Configuration? = nil,
+    experimentalFeatures: Parser.ExperimentalFeatures = [],
     file: StaticString = #file,
     line: UInt = #line
   ) {
     let markedInput = MarkedText(textWithMarkers: input)
-    let tree = Parser.parse(source: markedInput.textWithoutMarkers)
+    let originalSource: String = markedInput.textWithoutMarkers
+    let tree = Parser.parse(source: originalSource, experimentalFeatures: experimentalFeatures)
     let sourceFileSyntax =
       try! OperatorTable.standardOperators.foldAll(tree).as(SourceFileSyntax.self)!
 
@@ -108,7 +111,9 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
     let context = makeContext(
       sourceFileSyntax: sourceFileSyntax,
       configuration: configuration,
-      findingConsumer: { emittedFindings.append($0) })
+      selection: .infinite,
+      findingConsumer: { emittedFindings.append($0) }
+    )
 
     let formatter = formatType.init(context: context)
     let actual = formatter.visit(sourceFileSyntax)
@@ -120,7 +125,8 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
       emittedFindings: emittedFindings,
       context: context,
       file: file,
-      line: line)
+      line: line
+    )
 
     // Verify that the pretty printer can consume the transformed tree (e.g., it does not contain
     // any unfolded `SequenceExpr`s). Then do a whitespace-insensitive comparison of the two trees
@@ -129,31 +135,46 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
     // misplacing trivia in a way that the pretty-printer isn't able to handle).
     let prettyPrintedSource = PrettyPrinter(
       context: context,
+      source: originalSource,
       node: Syntax(actual),
       printTokenStream: false,
       whitespaceOnly: false
     ).prettyPrint()
-    let prettyPrintedTree = Parser.parse(source: prettyPrintedSource)
+    let prettyPrintedTree = Parser.parse(source: prettyPrintedSource, experimentalFeatures: experimentalFeatures)
     XCTAssertEqual(
       whitespaceInsensitiveText(of: actual),
       whitespaceInsensitiveText(of: prettyPrintedTree),
       "After pretty-printing and removing fluid whitespace, the files did not match",
-      file: file, line: line)
+      file: file,
+      line: line
+    )
 
     var emittedPipelineFindings = [Finding]()
     // Disable default rules, so only select rule runs in pipeline
     configuration.rules = [formatType.ruleName: true]
     let pipeline = SwiftFormatter(
-      configuration: configuration, findingConsumer: { emittedPipelineFindings.append($0) })
+      configuration: configuration,
+      findingConsumer: { emittedPipelineFindings.append($0) }
+    )
     pipeline.debugOptions.insert(.disablePrettyPrint)
     var pipelineActual = ""
     try! pipeline.format(
-      syntax: sourceFileSyntax, operatorTable: OperatorTable.standardOperators,
-      assumingFileURL: nil, to: &pipelineActual)
+      syntax: sourceFileSyntax,
+      source: originalSource,
+      operatorTable: OperatorTable.standardOperators,
+      assumingFileURL: nil,
+      selection: .infinite,
+      to: &pipelineActual
+    )
     assertStringsEqualWithDiff(pipelineActual, expected)
     assertFindings(
-      expected: findings, markerLocations: markedInput.markers,
-      emittedFindings: emittedPipelineFindings, context: context, file: file, line: line)
+      expected: findings,
+      markerLocations: markedInput.markers,
+      emittedFindings: emittedPipelineFindings,
+      context: context,
+      file: file,
+      line: line
+    )
   }
 }
 

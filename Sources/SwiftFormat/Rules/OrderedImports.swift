@@ -168,7 +168,8 @@ public final class OrderedImports: SyntaxFormatRule {
         switch lineType {
         case .regularImport, .declImport:
           diagnose(
-            .groupImports(before: lineType, after: LineType.testableImport), on: line.firstToken
+            .groupImports(before: lineType, after: LineType.testableImport),
+            on: line.firstToken
           )
         default: ()
         }
@@ -178,7 +179,8 @@ public final class OrderedImports: SyntaxFormatRule {
         switch lineType {
         case .regularImport:
           diagnose(
-            .groupImports(before: lineType, after: LineType.declImport), on: line.firstToken
+            .groupImports(before: lineType, after: LineType.declImport),
+            on: line.firstToken
           )
         default: ()
         }
@@ -281,9 +283,10 @@ fileprivate func joinLines(_ inputLineLists: [Line]...) -> [Line] {
 /// This function transforms the statements in a CodeBlockItemListSyntax object into a list of Line
 /// objects. Blank lines and standalone comments are represented by their own Line object. Code with
 /// a trailing comment are represented together in the same Line.
-fileprivate func generateLines(codeBlockItemList: CodeBlockItemListSyntax, context: Context)
-  -> [Line]
-{
+fileprivate func generateLines(
+  codeBlockItemList: CodeBlockItemListSyntax,
+  context: Context
+) -> [Line] {
   var lines: [Line] = []
   var currentLine = Line()
 
@@ -310,7 +313,7 @@ fileprivate func generateLines(codeBlockItemList: CodeBlockItemListSyntax, conte
       if currentLine.syntaxNode != nil {
         appendNewLine()
       }
-      let sortable = context.isRuleEnabled(OrderedImports.self, node: Syntax(block))
+      let sortable = context.shouldFormat(OrderedImports.self, node: Syntax(block))
       var blockWithoutTrailingTrivia = block
       blockWithoutTrailingTrivia.trailingTrivia = []
       currentLine.syntaxNode = .importCodeBlock(blockWithoutTrailingTrivia, sortable: sortable)

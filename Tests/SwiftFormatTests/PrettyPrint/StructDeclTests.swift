@@ -208,7 +208,7 @@ final class StructDeclTests: PrettyPrintTestCase {
 
   func testStructWhereClause_lineBreakBeforeEachGenericRequirement() {
     let input =
-    """
+      """
       struct MyStruct<S, T> where S: Collection {
         let A: Int
         let B: Double
@@ -224,7 +224,7 @@ final class StructDeclTests: PrettyPrintTestCase {
       """
 
     let expected =
-    """
+      """
       struct MyStruct<S, T> where S: Collection {
         let A: Int
         let B: Double
@@ -295,7 +295,7 @@ final class StructDeclTests: PrettyPrintTestCase {
 
   func testStructWhereClauseWithInheritance_lineBreakBeforeEachGenericRequirement() {
     let input =
-    """
+      """
       struct MyStruct<S, T>: ProtoOne where S: Collection {
         let A: Int
         let B: Double
@@ -311,7 +311,7 @@ final class StructDeclTests: PrettyPrintTestCase {
       """
 
     let expected =
-    """
+      """
       struct MyStruct<S, T>: ProtoOne where S: Collection {
         let A: Int
         let B: Double

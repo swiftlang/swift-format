@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class NoLeadingUnderscoresTests: LintOrFormatRuleTestCase {
   func testVars() {
@@ -135,7 +134,7 @@ final class NoLeadingUnderscoresTests: LintOrFormatRuleTestCase {
       infix operator <> : _BazPrecedence
       """,
       findings: [
-        FindingSpec("1️⃣", message: "remove the leading '_' from the name '_FooPrecedence'"),
+        FindingSpec("1️⃣", message: "remove the leading '_' from the name '_FooPrecedence'")
       ]
     )
   }
@@ -148,7 +147,7 @@ final class NoLeadingUnderscoresTests: LintOrFormatRuleTestCase {
       typealias 1️⃣_Bar = Bar
       """,
       findings: [
-        FindingSpec("1️⃣", message: "remove the leading '_' from the name '_Bar'"),
+        FindingSpec("1️⃣", message: "remove the leading '_' from the name '_Bar'")
       ]
     )
   }

@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2020 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2024 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -35,6 +35,9 @@ class Frontend {
     /// The configuration that should applied for this file.
     let configuration: Configuration
 
+    /// the selected ranges to process
+    let selection: Selection
+
     /// Returns the string contents of the file.
     ///
     /// The contents of the file are assumed to be UTF-8 encoded. If there is an error decoding the
@@ -45,10 +48,16 @@ class Frontend {
       return String(data: sourceData, encoding: .utf8)
     }()
 
-    init(fileHandle: FileHandle, url: URL, configuration: Configuration) {
+    init(
+      fileHandle: FileHandle,
+      url: URL,
+      configuration: Configuration,
+      selection: Selection = .infinite
+    ) {
       self.fileHandle = fileHandle
       self.url = url
       self.configuration = configuration
+      self.selection = selection
     }
   }
 
@@ -80,7 +89,8 @@ class Frontend {
     self.lintFormatOptions = lintFormatOptions
 
     self.diagnosticPrinter = StderrDiagnosticPrinter(
-      colorMode: lintFormatOptions.colorDiagnostics.map { $0 ? .on : .off } ?? .auto)
+      colorMode: lintFormatOptions.colorDiagnostics.map { $0 ? .on : .off } ?? .auto
+    )
     self.diagnosticsEngine =
       DiagnosticsEngine(diagnosticsHandlers: [diagnosticPrinter.printDiagnostic])
   }
@@ -92,7 +102,8 @@ class Frontend {
     } else {
       processURLs(
         lintFormatOptions.paths.map(URL.init(fileURLWithPath:)),
-        parallel: lintFormatOptions.parallel)
+        parallel: lintFormatOptions.parallel
+      )
     }
   }
 
@@ -108,9 +119,13 @@ class Frontend {
 
   /// Processes source content from standard input.
   private func processStandardInput() {
-    guard let configuration = configuration(
-      fromPathOrString: lintFormatOptions.configuration,
-      orInferredFromSwiftFileAt: nil)
+    let assumedUrl = lintFormatOptions.assumeFilename.map(URL.init(fileURLWithPath:))
+
+    guard
+      let configuration = configuration(
+        fromPathOrString: lintFormatOptions.configuration,
+        orInferredFromSwiftFileAt: assumedUrl
+      )
     else {
       // Already diagnosed in the called method.
       return
@@ -118,8 +133,10 @@ class Frontend {
 
     let fileToProcess = FileToProcess(
       fileHandle: FileHandle.standardInput,
-      url: URL(fileURLWithPath: lintFormatOptions.assumeFilename ?? "<stdin>"),
-      configuration: configuration)
+      url: assumedUrl ?? URL(fileURLWithPath: "<stdin>"),
+      configuration: configuration,
+      selection: Selection(offsetRanges: lintFormatOptions.offsets)
+    )
     processFile(fileToProcess)
   }
 
@@ -127,7 +144,8 @@ class Frontend {
   private func processURLs(_ urls: [URL], parallel: Bool) {
     precondition(
       !urls.isEmpty,
-      "processURLs(_:) should only be called when 'urls' is non-empty.")
+      "processURLs(_:) should only be called when 'urls' is non-empty."
+    )
 
     if parallel {
       let filesToProcess =
@@ -149,20 +167,27 @@ class Frontend {
   private func openAndPrepareFile(at url: URL) -> FileToProcess? {
     guard let sourceFile = try? FileHandle(forReadingFrom: url) else {
       diagnosticsEngine.emitError(
-        "Unable to open \(url.relativePath): file is not readable or does not exist")
+        "Unable to open \(url.relativePath): file is not readable or does not exist"
+      )
       return nil
     }
 
     guard
       let configuration = configuration(
         fromPathOrString: lintFormatOptions.configuration,
-        orInferredFromSwiftFileAt: url)
+        orInferredFromSwiftFileAt: url
+      )
     else {
       // Already diagnosed in the called method.
       return nil
     }
 
-    return FileToProcess(fileHandle: sourceFile, url: url, configuration: configuration)
+    return FileToProcess(
+      fileHandle: sourceFile,
+      url: url,
+      configuration: configuration,
+      selection: Selection(offsetRanges: lintFormatOptions.offsets)
+    )
   }
 
   /// Returns the configuration that applies to the given `.swift` source file, when an explicit
@@ -222,7 +247,8 @@ class Frontend {
         // Fall through to the default return at the end of the function.
       } catch {
         diagnosticsEngine.emitError(
-          "Unable to read configuration for \(swiftFileURL.path): \(error.localizedDescription)")
+          "Unable to read configuration for \(swiftFileURL.path): \(error.localizedDescription)"
+        )
         return nil
       }
     } else {
@@ -238,7 +264,8 @@ class Frontend {
         }
       } catch {
         diagnosticsEngine.emitError(
-          "Unable to read configuration for \(cwd): \(error.localizedDescription)")
+          "Unable to read configuration for \(cwd): \(error.localizedDescription)"
+        )
         return nil
       }
     }

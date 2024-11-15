@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class NeverUseImplicitlyUnwrappedOptionalsTests: LintOrFormatRuleTestCase {
   func testInvalidVariableUnwrapping() {
@@ -31,6 +30,22 @@ final class NeverUseImplicitlyUnwrappedOptionalsTests: LintOrFormatRuleTestCase 
       import XCTest
 
       var s: String!
+      """,
+      findings: []
+    )
+  }
+
+  func testIgnoreTestAttrinuteFunction() {
+    assertLint(
+      NeverUseImplicitlyUnwrappedOptionals.self,
+      """
+      @Test
+      func testSomeFunc() {
+        var s: String!
+        func nestedFunc() {
+          var f: Foo!
+        }
+      }
       """,
       findings: []
     )

@@ -11,10 +11,9 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import SwiftSyntax
-import SwiftParser
-
 @_spi(Rules) import SwiftFormat
+import SwiftParser
+import SwiftSyntax
 
 /// Collects information about rules in the formatter code base.
 final class RuleCollector {
@@ -149,7 +148,8 @@ final class RuleCollector {
         description: description?.text,
         visitedNodes: visitedNodes,
         canFormat: canFormat,
-        isOptIn: ruleType.isOptIn)
+        isOptIn: ruleType.isOptIn
+      )
     }
 
     return nil

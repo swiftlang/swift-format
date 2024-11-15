@@ -67,24 +67,7 @@ public struct DocumentationCommentText {
     // comment. We have to copy it into an array since `Trivia` doesn't support bidirectional
     // indexing.
     let triviaArray = Array(trivia)
-    let commentStartIndex: Array<TriviaPiece>.Index
-    if
-      let lastNonDocCommentIndex = triviaArray.lastIndex(where: {
-        switch $0 {
-        case .docBlockComment, .docLineComment,
-            .newlines(1), .carriageReturns(1), .carriageReturnLineFeeds(1),
-            .spaces, .tabs:
-          return false
-        default:
-          return true
-        }
-      }),
-      lastNonDocCommentIndex != trivia.endIndex
-    {
-      commentStartIndex = triviaArray.index(after: lastNonDocCommentIndex)
-    } else {
-      commentStartIndex = triviaArray.startIndex
-    }
+    let commentStartIndex = findCommentStartIndex(triviaArray)
 
     // Determine the indentation level of the first line of the comment. This is used to adjust
     // block comments, whose text spans multiple lines.
@@ -174,7 +157,8 @@ public struct DocumentationCommentText {
 private func indentationDistance(of text: Substring) -> Int {
   return text.distance(
     from: text.startIndex,
-    to: text.firstIndex { !$0.isWhitespace } ?? text.endIndex)
+    to: text.firstIndex { !$0.isWhitespace } ?? text.endIndex
+  )
 }
 
 /// Returns the number of contiguous whitespace characters (spaces and tabs only) that precede the
@@ -215,4 +199,36 @@ private func asciiArtLength(of string: Substring, leadingSpaces: Int) -> Int {
     return leadingSpaces + 2
   }
   return 0
+}
+
+/// Returns the start index of the earliest comment in the Trivia if we work backwards and
+/// skip through comments, newlines, and whitespace. Then we advance a bit forward to be sure
+/// the returned index is actually a comment and not whitespace.
+private func findCommentStartIndex(_ triviaArray: Array<TriviaPiece>) -> Array<TriviaPiece>.Index {
+  func firstCommentIndex(_ slice: ArraySlice<TriviaPiece>) -> Array<TriviaPiece>.Index {
+    return slice.firstIndex(where: {
+      switch $0 {
+      case .docLineComment, .docBlockComment:
+        return true
+      default:
+        return false
+      }
+    }) ?? slice.endIndex
+  }
+
+  if let lastNonDocCommentIndex = triviaArray.lastIndex(where: {
+    switch $0 {
+    case .docBlockComment, .docLineComment,
+      .newlines(1), .carriageReturns(1), .carriageReturnLineFeeds(1),
+      .spaces, .tabs:
+      return false
+    default:
+      return true
+    }
+  }) {
+    let nextIndex = triviaArray.index(after: lastNonDocCommentIndex)
+    return firstCommentIndex(triviaArray[nextIndex...])
+  } else {
+    return firstCommentIndex(triviaArray[...])
+  }
 }

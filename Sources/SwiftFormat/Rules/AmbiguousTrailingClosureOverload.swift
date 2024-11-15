@@ -29,9 +29,11 @@ public final class AmbiguousTrailingClosureOverload: SyntaxLintRule {
           Finding.Note(
             message: .otherAmbiguousOverloadHere(decl.fullDeclName),
             location: Finding.Location(
-              decl.name.startLocation(converter: self.context.sourceLocationConverter))
+              decl.name.startLocation(converter: self.context.sourceLocationConverter)
+            )
           )
-        })
+        }
+      )
     }
   }
 

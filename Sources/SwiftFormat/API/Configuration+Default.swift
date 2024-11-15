@@ -26,10 +26,12 @@ extension Configuration {
     self.lineLength = 100
     self.tabWidth = 8
     self.indentation = .spaces(2)
+    self.spacesBeforeEndOfLineComments = 2
     self.respectsExistingLineBreaks = true
     self.lineBreakBeforeControlFlowKeywords = false
     self.lineBreakBeforeEachArgument = false
     self.lineBreakBeforeEachGenericRequirement = false
+    self.lineBreakBetweenDeclarationAttributes = false
     self.prioritizeKeepingFunctionOutputTogether = false
     self.indentConditionalCompilationBlocks = true
     self.lineBreakAroundMultilineExpressionChainComponents = false
@@ -38,5 +40,6 @@ extension Configuration {
     self.spacesAroundRangeFormationOperators = false
     self.noAssignmentInExpressions = NoAssignmentInExpressionsConfiguration()
     self.multiElementCollectionTrailingCommas = true
+    self.reflowMultilineStringLiterals = .never
   }
 }

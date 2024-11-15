@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 // FIXME: Diagnostics should be emitted inside the comment, not at the beginning of the declaration.
 final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
@@ -26,8 +25,15 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
       2️⃣func testInvalidParameterDesc(command: String, stdin: String) -> String {}
       """,
       findings: [
-        FindingSpec("1️⃣", message: "replace the plural 'Parameters:' section with a singular inline 'Parameter' section"),
-        FindingSpec("2️⃣", message: "replace the singular inline 'Parameter' section with a plural 'Parameters:' section that has the parameters nested inside it"),
+        FindingSpec(
+          "1️⃣",
+          message: "replace the plural 'Parameters:' section with a singular inline 'Parameter' section"
+        ),
+        FindingSpec(
+          "2️⃣",
+          message:
+            "replace the singular inline 'Parameter' section with a plural 'Parameters:' section that has the parameters nested inside it"
+        ),
       ]
     )
   }
@@ -216,7 +222,10 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "change the parameters of the documentation of 'incorrectParam' to match its parameters"),
+        FindingSpec(
+          "1️⃣",
+          message: "change the parameters of the documentation of 'incorrectParam' to match its parameters"
+        )
       ]
     )
   }

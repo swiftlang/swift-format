@@ -67,7 +67,8 @@ public final class SwiftLinter {
     try lint(
       source: String(contentsOf: url, encoding: .utf8),
       assumingFileURL: url,
-      parsingDiagnosticHandler: parsingDiagnosticHandler)
+      parsingDiagnosticHandler: parsingDiagnosticHandler
+    )
   }
 
   /// Lints the given Swift source code.
@@ -80,12 +81,17 @@ public final class SwiftLinter {
   /// - Parameters:
   ///   - source: The Swift source code to be linted.
   ///   - url: A file URL denoting the filename/path that should be assumed for this source code.
+  ///   - experimentalFeatures: The set of experimental features that should be enabled in the
+  ///     parser. These names must be from the set of parser-recognized experimental language
+  ///     features in `SwiftParser`'s `Parser.ExperimentalFeatures` enum, which match the spelling
+  ///     defined in the compiler's `Features.def` file.
   ///   - parsingDiagnosticHandler: An optional callback that will be notified if there are any
   ///     errors when parsing the source code.
   /// - Throws: If an unrecoverable error occurs when formatting the code.
   public func lint(
     source: String,
     assumingFileURL url: URL,
+    experimentalFeatures: Set<String> = [],
     parsingDiagnosticHandler: ((Diagnostic, SourceLocation) -> Void)? = nil
   ) throws {
     // If the file or input string is completely empty, do nothing. This prevents even a trailing
@@ -97,9 +103,15 @@ public final class SwiftLinter {
       source: source,
       operatorTable: .standardOperators,
       assumingFileURL: url,
-      parsingDiagnosticHandler: parsingDiagnosticHandler)
+      experimentalFeatures: experimentalFeatures,
+      parsingDiagnosticHandler: parsingDiagnosticHandler
+    )
     try lint(
-      syntax: sourceFile, operatorTable: .standardOperators, assumingFileURL: url, source: source)
+      syntax: sourceFile,
+      operatorTable: .standardOperators,
+      assumingFileURL: url,
+      source: source
+    )
   }
 
   /// Lints the given Swift syntax tree.
@@ -119,21 +131,28 @@ public final class SwiftLinter {
   /// - Throws: If an unrecoverable error occurs when formatting the code.
   public func lint(
     syntax: SourceFileSyntax,
+    source: String,
     operatorTable: OperatorTable,
     assumingFileURL url: URL
   ) throws {
-    try lint(syntax: syntax, operatorTable: operatorTable, assumingFileURL: url, source: nil)
+    try lint(syntax: syntax, operatorTable: operatorTable, assumingFileURL: url, source: source)
   }
 
   private func lint(
     syntax: SourceFileSyntax,
     operatorTable: OperatorTable,
     assumingFileURL url: URL,
-    source: String?
+    source: String
   ) throws {
     let context = Context(
-      configuration: configuration, operatorTable: operatorTable, findingConsumer: findingConsumer,
-      fileURL: url, sourceFileSyntax: syntax, source: source, ruleNameCache: ruleNameCache)
+      configuration: configuration,
+      operatorTable: operatorTable,
+      findingConsumer: findingConsumer,
+      fileURL: url,
+      sourceFileSyntax: syntax,
+      source: source,
+      ruleNameCache: ruleNameCache
+    )
     let pipeline = LintPipeline(context: context)
     pipeline.walk(Syntax(syntax))
 
@@ -145,9 +164,11 @@ public final class SwiftLinter {
     // pretty-printer.
     let printer = PrettyPrinter(
       context: context,
+      source: source,
       node: Syntax(syntax),
       printTokenStream: debugOptions.contains(.dumpTokenStream),
-      whitespaceOnly: true)
+      whitespaceOnly: true
+    )
     let formatted = printer.prettyPrint()
     let ws = WhitespaceLinter(user: syntax.description, formatted: formatted, context: context)
     ws.lint()

@@ -1,7 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
-
+import _SwiftFormatTestSupport
 
 final class ReplaceForEachWithForLoopTests: LintOrFormatRuleTestCase {
   func test() {
@@ -27,7 +25,7 @@ final class ReplaceForEachWithForLoopTests: LintOrFormatRuleTestCase {
       findings: [
         FindingSpec("1️⃣", message: "replace use of '.forEach { ... }' with for-in loop"),
         FindingSpec("2️⃣", message: "replace use of '.forEach { ... }' with for-in loop"),
-        FindingSpec("3️⃣", message: "replace use of '.forEach { ... }' with for-in loop")
+        FindingSpec("3️⃣", message: "replace use of '.forEach { ... }' with for-in loop"),
       ]
     )
   }

@@ -15,12 +15,12 @@
 from __future__ import print_function
 
 import argparse
-import sys
-import os, platform
-import subprocess
-from pathlib import Path
-from typing import List, Union, Optional
 import json
+import os
+import subprocess
+import sys
+from pathlib import Path
+from typing import List, Optional, Union
 
 # -----------------------------------------------------------------------------
 # General utilities

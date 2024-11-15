@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class NoPlaygroundLiteralsTests: LintOrFormatRuleTestCase {
   func testColorLiterals() {
@@ -40,9 +39,18 @@ final class NoPlaygroundLiteralsTests: LintOrFormatRuleTestCase {
       _ = #fileLiteral<SomeType>(resourceName: "secrets.json")
       """,
       findings: [
-        FindingSpec("1️⃣", message: "replace '#fileLiteral' with a call to a method such as 'Bundle.url(forResource:withExtension:)'"),
-        FindingSpec("2️⃣", message: "replace '#fileLiteral' with a call to a method such as 'Bundle.url(forResource:withExtension:)'"),
-        FindingSpec("3️⃣", message: "replace '#fileLiteral' with a call to a method such as 'Bundle.url(forResource:withExtension:)'"),
+        FindingSpec(
+          "1️⃣",
+          message: "replace '#fileLiteral' with a call to a method such as 'Bundle.url(forResource:withExtension:)'"
+        ),
+        FindingSpec(
+          "2️⃣",
+          message: "replace '#fileLiteral' with a call to a method such as 'Bundle.url(forResource:withExtension:)'"
+        ),
+        FindingSpec(
+          "3️⃣",
+          message: "replace '#fileLiteral' with a call to a method such as 'Bundle.url(forResource:withExtension:)'"
+        ),
       ]
     )
   }

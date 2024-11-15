@@ -1,6 +1,5 @@
-import _SwiftFormatTestSupport
-
 @_spi(Rules) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class NeverForceUnwrapTests: LintOrFormatRuleTestCase {
   func testUnsafeUnwrap() {
@@ -36,6 +35,25 @@ final class NeverForceUnwrapTests: LintOrFormatRuleTestCase {
       import XCTest
 
       var b = a as! Int
+      """,
+      findings: []
+    )
+  }
+
+  func testIgnoreTestAttributeFunction() {
+    assertLint(
+      NeverForceUnwrap.self,
+      """
+      @Test
+      func testSomeFunc() {
+        var b = a as! Int
+      }
+      @Test
+      func testAnotherFunc() {
+        func nestedFunc() {
+          let c = someValue()!
+        }
+      }
       """,
       findings: []
     )

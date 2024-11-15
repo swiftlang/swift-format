@@ -121,8 +121,11 @@ final class MemberAccessExprTests: PrettyPrintTestCase {
     var configuration = Configuration.forTesting
     configuration.lineBreakAroundMultilineExpressionChainComponents = true
     assertPrettyPrintEqual(
-      input: input, expected: expectedWithForcedBreaks, linelength: 20,
-      configuration: configuration)
+      input: input,
+      expected: expectedWithForcedBreaks,
+      linelength: 20,
+      configuration: configuration
+    )
   }
 
   func testContinuationRestorationAfterGroup() {
@@ -238,8 +241,11 @@ final class MemberAccessExprTests: PrettyPrintTestCase {
     var configuration = Configuration.forTesting
     configuration.lineBreakAroundMultilineExpressionChainComponents = true
     assertPrettyPrintEqual(
-      input: input, expected: expectedWithForcedBreaking, linelength: 35,
-      configuration: configuration)
+      input: input,
+      expected: expectedWithForcedBreaking,
+      linelength: 35,
+      configuration: configuration
+    )
   }
 
   func testMemberItemClosureChaining() {
@@ -332,30 +338,33 @@ final class MemberAccessExprTests: PrettyPrintTestCase {
     var configuration = Configuration.forTesting
     configuration.lineBreakAroundMultilineExpressionChainComponents = true
     assertPrettyPrintEqual(
-      input: input, expected: expectedWithForcedBreaks, linelength: 50,
-      configuration: configuration)
+      input: input,
+      expected: expectedWithForcedBreaks,
+      linelength: 50,
+      configuration: configuration
+    )
   }
 
   func testChainedTrailingClosureMethods() {
     let input =
       """
-      var button =  View.Button { Text("ABC") }.action { presentAction() }.background(.red).text(.blue).text(.red).font(.appleSans)
-      var button =  View.Button {
-        // comment #0
-        Text("ABC")
-      }.action { presentAction() }.background(.red).text(.blue).text(.red).font(.appleSans)
-      var button =  View.Button { Text("ABC") }
-        .action { presentAction() }.background(.red).text(.blue) .text(.red).font(.appleSans)
-      var button =  View.Button { Text("ABC") }
-        .action {
-          // comment #1
-          presentAction()  // comment #2
-        }.background(.red).text(.blue) .text(.red).font(.appleSans) /* trailing comment */
-    var button =  View.Button { Text("ABC") }.action { presentAction() }.background(.red).text(.blue).text(.red).font(.appleSans).foo {
-      abc in
-      return abc.foo.bar
-    }
-    """
+        var button =  View.Button { Text("ABC") }.action { presentAction() }.background(.red).text(.blue).text(.red).font(.appleSans)
+        var button =  View.Button {
+          // comment #0
+          Text("ABC")
+        }.action { presentAction() }.background(.red).text(.blue).text(.red).font(.appleSans)
+        var button =  View.Button { Text("ABC") }
+          .action { presentAction() }.background(.red).text(.blue) .text(.red).font(.appleSans)
+        var button =  View.Button { Text("ABC") }
+          .action {
+            // comment #1
+            presentAction()  // comment #2
+          }.background(.red).text(.blue) .text(.red).font(.appleSans) /* trailing comment */
+      var button =  View.Button { Text("ABC") }.action { presentAction() }.background(.red).text(.blue).text(.red).font(.appleSans).foo {
+        abc in
+        return abc.foo.bar
+      }
+      """
 
     let expectedNoForcedBreaks =
       """
@@ -425,8 +434,11 @@ final class MemberAccessExprTests: PrettyPrintTestCase {
     var configuration = Configuration.forTesting
     configuration.lineBreakAroundMultilineExpressionChainComponents = true
     assertPrettyPrintEqual(
-      input: input, expected: expectedWithForcedBreaks, linelength: 50,
-      configuration: configuration)
+      input: input,
+      expected: expectedWithForcedBreaks,
+      linelength: 50,
+      configuration: configuration
+    )
   }
 
   func testChainedSubscriptExprs() {
@@ -514,7 +526,10 @@ final class MemberAccessExprTests: PrettyPrintTestCase {
     var configuration = Configuration.forTesting
     configuration.lineBreakAroundMultilineExpressionChainComponents = true
     assertPrettyPrintEqual(
-      input: input, expected: expectedWithForcedBreaks, linelength: 50,
-      configuration: configuration)
+      input: input,
+      expected: expectedWithForcedBreaks,
+      linelength: 50,
+      configuration: configuration
+    )
   }
 }

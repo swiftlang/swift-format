@@ -23,7 +23,6 @@ add_executable(swift-format
   Utilities/Diagnostic.swift
   Utilities/DiagnosticsEngine.swift
   Utilities/FileHandleTextOutputStream.swift
-  Utilities/FileIterator.swift
   Utilities/FormatError.swift
   Utilities/StderrDiagnosticPrinter.swift
   Utilities/TTY.swift)
