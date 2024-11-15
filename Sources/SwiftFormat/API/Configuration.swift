@@ -46,6 +46,7 @@ public struct Configuration: Codable, Equatable {
     case noAssignmentInExpressions
     case multiElementCollectionTrailingCommas
     case reflowMultilineStringLiterals
+    case indentBlankLines
   }
 
   /// A dictionary containing the default enabled/disabled states of rules, keyed by the rules'
@@ -260,6 +261,13 @@ public struct Configuration: Codable, Equatable {
 
   public var reflowMultilineStringLiterals: MultilineStringReflowBehavior
 
+  /// Determines whether to add indentation whitespace to blank lines or remove it entirely.
+  ///
+  /// If true, blank lines will be modified to match the current indentation level:
+  /// if they contain whitespace, the existing whitespace will be adjusted, and if they are empty, spaces will be added to match the indentation.
+  /// If false (the default), the whitespace in blank lines will be removed entirely.
+  public var indentBlankLines: Bool
+
   /// Creates a new `Configuration` by loading it from a configuration file.
   public init(contentsOf url: URL) throws {
     let data = try Data(contentsOf: url)
@@ -368,6 +376,12 @@ public struct Configuration: Codable, Equatable {
     self.reflowMultilineStringLiterals =
       try container.decodeIfPresent(MultilineStringReflowBehavior.self, forKey: .reflowMultilineStringLiterals)
       ?? defaults.reflowMultilineStringLiterals
+    self.indentBlankLines =
+      try container.decodeIfPresent(
+        Bool.self,
+        forKey: .indentBlankLines
+      )
+      ?? defaults.indentBlankLines
 
     // If the `rules` key is not present at all, default it to the built-in set
     // so that the behavior is the same as if the configuration had been

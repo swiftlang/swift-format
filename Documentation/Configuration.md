@@ -94,6 +94,11 @@ top-level keys and values:
 
 *  `multiElementCollectionTrailingCommas` _(boolean)_: Determines whether multi-element collection literals should have trailing commas.
     Defaults to `true`.
+    
+*  `indentBlankLines` _(boolean)_: Determines whether blank lines should be modified 
+    to match the current indentation. When this setting is true, blank lines will be modified 
+    to match the indentation level, adding indentation whether or not there is existing whitespace. 
+    When false (the default), all whitespace in blank lines will be completely removed.
 
 > TODO: Add support for enabling/disabling specific syntax transformations in
 > the pipeline.
