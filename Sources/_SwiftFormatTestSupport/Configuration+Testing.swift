@@ -41,6 +41,7 @@ extension Configuration {
     config.spacesAroundRangeFormationOperators = false
     config.noAssignmentInExpressions = NoAssignmentInExpressionsConfiguration()
     config.multiElementCollectionTrailingCommas = true
+    config.indentBlankLines = false
     return config
   }
 }

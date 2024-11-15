@@ -3521,6 +3521,12 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         leadingIndent = nil
 
       case .newlines(let count), .carriageReturns(let count), .carriageReturnLineFeeds(let count):
+        if config.indentBlankLines,
+          let leadingIndent, leadingIndent.count > 0
+        {
+          requiresNextNewline = true
+        }
+
         leadingIndent = .spaces(0)
         guard !isStartOfFile else { break }
 
@@ -3557,6 +3563,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       case .spaces(let n):
         guard leadingIndent == .spaces(0) else { break }
         leadingIndent = .spaces(n)
+
       case .tabs(let n):
         guard leadingIndent == .spaces(0) else { break }
         leadingIndent = .tabs(n)
