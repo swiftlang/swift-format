@@ -257,10 +257,10 @@ class Frontend {
     #else
       if let xdgConfigHome = ProcessInfo.processInfo.environment["XDG_CONFIG_HOME"] {
         configLocations.append(URL(fileURLWithPath: xdgConfigHome))
-      }
-
-      if let homeLocation = ProcessInfo.processInfo.environment["HOME"] {
-        configLocations.append(URL(fileURLWithPath: homeLocation + "/.config/"))
+      }else if let homeLocation = ProcessInfo.processInfo.environment["HOME"] {
+        let dotConfigUrl = URL(fileURLWithPath: homeLocation)
+          .appendingPathComponent(".config", isDirectory: true)
+        configLocations.append(dotConfigUrl)
       }
 
       for supportDirectoryUrl in FileManager.default.urls(
