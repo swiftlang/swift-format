@@ -275,38 +275,40 @@ class Frontend {
     var configLocations: [URL?] = []
 
     #if os(Windows)
-      if let localAppData = ProcessInfo.processInfo.environment["LOCALAPPDATA"] {
-        configLocations.append(URL(fileURLWithPath: localAppData))
-      }
-      if let programData = ProcessInfo.processInfo.environment["PROGRAMDATA"] {
-        configLocations.append(URL(fileURLWithPath: programData))
-      }
+    if let localAppData = ProcessInfo.processInfo.environment["LOCALAPPDATA"] {
+      configLocations.append(URL(fileURLWithPath: localAppData))
+    }
+    if let programData = ProcessInfo.processInfo.environment["PROGRAMDATA"] {
+      configLocations.append(URL(fileURLWithPath: programData))
+    }
     #else
-      if let xdgConfigHome = ProcessInfo.processInfo.environment["XDG_CONFIG_HOME"] {
-        configLocations.append(URL(fileURLWithPath: xdgConfigHome))
-      }else if let homeLocation = ProcessInfo.processInfo.environment["HOME"] {
-        let dotConfigUrl = URL(fileURLWithPath: homeLocation)
-          .appendingPathComponent(".config", isDirectory: true)
-        configLocations.append(dotConfigUrl)
-      }
+    if let xdgConfigHome = ProcessInfo.processInfo.environment["XDG_CONFIG_HOME"] {
+      configLocations.append(URL(fileURLWithPath: xdgConfigHome))
+    } else if let homeLocation = ProcessInfo.processInfo.environment["HOME"] {
+      let dotConfigUrl = URL(fileURLWithPath: homeLocation)
+        .appendingPathComponent(".config", isDirectory: true)
+      configLocations.append(dotConfigUrl)
+    }
 
-      for supportDirectoryUrl in FileManager.default.urls(
-        for: .applicationSupportDirectory, in: .userDomainMask)
-      {
-        configLocations.append(supportDirectoryUrl)
-      }
+    for supportDirectoryUrl in FileManager.default.urls(
+      for: .applicationSupportDirectory,
+      in: .userDomainMask
+    ) {
+      configLocations.append(supportDirectoryUrl)
+    }
 
-      if let xdgConfigDirs = ProcessInfo.processInfo.environment["XDG_CONFIG_DIRS"] {
-        configLocations += xdgConfigDirs.split(separator: ":").map { xdgConfigDir in
-          URL(fileURLWithPath: String(xdgConfigDir))
-        }
+    if let xdgConfigDirs = ProcessInfo.processInfo.environment["XDG_CONFIG_DIRS"] {
+      configLocations += xdgConfigDirs.split(separator: ":").map { xdgConfigDir in
+        URL(fileURLWithPath: String(xdgConfigDir))
       }
+    }
 
-      if let libraryUrl = FileManager.default.urls(
-        for: .applicationSupportDirectory, in: .systemDomainMask
-      ).first {
-        configLocations.append(libraryUrl)
-      }
+    if let libraryUrl = FileManager.default.urls(
+      for: .applicationSupportDirectory,
+      in: .systemDomainMask
+    ).first {
+      configLocations.append(libraryUrl)
+    }
     #endif
 
     for case var location? in configLocations {
@@ -319,7 +321,8 @@ class Frontend {
           return configuration
         } catch {
           diagnosticsEngine.emitError(
-            "Unable to read configuration for \(location.path): \(error.localizedDescription)")
+            "Unable to read configuration for \(location.path): \(error.localizedDescription)"
+          )
           return nil
         }
       }
@@ -339,7 +342,9 @@ class Frontend {
     let invalidRules = configuration.rules.filter { !RuleRegistry.rules.keys.contains($0.key) }
     for rule in invalidRules {
       diagnosticsEngine.emitWarning(
-        "Configuration contains an unrecognized rule: \(rule.key)", location: nil)
+        "Configuration contains an unrecognized rule: \(rule.key)",
+        location: nil
+      )
     }
   }
 }
