@@ -10,6 +10,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftFormat
+
 /// A description of a `Finding` that can be asserted during tests.
 public struct FindingSpec {
   /// The marker that identifies the finding.
@@ -21,11 +23,15 @@ public struct FindingSpec {
   /// A description of a `Note` that should be associated with this finding.
   public var notes: [NoteSpec]
 
+  /// A description of a `Note` that should be associated with this finding.
+  public var severity: Finding.Severity
+
   /// Creates a new `FindingSpec` with the given values.
-  public init(_ marker: String = "1️⃣", message: String, notes: [NoteSpec] = []) {
+  public init(_ marker: String = "1️⃣", message: String, notes: [NoteSpec] = [], severity: Finding.Severity = .warning) {
     self.marker = marker
     self.message = message
     self.notes = notes
+    self.severity = severity
   }
 }
 

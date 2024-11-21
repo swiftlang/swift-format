@@ -145,6 +145,18 @@ open class DiagnosingTestCase: XCTestCase {
         line: line
       )
     }
+
+    XCTAssertEqual(
+      matchedFinding.severity,
+      findingSpec.severity,
+      """
+      Finding emitted at marker '\(findingSpec.marker)' \
+      (line:col \(markerLocation.line):\(markerLocation.column), offset \(utf8Offset)) \
+      had the wrong severity
+      """,
+      file: file,
+      line: line
+    )
   }
 
   private func assertAndRemoveNote(

@@ -24,6 +24,11 @@ internal let highestSupportedConfigurationVersion = 1
 /// Holds the complete set of configured values and defaults.
 public struct Configuration: Codable, Equatable {
 
+  public enum RuleSeverity: String, Codable, CaseIterable, Equatable, Sendable {
+    case warning = "warning"
+    case error = "error"
+  }
+
   private enum CodingKeys: CodingKey {
     case version
     case maximumBlankLines
@@ -42,6 +47,7 @@ public struct Configuration: Codable, Equatable {
     case fileScopedDeclarationPrivacy
     case indentSwitchCaseLabels
     case rules
+    case ruleSeverity
     case spacesAroundRangeFormationOperators
     case noAssignmentInExpressions
     case multiElementCollectionTrailingCommas
@@ -63,6 +69,10 @@ public struct Configuration: Codable, Equatable {
   /// The dictionary containing the rule names that we wish to run on. A rule is not used if it is
   /// marked as `false`, or if it is missing from the dictionary.
   public var rules: [String: Bool]
+
+  /// The dictionary containing the severities for the rule names that we wish to run on. If a rule
+  /// is not listed here, the default severity is used.
+  public var ruleSeverity: [String: RuleSeverity]
 
   /// The maximum number of consecutive blank lines that may appear in a file.
   public var maximumBlankLines: Int
@@ -390,6 +400,9 @@ public struct Configuration: Codable, Equatable {
     self.rules =
       try container.decodeIfPresent([String: Bool].self, forKey: .rules)
       ?? defaults.rules
+
+    self.ruleSeverity =
+    try container.decodeIfPresent([String: RuleSeverity].self, forKey: .ruleSeverity) ?? [:]
   }
 
   public func encode(to encoder: Encoder) throws {

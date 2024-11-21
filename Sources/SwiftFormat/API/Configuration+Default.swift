@@ -22,6 +22,7 @@ extension Configuration {
   /// the JSON will be populated from this default configuration.
   public init() {
     self.rules = Self.defaultRuleEnablements
+    self.ruleSeverity = [:]
     self.maximumBlankLines = 1
     self.lineLength = 100
     self.tabWidth = 8

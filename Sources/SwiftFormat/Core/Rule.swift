@@ -86,6 +86,8 @@ extension Rule {
       syntaxLocation = nil
     }
 
+    let severity: Finding.Severity? = severity ?? context.configuration.findingSeverity(for: type(of: self))
+
     let category = RuleBasedFindingCategory(ruleType: type(of: self), severity: severity)
     context.findingEmitter.emit(
       message,
@@ -93,5 +95,15 @@ extension Rule {
       location: syntaxLocation.flatMap(Finding.Location.init),
       notes: notes
     )
+  }
+}
+
+extension Configuration {
+  func findingSeverity(for rule: any Rule.Type) -> Finding.Severity? {
+    guard let severity = self.ruleSeverity[rule.ruleName] else { return nil }
+    switch severity {
+      case .warning: return .warning
+      case .error: return .error
+    }
   }
 }
