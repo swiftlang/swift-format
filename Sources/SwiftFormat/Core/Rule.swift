@@ -93,7 +93,8 @@ extension Rule {
       message,
       category: category,
       location: syntaxLocation.flatMap(Finding.Location.init),
-      notes: notes
+      notes: notes,
+      context: context
     )
   }
 }
@@ -101,9 +102,6 @@ extension Rule {
 extension Configuration {
   func findingSeverity(for rule: any Rule.Type) -> Finding.Severity? {
     guard let severity = self.ruleSeverity[rule.ruleName] else { return nil }
-    switch severity {
-      case .warning: return .warning
-      case .error: return .error
-    }
+    return severity.findingSeverity
   }
 }

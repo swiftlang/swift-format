@@ -44,7 +44,8 @@ final class FindingEmitter {
     _ message: Finding.Message,
     category: FindingCategorizing,
     location: Finding.Location? = nil,
-    notes: [Finding.Note] = []
+    notes: [Finding.Note] = [],
+    context: Context
   ) {
     guard let consumer = self.consumer else { return }
 
@@ -54,7 +55,7 @@ final class FindingEmitter {
       Finding(
         category: category,
         message: message,
-        severity: category.defaultSeverity,
+        severity: category.severity(configuration: context.configuration),
         location: location,
         notes: notes
       )

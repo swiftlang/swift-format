@@ -12,6 +12,7 @@
 
 /// Categories for findings emitted by the pretty printer.
 enum PrettyPrintFindingCategory: FindingCategorizing {
+
   /// Finding related to an end-of-line comment.
   case endOfLineComment
 
@@ -24,4 +25,9 @@ enum PrettyPrintFindingCategory: FindingCategorizing {
     case .trailingComma: return "TrailingComma"
     }
   }
+
+  var name: String {
+    self.description
+  }
+
 }

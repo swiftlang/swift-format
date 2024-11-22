@@ -24,13 +24,20 @@ struct RuleBasedFindingCategory: FindingCategorizing {
 
   var severity: Finding.Severity?
 
-  public var defaultSeverity: Finding.Severity {
-    return severity ?? .warning
+  var name: String {
+    return description
   }
 
   /// Creates a finding category that wraps the given rule type.
   init(ruleType: Rule.Type, severity: Finding.Severity? = nil) {
     self.ruleType = ruleType
     self.severity = severity
+  }
+
+  func severity(configuration: Configuration) -> Finding.Severity {
+    if let severity = severity {
+        return severity
+    }
+    return severityFromConfig(configuration: configuration)
   }
 }

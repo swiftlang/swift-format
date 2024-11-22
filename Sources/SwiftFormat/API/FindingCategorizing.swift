@@ -17,13 +17,23 @@
 /// to be displayed as part of the diagnostic message when the finding is presented to the user.
 /// For example, the category `Indentation` in the message `[Indentation] Indent by 2 spaces`.
 public protocol FindingCategorizing: CustomStringConvertible {
-  /// The default severity of findings emitted in this category.
+  /// The severity of findings emitted in this category.
   ///
-  /// By default, all findings are warnings. Individual categories may choose to override this to
+  /// By default, all findings are warnings. Individual categories or configuration may choose to override this to
   /// make the findings in those categories more severe.
-  var defaultSeverity: Finding.Severity { get }
+  func severity(configuration: Configuration) -> Finding.Severity
+
+  /// The name of the category.
+  var name: String {get}
 }
 
 extension FindingCategorizing {
-  public var defaultSeverity: Finding.Severity { .warning }
+    func severity(configuration: Configuration) -> Finding.Severity {
+        return severityFromConfig(configuration: configuration)
+    }
+
+    func severityFromConfig(configuration: Configuration) -> Finding.Severity {
+        guard let customSeverity = configuration.ruleSeverity[self.name] else { return .warning }
+        return customSeverity.findingSeverity
+    }
 }

@@ -44,4 +44,8 @@ enum WhitespaceFindingCategory: FindingCategorizing {
     case .lineLength: return "LineLength"
     }
   }
+
+  var name: String {
+    return self.description
+  }
 }
