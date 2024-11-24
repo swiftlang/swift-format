@@ -21,19 +21,8 @@ public protocol FindingCategorizing: CustomStringConvertible {
   ///
   /// By default, all findings are warnings. Individual categories or configuration may choose to override this to
   /// make the findings in those categories more severe.
-  func severity(configuration: Configuration) -> Finding.Severity
+  var severity: Finding.Severity { get }
 
   /// The name of the category.
-  var name: String {get}
-}
-
-extension FindingCategorizing {
-    func severity(configuration: Configuration) -> Finding.Severity {
-        return severityFromConfig(configuration: configuration)
-    }
-
-    func severityFromConfig(configuration: Configuration) -> Finding.Severity {
-        guard let customSeverity = configuration.ruleSeverity[self.name] else { return .warning }
-        return customSeverity.findingSeverity
-    }
+  var name: String { get }
 }

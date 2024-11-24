@@ -16,7 +16,11 @@ final class OmitReturnsTests: LintOrFormatRuleTestCase {
           }
         """,
       findings: [
-        FindingSpec("1️⃣", message: "'return' can be omitted because body consists of a single expression", severity: .refactoring)
+        FindingSpec(
+          "1️⃣",
+          message: "'return' can be omitted because body consists of a single expression",
+          severity: .refactoring
+        )
       ]
     )
   }
@@ -35,7 +39,11 @@ final class OmitReturnsTests: LintOrFormatRuleTestCase {
           }
         """,
       findings: [
-        FindingSpec("1️⃣", message: "'return' can be omitted because body consists of a single expression", severity: .refactoring)
+        FindingSpec(
+          "1️⃣",
+          message: "'return' can be omitted because body consists of a single expression",
+          severity: .refactoring
+        )
       ]
     )
   }
@@ -76,8 +84,16 @@ final class OmitReturnsTests: LintOrFormatRuleTestCase {
           }
         """,
       findings: [
-        FindingSpec("1️⃣", message: "'return' can be omitted because body consists of a single expression", severity: .refactoring),
-        FindingSpec("2️⃣", message: "'return' can be omitted because body consists of a single expression", severity: .refactoring),
+        FindingSpec(
+          "1️⃣",
+          message: "'return' can be omitted because body consists of a single expression",
+          severity: .refactoring
+        ),
+        FindingSpec(
+          "2️⃣",
+          message: "'return' can be omitted because body consists of a single expression",
+          severity: .refactoring
+        ),
       ]
     )
   }
@@ -114,8 +130,16 @@ final class OmitReturnsTests: LintOrFormatRuleTestCase {
           }
         """,
       findings: [
-        FindingSpec("1️⃣", message: "'return' can be omitted because body consists of a single expression", severity: .refactoring),
-        FindingSpec("2️⃣", message: "'return' can be omitted because body consists of a single expression", severity: .refactoring),
+        FindingSpec(
+          "1️⃣",
+          message: "'return' can be omitted because body consists of a single expression",
+          severity: .refactoring
+        ),
+        FindingSpec(
+          "2️⃣",
+          message: "'return' can be omitted because body consists of a single expression",
+          severity: .refactoring
+        ),
       ]
     )
   }

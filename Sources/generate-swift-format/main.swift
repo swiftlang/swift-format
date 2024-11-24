@@ -20,6 +20,10 @@ let rulesDirectory =
   sourcesDirectory
   .appendingPathComponent("SwiftFormat")
   .appendingPathComponent("Rules")
+let prettyPrintDirectory =
+  sourcesDirectory
+  .appendingPathComponent("SwiftFormat")
+  .appendingPathComponent("PrettyPrint")
 let pipelineFile =
   sourcesDirectory
   .appendingPathComponent("SwiftFormat")
@@ -46,12 +50,15 @@ let ruleDocumentationFile =
 var ruleCollector = RuleCollector()
 try ruleCollector.collect(from: rulesDirectory)
 
+var prettyPrintCollector = PrettyPrintCollector()
+try prettyPrintCollector.collect(from: prettyPrintDirectory)
+
 // Generate a file with extensions for the lint and format pipelines.
 let pipelineGenerator = PipelineGenerator(ruleCollector: ruleCollector)
 try pipelineGenerator.generateFile(at: pipelineFile)
 
 // Generate the rule registry dictionary for configuration.
-let registryGenerator = RuleRegistryGenerator(ruleCollector: ruleCollector)
+let registryGenerator = RuleRegistryGenerator(ruleCollector: ruleCollector, prettyPrintCollector: prettyPrintCollector)
 try registryGenerator.generateFile(at: ruleRegistryFile)
 
 // Generate the rule name cache.

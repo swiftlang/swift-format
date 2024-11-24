@@ -55,7 +55,7 @@ final class FindingEmitter {
       Finding(
         category: category,
         message: message,
-        severity: category.severity(configuration: context.configuration),
+        severity: category.severity,
         location: location,
         notes: notes
       )
