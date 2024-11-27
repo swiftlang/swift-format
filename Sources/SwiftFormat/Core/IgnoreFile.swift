@@ -12,6 +12,12 @@
 
 import Foundation
 
+/// A file that describes which files and directories should be ignored by the formatter.
+/// In the future, this file may contain complex rules for ignoring files, based
+/// on pattern matching file paths.
+/// 
+/// Currently, the only valid content for an ignore file is a single asterisk "*",
+/// optionally surrounded by whitespace.
 public class IgnoreFile {
   /// Name of the ignore file to look for.
   /// The presence of this file in a directory will cause the formatter
