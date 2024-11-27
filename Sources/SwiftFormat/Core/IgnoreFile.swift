@@ -60,6 +60,11 @@ public class IgnoreFile {
   /// Returns nil if no ignore file is found.
   /// Throws an error if an invalid ignore file is found somewhere 
   /// in the directory tree.
+  ///
+  /// Note that we start the search from the given URL's **container**,
+  /// not the URL itself; the URL passed in is expected to be for a file.
+  /// If you pass a directory URL, the search will not include the contents
+  /// of that directory.
   public convenience init?(for url: URL) throws {
       var containingDirectory = url.absoluteURL.standardized
       repeat {
