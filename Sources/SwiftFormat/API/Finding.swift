@@ -18,6 +18,7 @@ public struct Finding {
     case error
     case refactoring
     case convention
+    case disabled
   }
 
   /// The file path and location in that file where a finding was encountered.

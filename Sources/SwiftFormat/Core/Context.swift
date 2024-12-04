@@ -108,7 +108,12 @@ public final class Context {
     let ruleName = ruleNameCache[ObjectIdentifier(rule)] ?? R.ruleName
     switch ruleMask.ruleState(ruleName, at: loc) {
     case .default:
-      return configuration.rules[ruleName] ?? false
+        guard let configSeverity = configuration.rules[ruleName] else { return false }
+        if case .disabled = configSeverity {
+          return false
+        } else {
+          return true
+        }
     case .disabled:
       return false
     }

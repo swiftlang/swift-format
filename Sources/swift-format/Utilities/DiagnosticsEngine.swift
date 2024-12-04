@@ -140,6 +140,7 @@ final class DiagnosticsEngine {
     case .warning: severity = .warning
     case .refactoring: severity = .warning
     case .convention: severity = .warning
+    case .disabled: fatalError("must not be called for disabled findings")
     }
     return Diagnostic(
       severity: severity,

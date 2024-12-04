@@ -21,6 +21,7 @@ class WhitespaceTestCase: DiagnosingTestCase {
     input: String,
     expected: String,
     linelength: Int? = nil,
+    configuration: Configuration = Configuration.forTesting,
     findings: [FindingSpec],
     file: StaticString = #file,
     line: UInt = #line
@@ -28,7 +29,7 @@ class WhitespaceTestCase: DiagnosingTestCase {
     let markedText = MarkedText(textWithMarkers: input)
 
     let sourceFileSyntax = Parser.parse(source: markedText.textWithoutMarkers)
-    var configuration = Configuration.forTesting
+    var configuration = configuration
     if let linelength = linelength {
       configuration.lineLength = linelength
     }

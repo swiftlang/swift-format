@@ -17,11 +17,11 @@ final class TypeNamesShouldBeCapitalizedTests: LintOrFormatRuleTestCase {
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "rename the struct 'a' using UpperCamelCase; for example, 'A'"),
-        FindingSpec("2️⃣", message: "rename the class 'klassName' using UpperCamelCase; for example, 'KlassName'"),
-        FindingSpec("3️⃣", message: "rename the struct 'subType' using UpperCamelCase; for example, 'SubType'"),
-        FindingSpec("4️⃣", message: "rename the protocol 'myProtocol' using UpperCamelCase; for example, 'MyProtocol'"),
-        FindingSpec("5️⃣", message: "rename the struct 'innerType' using UpperCamelCase; for example, 'InnerType'"),
+        FindingSpec("1️⃣", message: "rename the struct 'a' using UpperCamelCase; for example, 'A'", severity: .convention),
+        FindingSpec("2️⃣", message: "rename the class 'klassName' using UpperCamelCase; for example, 'KlassName'", severity: .convention),
+        FindingSpec("3️⃣", message: "rename the struct 'subType' using UpperCamelCase; for example, 'SubType'", severity: .convention),
+        FindingSpec("4️⃣", message: "rename the protocol 'myProtocol' using UpperCamelCase; for example, 'MyProtocol'", severity: .convention),
+        FindingSpec("5️⃣", message: "rename the struct 'innerType' using UpperCamelCase; for example, 'InnerType'", severity: .convention),
       ]
     )
   }
@@ -36,8 +36,8 @@ final class TypeNamesShouldBeCapitalizedTests: LintOrFormatRuleTestCase {
       distributed actor DistGreeter {}
       """,
       findings: [
-        FindingSpec("1️⃣", message: "rename the actor 'myActor' using UpperCamelCase; for example, 'MyActor'"),
-        FindingSpec("2️⃣", message: "rename the actor 'greeter' using UpperCamelCase; for example, 'Greeter'"),
+        FindingSpec("1️⃣", message: "rename the actor 'myActor' using UpperCamelCase; for example, 'MyActor'", severity: .convention),
+        FindingSpec("2️⃣", message: "rename the actor 'greeter' using UpperCamelCase; for example, 'Greeter'", severity: .convention),
       ]
     )
   }
@@ -63,9 +63,9 @@ final class TypeNamesShouldBeCapitalizedTests: LintOrFormatRuleTestCase {
       }
       """,
       findings: [
-        FindingSpec("1️⃣", message: "rename the associated type 'kind' using UpperCamelCase; for example, 'Kind'"),
-        FindingSpec("2️⃣", message: "rename the type alias 'x' using UpperCamelCase; for example, 'X'"),
-        FindingSpec("3️⃣", message: "rename the type alias 'data' using UpperCamelCase; for example, 'Data'"),
+        FindingSpec("1️⃣", message: "rename the associated type 'kind' using UpperCamelCase; for example, 'Kind'", severity: .convention),
+        FindingSpec("2️⃣", message: "rename the type alias 'x' using UpperCamelCase; for example, 'X'", severity: .convention),
+        FindingSpec("3️⃣", message: "rename the type alias 'data' using UpperCamelCase; for example, 'Data'", severity: .convention),
       ]
     )
   }
@@ -107,17 +107,18 @@ final class TypeNamesShouldBeCapitalizedTests: LintOrFormatRuleTestCase {
       distributed actor __InternalGreeter {}
       """,
       findings: [
-        FindingSpec("1️⃣", message: "rename the protocol '_p' using UpperCamelCase; for example, '_P'"),
-        FindingSpec("2️⃣", message: "rename the associated type '_value' using UpperCamelCase; for example, '_Value'"),
-        FindingSpec("3️⃣", message: "rename the struct '_data' using UpperCamelCase; for example, '_Data'"),
-        FindingSpec("4️⃣", message: "rename the type alias '_x' using UpperCamelCase; for example, '_X'"),
+        FindingSpec("1️⃣", message: "rename the protocol '_p' using UpperCamelCase; for example, '_P'", severity: .convention),
+        FindingSpec("2️⃣", message: "rename the associated type '_value' using UpperCamelCase; for example, '_Value'", severity: .convention),
+        FindingSpec("3️⃣", message: "rename the struct '_data' using UpperCamelCase; for example, '_Data'", severity: .convention),
+        FindingSpec("4️⃣", message: "rename the type alias '_x' using UpperCamelCase; for example, '_X'", severity: .convention),
         FindingSpec(
           "5️⃣",
-          message: "rename the actor '_internalActor' using UpperCamelCase; for example, '_InternalActor'"
+          message: "rename the actor '_internalActor' using UpperCamelCase; for example, '_InternalActor'",
+          severity: .convention
         ),
-        FindingSpec("6️⃣", message: "rename the enum '__e' using UpperCamelCase; for example, '__E'"),
-        FindingSpec("7️⃣", message: "rename the class '_myClass' using UpperCamelCase; for example, '_MyClass'"),
-        FindingSpec("8️⃣", message: "rename the actor '__greeter' using UpperCamelCase; for example, '__Greeter'"),
+        FindingSpec("6️⃣", message: "rename the enum '__e' using UpperCamelCase; for example, '__E'", severity: .convention),
+        FindingSpec("7️⃣", message: "rename the class '_myClass' using UpperCamelCase; for example, '_MyClass'", severity: .convention),
+        FindingSpec("8️⃣", message: "rename the actor '__greeter' using UpperCamelCase; for example, '__Greeter'", severity: .convention),
       ]
     )
   }
