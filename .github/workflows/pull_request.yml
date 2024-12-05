@@ -16,3 +16,4 @@ jobs:
     with:
       license_header_check_enabled: false
       license_header_check_project_name: "Swift.org"
+      api_breakage_check_allowlist_path: "api-breakages.txt"

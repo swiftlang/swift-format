@@ -1,0 +1,4 @@
+6.2
+---
+
+API breakage: constructor FileIterator.init(urls:followSymlinks:) has been removed
