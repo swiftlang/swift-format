@@ -48,7 +48,7 @@ public struct FileIterator: Sequence, IteratorProtocol {
   /// The given URLs may be files or directories. If they are directories, the iterator will recurse
   /// into them.
   public init(urls: [URL], followSymlinks: Bool) {
-    self.urls = urls
+    self.urls = urls.filter(inputShouldBeProcessed(at:))
     self.urlIterator = self.urls.makeIterator()
     self.followSymlinks = followSymlinks
   }
@@ -83,6 +83,21 @@ public struct FileIterator: Sequence, IteratorProtocol {
           fallthrough
 
         case .typeDirectory:
+          do {
+            if let ignoreFile = try IgnoreFile(forDirectory: next), !ignoreFile.shouldProcess(next) {
+              // skip this directory and its subdirectories if it should be ignored
+              continue
+            }
+          } catch IgnoreFile.Error.invalidContent(let url) {
+            // we hit an invalid ignore file
+            // we skip the directory, but return the path of the ignore file
+            // so that we can report an error
+            output = url
+          } catch {
+            // we hit another unexpected error; just skip the directory
+            continue
+          }
+
           dirIterator = FileManager.default.enumerator(
             at: next,
             includingPropertiesForKeys: nil,
@@ -168,4 +183,21 @@ private func fileType(at url: URL) -> FileAttributeType? {
   // We cannot use `URL.resourceValues(forKeys:)` here because it appears to behave incorrectly on
   // Linux.
   return try? FileManager.default.attributesOfItem(atPath: url.path)[.type] as? FileAttributeType
+}
+
+/// Returns true if the file should be processed.
+/// Directories are always processed.
+/// For other files, we look for an ignore file in the containing 
+/// directory or any of its parents.
+/// If there is no ignore file, we process the file.
+/// If an ignore file is found, we consult it to see if the file should be processed.
+/// An invalid ignore file is treated here as if it does not exist, but
+/// will be reported as an error when we try to process the directory.
+private func inputShouldBeProcessed(at url: URL) -> Bool {
+  guard fileType(at: url) != .typeDirectory else {
+    return true
+  }
+      
+  let ignoreFile = try? IgnoreFile(for: url)
+  return ignoreFile?.shouldProcess(url) ?? true
 }
