@@ -34,12 +34,12 @@ jobs:
             echo "${{ github.triggering_actor }} is not allowed to create a release"
             exit 1
           fi
-  define_tags:
-    name: Determine dependent swift-syntax version and prerelease date
+  create_release_commits:
+    name: Create release commits
     runs-on: ubuntu-latest
     outputs:
-      swift_syntax_tag: ${{ steps.swift_syntax_tag.outputs.swift_syntax_tag }}
       swift_format_version: ${{ steps.swift_format_version.outputs.swift_format_version }}
+      release_commit_patch: ${{ steps.create_release_commits.outputs.release_commit_patch }}
     steps:
       - name: Determine swift-syntax tag to depend on
         id: swift_syntax_tag
@@ -65,37 +65,81 @@ jobs:
           fi
           echo "Using swift-format version: $SWIFT_FORMAT_VERSION"
           echo "swift_format_version=$SWIFT_FORMAT_VERSION" >> "$GITHUB_OUTPUT"
-  test_debug:
-    name: Test in Debug configuration
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      - name: Create release commits
+        id: create_release_commits
+        run: |
+          # Without this, we can't perform git operations in GitHub actions.
+          git config --global --add safe.directory "$(realpath .)"
+          git config --local user.name 'swift-ci'
+          git config --local user.email 'swift-ci@users.noreply.github.com'
+
+          BASE_COMMIT=$(git rev-parse HEAD)
+
+          sed -E -i "s#branch: \"(main|release/[0-9]+\.[0-9]+)\"#from: \"${{ steps.swift_syntax_tag.outputs.swift_syntax_tag }}\"#" Package.swift
+          git add Package.swift
+          git commit -m "Change swift-syntax dependency to ${{ steps.swift_syntax_tag.outputs.swift_syntax_tag }}"
+
+          sed -E -i "s#print\(\".*\"\)#print\(\"${{ steps.swift_format_version.outputs.swift_format_version }}\"\)#" Sources/swift-format/PrintVersion.swift
+          git add Sources/swift-format/PrintVersion.swift
+          git commit -m "Change version to ${{ steps.swift_format_version.outputs.swift_format_version }}"
+
+          {
+            echo 'release_commit_patch<<EOF'
+            git format-patch "$BASE_COMMIT"..HEAD --stdout
+            echo EOF
+          } >> "$GITHUB_OUTPUT"
+  test:
+    name: Test in ${{ matrix.release && 'Release' || 'Debug' }} configuration
     uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@main
-    needs: define_tags
+    needs: create_release_commits
+    strategy:
+      fail-fast: false
+      matrix:
+        release: [true, false]
     with:
-      pre_build_command: bash .github/workflows/create-release-commits.sh '${{ needs.define_tags.outputs.swift_syntax_tag }}' '${{ needs.define_tags.outputs.swift_format_version }}'
+      enable_windows_docker: false  # Dockerless Windows is 5-10 minutes faster than Docker on Windows
+      linux_pre_build_command: |
+        git config --global --add safe.directory "$(realpath .)"
+        git config --local user.name 'swift-ci'
+        git config --local user.email 'swift-ci@users.noreply.github.com'
+        git am << EOF
+        ${{ needs.create_release_commits.outputs.release_commit_patch }}
+        EOF
+      windows_pre_build_command: |
+        git config --local user.name "swift-ci"
+        git config --local user.email "swift-ci@users.noreply.github.com"
+        echo @"
+        ${{ needs.create_release_commits.outputs.release_commit_patch }}
+        "@ > $env:TEMP\patch.diff
+        # For some reason `git am` fails in Powershell with the following error. Executing it in cmd works...
+        # fatal: empty ident name (for <>) not allowed
+        cmd /c "type $env:TEMP\patch.diff | git am || (exit /b 1)"
       # We require that releases of swift-format build without warnings
-      build_command: swift test -Xswiftc -warnings-as-errors
-  test_release:
-    name: Test in Release configuration
-    uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@main
-    needs: define_tags
-    with:
-      pre_build_command: bash .github/workflows/create-release-commits.sh '${{ needs.define_tags.outputs.swift_syntax_tag }}' '${{ needs.define_tags.outputs.swift_format_version }}'
-      # We require that releases of swift-format build without warnings
-      build_command: swift test -c release -Xswiftc -warnings-as-errors
+      linux_build_command: swift test -Xswiftc -warnings-as-errors ${{ matrix.release && '-c release' || '' }}
+      windows_build_command: swift test -Xswiftc -warnings-as-errors ${{ matrix.release && '-c release' || '' }}
   create_tag:
     name: Create Tag
     runs-on: ubuntu-latest
-    needs: [check_triggering_actor, test_debug, test_release, define_tags]
+    needs: [check_triggering_actor, test, create_release_commits]
     permissions:
       contents: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Create release commits
-        run: bash .github/workflows/create-release-commits.sh '${{ needs.define_tags.outputs.swift_syntax_tag }}' '${{ needs.define_tags.outputs.swift_format_version }}'
+      - name: Apply release commits
+        run: |
+          git config --global --add safe.directory "$(realpath .)"
+          git config --local user.name 'swift-ci'
+          git config --local user.email 'swift-ci@users.noreply.github.com'
+          git am << EOF
+          ${{ needs.create_release_commits.outputs.release_commit_patch }}
+          EOF
       - name: Tag release
         run: |
-          git tag "${{ needs.define_tags.outputs.swift_format_version }}"
-          git push origin "${{ needs.define_tags.outputs.swift_format_version }}"
+          git tag "${{ needs.create_release_commits.outputs.swift_format_version }}"
+          git push origin "${{ needs.create_release_commits.outputs.swift_format_version }}"
       - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
@@ -104,6 +148,6 @@ jobs:
             # Only create a release automatically for prereleases. For real releases, release notes should be crafted by hand.
             exit
           fi
-          gh release create "${{ needs.define_tags.outputs.swift_format_version }}" \
-            --title "${{ needs.define_tags.outputs.swift_format_version }}" \
+          gh release create "${{ needs.create_release_commits.outputs.swift_format_version }}" \
+            --title "${{ needs.create_release_commits.outputs.swift_format_version }}" \
             --prerelease
