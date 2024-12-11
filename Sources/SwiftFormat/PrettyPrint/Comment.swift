@@ -67,9 +67,9 @@ struct Comment {
 
     switch kind {
     case .line, .docLine:
+      self.length = text.count
       self.text = [text]
       self.text[0].removeFirst(kind.prefixLength)
-      self.length = self.text.reduce(0, { $0 + $1.count + kind.prefixLength + 1 })
 
     case .block, .docBlock:
       var fulltext: String = text
