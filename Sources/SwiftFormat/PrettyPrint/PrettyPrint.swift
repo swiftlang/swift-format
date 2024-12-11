@@ -558,7 +558,9 @@ public class PrettyPrinter {
   /// Indicates whether the current line can fit a string of the given length. If no length
   /// is given, it indicates whether the current line can accomodate *any* text.
   private func canFit(_ length: Int = 1) -> Bool {
+//    print("\(length)")
     let spaceRemaining = configuration.lineLength - outputBuffer.column
+//    print("let \(spaceRemaining) = \(configuration.lineLength) - \(outputBuffer.column)")
     return outputBuffer.isAtStartOfLine || length <= spaceRemaining
   }
 

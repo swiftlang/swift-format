@@ -985,7 +985,8 @@ final class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(
       input: """
         import veryveryverylongmodulenameherebecauseitistypical  // special sentinel comment
-
+        
+        let x  // this comment should line up with 45
         func fooBarBazRunningOutOfIdeas() {  1️⃣// comment that needs to move
           if foo {  // comment is fine
           }
@@ -995,6 +996,7 @@ final class CommentTests: PrettyPrintTestCase {
       expected: """
         import veryveryverylongmodulenameherebecauseitistypical  // special sentinel comment
 
+        let x  // this comment should line up with 45
         func fooBarBazRunningOutOfIdeas() {  // comment that needs to move
           if foo {  // comment is fine
           }
