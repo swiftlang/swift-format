@@ -97,14 +97,13 @@ public struct FileIterator: Sequence, IteratorProtocol {
               // skip this directory and its subdirectories if it should be ignored
               continue
             }
-          } catch IgnoreFile.Error.invalidContent(let url) {
+          } catch IgnoreFile.Error.invalidFile(let url, _) {
             // we hit an invalid ignore file
-            // we skip the directory, but return the path of the ignore file
-            // so that we can report an error
+            // we return the path of the ignore file so that we can report an error
+            // and process the directory as normal
             output = url
           } catch {
-            // we hit another unexpected error; just skip the directory
-            continue
+            // we hit another unexpected error; process the directory as normal
           }
 
           dirIterator = FileManager.default.enumerator(
@@ -197,7 +196,7 @@ private func fileType(at url: URL) -> FileAttributeType? {
 
 /// Returns true if the file should be processed.
 /// Directories are always processed.
-/// For other files, we look for an ignore file in the containing 
+/// For other files, we look for an ignore file in the containing
 /// directory or any of its parents.
 /// If there is no ignore file, we process the file.
 /// If an ignore file is found, we consult it to see if the file should be processed.
@@ -207,7 +206,7 @@ private func inputShouldBeProcessed(at url: URL) -> Bool {
   guard fileType(at: url) != .typeDirectory else {
     return true
   }
-      
+
   let ignoreFile = try? IgnoreFile(for: url)
   return ignoreFile?.shouldProcess(url) ?? true
 }

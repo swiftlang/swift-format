@@ -15,7 +15,7 @@ import Foundation
 /// A file that describes which files and directories should be ignored by the formatter.
 /// In the future, this file may contain complex rules for ignoring files, based
 /// on pattern matching file paths.
-/// 
+///
 /// Currently, the only valid content for an ignore file is a single asterisk "*",
 /// optionally surrounded by whitespace.
 public class IgnoreFile {
@@ -26,18 +26,30 @@ public class IgnoreFile {
 
   /// Errors that can be thrown by the IgnoreFile initializer.
   public enum Error: Swift.Error {
-    /// Error thrown when an ignore file has invalid content.
-    case invalidContent(URL)
+    /// Error thrown when initialising with invalid content.
+    case invalidContent
+
+    /// Error thrown when we fail to initialise with the given URL.
+    case invalidFile(URL, Swift.Error)
+  }
+
+  /// Create an instance from a string.
+  /// Returns nil if the content is not valid.
+  public init(_ content: String) throws {
+    guard content.trimmingCharacters(in: .whitespacesAndNewlines) == "*" else {
+      throw Error.invalidContent
+    }
   }
 
   /// Create an instance from the contents of the file at the given URL.
   /// Throws an error if the file content can't be read, or is not valid.
-  public init(contentsOf url: URL) throws {
-    let content = try String(contentsOf: url, encoding: .utf8)
-      guard content.trimmingCharacters(in: .whitespacesAndNewlines) == "*" else {
-        throw Error.invalidContent(url)
-      }
-  } 
+  public convenience init(contentsOf url: URL) throws {
+    do {
+      try self.init(try String(contentsOf: url, encoding: .utf8))
+    } catch {
+      throw Error.invalidFile(url, error)
+    }
+  }
 
   /// Create an instance for the given directory, if a valid
   /// ignore file with the standard name is found in that directory.
@@ -47,18 +59,24 @@ public class IgnoreFile {
   /// Note that this initializer does not search parent directories for ignore files.
   public convenience init?(forDirectory directory: URL) throws {
     let url = directory.appendingPathComponent(IgnoreFile.fileName)
-    guard FileManager.default.isReadableFile(atPath: url.path) else {
-      return nil
-    }
 
-    try self.init(contentsOf: url)
+    do {
+      try self.init(contentsOf: url)
+    } catch {
+      if case let Error.invalidFile(_, underlying) = error, (underlying as NSError).domain == NSCocoaErrorDomain,
+        (underlying as NSError).code == NSFileReadNoSuchFileError
+      {
+        return nil
+      }
+      throw error
+    }
   }
 
   /// Create an instance to use for the given URL.
   /// We search for an ignore file starting from the given URL's container,
   /// and moving up the directory tree, until we reach the root directory.
   /// Returns nil if no ignore file is found.
-  /// Throws an error if an invalid ignore file is found somewhere 
+  /// Throws an error if an invalid ignore file is found somewhere
   /// in the directory tree.
   ///
   /// Note that we start the search from the given URL's **container**,
@@ -66,16 +84,16 @@ public class IgnoreFile {
   /// If you pass a directory URL, the search will not include the contents
   /// of that directory.
   public convenience init?(for url: URL) throws {
-      var containingDirectory = url.absoluteURL.standardized
-      repeat {
-        containingDirectory.deleteLastPathComponent()
-        let url = containingDirectory.appendingPathComponent(IgnoreFile.fileName)
-        if FileManager.default.isReadableFile(atPath: url.path) {
-          try self.init(contentsOf: url)
-          return
-        }
-      } while !containingDirectory.isRoot
-      return nil
+    var containingDirectory = url.absoluteURL.standardized
+    repeat {
+      containingDirectory.deleteLastPathComponent()
+      let url = containingDirectory.appendingPathComponent(IgnoreFile.fileName)
+      if FileManager.default.isReadableFile(atPath: url.path) {
+        try self.init(contentsOf: url)
+        return
+      }
+    } while !containingDirectory.isRoot
+    return nil
   }
 
   /// Should the given URL be processed?
@@ -85,7 +103,7 @@ public class IgnoreFile {
     return false
   }
 
-  /// Returns true if the name of the given URL matches 
+  /// Returns true if the name of the given URL matches
   /// the standard ignore file name.
   public static func isStandardIgnoreFile(_ url: URL) -> Bool {
     return url.lastPathComponent == fileName
