@@ -174,6 +174,7 @@ public struct FileIterator: Sequence, IteratorProtocol {
           relativePath = path
         }
         output = URL(fileURLWithPath: relativePath, isDirectory: false, relativeTo: workingDirectory)
+
       default:
         break
       }
