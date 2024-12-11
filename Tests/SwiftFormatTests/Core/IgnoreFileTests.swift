@@ -119,16 +119,8 @@ final class IgnoreFileTests: XCTestCase {
     let iterator = FileIterator(urls: [url], followSymlinks: false)
     let files = Array(iterator)
 
-    // note that the ignore file has no effect on the FileIterator here,
-    // because it is not in the root directory
-    // this is expected behavior, and a limitation of the current implementation
-    // of FileIterator, as it flattens subdirectories into a single list rather
-    // than recursing into them; however, the ignore file itself will still be
-    // picked up and obeyed when each source file is processed.
-    XCTAssertEqual(files.count, 2)
-    for file in files {
-      XCTAssertEqual(file.lastPathComponent, "file.swift")
-    }
+    XCTAssertEqual(files.count, 1)
+    XCTAssertEqual(files.first?.lastPathComponent, "file.swift")
   }
 
 }
