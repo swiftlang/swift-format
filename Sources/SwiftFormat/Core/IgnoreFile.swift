@@ -22,7 +22,7 @@ public class IgnoreFile {
   /// Name of the ignore file to look for.
   /// The presence of this file in a directory will cause the formatter
   /// to skip formatting files in that directory and its subdirectories.
-  fileprivate static let fileName = ".swift-format-ignore"
+  public static let standardFileName = ".swift-format-ignore"
 
   /// Errors that can be thrown by the IgnoreFile initializer.
   public enum Error: Swift.Error {
@@ -58,7 +58,7 @@ public class IgnoreFile {
   ///
   /// Note that this initializer does not search parent directories for ignore files.
   public convenience init?(forDirectory directory: URL) throws {
-    let url = directory.appendingPathComponent(IgnoreFile.fileName)
+    let url = directory.appendingPathComponent(IgnoreFile.standardFileName)
 
     do {
       try self.init(contentsOf: url)
@@ -84,10 +84,14 @@ public class IgnoreFile {
   /// If you pass a directory URL, the search will not include the contents
   /// of that directory.
   public convenience init?(for url: URL) throws {
+    guard !url.isRoot else {
+      return nil
+    }
+
     var containingDirectory = url.absoluteURL.standardized
     repeat {
       containingDirectory.deleteLastPathComponent()
-      let url = containingDirectory.appendingPathComponent(IgnoreFile.fileName)
+      let url = containingDirectory.appendingPathComponent(IgnoreFile.standardFileName)
       if FileManager.default.isReadableFile(atPath: url.path) {
         try self.init(contentsOf: url)
         return
@@ -101,11 +105,5 @@ public class IgnoreFile {
   /// which means that all files should be ignored.
   func shouldProcess(_ url: URL) -> Bool {
     return false
-  }
-
-  /// Returns true if the name of the given URL matches
-  /// the standard ignore file name.
-  public static func isStandardIgnoreFile(_ url: URL) -> Bool {
-    return url.lastPathComponent == fileName
   }
 }

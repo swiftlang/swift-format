@@ -114,8 +114,7 @@ var targets: [Target] = [
       "SwiftFormat",
       "_SwiftFormatTestSupport",
       .product(name: "Markdown", package: "swift-markdown"),
-    ] + swiftSyntaxDependencies(["SwiftOperators", "SwiftParser", "SwiftSyntax", "SwiftSyntaxBuilder"]),
-    resources: [.copy("Resources")]
+    ] + swiftSyntaxDependencies(["SwiftOperators", "SwiftParser", "SwiftSyntax", "SwiftSyntaxBuilder"])
   ),
 ]
 
