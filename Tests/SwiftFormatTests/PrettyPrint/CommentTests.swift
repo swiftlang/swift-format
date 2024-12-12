@@ -1009,6 +1009,29 @@ final class CommentTests: PrettyPrintTestCase {
     )
   }
 
+  // Tests that "end of line" comments are flagged only when they exceed the configured line length.
+  func testDiagnoseMoveEndOfLineCommentAroundBoundary() {
+    assertPrettyPrintEqual(
+      input: """
+        x  // 789
+        x  // 7890
+        x  1️⃣// 78901
+
+        """,
+      expected: """
+        x  // 789
+        x  // 7890
+        x  // 78901
+
+        """,
+      linelength: 10,
+      whitespaceOnly: true,
+      findings: [
+        FindingSpec("1️⃣", message: "move end-of-line comment that exceeds the line length")
+      ]
+    )
+  }
+
   func testLineWithDocLineComment() {
     // none of these should be merged if/when there is comment formatting
     let input =
