@@ -103,12 +103,14 @@ final class FileIteratorTests: XCTestCase {
     while !root.isRoot {
       root.deleteLastPathComponent()
     }
-    var rootPath = root.path
     #if os(Windows) && compiler(<6.1)
+    var rootPath = root.path
     if rootPath.hasPrefix("/") {
       // Canonicalize /C: to C:
       rootPath = String(rootPath.dropFirst())
     }
+    #else
+    let rootPath = root.path
     #endif
     // Make sure that we don't drop the beginning of the path if we are running in root.
     // https://github.com/swiftlang/swift-format/issues/862
