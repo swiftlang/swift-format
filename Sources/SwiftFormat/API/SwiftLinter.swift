@@ -45,7 +45,7 @@ public final class SwiftLinter {
   /// This form of the `lint` function automatically folds expressions using the default operator
   /// set defined in Swift. If you need more control over this—for example, to provide the correct
   /// precedence relationships for custom operators—you must parse and fold the syntax tree
-  /// manually and then call ``lint(syntax:assumingFileURL:)``.
+  /// manually and then call ``lint(syntax:source:operatorTable:assumingFileURL:)``.
   ///
   /// - Parameters:
   ///   - url: The URL of the file containing the code to format.
@@ -76,7 +76,7 @@ public final class SwiftLinter {
   /// This form of the `lint` function automatically folds expressions using the default operator
   /// set defined in Swift. If you need more control over this—for example, to provide the correct
   /// precedence relationships for custom operators—you must parse and fold the syntax tree
-  /// manually and then call ``lint(syntax:assumingFileURL:)``.
+  /// manually and then call ``lint(syntax:source:operatorTable:assumingFileURL:)``.
   ///
   /// - Parameters:
   ///   - source: The Swift source code to be linted.
@@ -124,6 +124,7 @@ public final class SwiftLinter {
   ///
   /// - Parameters:
   ///   - syntax: The Swift syntax tree to be converted to be linted.
+  ///   - source: The Swift source code to be linted.
   ///   - operatorTable: The table that defines the operators and their precedence relationships.
   ///     This must be the same operator table that was used to fold the expressions in the `syntax`
   ///     argument.

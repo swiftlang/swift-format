@@ -45,7 +45,7 @@ public final class SwiftFormatter {
   /// This form of the `format` function automatically folds expressions using the default operator
   /// set defined in Swift. If you need more control over this—for example, to provide the correct
   /// precedence relationships for custom operators—you must parse and fold the syntax tree
-  /// manually and then call ``format(syntax:assumingFileURL:to:)``.
+  /// manually and then call ``format(syntax:source:operatorTable:assumingFileURL:selection:to:)``.
   ///
   /// - Parameters:
   ///   - url: The URL of the file containing the code to format.
@@ -81,7 +81,7 @@ public final class SwiftFormatter {
   /// This form of the `format` function automatically folds expressions using the default operator
   /// set defined in Swift. If you need more control over this—for example, to provide the correct
   /// precedence relationships for custom operators—you must parse and fold the syntax tree
-  /// manually and then call ``format(syntax:assumingFileURL:to:)``.
+  /// manually and then call ``format(syntax:source:operatorTable:assumingFileURL:selection:to:)``.
   ///
   /// - Parameters:
   ///   - source: The Swift source code to be formatted.
