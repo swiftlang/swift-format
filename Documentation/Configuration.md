@@ -8,97 +8,175 @@ used as a command line tool or as an API.
 A `swift-format` configuration file is a JSON file with the following
 top-level keys and values:
 
-*   `version` _(number)_: The version of the configuration file. For now, this
-    should always be `1`.
+### `version`  
+**type:** number  
 
-*   `lineLength` _(number)_: The maximum allowed length of a line, in
-    characters.
+**description:** The version of the configuration file. For now, this should always be `1`.  
 
-*   `indentation` _(object)_: The kind and amount of whitespace that should be
-    added when indenting one level. The object value of this property should
-    have **exactly one of the following properties:**
+**default:** `1`  
 
-    *   `spaces` _(number)_: One level of indentation is the given number of
-        spaces.
-    *   `tabs` _(number)_: One level of indentation is the given number of
-        tabs.
+---
 
-*   `tabWidth` _(number)_: The number of spaces that should be considered
-    equivalent to one tab character. This is used during line length
-    calculations when tabs are used for indentation.
+### `lineLength`  
+**type:** number  
 
-*   `maximumBlankLines` _(number)_: The maximum number of consecutive blank
-    lines that are allowed to be present in a source file. Any number larger
-    than this will be collapsed down to the maximum.
+**description:** The maximum allowed length of a line, in characters.  
 
-*   `spacesBeforeEndOfLineComments` _(number)_: The number of spaces between 
-    the last token on a non-empty line and a line comment starting with `//`.
+**default:** `100`  
 
-*   `respectsExistingLineBreaks` _(boolean)_: Indicates whether or not existing
-    line breaks in the source code should be honored (if they are valid
-    according to the style guidelines being enforced). If this settings is
-    `false`, then the formatter will be more "opinionated" by only inserting
-    line breaks where absolutely necessary and removing any others, effectively
-    canonicalizing the output.
+---
 
-*   `lineBreakBeforeControlFlowKeywords` _(boolean)_: Determines the
-    line-breaking behavior for control flow keywords that follow a closing
-    brace, like `else` and `catch`. If true, a line break will be added before
-    the keyword, forcing it onto its own line. If false (the default), the
-    keyword will be placed after the closing brace (separated by a space).
+### `indentation`  
+**type:** object  
 
-*   `lineBreakBeforeEachArgument` _(boolean)_: Determines the line-breaking
-    behavior for generic arguments and function arguments when a declaration is
-    wrapped onto multiple lines. If true, a line break will be added before each
-    argument, forcing the entire argument list to be laid out vertically.
-    If false (the default), arguments will be laid out horizontally first, with
-    line breaks only being fired when the line length would be exceeded.
-    
-*   `lineBreakBeforeEachGenericRequirement` _(boolean)_:  Determines the 
-    line-breaking behavior for generic requirements when the requirements list 
-    is wrapped onto multiple lines. If true, a line break will be added before each
-    requirement, forcing the entire requirements list to be laid out vertically. If false
-    (the default), requirements will be laid out horizontally first, with line breaks 
-    only being fired when the line length would be exceeded.
+**description:** The kind and amount of whitespace that should be added when indenting one level. The object value of this property should have exactly one of the following properties:  
 
-*   `lineBreakBetweenDeclarationAttributes` _(boolean)_:  Determines the 
-    line-breaking behavior for adjacent attributes on declarations.
-    If true, a line break will be added between each attribute, forcing the
-    attribute list to be laid out vertically. If false (the default),
-    attributes will be laid out horizontally first, with line breaks only
-    being fired when the line length would be exceeded.
+- `spaces` _(number)_: One level of indentation is the given number of spaces.  
+- `tabs` _(number)_: One level of indentation is the given number of tabs.  
 
-*   `prioritizeKeepingFunctionOutputTogether` _(boolean)_: Determines if 
-    function-like declaration outputs should be prioritized to be together with the
-    function signature right (closing) parenthesis. If false (the default), function 
-    output (i.e. throws, return type) is not prioritized to be together with the 
-    signature's right parenthesis, and when the line length would be exceeded,
-    a line break will be fired after the function signature first, indenting the 
-    declaration output one additional level. If true, A line break will be fired 
-    further up in the function's declaration (e.g. generic parameters, 
-    parameters) before breaking on the function's output.  
+**default:** `{ "spaces": 2 }`  
 
-*   `indentConditionalCompilationBlocks` _(boolean)_: Determines if
-    conditional compilation blocks are indented. If this setting is `false` the body
-    of `#if`, `#elseif`, and `#else` is not indented. Defaults to `true`.
+---
 
-*  `lineBreakAroundMultilineExpressionChainComponents` _(boolean)_:  Determines whether
-   line breaks should be forced before and after multiline components of dot-chained
-   expressions, such as function calls and subscripts chained together through member
-   access (i.e. "." expressions). When any component is multiline and this option is
-   true, a line break is forced before the "." of the component and after the component's
-   closing delimiter (i.e. right paren, right bracket, right brace, etc.).
+### `tabWidth`  
+**type:** number  
 
-*  `spacesAroundRangeFormationOperators` _(boolean)_: Determines whether whitespace should be forced
-   before and after the range formation operators `...` and `..<`.
+**description:** The number of spaces that should be considered equivalent to one tab character. This is used during line length calculations when tabs are used for indentation.  
 
-*  `multiElementCollectionTrailingCommas` _(boolean)_: Determines whether multi-element collection literals should have trailing commas.
-    Defaults to `true`.
-    
-*  `indentBlankLines` _(boolean)_: Determines whether blank lines should be modified 
-    to match the current indentation. When this setting is true, blank lines will be modified 
-    to match the indentation level, adding indentation whether or not there is existing whitespace. 
-    When false (the default), all whitespace in blank lines will be completely removed.
+**default:** `8`  
+
+---
+
+### `maximumBlankLines`  
+**type:** number  
+
+**description:** The maximum number of consecutive blank lines that are allowed to be present in a source file. Any number larger than this will be collapsed down to the maximum.  
+
+**default:** `1`  
+
+---
+
+### `spacesBeforeEndOfLineComments`  
+**type:** number  
+
+**description:** The number of spaces between the last token on a non-empty line and a line comment starting with `//`.  
+
+**default:** `2`  
+
+---
+
+### `respectsExistingLineBreaks`  
+**type:** boolean  
+
+**description:** Indicates whether or not existing line breaks in the source code should be honored (if they are valid according to the style guidelines being enforced). If this settings is `false`, then the formatter will be more "opinionated" by only inserting line breaks where absolutely necessary and removing any others, effectively canonicalizing the output.
+
+**default:** `true`  
+
+---
+
+### `lineBreakBeforeControlFlowKeywords`  
+**type:** boolean  
+
+**description:** Determines the line-breaking behavior for control flow keywords that follow a closing brace, like `else` and `catch`. If true, a line break will be added before the keyword, forcing it onto its own line. If `false`, the keyword will be placed after the closing brace (separated by a space).
+
+**default:** `false`  
+
+---
+
+### `lineBreakBeforeEachArgument`  
+**type:** boolean  
+
+**description:** Determines the line-breaking behavior for generic arguments and function arguments when a declaration is wrapped onto multiple lines. If true, a line break will be added before each argument, forcing the entire argument list to be laid out vertically. If `false`, arguments will be laid out horizontally first, with line breaks only being fired when the line length would be exceeded.
+
+**default:** `false`  
+
+---
+
+### `lineBreakBeforeEachGenericRequirement`  
+**type:** boolean  
+
+**description:** Determines the line-breaking behavior for generic requirements when the requirements list is wrapped onto multiple lines. If true, a line break will be added before each requirement, forcing the entire requirements list to be laid out vertically. If `false`, requirements will be laid out horizontally first, with line breaks only being fired when the line length would be exceeded.
+
+**default:** `false`  
+
+---
+
+### `lineBreakBetweenDeclarationAttributes`  
+**type:** boolean  
+
+**description:** Determines the line-breaking behavior for adjacent attributes on declarations. If true, a line break will be added between each attribute, forcing the attribute list to be laid out vertically. If `false`, attributes will be laid out horizontally first, with line breaks only being fired when the line length would be exceeded.
+
+**default:** `false`  
+
+---
+
+### `prioritizeKeepingFunctionOutputTogether`  
+**type:** boolean  
+
+**description:** Determines if function-like declaration outputs should be prioritized to be together with thefunction signature right (closing) parenthesis. If `false`, function output (i.e. throws, return type) is not prioritized to be together with the signature's right parenthesis, and when the line length would be exceeded,a line break will be fired after the function signature first, indenting the declaration output one additional level. If true, A line break will be fired further up in the function's declaration (e.g. generic parameters, parameters) before breaking on the function's output.  
+
+**default:** `false`  
+
+---
+
+### `indentConditionalCompilationBlocks`  
+**type:** boolean  
+
+**description:** Determines if conditional compilation blocks are indented. If this setting is `false` the body of `#if`, `#elseif`, and `#else` is not indented.  
+
+**default:** `true`  
+
+---
+
+### `lineBreakAroundMultilineExpressionChainComponents`  
+**type:** boolean  
+
+**description:** Determines whether line breaks should be forced before and after multiline components of dot-chained expressions, such as function calls and subscripts chained together through member access (i.e. "." expressions). When any component is multiline and this option is true, a line break is forced before the "." of the component and after the component's closing delimiter (i.e. right paren, right bracket, right brace, etc.).  
+
+**default:** `false`  
+
+---
+
+## FIXME: fileScopedDeclarationPrivacy
+
+---
+
+### FIXME: indentSwitchCaseLabels
+
+---
+
+### `spacesAroundRangeFormationOperators`  
+**type:** boolean  
+
+**description:** Determines whether whitespace should be forced before and after the range formation operators `...` and `..<`.  
+
+**default:** `false`  
+
+---
+
+### FIXME: noAssignmentInExpressions
+
+---
+
+### `multiElementCollectionTrailingCommas`  
+**type:** boolean  
+
+**description:** Determines whether multi-element collection literals should have trailing commas.  
+
+**default:** `true`  
+
+---
+
+### FIXME: reflowMultilineStringLiterals
+
+---
+
+### `indentBlankLines`  
+**type:** boolean  
+
+**description:** Determines whether blank lines should be modified to match the current indentation. When this setting is true, blank lines will be modified whitespace. If `false`, all whitespace in blank lines will be completely removed.
+
+**default:** `false`
 
 > TODO: Add support for enabling/disabling specific syntax transformations in
 > the pipeline.
