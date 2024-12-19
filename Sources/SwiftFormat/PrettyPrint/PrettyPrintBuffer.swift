@@ -125,7 +125,7 @@ struct PrettyPrintBuffer {
     var lastLength = 0
     // We are only interested in "\n" we can use the UTF8 view and skip the grapheme clustering.
     for element in text.utf8 {
-      if element == 10 {
+      if element == UInt8(ascii: "\n") {
         lineNumber += 1
         lastLength = 0
       } else {
