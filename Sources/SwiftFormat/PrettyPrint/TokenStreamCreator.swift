@@ -3226,20 +3226,27 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   ) where BodyContents.Element: SyntaxProtocol {
     guard let node = node, let contentsKeyPath = contentsKeyPath else { return }
 
+    let isEmpty = areBracesCompletelyEmpty(node, contentsKeyPath: contentsKeyPath)
+    let newlineBehavior: NewlineBehavior
+    if config.alwaysBreakOnNewScopes && !isEmpty {
+      // Force a newline after the left brace.
+      newlineBehavior = .hard(count: 1)
+    } else {
+      newlineBehavior = openBraceNewlineBehavior
+    }
+
     if shouldResetBeforeLeftBrace {
       before(
         node.leftBrace,
         tokens: .break(.reset, size: 1, newlines: .elective(ignoresDiscretionary: true))
       )
     }
-    if !areBracesCompletelyEmpty(node, contentsKeyPath: contentsKeyPath) {
-      after(
-        node.leftBrace,
-        tokens: .break(.open, size: 1, newlines: openBraceNewlineBehavior),
-        .open
-      )
+
+    if !isEmpty {
+      after(node.leftBrace, tokens: .break(.open, size: 1, newlines: newlineBehavior), .open)
       before(node.rightBrace, tokens: .break(.close, size: 1), .close)
     } else {
+      // If empty scope, keep on the same line if allowed.
       after(node.leftBrace, tokens: .break(.open, size: 0, newlines: openBraceNewlineBehavior))
       before(node.rightBrace, tokens: .break(.close, size: 0))
     }
