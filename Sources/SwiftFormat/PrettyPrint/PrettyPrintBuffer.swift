@@ -122,17 +122,16 @@ struct PrettyPrintBuffer {
     // In case of comments, we may get a multi-line string.
     // To account for that case, we need to correct the lineNumber count.
     // The new column is only the position within the last line.
-    var lastLength = 0
-    // We are only interested in "\n" we can use the UTF8 view and skip the grapheme clustering.
-    for element in text.utf8 {
-      if element == UInt8(ascii: "\n") {
-        lineNumber += 1
-        lastLength = 0
-      } else {
-        lastLength += 1
-      }
+    let lines = text.split(separator: "\n")
+    lineNumber += lines.count - 1
+    if lines.count > 1 {
+      // in case we have inserted new lines, we need to reset the column
+      column = lines.last?.count ?? 0
+    } else {
+      // in case it is an end of line comment or a single line comment,
+      // we just add to the current column
+      column += lines.last?.count ?? 0
     }
-    column += lastLength
   }
 
   /// Request that the given number of spaces be printed out before the next text token.
