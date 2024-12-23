@@ -200,19 +200,24 @@ configuration, by redirecting it to a file and editing it.
 
 ### Configuring the Command Line Tool
 
-For any source file being checked or formatted, `swift-format` looks for a
-JSON-formatted file named `.swift-format` in the same directory. If one is
-found, then that file is loaded to determine the tool's configuration. If the
-file is not found, then it looks in the parent directory, and so on.
+For any source file being checked or formatted, `swift-format` looks for 
+configuration files in the same directory, and parent directories. 
 
-If no configuration file is found, a default configuration is used. The
-settings in the default configuration can be viewed by running
-`swift-format dump-configuration`, which will dump it to standard
-output.
+If it finds a file named `.swift-format-ignore`, its contents will determine
+which files in that directory will be ignored by `swift-format`. Currently
+the only supported option is `*`, which ignores all files.
+
+If it finds a JSON-formatted file called `.swift-format`, then that
+file is loaded to determine the tool's configuration. 
+
+If no configuration file is found at any level, a default configuration 
+is used. The settings in the default configuration can be viewed by
+running `swift-format dump-configuration`, which will dump it to 
+standard output.
 
 If the `--configuration <file>` option is passed to `swift-format`, then that
 configuration will be used unconditionally and the file system will not be
-searched.
+searched for `.swift-format` files.
 
 See [Documentation/Configuration.md](Documentation/Configuration.md) for a
 description of the configuration file format and the settings that are
