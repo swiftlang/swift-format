@@ -136,4 +136,60 @@ final class NoEmptyLinesOpeningClosingBracesTests: LintOrFormatRuleTestCase {
       ]
     )
   }
+
+  func testNoEmptyLinesOpeningClosingBracesInFunctionBeginningAndEndingWithComment() {
+    assertFormatting(
+      NoEmptyLinesOpeningClosingBraces.self,
+      input: """
+        func myFunc() {
+            // Some comment here
+
+            // Do a thing
+            var x = doAThing()
+
+            // Do a thing
+
+            var y = doAThing()
+
+            // Some other comment here
+        }
+        """,
+      expected: """
+        func myFunc() {
+            // Some comment here
+
+            // Do a thing
+            var x = doAThing()
+
+            // Do a thing
+
+            var y = doAThing()
+
+            // Some other comment here
+        }
+        """
+    )
+  }
+
+  func testNoEmptyLinesOpeningClosingBracesInFunctionWithEmptyLinesOnly() {
+    assertFormatting(
+      NoEmptyLinesOpeningClosingBraces.self,
+      input: """
+        func myFunc() {
+
+
+
+
+
+        1️⃣}
+        """,
+      expected: """
+        func myFunc() {
+        }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove empty lines before '}'")
+      ]
+    )
+  }
 }
