@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 import ArgumentParser
+import Foundation
 
 extension SwiftFormatCommand {
   /// Emits style diagnostics for one or more files containing Swift code.
@@ -31,6 +32,25 @@ extension SwiftFormatCommand {
 
     @OptionGroup(visibility: .hidden)
     var performanceMeasurementOptions: PerformanceMeasurementsOptions
+
+    func validate() throws {
+      #if !os(Windows)
+      let stdinIsPiped: Bool = {
+        let standardInput = FileHandle.standardInput
+        return isatty(standardInput.fileDescriptor) == 0
+      }()
+      if !stdinIsPiped, lintOptions.paths.isEmpty {
+        throw ValidationError(
+          """
+          No input files specified. Use one of the following:
+            - Provide the path to a directory along with the '--recursive' option to lint all Swift files within it.
+            - Provide the path to a specific Swift source code file.
+            - Or, pipe Swift code into the command (e.g., echo "let a = 1" | swift-format lint).
+          """
+        )
+      }
+      #endif
+    }
 
     func run() throws {
       try performanceMeasurementOptions.printingInstructionCountIfRequested {
