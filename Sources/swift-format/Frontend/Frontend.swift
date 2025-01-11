@@ -97,7 +97,23 @@ class Frontend {
 
   /// Runs the linter or formatter over the inputs.
   final func run() {
-    if lintFormatOptions.paths.isEmpty {
+    if lintFormatOptions.paths == ["-"] {
+      processStandardInput()
+    } else if lintFormatOptions.paths.isEmpty {
+      diagnosticsEngine.emitWarning(
+        """
+        Running swift-format without input paths is deprecated and will be removed in the future.
+
+        Please update your invocation to do either of the following:
+
+        - Pass `-` to read from stdin (e.g., `cat MyFile.swift | swift-format -`).
+        - Pass one or more paths to Swift source files or directories containing
+          Swift source files. When passing directories, make sure to include the
+          `--recursive` flag.
+
+        For more information, use the `--help` option.
+        """
+      )
       processStandardInput()
     } else {
       processURLs(
