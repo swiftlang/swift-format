@@ -339,9 +339,16 @@ public class WhitespaceLinter {
     startingAt offset: Int,
     in data: [UTF8.CodeUnit]
   ) -> ArraySlice<UTF8.CodeUnit> {
+    func isWhitespace(_ char: UTF8.CodeUnit) -> Bool {
+      switch char {
+      case UInt8(ascii: " "), UInt8(ascii: "\n"), UInt8(ascii: "\t"), UInt8(ascii: "\r"), /*VT*/ 0x0B, /*FF*/ 0x0C:
+        return true
+      default:
+        return false
+      }
+    }
     guard
-      let whitespaceEnd =
-        data[offset...].firstIndex(where: { !UnicodeScalar($0).properties.isWhitespace })
+      let whitespaceEnd = data[offset...].firstIndex(where: { !isWhitespace($0) })
     else {
       return data[offset..<data.endIndex]
     }
