@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 import ArgumentParser
+import Foundation
 
 extension SwiftFormatCommand {
   /// Formats one or more files containing Swift code.
@@ -36,9 +37,27 @@ extension SwiftFormatCommand {
     var performanceMeasurementOptions: PerformanceMeasurementsOptions
 
     func validate() throws {
+      #if os(Windows)
       if inPlace && formatOptions.paths.isEmpty {
         throw ValidationError("'--in-place' is only valid when formatting files")
       }
+      #else
+      let stdinIsPiped: Bool = {
+        let standardInput = FileHandle.standardInput
+        return isatty(standardInput.fileDescriptor) == 0
+      }()
+      if !stdinIsPiped, formatOptions.paths.isEmpty {
+        throw ValidationError(
+          """
+          No input files specified. Please provide input in one of the following ways:
+            - Provide the path to a directory along with the '--recursive' option to format all Swift files within it.
+            - Provide the path to a specific Swift source code file.
+            - Or, pipe Swift code into the command (e.g., echo "let a = 1" | swift-format).
+          Additionally, if you want to overwrite files in-place, use '--in-place'.
+          """
+        )
+      }
+      #endif
     }
 
     func run() throws {
