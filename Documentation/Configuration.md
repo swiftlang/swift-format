@@ -137,11 +137,40 @@ top-level keys and values:
 
 ---
 
-## FIXME: fileScopedDeclarationPrivacy
+## `fileScopedDeclarationPrivacy`
+**type:** object
+
+**description:** Declarations at file scope with effective private access should be consistently declared as either `fileprivate` or `private`, determined by configuration.
+
+- `accessLevel` _(string)_: The formal access level to use when encountering a file-scoped declaration with effective private access. Allowed values are `private` and `fileprivate`.
+
+**default:** `{ "accessLevel" : "private" }`  
 
 ---
 
-### FIXME: indentSwitchCaseLabels
+### `indentSwitchCaseLabels`
+**type:** boolean
+
+**description:** Determines if `case` statements should be indented compared to the containing `switch` block.
+
+When `false`, the correct form is:
+```swift
+switch someValue {
+case someCase:
+  someStatement
+...
+}
+```
+When `true`, the correct form is:
+```swift
+switch someValue {
+  case someCase:
+    someStatement
+  ...
+}
+```
+
+**default:** `false`
 
 ---
 
@@ -154,7 +183,14 @@ top-level keys and values:
 
 ---
 
-### FIXME: noAssignmentInExpressions
+### `noAssignmentInExpressions`
+**type:** object
+
+**description:** Assignment expressions must be their own statements. Assignment should not be used in an expression context that expects a `Void` value. For example, assigning a variable within a `return` statement existing a `Void` function is prohibited.
+
+- `allowedFunctions` _(strings array)_: A list of function names where assignments are allowed to be embedded in expressions that are passed as parameters to that function.
+
+**default:** `{ "allowedFunctions" : ["XCTAssertNoThrow"] }`
 
 ---
 
@@ -167,7 +203,51 @@ top-level keys and values:
 
 ---
 
-### FIXME: reflowMultilineStringLiterals
+### `reflowMultilineStringLiterals`
+**type:** `string`
+
+**description:** Determines how multiline string literals should reflow when formatted.
+
+- `never`: Never reflow multiline string literals.
+- `onlyLinesOverLength`: Reflow lines in string literal that exceed the maximum line length.
+For example with a line length of 10:
+```swift
+"""
+an escape\
+ line break
+a hard line break
+"""
+```
+will be formatted as:
+```swift
+"""
+an esacpe\
+ line break
+a hard \
+line break
+"""
+```
+- `always`: Always reflow multiline string literals, this will ignore existing escaped newlines in the literal and reflow each line. Hard linebreaks are still respected.
+For example, with a line length of 10:
+```swift
+"""
+one \
+word \
+a line.
+this is too long.
+"""
+```
+will be formatted as:
+```swift
+"""
+one word \
+a line.
+this is \
+too long.
+"""
+```
+
+**default:** `"never"`
 
 ---
 
