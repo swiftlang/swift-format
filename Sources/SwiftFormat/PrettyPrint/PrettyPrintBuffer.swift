@@ -119,18 +119,21 @@ struct PrettyPrintBuffer {
     consecutiveNewlineCount = 0
     pendingSpaces = 0
 
-    // In case of comments, we may get a multi-line string.
-    // To account for that case, we need to correct the lineNumber count.
-    // The new column is only the position within the last line.
-    let lines = text.split(separator: "\n")
-    lineNumber += lines.count - 1
-    if lines.count > 1 {
-      // in case we have inserted new lines, we need to reset the column
-      column = lines.last?.count ?? 0
+    // In case of comments, we may get a multi-line string. To account for that case, we need to correct the
+    // `lineNumber` count. The new `column` is the position within the last line.
+
+    var lastNewlineIndex: String.Index? = nil
+    for i in text.utf8.indices {
+      if text.utf8[i] == UInt8(ascii: "\n") {
+        lastNewlineIndex = i
+        lineNumber += 1
+      }
+    }
+
+    if let lastNewlineIndex {
+      column = text.distance(from: text.utf8.index(after: lastNewlineIndex), to: text.endIndex)
     } else {
-      // in case it is an end of line comment or a single line comment,
-      // we just add to the current column
-      column += lines.last?.count ?? 0
+      column += text.count
     }
   }
 

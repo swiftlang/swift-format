@@ -108,7 +108,7 @@ struct LintFormatOptions: ParsableArguments {
   var experimentalFeatures: [String] = []
 
   /// The list of paths to Swift source files that should be formatted or linted.
-  @Argument(help: "Zero or more input filenames.")
+  @Argument(help: "Zero or more input filenames. Use `-` for stdin.")
   var paths: [String] = []
 
   @Flag(help: .hidden) var debugDisablePrettyPrint: Bool = false
