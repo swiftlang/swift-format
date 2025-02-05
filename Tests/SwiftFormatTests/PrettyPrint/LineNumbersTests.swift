@@ -81,4 +81,38 @@ final class LineNumbersTests: PrettyPrintTestCase {
       ]
     )
   }
+
+  func testCharacterVsCodepoint() {
+    let input =
+      """
+      let fo = 1  // 🤥
+
+      """
+
+    assertPrettyPrintEqual(
+      input: input,
+      expected: input,
+      linelength: 16,
+      whitespaceOnly: true,
+      findings: []
+    )
+  }
+
+  func testCharacterVsCodepointMultiline() {
+    let input =
+      #"""
+      /// This is a multiline
+      /// comment that is in 🤥
+      /// fact perfectly sized
+
+      """#
+
+    assertPrettyPrintEqual(
+      input: input,
+      expected: input,
+      linelength: 25,
+      whitespaceOnly: true,
+      findings: []
+    )
+  }
 }
