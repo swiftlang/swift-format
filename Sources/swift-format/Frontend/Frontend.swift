@@ -222,7 +222,9 @@ class Frontend {
   ///   it was provided, or by searching in paths inferred by `swiftFilePath` if one exists, or the
   ///   default configuration otherwise. If an error occurred when reading the configuration, a
   ///   diagnostic is emitted and `nil` is returned. If neither `pathOrString` nor `swiftFilePath`
-  ///   were provided, a default `Configuration()` will be returned.
+  ///   were provided, a configuration is searched at the current working directory or upwards the
+  ///   path. Next the configuration is searched for at the OS default config locations as
+  ///   swift-format/config.json. Finally the default `Configuration()` will be returned.
   private func configuration(
     fromPathOrString pathOrString: String?,
     orInferredFromSwiftFileAt swiftFileURL: URL?
@@ -284,6 +286,64 @@ class Frontend {
       }
     }
 
+    // Load global configuration file
+    // First URLs are created, then they are queried. First match is loaded
+    var configLocations: [URL?] = []
+
+    #if os(Windows)
+    if let localAppData = ProcessInfo.processInfo.environment["LOCALAPPDATA"] {
+      configLocations.append(URL(fileURLWithPath: localAppData))
+    }
+    if let programData = ProcessInfo.processInfo.environment["PROGRAMDATA"] {
+      configLocations.append(URL(fileURLWithPath: programData))
+    }
+    #else
+    if let xdgConfigHome = ProcessInfo.processInfo.environment["XDG_CONFIG_HOME"] {
+      configLocations.append(URL(fileURLWithPath: xdgConfigHome))
+    } else if let homeLocation = ProcessInfo.processInfo.environment["HOME"] {
+      let dotConfigUrl = URL(fileURLWithPath: homeLocation)
+        .appendingPathComponent(".config", isDirectory: true)
+      configLocations.append(dotConfigUrl)
+    }
+
+    for supportDirectoryUrl in FileManager.default.urls(
+      for: .applicationSupportDirectory,
+      in: .userDomainMask
+    ) {
+      configLocations.append(supportDirectoryUrl)
+    }
+
+    if let xdgConfigDirs = ProcessInfo.processInfo.environment["XDG_CONFIG_DIRS"] {
+      configLocations += xdgConfigDirs.split(separator: ":").map { xdgConfigDir in
+        URL(fileURLWithPath: String(xdgConfigDir))
+      }
+    }
+
+    if let libraryUrl = FileManager.default.urls(
+      for: .applicationSupportDirectory,
+      in: .systemDomainMask
+    ).first {
+      configLocations.append(libraryUrl)
+    }
+    #endif
+
+    for case var location? in configLocations {
+      location.appendPathComponent("swift-format", isDirectory: true)
+      location.appendPathComponent("config.json", isDirectory: false)
+      if FileManager.default.fileExists(atPath: location.path) {
+        do {
+          let configuration = try configurationLoader.configuration(at: location)
+          self.checkForUnrecognizedRules(in: configuration)
+          return configuration
+        } catch {
+          diagnosticsEngine.emitError(
+            "Unable to read configuration for \(location.path): \(error.localizedDescription)"
+          )
+          return nil
+        }
+      }
+    }
+
     // An explicit configuration has not been given, and one cannot be found.
     // Return the default configuration.
     return Configuration()
@@ -297,7 +357,10 @@ class Frontend {
     // That way they will be printed out, but we'll continue execution on the valid rules.
     let invalidRules = configuration.rules.filter { !RuleRegistry.rules.keys.contains($0.key) }
     for rule in invalidRules {
-      diagnosticsEngine.emitWarning("Configuration contains an unrecognized rule: \(rule.key)", location: nil)
+      diagnosticsEngine.emitWarning(
+        "Configuration contains an unrecognized rule: \(rule.key)",
+        location: nil
+      )
     }
   }
 }
