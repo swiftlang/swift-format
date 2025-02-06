@@ -22,26 +22,9 @@ extension SwiftFormatCommand {
     )
 
     func run() throws {
-      let configuration = Configuration()
-      do {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted]
-        if #available(macOS 10.13, *) {
-          encoder.outputFormatting.insert(.sortedKeys)
-        }
+      let configuration = try Configuration().asJsonString()
 
-        let data = try encoder.encode(configuration)
-        guard let jsonString = String(data: data, encoding: .utf8) else {
-          // This should never happen, but let's make sure we fail more gracefully than crashing, just
-          // in case.
-          throw FormatError(
-            message: "Could not dump the default configuration: the JSON was not valid UTF-8"
-          )
-        }
-        print(jsonString)
-      } catch {
-        throw FormatError(message: "Could not dump the default configuration: \(error)")
-      }
+      print(configuration)
     }
   }
 }

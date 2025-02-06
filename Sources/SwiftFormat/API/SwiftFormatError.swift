@@ -28,6 +28,9 @@ public enum SwiftFormatError: LocalizedError {
   /// The requested experimental feature name was not recognized by the parser.
   case unrecognizedExperimentalFeature(String)
 
+  /// An error happened while dumping the tool's configuration.
+  case configurationDumpFailed(String)
+
   public var errorDescription: String? {
     switch self {
     case .fileNotReadable:
@@ -38,6 +41,8 @@ public enum SwiftFormatError: LocalizedError {
       return "file contains invalid Swift syntax"
     case .unrecognizedExperimentalFeature(let name):
       return "experimental feature '\(name)' was not recognized by the Swift parser"
+    case .configurationDumpFailed(let message):
+      return "dumping configuration failed: \(message)"
     }
   }
 }

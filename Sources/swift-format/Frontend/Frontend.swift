@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2024 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -67,6 +67,9 @@ class Frontend {
   /// The diagnostic engine to which warnings and errors will be emitted.
   final let diagnosticsEngine: DiagnosticsEngine
 
+  /// Options that control the tool's configuration.
+  final let configurationOptions: ConfigurationOptions
+
   /// Options that apply during formatting or linting.
   final let lintFormatOptions: LintFormatOptions
 
@@ -85,7 +88,8 @@ class Frontend {
   /// Creates a new frontend with the given options.
   ///
   /// - Parameter lintFormatOptions: Options that apply during formatting or linting.
-  init(lintFormatOptions: LintFormatOptions) {
+  init(configurationOptions: ConfigurationOptions, lintFormatOptions: LintFormatOptions) {
+    self.configurationOptions = configurationOptions
     self.lintFormatOptions = lintFormatOptions
 
     self.diagnosticPrinter = StderrDiagnosticPrinter(
@@ -139,7 +143,7 @@ class Frontend {
 
     guard
       let configuration = configuration(
-        fromPathOrString: lintFormatOptions.configuration,
+        fromPathOrString: configurationOptions.configuration,
         orInferredFromSwiftFileAt: assumedUrl
       )
     else {
@@ -190,7 +194,7 @@ class Frontend {
 
     guard
       let configuration = configuration(
-        fromPathOrString: lintFormatOptions.configuration,
+        fromPathOrString: configurationOptions.configuration,
         orInferredFromSwiftFileAt: url
       )
     else {

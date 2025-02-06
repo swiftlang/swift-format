@@ -1,7 +1,7 @@
 #[[
 This source file is part of the swift-format open source project
 
-Copyright (c) 2024 Apple Inc. and the swift-format project authors
+Copyright (c) 2024 - 2025 Apple Inc. and the swift-format project authors
 Licensed under Apache License v2.0 with Runtime Library Exception
 
 See https://swift.org/LICENSE.txt for license information
@@ -9,6 +9,7 @@ See https://swift.org/LICENSE.txt for license information
 
 add_library(SwiftFormat
   API/Configuration+Default.swift
+  API/Configuration+Dump.swift
   API/Configuration.swift
   API/DebugOptions.swift
   API/Finding.swift

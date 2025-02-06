@@ -12,22 +12,17 @@
 
 import ArgumentParser
 
-/// Collects the command line options that were passed to `swift-format` and dispatches to the
-/// appropriate subcommand.
-@main
-struct SwiftFormatCommand: ParsableCommand {
-  static var configuration = CommandConfiguration(
-    commandName: "swift-format",
-    abstract: "Format or lint Swift source code",
-    subcommands: [
-      DumpConfiguration.self,
-      DumpEffectiveConfiguration.self,
-      Format.self,
-      Lint.self,
-    ],
-    defaultSubcommand: Format.self
+/// Common arguments used by the `lint`, `format` and `dump-effective-configuration` subcommands.
+struct ConfigurationOptions: ParsableArguments {
+  /// The path to the JSON configuration file that should be loaded.
+  ///
+  /// If not specified, the default configuration will be used.
+  @Option(
+    name: .customLong("configuration"),
+    help: """
+      The path to a JSON file containing the configuration of the linter/formatter or a JSON string containing the \
+      configuration directly.
+      """
   )
-
-  @OptionGroup()
-  var versionOptions: VersionOptions
+  var configuration: String?
 }
