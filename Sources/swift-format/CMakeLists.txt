@@ -12,13 +12,12 @@ add_executable(swift-format
   SwiftFormatCommand.swift
   VersionOptions.swift
   Frontend/ConfigurationLoader.swift
-  Frontend/DumpEffectiveConfigurationFrontend.swift
+  Frontend/DumpConfigurationFrontend.swift
   Frontend/FormatFrontend.swift
   Frontend/Frontend.swift
   Frontend/LintFrontend.swift
   Subcommands/ConfigurationOptions.swift
   Subcommands/DumpConfiguration.swift
-  Subcommands/DumpEffectiveConfiguration.swift
   Subcommands/Format.swift
   Subcommands/Lint.swift
   Subcommands/LintFormatOptions.swift

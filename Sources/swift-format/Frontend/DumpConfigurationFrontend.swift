@@ -13,13 +13,13 @@
 import Foundation
 import SwiftFormat
 
-/// The frontend for dumping the effective configuration.
-class DumpEffectiveConfigurationFrontend: Frontend {
-  private(set) var dumpResult: Result<String, Error> = .failure(
-    SwiftFormatError.configurationDumpFailed("Configuration not resolved yet")
+/// The frontend for dumping the configuration.
+class DumpConfigurationFrontend: Frontend {
+  private(set) var dumpedConfiguration: Result<String, Error> = .failure(
+    SwiftFormatError.configurationDumpFailed("Configuration not dumped yet")
   )
 
   override func processFile(_ fileToProcess: FileToProcess) {
-    dumpResult = Result.init(catching: fileToProcess.configuration.asJsonString)
+    dumpedConfiguration = Result.init(catching: fileToProcess.configuration.asJsonString)
   }
 }

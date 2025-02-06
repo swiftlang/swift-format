@@ -12,7 +12,7 @@
 
 import ArgumentParser
 
-/// Common arguments used by the `lint`, `format` and `dump-effective-configuration` subcommands.
+/// Common arguments used by the `lint`, `format` and `dump-configuration` subcommands.
 struct ConfigurationOptions: ParsableArguments {
   /// The path to the JSON configuration file that should be loaded.
   ///

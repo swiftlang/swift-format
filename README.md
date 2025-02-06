@@ -219,10 +219,10 @@ description of the configuration format and the settings that are available.
 
 #### Viewing the Effective Configuration
 
-The `dump-effective-configuration` subcommand dumps the configuration that
-would be used if `swift-format` was executed from the current working directory,
-and accounts for `.swift-format` files or `--configuration` options as outlined
-above.
+The `dump-configuration` subcommand accepts a `--effective` flag. If set, it
+dumps the configuration that would be used if `swift-format` was executed from
+the current working directory, and accounts for `.swift-format` files or
+ `--configuration` options as outlined above.
 
 ### Miscellaneous
 
