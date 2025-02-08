@@ -225,10 +225,12 @@ class LintPipeline: SyntaxVisitor {
   }
 
   override func visit(_ node: ForStmtSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(UseLetInEveryBoundCaseVariable.visit, for: node)
     visitIfEnabled(UseWhereClausesInForLoops.visit, for: node)
     return .visitChildren
   }
   override func visitPost(_ node: ForStmtSyntax) {
+    onVisitPost(rule: UseLetInEveryBoundCaseVariable.self, for: node)
     onVisitPost(rule: UseWhereClausesInForLoops.self, for: node)
   }
 
@@ -386,6 +388,14 @@ class LintPipeline: SyntaxVisitor {
     onVisitPost(rule: NoPlaygroundLiterals.self, for: node)
   }
 
+  override func visit(_ node: MatchingPatternConditionSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(UseLetInEveryBoundCaseVariable.visit, for: node)
+    return .visitChildren
+  }
+  override func visitPost(_ node: MatchingPatternConditionSyntax) {
+    onVisitPost(rule: UseLetInEveryBoundCaseVariable.self, for: node)
+  }
+
   override func visit(_ node: MemberBlockItemListSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(DoNotUseSemicolons.visit, for: node)
     return .visitChildren
@@ -510,6 +520,14 @@ class LintPipeline: SyntaxVisitor {
     onVisitPost(rule: UseTripleSlashForDocumentationComments.self, for: node)
   }
 
+  override func visit(_ node: SwitchCaseItemSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(UseLetInEveryBoundCaseVariable.visit, for: node)
+    return .visitChildren
+  }
+  override func visitPost(_ node: SwitchCaseItemSyntax) {
+    onVisitPost(rule: UseLetInEveryBoundCaseVariable.self, for: node)
+  }
+
   override func visit(_ node: SwitchCaseLabelSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(NoLabelsInCasePatterns.visit, for: node)
     return .visitChildren
@@ -568,14 +586,6 @@ class LintPipeline: SyntaxVisitor {
     onVisitPost(rule: UseTripleSlashForDocumentationComments.self, for: node)
   }
 
-  override func visit(_ node: ValueBindingPatternSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(UseLetInEveryBoundCaseVariable.visit, for: node)
-    return .visitChildren
-  }
-  override func visitPost(_ node: ValueBindingPatternSyntax) {
-    onVisitPost(rule: UseLetInEveryBoundCaseVariable.self, for: node)
-  }
-
   override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
     visitIfEnabled(AlwaysUseLowerCamelCase.visit, for: node)
@@ -627,6 +637,7 @@ extension FormatPipeline {
     node = ReturnVoidInsteadOfEmptyTuple(context: context).rewrite(node)
     node = UseEarlyExits(context: context).rewrite(node)
     node = UseExplicitNilCheckInConditions(context: context).rewrite(node)
+    node = UseLetInEveryBoundCaseVariable(context: context).rewrite(node)
     node = UseShorthandTypeNames(context: context).rewrite(node)
     node = UseSingleLinePropertyGetter(context: context).rewrite(node)
     node = UseTripleSlashForDocumentationComments(context: context).rewrite(node)
