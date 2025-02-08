@@ -31,27 +31,27 @@ public final class UseLetInEveryBoundCaseVariable: SyntaxFormatRule {
       result.pattern = PatternSyntax(replacement)
       return result
     }
-    
+
     return super.visit(node)
   }
-  
+
   public override func visit(_ node: SwitchCaseItemSyntax) -> SwitchCaseItemSyntax {
     if let (replacement, specifier) = distributeLetVarThroughPattern(node.pattern) {
       diagnose(.useLetInBoundCaseVariables(specifier), on: node.pattern)
-      
+
       var result = node
       result.pattern = PatternSyntax(replacement)
       return result
     }
-    
+
     return super.visit(node)
   }
-  
+
   public override func visit(_ node: ForStmtSyntax) -> StmtSyntax {
     guard node.caseKeyword != nil else {
       return super.visit(node)
     }
-    
+
     if let (replacement, specifier) = distributeLetVarThroughPattern(node.pattern) {
       diagnose(.useLetInBoundCaseVariables(specifier), on: node.pattern)
 
@@ -59,7 +59,7 @@ public final class UseLetInEveryBoundCaseVariable: SyntaxFormatRule {
       result.pattern = PatternSyntax(replacement)
       return StmtSyntax(result)
     }
-    
+
     return super.visit(node)
   }
 }
@@ -78,22 +78,30 @@ extension UseLetInEveryBoundCaseVariable {
   ) -> ExprSyntax {
     var patternStack = patternStack
     var result = expr
-    
+
     // As we unwind the stack, wrap the expression in optional chaining
     // or force unwrap expressions.
     while let (kind, trivia) = patternStack.popLast() {
       if kind == .chained {
-        result = ExprSyntax(OptionalChainingExprSyntax(
-          expression: result, trailingTrivia: trivia))
+        result = ExprSyntax(
+          OptionalChainingExprSyntax(
+            expression: result,
+            trailingTrivia: trivia
+          )
+        )
       } else {
-        result = ExprSyntax(ForceUnwrapExprSyntax(
-          expression: result, trailingTrivia: trivia))
+        result = ExprSyntax(
+          ForceUnwrapExprSyntax(
+            expression: result,
+            trailingTrivia: trivia
+          )
+        )
       }
     }
-    
+
     return result
   }
-  
+
   /// Returns a rewritten version of the given pattern if bindings can be moved
   /// into bound cases.
   ///
@@ -105,13 +113,13 @@ extension UseLetInEveryBoundCaseVariable {
     _ pattern: PatternSyntax
   ) -> (ExpressionPatternSyntax, TokenSyntax)? {
     guard let bindingPattern = pattern.as(ValueBindingPatternSyntax.self),
-          let exprPattern = bindingPattern.pattern.as(ExpressionPatternSyntax.self)
+      let exprPattern = bindingPattern.pattern.as(ExpressionPatternSyntax.self)
     else { return nil }
 
     // Grab the `let` or `var` used in the binding pattern.
     let specifier = bindingPattern.bindingSpecifier
     let identifierBinder = BindIdentifiersRewriter(bindingSpecifier: specifier)
-    
+
     // Drill down into any optional patterns that we encounter (e.g., `case let .foo(x)?`).
     var patternStack: [(OptionalPatternKind, Trivia)] = []
     var expression = exprPattern.expression
@@ -137,7 +145,8 @@ extension UseLetInEveryBoundCaseVariable {
       functionCall.arguments = newArguments.as(LabeledExprListSyntax.self)!
       result.expression = restoreOptionalChainingAndForcing(
         ExprSyntax(functionCall),
-        patternStack: patternStack)
+        patternStack: patternStack
+      )
       return (result, specifier)
     }
 
@@ -148,7 +157,8 @@ extension UseLetInEveryBoundCaseVariable {
       tupleExpr.elements = newElements.as(LabeledExprListSyntax.self)!
       result.expression = restoreOptionalChainingAndForcing(
         ExprSyntax(tupleExpr),
-        patternStack: patternStack)
+        patternStack: patternStack
+      )
       return (result, specifier)
     }
 
@@ -169,19 +179,20 @@ extension Finding.Message {
 /// with the given specifier.
 private final class BindIdentifiersRewriter: SyntaxRewriter {
   var bindingSpecifier: TokenSyntax
-  
+
   init(bindingSpecifier: TokenSyntax) {
     self.bindingSpecifier = bindingSpecifier
   }
-  
+
   override func visit(_ node: PatternExprSyntax) -> ExprSyntax {
     guard let identifier = node.pattern.as(IdentifierPatternSyntax.self) else {
       return super.visit(node)
     }
-    
+
     let binding = ValueBindingPatternSyntax(
       bindingSpecifier: bindingSpecifier,
-      pattern: identifier)
+      pattern: identifier
+    )
     var result = node
     result.pattern = PatternSyntax(binding)
     return ExprSyntax(result)
