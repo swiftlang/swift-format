@@ -4,3 +4,15 @@
   language: swift
   types: [swift]
   require_serial: true
+- id: swift-lint
+  name: swift-lint
+  entry: swift-format lint
+  language: swift
+  types: [swift]
+  require_serial: true
+- id: swift-lint-strict
+  name: swift-lint-strict
+  entry: swift-format lint --strict
+  language: swift
+  types: [swift]
+  require_serial: true
