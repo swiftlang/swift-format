@@ -40,30 +40,34 @@ extension SwiftFormatCommand {
     }
 
     func run() throws {
-      if !effective {
-        let configuration = try Configuration().asJsonString()
-        print(configuration)
-        return
+      let diagnosticPrinter = StderrDiagnosticPrinter(colorMode: .auto)
+      let diagnosticsEngine = DiagnosticsEngine(diagnosticsHandlers: [diagnosticPrinter.printDiagnostic])
+
+      let configuration: Configuration
+      if effective {
+        var configurationProvider = Frontend.ConfigurationProvider(diagnosticsEngine: diagnosticsEngine)
+
+        guard
+          let effectiveConfiguration = configurationProvider.provide(
+            forConfigPathOrString: configurationOptions.configuration,
+            orForSwiftFileAt: nil
+          )
+        else {
+          // Already diagnosed in the called method through the diagnosticsEngine.
+          throw ExitCode.failure
+        }
+
+        configuration = effectiveConfiguration
+      } else {
+        configuration = Configuration()
       }
 
-      // Pretend to use stdin, so that the configuration loading machinery in the Frontend base class can be used in the
-      // next step. This produces the same results as if "format" or "lint" subcommands were called.
-      let lintFormatOptions = try LintFormatOptions.parse(["-"])
-
-      let frontend = DumpConfigurationFrontend(
-        configurationOptions: configurationOptions,
-        lintFormatOptions: lintFormatOptions
-      )
-      frontend.run()
-      if frontend.diagnosticsEngine.hasErrors {
+      do {
+        let configurationAsJson = try configuration.asJsonString()
+        print(configurationAsJson)
+      } catch {
+        diagnosticsEngine.emitError("\(error.localizedDescription)")
         throw ExitCode.failure
-      }
-
-      switch frontend.dumpedConfiguration {
-      case .success(let configuration):
-        print(configuration)
-      case .failure(let error):
-        throw error
       }
     }
   }

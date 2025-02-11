@@ -19,11 +19,7 @@ extension Configuration {
 
     do {
       let encoder = JSONEncoder()
-      encoder.outputFormatting = [.prettyPrinted]
-      if #available(macOS 10.13, *) {
-        encoder.outputFormatting.insert(.sortedKeys)
-      }
-
+      encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
       data = try encoder.encode(self)
     } catch {
       throw SwiftFormatError.configurationDumpFailed("\(error)")
