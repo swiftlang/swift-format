@@ -6,13 +6,7 @@
   require_serial: true
 - id: swift-format-lint
   name: swift-format-lint
-  entry: swift-format lint
-  language: swift
-  types: [swift]
-  require_serial: true
-- id: swift-format-lint-strict
-  name: swift-format-lint-strict
-  entry: swift-format lint --strict
+  entry: swift-format lint --strict --recursive --parallel
   language: swift
   types: [swift]
   require_serial: true
