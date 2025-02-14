@@ -56,8 +56,10 @@ final class DontRepeatTypeInStaticPropertiesTests: LintOrFormatRuleTestCase {
       extension A {
         static let b = C()
       }
-      """,
-      findings: []
+      extension UIImage {
+        static let fooImage: Int
+      }
+      """
     )
   }
 
@@ -75,14 +77,84 @@ final class DontRepeatTypeInStaticPropertiesTests: LintOrFormatRuleTestCase {
     )
   }
 
+  func testDottedExtendedTypeWithNamespacePrefix() {
+    assertLint(
+      DontRepeatTypeInStaticProperties.self,
+      """
+      extension Dotted.RANDThing {
+        static let 1️⃣defaultThing: Dotted.RANDThing
+      }
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the suffix 'Thing' from the name of the variable 'defaultThing'")
+      ]
+    )
+  }
+
+  func testSelfType() {
+    assertLint(
+      DontRepeatTypeInStaticProperties.self,
+      """
+      extension Dotted.Thing {
+        static let 1️⃣defaultThing: Self
+      }
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the suffix 'Thing' from the name of the variable 'defaultThing'")
+      ]
+    )
+  }
+
+  func testDottedExtendedTypeInitializer() {
+    assertLint(
+      DontRepeatTypeInStaticProperties.self,
+      """
+      extension Dotted.Thing {
+        static let 1️⃣defaultThing = Dotted.Thing()
+      }
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the suffix 'Thing' from the name of the variable 'defaultThing'")
+      ]
+    )
+  }
+
+  func testExplicitInitializer() {
+    assertLint(
+      DontRepeatTypeInStaticProperties.self,
+      """
+      struct Foo {
+        static let 1️⃣defaultFoo = Foo.init()
+      }
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the suffix 'Foo' from the name of the variable 'defaultFoo'")
+      ]
+    )
+  }
+
+  func testSelfTypeInitializer() {
+    assertLint(
+      DontRepeatTypeInStaticProperties.self,
+      """
+      struct Foo {
+        static let 1️⃣defaultFoo = Self()
+      }
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the suffix 'Foo' from the name of the variable 'defaultFoo'")
+      ]
+    )
+  }
+
   func testIgnoreSingleDecl() {
     assertLint(
       DontRepeatTypeInStaticProperties.self,
       """
       struct Foo {
         // swift-format-ignore: DontRepeatTypeInStaticProperties
-        static let defaultFoo: Int
-        static let 1️⃣alternateFoo: Int
+        static let defaultFoo: Foo
+        static let 1️⃣alternateFoo: Foo
       }
       """,
       findings: [
@@ -90,5 +162,4 @@ final class DontRepeatTypeInStaticPropertiesTests: LintOrFormatRuleTestCase {
       ]
     )
   }
-
 }
