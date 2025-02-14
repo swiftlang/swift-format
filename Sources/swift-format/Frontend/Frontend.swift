@@ -181,6 +181,13 @@ class Frontend {
   /// Read and prepare the file at the given path for processing, optionally synchronizing
   /// diagnostic output.
   private func openAndPrepareFile(at url: URL) -> FileToProcess? {
+    guard url.lastPathComponent != IgnoreFile.standardFileName else {
+      diagnosticsEngine.emitError(
+        "Invalid ignore file \(url.relativePath): currently the only supported content for ignore files is a single asterisk `*`, which matches all files."
+      )
+      return nil
+    }
+
     guard let sourceFile = try? FileHandle(forReadingFrom: url) else {
       diagnosticsEngine.emitError(
         "Unable to open \(url.relativePath): file is not readable or does not exist"

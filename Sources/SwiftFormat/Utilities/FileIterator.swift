@@ -57,7 +57,7 @@ public struct FileIterator: Sequence, IteratorProtocol {
   ///   - workingDirectory: `URL` that indicates the current working directory. Used for testing.
   public init(urls: [URL], followSymlinks: Bool, workingDirectory: URL = URL(fileURLWithPath: ".")) {
     self.workingDirectory = workingDirectory
-    self.urls = urls
+    self.urls = urls.filter(inputShouldBeProcessed(at:))
     self.urlIterator = self.urls.makeIterator()
     self.followSymlinks = followSymlinks
   }
@@ -92,6 +92,20 @@ public struct FileIterator: Sequence, IteratorProtocol {
           fallthrough
 
         case .typeDirectory:
+          do {
+            if let ignoreFile = try IgnoreFile(forDirectory: next), !ignoreFile.shouldProcess(next) {
+              // skip this directory and its subdirectories if it should be ignored
+              continue
+            }
+          } catch IgnoreFile.Error.invalidFile(let url, _) {
+            // we hit an invalid ignore file
+            // we return the path of the ignore file so that we can report an error
+            // and process the directory as normal
+            output = url
+          } catch {
+            // we hit another unexpected error; process the directory as normal
+          }
+
           dirIterator = FileManager.default.enumerator(
             at: next,
             includingPropertiesForKeys: nil,
@@ -178,4 +192,35 @@ private func fileType(at url: URL) -> FileAttributeType? {
   // We cannot use `URL.resourceValues(forKeys:)` here because it appears to behave incorrectly on
   // Linux.
   return try? FileManager.default.attributesOfItem(atPath: url.path)[.type] as? FileAttributeType
+}
+
+/// Returns true if the file should be processed.
+/// Directories are always processed.
+/// For other files, we look for an ignore file in the containing
+/// directory or any of its parents.
+/// If there is no ignore file, we process the file.
+/// If an ignore file is found, we consult it to see if the file should be processed.
+/// An invalid ignore file is treated here as if it does not exist, but
+/// will be reported as an error when we try to process the directory.
+private func inputShouldBeProcessed(at url: URL) -> Bool {
+  guard fileType(at: url) != .typeDirectory else {
+    return true
+  }
+
+  let ignoreFile = try? IgnoreFile(for: url)
+  return ignoreFile?.shouldProcess(url) ?? true
+}
+
+fileprivate extension URL {
+  var isRoot: Bool {
+    #if os(Windows)
+    // FIXME: We should call into Windows' native check to check if this path is a root once https://github.com/swiftlang/swift-foundation/issues/976 is fixed.
+    // https://github.com/swiftlang/swift-format/issues/844
+    return self.pathComponents.count <= 1
+    #else
+    // On Linux, we may end up with an string for the path due to https://github.com/swiftlang/swift-foundation/issues/980
+    // TODO: Remove the check for "" once https://github.com/swiftlang/swift-foundation/issues/980 is fixed.
+    return self.path == "/" || self.path == ""
+    #endif
+  }
 }
