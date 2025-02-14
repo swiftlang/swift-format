@@ -26,19 +26,23 @@ public final class DontRepeatTypeInStaticProperties: SyntaxLintRule {
   /// type name (excluding possible namespace prefixes, like `NS` or `UI`) as a suffix.
   public override func visit(_ node: VariableDeclSyntax) -> SyntaxVisitorContinueKind {
     guard node.modifiers.contains(anyOf: [.class, .static]),
-      let typeName = Syntax(node).containingDeclName
+      let typeName = Syntax(node).containingDeclName,
+      let variableTypeName = node.typeName,
+      typeName.hasSuffix(variableTypeName) || variableTypeName == "Self"
     else {
       return .visitChildren
     }
 
-    let bareTypeName = removingPossibleNamespacePrefix(from: typeName)
+    // the final component of the top type `A.B.C.D` is what we want `D`.
+    let lastTypeName = typeName.components(separatedBy: ".").last!
+    let bareTypeName = removingPossibleNamespacePrefix(from: lastTypeName)
     for binding in node.bindings {
       guard let identifierPattern = binding.pattern.as(IdentifierPatternSyntax.self) else {
         continue
       }
 
       let varName = identifierPattern.identifier.text
-      if varName.contains(bareTypeName) {
+      if varName.hasSuffix(bareTypeName) {
         diagnose(.removeTypeFromName(name: varName, type: bareTypeName), on: identifierPattern)
       }
     }
@@ -90,8 +94,7 @@ extension Syntax {
       case .identifierType(let simpleType):
         return simpleType.name.text
       case .memberType(let memberType):
-        // the final component of the top type `A.B.C.D` is what we want `D`.
-        return memberType.name.text
+        return memberType.description.trimmingCharacters(in: .whitespacesAndNewlines)
       default:
         // Do nothing for non-nominal types. If Swift adds support for extensions on non-nominals,
         // we'll need to update this if we need to support some subset of those.
@@ -102,6 +105,26 @@ extension Syntax {
         return parent.containingDeclName
       }
 
+      return nil
+    }
+  }
+}
+
+extension VariableDeclSyntax {
+  fileprivate var typeName: String? {
+    if let typeAnnotation = bindings.first?.typeAnnotation {
+      return typeAnnotation.type.description
+    } else if let initializerCalledExpression = bindings.first?.initializer?.value.as(FunctionCallExprSyntax.self)?
+      .calledExpression
+    {
+      if let memberAccessExprSyntax = initializerCalledExpression.as(MemberAccessExprSyntax.self),
+        memberAccessExprSyntax.declName.baseName.tokenKind == .keyword(.`init`)
+      {
+        return memberAccessExprSyntax.base?.description
+      } else {
+        return initializerCalledExpression.description
+      }
+    } else {
       return nil
     }
   }
