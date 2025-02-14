@@ -210,13 +210,19 @@ settings in the default configuration can be viewed by running
 `swift-format dump-configuration`, which will dump it to standard
 output.
 
-If the `--configuration <file>` option is passed to `swift-format`, then that
-configuration will be used unconditionally and the file system will not be
-searched.
+If the `--configuration <configuration>` option is passed to `swift-format`,
+then that configuration will be used unconditionally and the file system will
+not be searched.
 
 See [Documentation/Configuration.md](Documentation/Configuration.md) for a
-description of the configuration file format and the settings that are
-available.
+description of the configuration format and the settings that are available.
+
+#### Viewing the Effective Configuration
+
+The `dump-configuration` subcommand accepts a `--effective` flag. If set, it
+dumps the configuration that would be used if `swift-format` was executed from
+the current working directory, and accounts for `.swift-format` files or
+ `--configuration` options as outlined above.
 
 ### Miscellaneous
 

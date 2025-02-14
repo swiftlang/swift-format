@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2020 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -21,6 +21,9 @@ extension SwiftFormatCommand {
     )
 
     @OptionGroup()
+    var configurationOptions: ConfigurationOptions
+
+    @OptionGroup()
     var lintOptions: LintFormatOptions
 
     @Flag(
@@ -34,7 +37,7 @@ extension SwiftFormatCommand {
 
     func run() throws {
       try performanceMeasurementOptions.printingInstructionCountIfRequested {
-        let frontend = LintFrontend(lintFormatOptions: lintOptions)
+        let frontend = LintFrontend(configurationOptions: configurationOptions, lintFormatOptions: lintOptions)
         frontend.run()
 
         if frontend.diagnosticsEngine.hasErrors || strict && frontend.diagnosticsEngine.hasWarnings {

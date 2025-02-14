@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2020 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -15,32 +15,58 @@ import Foundation
 import SwiftFormat
 
 extension SwiftFormatCommand {
-  /// Dumps the tool's default configuration in JSON format to standard output.
+  /// Dumps the tool's configuration in JSON format to standard output.
   struct DumpConfiguration: ParsableCommand {
     static var configuration = CommandConfiguration(
-      abstract: "Dump the default configuration in JSON format to standard output"
+      abstract: "Dump the configuration in JSON format to standard output",
+      discussion: """
+        Without any options, dumps the default configuration. When '--effective' is set, dumps the configuration that \
+        would be used if swift-format was executed from the current working directory (cwd), incorporating \
+        configuration files found in the cwd or its parents, or input from the '--configuration' option.
+        """
     )
 
+    /// Whether or not to dump the effective configuration.
+    @Flag(name: .shortAndLong, help: "Dump the effective instead of the default configuration.")
+    var effective: Bool = false
+
+    @OptionGroup()
+    var configurationOptions: ConfigurationOptions
+
+    func validate() throws {
+      if configurationOptions.configuration != nil && !effective {
+        throw ValidationError("'--configuration' is only valid in combination with '--effective'")
+      }
+    }
+
     func run() throws {
-      let configuration = Configuration()
-      do {
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted]
-        if #available(macOS 10.13, *) {
-          encoder.outputFormatting.insert(.sortedKeys)
+      let diagnosticPrinter = StderrDiagnosticPrinter(colorMode: .auto)
+      let diagnosticsEngine = DiagnosticsEngine(diagnosticsHandlers: [diagnosticPrinter.printDiagnostic])
+
+      let configuration: Configuration
+      if effective {
+        var configurationProvider = Frontend.ConfigurationProvider(diagnosticsEngine: diagnosticsEngine)
+
+        guard
+          let effectiveConfiguration = configurationProvider.provide(
+            forConfigPathOrString: configurationOptions.configuration,
+            orForSwiftFileAt: nil
+          )
+        else {
+          // Already diagnosed in the called method through the diagnosticsEngine.
+          throw ExitCode.failure
         }
 
-        let data = try encoder.encode(configuration)
-        guard let jsonString = String(data: data, encoding: .utf8) else {
-          // This should never happen, but let's make sure we fail more gracefully than crashing, just
-          // in case.
-          throw FormatError(
-            message: "Could not dump the default configuration: the JSON was not valid UTF-8"
-          )
-        }
-        print(jsonString)
+        configuration = effectiveConfiguration
+      } else {
+        configuration = Configuration()
+      }
+
+      do {
+        print(try configuration.asJsonString())
       } catch {
-        throw FormatError(message: "Could not dump the default configuration: \(error)")
+        diagnosticsEngine.emitError("\(error.localizedDescription)")
+        throw ExitCode.failure
       }
     }
   }

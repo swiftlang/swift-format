@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2020 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -30,6 +30,9 @@ extension SwiftFormatCommand {
     var inPlace: Bool = false
 
     @OptionGroup()
+    var configurationOptions: ConfigurationOptions
+
+    @OptionGroup()
     var formatOptions: LintFormatOptions
 
     @OptionGroup(visibility: .hidden)
@@ -43,7 +46,11 @@ extension SwiftFormatCommand {
 
     func run() throws {
       try performanceMeasurementOptions.printingInstructionCountIfRequested() {
-        let frontend = FormatFrontend(lintFormatOptions: formatOptions, inPlace: inPlace)
+        let frontend = FormatFrontend(
+          configurationOptions: configurationOptions,
+          lintFormatOptions: formatOptions,
+          inPlace: inPlace
+        )
         frontend.run()
         if frontend.diagnosticsEngine.hasErrors { throw ExitCode.failure }
       }
