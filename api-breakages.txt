@@ -2,3 +2,4 @@
 ---
 
 API breakage: constructor FileIterator.init(urls:followSymlinks:) has been removed
+API breakage: enumelement SwiftFormatError.configurationDumpFailed has been added as a new enum case

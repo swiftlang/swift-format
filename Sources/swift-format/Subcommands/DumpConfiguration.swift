@@ -63,8 +63,7 @@ extension SwiftFormatCommand {
       }
 
       do {
-        let configurationAsJson = try configuration.asJsonString()
-        print(configurationAsJson)
+        print(try configuration.asJsonString())
       } catch {
         diagnosticsEngine.emitError("\(error.localizedDescription)")
         throw ExitCode.failure
