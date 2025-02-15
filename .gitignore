@@ -2,4 +2,4 @@
 .swiftpm/
 swift-format.xcodeproj/
 Package.resolved
-
+.index-build

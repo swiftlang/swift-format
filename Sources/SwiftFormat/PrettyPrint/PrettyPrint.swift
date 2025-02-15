@@ -475,7 +475,7 @@ public class PrettyPrinter {
 
       if wasEndOfLine {
         if !(canFit(comment.length) || isBreakingSuppressed) {
-          diagnose(.moveEndOfLineComment, category: .endOfLineComment)
+          diagnose(.moveEndOfLineComment, category: .endOfLineComment().withSeverity(configuration))
         }
       }
       outputBuffer.write(comment.print(indent: currentIndentation))
@@ -515,9 +515,9 @@ public class PrettyPrinter {
         startLineNumber != openCloseBreakCompensatingLineNumber && !isSingleElement
         && configuration.multiElementCollectionTrailingCommas
       if shouldHaveTrailingComma && !hasTrailingComma {
-        diagnose(.addTrailingComma, category: .trailingComma)
+        diagnose(.addTrailingComma, category: .trailingComma().withSeverity(configuration))
       } else if !shouldHaveTrailingComma && hasTrailingComma {
-        diagnose(.removeTrailingComma, category: .trailingComma)
+        diagnose(.removeTrailingComma, category: .trailingComma().withSeverity(configuration))
       }
 
       let shouldWriteComma = whitespaceOnly ? hasTrailingComma : shouldHaveTrailingComma
@@ -814,12 +814,14 @@ public class PrettyPrinter {
 
   /// Emits a finding with the given message and category at the current location in `outputBuffer`.
   private func diagnose(_ message: Finding.Message, category: PrettyPrintFindingCategory) {
+    if case .disabled = category.severity { return }
     // Add 1 since columns uses 1-based indices.
     let column = outputBuffer.column + 1
     context.findingEmitter.emit(
       message,
       category: category,
-      location: Finding.Location(file: context.fileURL.path, line: outputBuffer.lineNumber, column: column)
+      location: Finding.Location(file: context.fileURL.path, line: outputBuffer.lineNumber, column: column),
+      context: context
     )
   }
 }
@@ -833,4 +835,21 @@ extension Finding.Message {
 
   fileprivate static let removeTrailingComma: Finding.Message =
     "remove trailing comma from the last element in single line collection literal"
+}
+
+extension PrettyPrintFindingCategory {
+  func withSeverity(_ configuration: Configuration) -> Self {
+    let category: PrettyPrintFindingCategory = self
+    let severity =
+      configuration
+      .rules[category.name]?
+      .findingSeverity(ruleDefault: category.severity) ?? category.severity
+
+    switch self {
+    case .endOfLineComment:
+      return .endOfLineComment(severity)
+    case .trailingComma:
+      return .trailingComma(severity)
+    }
+  }
 }

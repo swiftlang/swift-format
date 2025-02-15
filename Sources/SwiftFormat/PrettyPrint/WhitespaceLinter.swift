@@ -131,7 +131,7 @@ public class WhitespaceLinter {
           // If there were excess newlines in the user input, tell the user to remove them. This
           // short-circuits the trailing whitespace check below; we don't bother telling the user
           // about trailing whitespace on a line that we're also telling them to delete.
-          diagnose(.removeLineError, category: .removeLine, utf8Offset: userIndex)
+          diagnose(.removeLineError, category: .removeLine().withSeverity(context), utf8Offset: userIndex)
           userIndex += userRun.count + 1
         } else if runIndex != userRuns.count - 1 {
           if let formattedRun = possibleFormattedRun {
@@ -169,7 +169,7 @@ public class WhitespaceLinter {
     if excessFormattedLines > 0 && !isLineTooLong {
       diagnose(
         .addLinesError(excessFormattedLines),
-        category: .addLines,
+        category: .addLines().withSeverity(context),
         utf8Offset: userWhitespace.startIndex
       )
     }
@@ -249,7 +249,7 @@ public class WhitespaceLinter {
     }
 
     isLineTooLong = true
-    diagnose(.lineLengthError, category: .lineLength, utf8Offset: adjustedUserIndex)
+    diagnose(.lineLengthError, category: .lineLength().withSeverity(context), utf8Offset: adjustedUserIndex)
   }
 
   /// Compare user and formatted whitespace buffers, and check for indentation errors.
@@ -275,7 +275,7 @@ public class WhitespaceLinter {
     let expected = indentation(of: formattedRun)
     diagnose(
       .indentationError(expected: expected, actual: actual),
-      category: .indentation,
+      category: .indentation().withSeverity(context),
       utf8Offset: userIndex
     )
   }
@@ -292,7 +292,7 @@ public class WhitespaceLinter {
     formattedRun: ArraySlice<UTF8.CodeUnit>
   ) {
     if userRun != formattedRun {
-      diagnose(.trailingWhitespaceError, category: .trailingWhitespace, utf8Offset: userIndex)
+      diagnose(.trailingWhitespaceError, category: .trailingWhitespace().withSeverity(context), utf8Offset: userIndex)
     }
   }
 
@@ -316,10 +316,10 @@ public class WhitespaceLinter {
     // This assumes tabs will always be forbidden for inter-token spacing (but not for leading
     // indentation).
     if userRun.contains(utf8Tab) {
-      diagnose(.spacingCharError, category: .spacingCharacter, utf8Offset: userIndex)
+      diagnose(.spacingCharError, category: .spacingCharacter().withSeverity(context), utf8Offset: userIndex)
     } else if formattedRun.count != userRun.count {
       let delta = formattedRun.count - userRun.count
-      diagnose(.spacingError(delta), category: .spacing, utf8Offset: userIndex)
+      diagnose(.spacingError(delta), category: .spacing().withSeverity(context), utf8Offset: userIndex)
     }
   }
 
@@ -375,12 +375,14 @@ public class WhitespaceLinter {
     category: WhitespaceFindingCategory,
     utf8Offset: Int
   ) {
+    if case .disabled = category.severity { return }
     let absolutePosition = AbsolutePosition(utf8Offset: utf8Offset)
     let sourceLocation = context.sourceLocationConverter.location(for: absolutePosition)
     context.findingEmitter.emit(
       message,
       category: category,
-      location: Finding.Location(sourceLocation)
+      location: Finding.Location(sourceLocation),
+      context: context
     )
   }
 
@@ -513,4 +515,31 @@ extension Finding.Message {
   }
 
   fileprivate static let lineLengthError: Finding.Message = "line is too long"
+}
+
+extension WhitespaceFindingCategory {
+  func withSeverity(_ context: Context) -> Self {
+    let category: WhitespaceFindingCategory = self
+    let severity =
+      context.configuration
+      .rules[category.name]?
+      .findingSeverity(ruleDefault: category.severity) ?? category.severity
+
+    switch self {
+    case .trailingWhitespace(_):
+      return .trailingWhitespace(severity)
+    case .indentation(_):
+      return .indentation(severity)
+    case .spacing(_):
+      return .spacing(severity)
+    case .spacingCharacter(_):
+      return .spacingCharacter(severity)
+    case .removeLine(_):
+      return .removeLine(severity)
+    case .addLines(_):
+      return .addLines(severity)
+    case .lineLength(_):
+      return .lineLength(severity)
+    }
+  }
 }

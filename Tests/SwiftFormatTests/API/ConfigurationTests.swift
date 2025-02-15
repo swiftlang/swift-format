@@ -18,6 +18,24 @@ final class ConfigurationTests: XCTestCase {
     XCTAssertEqual(defaultInitConfig, emptyJSONConfig)
   }
 
+  func testSeverityDecoding() {
+    let dictionaryData =
+      """
+      {
+        "rules": {
+            "AlwaysUseLowerCamelCase": "warning",
+            "AmbiguousTrailingClosureOverload": "error",
+        }
+      }
+      """.data(using: .utf8)!
+    let jsonDecoder = JSONDecoder()
+    let jsonConfig =
+      try! jsonDecoder.decode(Configuration.self, from: dictionaryData)
+
+    XCTAssertEqual(jsonConfig.rules["AlwaysUseLowerCamelCase"]!, .warning)
+    XCTAssertEqual(jsonConfig.rules["AmbiguousTrailingClosureOverload"]!, .error)
+  }
+
   func testMissingConfigurationFile() throws {
     #if os(Windows)
     #if compiler(<6.0.2)

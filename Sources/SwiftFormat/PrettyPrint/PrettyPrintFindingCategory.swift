@@ -12,11 +12,12 @@
 
 /// Categories for findings emitted by the pretty printer.
 enum PrettyPrintFindingCategory: FindingCategorizing {
+
   /// Finding related to an end-of-line comment.
-  case endOfLineComment
+  case endOfLineComment(Finding.Severity = .warning)
 
   /// Findings related to the presence of absence of a trailing comma in collection literals.
-  case trailingComma
+  case trailingComma(Finding.Severity = .warning)
 
   var description: String {
     switch self {
@@ -24,4 +25,16 @@ enum PrettyPrintFindingCategory: FindingCategorizing {
     case .trailingComma: return "TrailingComma"
     }
   }
+
+  var name: String {
+    self.description
+  }
+
+  var severity: Finding.Severity {
+    switch self {
+    case .endOfLineComment(let severity): return severity
+    case .trailingComma(let severity): return severity
+    }
+  }
+
 }
