@@ -119,4 +119,46 @@ final class OmitReturnsTests: LintOrFormatRuleTestCase {
       ]
     )
   }
+
+  func testInVariableBindings() {
+    assertFormatting(
+      OmitExplicitReturns.self,
+      input: """
+          var f = l.filter { 1️⃣return $0.a != o }
+          var bar = l.filter { 
+            2️⃣return $0.a != o
+          }
+        """,
+      expected: """
+          var f = l.filter { $0.a != o }
+          var bar = l.filter { 
+            $0.a != o
+          }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "'return' can be omitted because body consists of a single expression"),
+        FindingSpec("2️⃣", message: "'return' can be omitted because body consists of a single expression"),
+      ]
+    )
+  }
+
+  func testInVariableBindingWithTrailingTrivia() {
+    assertFormatting(
+      OmitExplicitReturns.self,
+      input: """
+          var f = l.filter { 
+            1️⃣return $0.a != o // comment
+          }
+        """,
+      expected: """
+          var f = l.filter { 
+            $0.a != o // comment
+          }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "'return' can be omitted because body consists of a single expression")
+      ]
+    )
+  }
+
 }
