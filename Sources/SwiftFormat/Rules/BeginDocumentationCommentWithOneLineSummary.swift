@@ -97,8 +97,13 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
     else { return }
 
     // For the purposes of checking the sentence structure of the comment, we can operate on the
-    // plain text; we don't need any of the styling.
-    let trimmedText = briefSummary.plainText.trimmingCharacters(in: .whitespacesAndNewlines)
+    // plain text; we don't need any of the styling. Additionally, the backticks that are
+    // frequently used to denote symbol names cause issues with quote identification, and
+    // aren't necessary for this purpose.
+    let trimmedText = briefSummary.plainText
+      .trimmingCharacters(in: .whitespacesAndNewlines)
+      .replacingOccurrences(of: "``.+?``", with: "ZZZ", options: .regularExpression)
+      .replacingOccurrences(of: "`.+?`", with: "zzz", options: .regularExpression)
     let (commentSentences, trailingText) = sentences(in: trimmedText)
     if commentSentences.count == 0 {
       diagnose(.terminateSentenceWithPeriod(trimmedText), on: decl)
