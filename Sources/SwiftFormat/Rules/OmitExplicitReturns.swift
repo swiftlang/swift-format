@@ -60,7 +60,7 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
     guard let accessorBlock = binding.accessorBlock,
       let transformed = transformAccessorBlock(accessorBlock)
     else {
-      return node
+      return super.visit(node)
     }
 
     binding.accessorBlock = transformed
@@ -145,7 +145,7 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
     CodeBlockItemListSyntax([
       CodeBlockItemSyntax(
         leadingTrivia: returnStmt.leadingTrivia,
-        item: .expr(returnStmt.expression!),
+        item: .expr(returnStmt.expression!.detached.with(\.trailingTrivia, [])),
         semicolon: nil,
         trailingTrivia: returnStmt.trailingTrivia
       )
