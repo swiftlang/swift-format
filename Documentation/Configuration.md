@@ -186,7 +186,7 @@ switch someValue {
 ### `noAssignmentInExpressions`
 **type:** object
 
-**description:** Assignment expressions must be their own statements. Assignment should not be used in an expression context that expects a `Void` value. For example, assigning a variable within a `return` statement existing a `Void` function is prohibited.
+**description:** Assignment expressions must be their own statements. Assignment should not be used in an expression context that expects a `Void` value. For example, assigning a variable within a `return` statement exiting a `Void` function is prohibited.
 
 - `allowedFunctions` _(strings array)_: A list of function names where assignments are allowed to be embedded in expressions that are passed as parameters to that function.
 
@@ -221,7 +221,7 @@ a hard line break
 will be formatted as:
 ```swift
 """
-an esacpe\
+an escape\
  line break
 a hard \
 line break
