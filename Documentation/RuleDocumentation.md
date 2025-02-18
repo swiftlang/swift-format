@@ -505,7 +505,10 @@ For example, `case let .identifier(x, y)` is forbidden. Use
 
 Lint: `case let .identifier(...)` will yield a lint error.
 
-`UseLetInEveryBoundCaseVariable` is a linter-only rule.
+Format: `case let .identifier(x, y)` will be replaced by
+`case .identifier(let x, let y)`.
+
+`UseLetInEveryBoundCaseVariable` rule can format your code automatically.
 
 ### UseShorthandTypeNames
 
