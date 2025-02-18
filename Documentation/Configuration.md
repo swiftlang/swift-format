@@ -113,7 +113,7 @@ top-level keys and values:
 ### `prioritizeKeepingFunctionOutputTogether`  
 **type:** boolean  
 
-**description:** Determines if function-like declaration outputs should be prioritized to be together with thefunction signature right (closing) parenthesis. If `false`, function output (i.e. throws, return type) is not prioritized to be together with the signature's right parenthesis, and when the line length would be exceeded,a line break will be fired after the function signature first, indenting the declaration output one additional level. If true, A line break will be fired further up in the function's declaration (e.g. generic parameters, parameters) before breaking on the function's output.  
+**description:** Determines if function-like declaration outputs should be prioritized to be together with the function signature's right (closing) parenthesis. If `false`, function output (i.e. throws, return type) is not prioritized to be together with the signature's right parenthesis, and when the line length would be exceeded, a line break will be fired after the function signature first, indenting the declaration output one additional level. If true, a line break will be fired further up in the function's declaration (e.g. generic parameters, parameters) before breaking on the function's output.  
 
 **default:** `false`  
 
@@ -186,7 +186,7 @@ switch someValue {
 ### `noAssignmentInExpressions`
 **type:** object
 
-**description:** Assignment expressions must be their own statements. Assignment should not be used in an expression context that expects a `Void` value. For example, assigning a variable within a `return` statement existing a `Void` function is prohibited.
+**description:** Assignment expressions must be their own statements. Assignment should not be used in an expression context that expects a `Void` value. For example, assigning a variable within a `return` statement exiting a `Void` function is prohibited.
 
 - `allowedFunctions` _(strings array)_: A list of function names where assignments are allowed to be embedded in expressions that are passed as parameters to that function.
 
@@ -221,7 +221,7 @@ a hard line break
 will be formatted as:
 ```swift
 """
-an esacpe\
+an escape\
  line break
 a hard \
 line break

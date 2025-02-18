@@ -15,7 +15,7 @@ import SwiftSyntax
 /// Assignment expressions must be their own statements.
 ///
 /// Assignment should not be used in an expression context that expects a `Void` value. For example,
-/// assigning a variable within a `return` statement existing a `Void` function is prohibited.
+/// assigning a variable within a `return` statement exiting a `Void` function is prohibited.
 ///
 /// Lint: If an assignment expression is found in a position other than a standalone statement, a
 ///       lint finding is emitted.
