@@ -5,11 +5,19 @@ import XCTest
 @_spi(Testing) import _SwiftFormatTestSupport
 
 final class WhitespaceLinterPerformanceTests: DiagnosingTestCase {
+  /// When executing in Swift CI, run the block to make sure it doesn't hit any assertions because we don't look at
+  /// performance numbers in CI and CI nodes can have variable performance characteristics if they are not bare-metal.
+  ///
+  /// Anywhere else, run XCTest's `measure` function to measure the performance of the block.
+  private func measureIfNotInCI(_ block: () -> Void) {
+    if ProcessInfo.processInfo.environment["SWIFTCI_USE_LOCAL_DEPS"] != nil {
+      block()
+    } else {
+      measure { block() }
+    }
+  }
+
   func testWhitespaceLinterPerformance() throws {
-    #if os(Windows)
-    // https://github.com/swiftlang/swift-format/issues/939
-    throw XCTSkip("This test is flaky on Windows")
-    #endif
     let input = String(
       repeating: """
         import      SomeModule
@@ -50,7 +58,7 @@ final class WhitespaceLinterPerformanceTests: DiagnosingTestCase {
       count: 20
     )
 
-    measure { performWhitespaceLint(input: input, expected: expected) }
+    measureIfNotInCI { performWhitespaceLint(input: input, expected: expected) }
   }
 
   /// Perform whitespace linting by comparing the input text from the user with the expected
