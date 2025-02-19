@@ -31,6 +31,17 @@ final class BeginDocumentationCommentWithOneLineSummaryTests: LintOrFormatRuleTe
         // ...
         }
 
+        /// Open a scope enclosed by `"typewriter"` double-quotes.
+        struct BeginTypewriterDoubleQuotes: MDocMacroProtocol {}
+
+        /// Before parsing arguments, capture all inputs that follow the `--`
+        /// terminator in this argument array.
+        public static var postTerminator: ArgumentArrayParsingStrategy
+
+        /// The source converter for the text in the current test, which
+        /// is related to ``thisInvalid(method.Signature:)``.
+        var converter: SourceLocationConverter!
+
         /// This docline should not succeed.
         /// There are two sentences without a blank line between them.
         1️⃣struct Test {}

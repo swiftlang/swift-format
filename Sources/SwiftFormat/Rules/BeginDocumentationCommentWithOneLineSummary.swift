@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+import Markdown
 import SwiftSyntax
 
 #if os(macOS)
@@ -91,14 +92,20 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
 
   /// Diagnose documentation comments that don't start with one sentence summary.
   private func diagnoseDocComments(in decl: DeclSyntax) {
+    // Extract the summary from a documentation comment, if it exists, and strip
+    // out any inline code segments (which shouldn't be considered when looking
+    // for the end of a sentence).
+    var inlineCodeRemover = InlineCodeRemover()
     guard
       let docComment = DocumentationComment(extractedFrom: decl),
-      let briefSummary = docComment.briefSummary
+      let briefSummary = docComment.briefSummary,
+      let noInlineCodeSummary = inlineCodeRemover.visit(briefSummary) as? Paragraph
     else { return }
 
     // For the purposes of checking the sentence structure of the comment, we can operate on the
     // plain text; we don't need any of the styling.
-    let trimmedText = briefSummary.plainText.trimmingCharacters(in: .whitespacesAndNewlines)
+    let trimmedText = noInlineCodeSummary.plainText
+      .trimmingCharacters(in: .whitespacesAndNewlines)
     let (commentSentences, trailingText) = sentences(in: trimmedText)
     if commentSentences.count == 0 {
       diagnose(.terminateSentenceWithPeriod(trimmedText), on: decl)
@@ -229,5 +236,11 @@ extension Finding.Message {
     _ text: Sentence
   ) -> Finding.Message {
     "add a blank comment line after this sentence: \"\(text)\""
+  }
+}
+
+struct InlineCodeRemover: MarkupRewriter {
+  mutating func visitInlineCode(_ inlineCode: InlineCode) -> Markup? {
+    nil
   }
 }
