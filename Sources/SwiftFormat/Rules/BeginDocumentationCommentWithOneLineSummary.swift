@@ -12,6 +12,7 @@
 
 import Foundation
 import SwiftSyntax
+import Markdown
 
 #if os(macOS)
 import NaturalLanguage
@@ -91,19 +92,20 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
 
   /// Diagnose documentation comments that don't start with one sentence summary.
   private func diagnoseDocComments(in decl: DeclSyntax) {
+    // Extract the summary from a documentation comment, if it exists, and strip
+    // out any inline code segments (which shouldn't be considered when looking
+    // for the end of a sentence).
+    var inlineCodeRemover = InlineCodeRemover()
     guard
       let docComment = DocumentationComment(extractedFrom: decl),
-      let briefSummary = docComment.briefSummary
+      let briefSummary = docComment.briefSummary,
+      let noInlineCodeSummary = inlineCodeRemover.visit(briefSummary) as? Paragraph
     else { return }
 
     // For the purposes of checking the sentence structure of the comment, we can operate on the
-    // plain text; we don't need any of the styling. Additionally, the backticks that are
-    // frequently used to denote symbol names cause issues with quote identification, and
-    // aren't necessary for this purpose.
-    let trimmedText = briefSummary.plainText
+    // plain text; we don't need any of the styling.
+    let trimmedText = noInlineCodeSummary.plainText
       .trimmingCharacters(in: .whitespacesAndNewlines)
-      .replacingOccurrences(of: "``.+?``", with: "ZZZ", options: .regularExpression)
-      .replacingOccurrences(of: "`.+?`", with: "zzz", options: .regularExpression)
     let (commentSentences, trailingText) = sentences(in: trimmedText)
     if commentSentences.count == 0 {
       diagnose(.terminateSentenceWithPeriod(trimmedText), on: decl)
@@ -234,5 +236,11 @@ extension Finding.Message {
     _ text: Sentence
   ) -> Finding.Message {
     "add a blank comment line after this sentence: \"\(text)\""
+  }
+}
+
+struct InlineCodeRemover: MarkupRewriter {
+  mutating func visitInlineCode(_ inlineCode: InlineCode) -> Markup? {
+    nil
   }
 }
