@@ -107,7 +107,7 @@ struct LintFormatOptions: ParsableArguments {
       throw ValidationError("'--recursive' is only valid when formatting or linting files")
     }
 
-    if assumeFilename != nil && !paths.isEmpty {
+    if assumeFilename != nil && !(paths.isEmpty || paths == ["-"]) {
       throw ValidationError("'--assume-filename' is only valid when reading from stdin")
     }
 
