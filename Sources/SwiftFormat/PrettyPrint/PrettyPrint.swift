@@ -819,7 +819,7 @@ public class PrettyPrinter {
     context.findingEmitter.emit(
       message,
       category: category,
-      location: Finding.Location(file: context.fileURL.path, line: outputBuffer.lineNumber, column: column)
+      location: Finding.Location(file: context.fileURL.relativePath, line: outputBuffer.lineNumber, column: column)
     )
   }
 }
