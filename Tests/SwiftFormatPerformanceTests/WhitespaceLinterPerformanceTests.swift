@@ -6,6 +6,10 @@ import XCTest
 
 final class WhitespaceLinterPerformanceTests: DiagnosingTestCase {
   func testWhitespaceLinterPerformance() {
+    #if os(Windows)
+      // https://github.com/swiftlang/swift-format/issues/939
+      throw XCTSkip("This test is flaky on Windows")
+    #endif
     let input = String(
       repeating: """
         import      SomeModule
