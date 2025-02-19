@@ -11,8 +11,8 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import SwiftSyntax
 import Markdown
+import SwiftSyntax
 
 #if os(macOS)
 import NaturalLanguage
