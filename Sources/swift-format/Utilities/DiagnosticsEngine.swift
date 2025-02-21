@@ -43,7 +43,6 @@ final class DiagnosticsEngine {
     switch diagnostic.severity {
     case .error: self.hasErrors = true
     case .warning: self.hasWarnings = true
-    default: break
     }
 
     for handler in handlers {
@@ -92,7 +91,7 @@ final class DiagnosticsEngine {
     for note in finding.notes {
       emit(
         Diagnostic(
-          severity: .note,
+          severity: .warning,
           location: note.location.map(Diagnostic.Location.init),
           message: "\(note.message)"
         )
@@ -116,15 +115,8 @@ final class DiagnosticsEngine {
     for message: SwiftDiagnostics.DiagnosticMessage,
     at location: SourceLocation
   ) -> Diagnostic {
-    let severity: Diagnostic.Severity
-    switch message.severity {
-    case .error: severity = .error
-    case .warning: severity = .warning
-    case .note: severity = .note
-    case .remark: severity = .note  // should we model this?
-    }
     return Diagnostic(
-      severity: severity,
+      severity: .error,
       location: Diagnostic.Location(location),
       category: nil,
       message: message.message
@@ -134,15 +126,8 @@ final class DiagnosticsEngine {
   /// Converts a lint finding into a diagnostic message that can be used by the `TSCBasic`
   /// diagnostics engine and returns it.
   private func diagnosticMessage(for finding: Finding) -> Diagnostic {
-    let severity: Diagnostic.Severity
-    switch finding.severity {
-    case .error: severity = .error
-    case .warning: severity = .warning
-    case .refactoring: severity = .warning
-    case .convention: severity = .warning
-    }
     return Diagnostic(
-      severity: severity,
+      severity: .error,
       location: finding.location.map(Diagnostic.Location.init),
       category: "\(finding.category)",
       message: "\(finding.message.text)"

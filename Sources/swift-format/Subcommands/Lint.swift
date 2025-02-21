@@ -28,7 +28,7 @@ extension SwiftFormatCommand {
 
     @Flag(
       name: .shortAndLong,
-      help: "Fail on warnings."
+      help: "Fail on warnings. Deprecated: All findings are treated as errors now."
     )
     var strict: Bool = false
 
@@ -38,9 +38,17 @@ extension SwiftFormatCommand {
     func run() throws {
       try performanceMeasurementOptions.printingInstructionCountIfRequested {
         let frontend = LintFrontend(configurationOptions: configurationOptions, lintFormatOptions: lintOptions)
+
+        if strict {
+          frontend.diagnosticsEngine.emitWarning(
+            """
+            Running swift-format with --strict is deprecated and will be removed in the future.
+            """
+          )
+        }
         frontend.run()
 
-        if frontend.diagnosticsEngine.hasErrors || strict && frontend.diagnosticsEngine.hasWarnings {
+        if frontend.diagnosticsEngine.hasErrors {
           throw ExitCode.failure
         }
       }

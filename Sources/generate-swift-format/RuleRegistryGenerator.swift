@@ -18,9 +18,13 @@ final class RuleRegistryGenerator: FileGenerator {
   /// The rules collected by scanning the formatter source code.
   let ruleCollector: RuleCollector
 
+  /// The pretty-printing categories collected by scanning the formatter source code.
+  let prettyPrintCollector: PrettyPrintCollector
+
   /// Creates a new rule registry generator.
-  init(ruleCollector: RuleCollector) {
+  init(ruleCollector: RuleCollector, prettyPrintCollector: PrettyPrintCollector) {
     self.ruleCollector = ruleCollector
+    self.prettyPrintCollector = prettyPrintCollector
   }
 
   func write(into handle: FileHandle) throws {
@@ -48,6 +52,10 @@ final class RuleRegistryGenerator: FileGenerator {
 
     for detectedRule in ruleCollector.allLinters.sorted(by: { $0.typeName < $1.typeName }) {
       handle.write("    \"\(detectedRule.typeName)\": \(!detectedRule.isOptIn),\n")
+    }
+
+    for ppCategory in prettyPrintCollector.allPrettyPrinterCategories.sorted(by: { $0 < $1 }) {
+      handle.write("    \"\(ppCategory)\": true,\n")
     }
     handle.write("  ]\n}\n")
   }
