@@ -285,11 +285,9 @@ public struct Configuration: Codable, Equatable {
     // If the version number is not present, assume it is 1.
     self.version = try container.decodeIfPresent(Int.self, forKey: .version) ?? 1
     guard version <= highestSupportedConfigurationVersion else {
-      throw DecodingError.dataCorruptedError(
-        forKey: .version,
-        in: container,
-        debugDescription:
-          "This version of the formatter does not support configuration version \(version)."
+      throw SwiftFormatError.unsupportedConfigurationVersion(
+        version,
+        highestSupported: highestSupportedConfigurationVersion
       )
     }
 

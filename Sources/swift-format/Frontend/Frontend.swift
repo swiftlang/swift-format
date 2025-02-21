@@ -99,7 +99,7 @@ class Frontend {
           // Fall through to the default return at the end of the function.
         } catch {
           diagnosticsEngine.emitError(
-            "Unable to read configuration for \(swiftFileURL.path): \(error.localizedDescription)"
+            "Unable to read configuration for \(swiftFileURL.relativePath): \(error.localizedDescription)"
           )
           return nil
         }
@@ -116,7 +116,7 @@ class Frontend {
           }
         } catch {
           diagnosticsEngine.emitError(
-            "Unable to read configuration for \(cwd): \(error.localizedDescription)"
+            "Unable to read configuration for \(cwd.relativePath): \(error.localizedDescription)"
           )
           return nil
         }

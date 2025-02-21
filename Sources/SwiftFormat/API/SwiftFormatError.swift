@@ -31,6 +31,9 @@ public enum SwiftFormatError: LocalizedError {
   /// An error happened while dumping the tool's configuration.
   case configurationDumpFailed(String)
 
+  /// The provided configuration version is not supported by this version of the formatter.
+  case unsupportedConfigurationVersion(Int, highestSupported: Int)
+
   public var errorDescription: String? {
     switch self {
     case .fileNotReadable:
@@ -43,6 +46,9 @@ public enum SwiftFormatError: LocalizedError {
       return "experimental feature '\(name)' was not recognized by the Swift parser"
     case .configurationDumpFailed(let message):
       return "dumping configuration failed: \(message)"
+    case .unsupportedConfigurationVersion(let version, let highestSupported):
+      return
+        "This version of the formatter does not support configuration version \(version). The highest supported version is \(highestSupported)."
     }
   }
 }
