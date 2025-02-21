@@ -7,3 +7,10 @@ API breakage: enumelement SwiftFormatError.unsupportedConfigurationVersion has b
 API breakage: class UseLetInEveryBoundCaseVariable has changed its super class from SwiftFormat.SyntaxLintRule to SwiftFormat.SyntaxFormatRule
 API breakage: func UseLetInEveryBoundCaseVariable.visit(_:) has return type change from SwiftSyntax.SyntaxVisitorContinueKind to SwiftSyntax.MatchingPatternConditionSyntax
 API breakage: func UseLetInEveryBoundCaseVariable.visit(_:) has parameter 0 type change from SwiftSyntax.ValueBindingPatternSyntax to SwiftSyntax.MatchingPatternConditionSyntax
+API breakage: func Rule.diagnose(_:on:severity:anchor:notes:) has parameter 2 type change from SwiftFormat.Finding.Severity? to SwiftFormat.FindingAnchor
+API breakage: func Rule.diagnose(_:on:severity:anchor:notes:) has parameter 3 type change from SwiftFormat.FindingAnchor to [SwiftFormat.Finding.Note]
+API breakage: enum Finding.Severity has been removed
+API breakage: var Finding.severity has been removed
+API breakage: var FindingCategorizing.defaultSeverity has been removed
+API breakage: var FindingCategorizing.defaultSeverity has been removed
+API breakage: func Rule.diagnose(_:on:severity:anchor:notes:) has been renamed to func diagnose(_:on:anchor:notes:)

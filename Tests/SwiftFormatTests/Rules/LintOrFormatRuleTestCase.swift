@@ -49,8 +49,7 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
     var emittedFindings = [Finding]()
 
     // Force the rule to be enabled while we test it.
-    var configuration = Configuration.forTesting
-    configuration.rules[type.ruleName] = true
+    let configuration = Configuration.forTesting(enabledRule: type.ruleName)
     let context = makeContext(
       sourceFileSyntax: sourceFileSyntax,
       configuration: configuration,
@@ -59,8 +58,6 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
     )
 
     var emittedPipelineFindings = [Finding]()
-    // Disable default rules, so only select rule runs in pipeline
-    configuration.rules = [type.ruleName: true]
     let pipeline = SwiftLinter(
       configuration: configuration,
       findingConsumer: { emittedPipelineFindings.append($0) }
@@ -118,8 +115,8 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
     var emittedFindings = [Finding]()
 
     // Force the rule to be enabled while we test it.
-    var configuration = configuration ?? Configuration.forTesting
-    configuration.rules[formatType.ruleName] = true
+    let configuration = configuration ?? Configuration.forTesting(enabledRule: formatType.ruleName)
+
     let context = makeContext(
       sourceFileSyntax: sourceFileSyntax,
       configuration: configuration,
@@ -162,8 +159,6 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
     )
 
     var emittedPipelineFindings = [Finding]()
-    // Disable default rules, so only select rule runs in pipeline
-    configuration.rules = [formatType.ruleName: true]
     let pipeline = SwiftFormatter(
       configuration: configuration,
       findingConsumer: { emittedPipelineFindings.append($0) }

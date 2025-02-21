@@ -61,7 +61,7 @@ public final class TypeNamesShouldBeCapitalized: SyntaxLintRule {
     if let firstChar = name.text[leadingUnderscores.endIndex...].first,
       firstChar.uppercased() != String(firstChar)
     {
-      diagnose(.capitalizeTypeName(name: name.text, kind: kind), on: name, severity: .convention)
+      diagnose(.capitalizeTypeName(name: name.text, kind: kind), on: name)
     }
   }
 }

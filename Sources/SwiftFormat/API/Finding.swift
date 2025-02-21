@@ -12,13 +12,6 @@
 
 /// A problem with the style or syntax of the source code discovered during linting or formatting.
 public struct Finding {
-  /// The severity of a finding.
-  public enum Severity {
-    case warning
-    case error
-    case refactoring
-    case convention
-  }
 
   /// The file path and location in that file where a finding was encountered.
   public struct Location {
@@ -83,27 +76,22 @@ public struct Finding {
   /// The finding's message.
   public let message: Message
 
-  /// The severity of the finding.
-  public let severity: Severity
-
   /// The optional location of the finding.
   public let location: Location?
 
   /// Notes that provide additional detail about the finding.
   public let notes: [Note]
 
-  /// Creates a new finding with the given category, message, severity, optional location, and
+  /// Creates a new finding with the given category, message, optional location, and
   /// notes.
   init(
     category: FindingCategorizing,
     message: Message,
-    severity: Finding.Severity,
     location: Location? = nil,
     notes: [Note] = []
   ) {
     self.category = category
     self.message = message
-    self.severity = severity
     self.location = location
     self.notes = notes
   }
