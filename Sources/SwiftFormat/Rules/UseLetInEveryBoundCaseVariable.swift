@@ -41,6 +41,7 @@ public final class UseLetInEveryBoundCaseVariable: SyntaxFormatRule {
 
       var result = node
       result.pattern = PatternSyntax(replacement)
+      result.leadingTrivia = node.leadingTrivia
       return result
     }
 
@@ -117,7 +118,8 @@ extension UseLetInEveryBoundCaseVariable {
     else { return nil }
 
     // Grab the `let` or `var` used in the binding pattern.
-    let specifier = bindingPattern.bindingSpecifier
+    var specifier = bindingPattern.bindingSpecifier
+    specifier.leadingTrivia = []
     let identifierBinder = BindIdentifiersRewriter(bindingSpecifier: specifier)
 
     // Drill down into any optional patterns that we encounter (e.g., `case let .foo(x)?`).

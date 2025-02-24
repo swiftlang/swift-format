@@ -66,6 +66,52 @@ final class UseLetInEveryBoundCaseVariableTests: LintOrFormatRuleTestCase {
     )
   }
 
+  func testSwitchMultipleCases() {
+    assertFormatting(
+      UseLetInEveryBoundCaseVariable.self,
+      input: """
+        switch (start.representation, end.representation) {
+        case 1️⃣let (.element(element), .separator(next: separator)):
+          return 2 * base.distance(from: element, to: separator) - 1
+        case 2️⃣let (.separator(next: separator), .element(element)):
+          return 2 * base.distance(from: separator, to: element) + 1
+        case 3️⃣let (.element(start), .element(end)),
+             4️⃣let (.separator(start), .separator(end)):
+          return 2 * base.distance(from: start, to: end)
+        }
+        """,
+      expected: """
+        switch (start.representation, end.representation) {
+        case (.element(let element), .separator(next: let separator)):
+          return 2 * base.distance(from: element, to: separator) - 1
+        case (.separator(next: let separator), .element(let element)):
+          return 2 * base.distance(from: separator, to: element) + 1
+        case (.element(let start), .element(let end)),
+             (.separator(let start), .separator(let end)):
+          return 2 * base.distance(from: start, to: end)
+        }
+        """,
+      findings: [
+        FindingSpec(
+          "1️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "2️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "3️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+        FindingSpec(
+          "4️⃣",
+          message: "move this 'let' keyword inside the 'case' pattern, before each of the bound variables"
+        ),
+      ]
+    )
+  }
+
   func testIfCase() {
     assertFormatting(
       UseLetInEveryBoundCaseVariable.self,
