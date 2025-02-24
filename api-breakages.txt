@@ -4,3 +4,6 @@
 API breakage: constructor FileIterator.init(urls:followSymlinks:) has been removed
 API breakage: enumelement SwiftFormatError.configurationDumpFailed has been added as a new enum case
 API breakage: enumelement SwiftFormatError.unsupportedConfigurationVersion has been added as a new enum case
+API breakage: class UseLetInEveryBoundCaseVariable has changed its super class from SwiftFormat.SyntaxLintRule to SwiftFormat.SyntaxFormatRule
+API breakage: func UseLetInEveryBoundCaseVariable.visit(_:) has return type change from SwiftSyntax.SyntaxVisitorContinueKind to SwiftSyntax.MatchingPatternConditionSyntax
+API breakage: func UseLetInEveryBoundCaseVariable.visit(_:) has parameter 0 type change from SwiftSyntax.ValueBindingPatternSyntax to SwiftSyntax.MatchingPatternConditionSyntax
