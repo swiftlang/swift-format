@@ -71,25 +71,18 @@ public struct FileIterator: Sequence, IteratorProtocol {
       if dirIterator != nil {
         output = nextInDirectory()
       } else {
-        guard var next = urlIterator.next() else {
+        guard let next = urlIterator.next() else {
           // If we've reached the end of all the URLs we wanted to iterate over, exit now.
           return nil
         }
-
-        guard let fileType = fileType(at: next) else {
+        guard let (next, fileType) = fileAndType(at: next, followSymlinks: followSymlinks) else {
           continue
         }
 
         switch fileType {
         case .typeSymbolicLink:
-          guard
-            followSymlinks,
-            let destination = try? FileManager.default.destinationOfSymbolicLink(atPath: next.path)
-          else {
-            break
-          }
-          next = URL(fileURLWithPath: destination, relativeTo: next)
-          fallthrough
+          // If we got here, we encountered a symlink but didn't follow it. Skip it.
+          continue
 
         case .typeDirectory:
           dirIterator = FileManager.default.enumerator(
@@ -132,27 +125,20 @@ public struct FileIterator: Sequence, IteratorProtocol {
       }
       #endif
 
-      guard item.lastPathComponent.hasSuffix(fileSuffix), let fileType = fileType(at: item) else {
+      guard item.lastPathComponent.hasSuffix(fileSuffix),
+        let (item, fileType) = fileAndType(at: item, followSymlinks: followSymlinks)
+      else {
         continue
       }
 
-      var path = item.path
       switch fileType {
-      case .typeSymbolicLink where followSymlinks:
-        guard
-          let destination = try? FileManager.default.destinationOfSymbolicLink(atPath: path)
-        else {
-          break
-        }
-        path = URL(fileURLWithPath: destination, relativeTo: item).path
-        fallthrough
-
       case .typeRegular:
         // We attempt to relativize the URLs based on the current working directory, not the
         // directory being iterated over, so that they can be displayed better in diagnostics. Thus,
         // if the user passes paths that are relative to the current working directory, they will
         // be displayed as relative paths. Otherwise, they will still be displayed as absolute
         // paths.
+        let path = item.path
         let relativePath: String
         if !workingDirectory.isRoot, path.hasPrefix(workingDirectory.path) {
           relativePath = String(path.dropFirst(workingDirectory.path.count).drop(while: { $0 == "/" || $0 == #"\"# }))
@@ -173,9 +159,41 @@ public struct FileIterator: Sequence, IteratorProtocol {
   }
 }
 
-/// Returns the type of the file at the given URL.
-private func fileType(at url: URL) -> FileAttributeType? {
-  // We cannot use `URL.resourceValues(forKeys:)` here because it appears to behave incorrectly on
-  // Linux.
-  return try? FileManager.default.attributesOfItem(atPath: url.path)[.type] as? FileAttributeType
+/// Returns the actual URL and type of the file at the given URL, following symlinks if requested.
+///
+/// - Parameters:
+///   - url: The URL to get the file and type of.
+///   - followSymlinks: Whether to follow symlinks.
+/// - Returns: The actual URL and type of the file at the given URL, or `nil` if the file does not
+///   exist or is not a supported file type. If `followSymlinks` is `true`, the returned URL may be
+///   different from the given URL; otherwise, it will be the same.
+private func fileAndType(at url: URL, followSymlinks: Bool) -> (URL, FileAttributeType)? {
+  func typeOfFile(at url: URL) -> FileAttributeType? {
+    // We cannot use `URL.resourceValues(forKeys:)` here because it appears to behave incorrectly on
+    // Linux.
+    return try? FileManager.default.attributesOfItem(atPath: url.path)[.type] as? FileAttributeType
+  }
+
+  guard var fileType = typeOfFile(at: url) else {
+    return nil
+  }
+
+  // We would use `standardizedFileURL.path` here as we do in the iterator above to ensure that
+  // path components like `.` and `..` are resolved, but the standardized URLs returned by
+  // Foundation pre-Swift-6.0 resolve symlinks. This causes the file type of a URL and its
+  // standardized path to not match.
+  var visited: Set<String> = [url.absoluteString]
+  var url = url
+  while followSymlinks && fileType == .typeSymbolicLink,
+    let destination = try? FileManager.default.destinationOfSymbolicLink(atPath: url.path)
+  {
+    url = URL(fileURLWithPath: destination, relativeTo: url)
+    // If this URL is in the visited set, we must have a symlink cycle. Ignore it gracefully.
+    guard !visited.contains(url.absoluteString), let newType = typeOfFile(at: url) else {
+      return nil
+    }
+    visited.insert(url.absoluteString)
+    fileType = newType
+  }
+  return (url, fileType)
 }
