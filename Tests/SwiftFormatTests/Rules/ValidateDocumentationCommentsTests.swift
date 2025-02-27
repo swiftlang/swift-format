@@ -95,7 +95,6 @@ final class ValidateDocumentationCommentsTests: LintOrFormatRuleTestCase {
       findings: [
         FindingSpec("1️⃣", message: "remove the 'Throws:' sections of 'doesNotThrow'; it does not throw any errors"),
         FindingSpec("2️⃣", message: "add a 'Throws:' section to document the errors thrown by 'doesThrow'"),
-        FindingSpec("3️⃣", message: "remove the 'Throws:' sections of 'doesRethrow'; it does not throw any errors"),
       ]
     )
   }
