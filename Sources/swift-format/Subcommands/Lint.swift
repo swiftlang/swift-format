@@ -28,7 +28,7 @@ extension SwiftFormatCommand {
 
     @Flag(
       name: .shortAndLong,
-      help: "Fail on warnings."
+      help: "Fail on warnings. Deprecated: All findings are treated as errors now."
     )
     var strict: Bool = false
 
@@ -40,7 +40,7 @@ extension SwiftFormatCommand {
         let frontend = LintFrontend(configurationOptions: configurationOptions, lintFormatOptions: lintOptions)
         frontend.run()
 
-        if frontend.diagnosticsEngine.hasErrors || strict && frontend.diagnosticsEngine.hasWarnings {
+        if frontend.diagnosticsEngine.hasErrors {
           throw ExitCode.failure
         }
       }

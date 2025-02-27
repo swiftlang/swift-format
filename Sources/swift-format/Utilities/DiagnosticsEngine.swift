@@ -23,9 +23,6 @@ final class DiagnosticsEngine {
   /// A Boolean value indicating whether any errors were emitted by the diagnostics engine.
   private(set) var hasErrors: Bool
 
-  /// A Boolean value indicating whether any warnings were emitted by the diagnostics engine.
-  private(set) var hasWarnings: Bool
-
   /// Creates a new diagnostics engine with the given diagnostic handlers.
   ///
   /// - Parameter diagnosticsHandlers: An array of functions, each of which takes a `Diagnostic` as
@@ -34,18 +31,12 @@ final class DiagnosticsEngine {
   init(diagnosticsHandlers: [(Diagnostic) -> Void]) {
     self.handlers = diagnosticsHandlers
     self.hasErrors = false
-    self.hasWarnings = false
   }
 
   /// Emits the diagnostic by passing it to the registered handlers, and tracks whether it was an
   /// error or warning diagnostic.
   private func emit(_ diagnostic: Diagnostic) {
-    switch diagnostic.severity {
-    case .error: self.hasErrors = true
-    case .warning: self.hasWarnings = true
-    default: break
-    }
-
+    self.hasErrors = true
     for handler in handlers {
       handler(diagnostic)
     }
@@ -60,23 +51,6 @@ final class DiagnosticsEngine {
   func emitError(_ message: String, location: SourceLocation? = nil) {
     emit(
       Diagnostic(
-        severity: .error,
-        location: location.map(Diagnostic.Location.init),
-        message: message
-      )
-    )
-  }
-
-  /// Emits a generic warning message.
-  ///
-  /// - Parameters:
-  ///   - message: The message associated with the error.
-  ///   - location: The location in the source code associated with the error, or nil if there is no
-  ///     location associated with the error.
-  func emitWarning(_ message: String, location: SourceLocation? = nil) {
-    emit(
-      Diagnostic(
-        severity: .warning,
         location: location.map(Diagnostic.Location.init),
         message: message
       )
@@ -92,7 +66,6 @@ final class DiagnosticsEngine {
     for note in finding.notes {
       emit(
         Diagnostic(
-          severity: .note,
           location: note.location.map(Diagnostic.Location.init),
           message: "\(note.message)"
         )
@@ -116,15 +89,7 @@ final class DiagnosticsEngine {
     for message: SwiftDiagnostics.DiagnosticMessage,
     at location: SourceLocation
   ) -> Diagnostic {
-    let severity: Diagnostic.Severity
-    switch message.severity {
-    case .error: severity = .error
-    case .warning: severity = .warning
-    case .note: severity = .note
-    case .remark: severity = .note  // should we model this?
-    }
     return Diagnostic(
-      severity: severity,
       location: Diagnostic.Location(location),
       category: nil,
       message: message.message
@@ -134,15 +99,7 @@ final class DiagnosticsEngine {
   /// Converts a lint finding into a diagnostic message that can be used by the `TSCBasic`
   /// diagnostics engine and returns it.
   private func diagnosticMessage(for finding: Finding) -> Diagnostic {
-    let severity: Diagnostic.Severity
-    switch finding.severity {
-    case .error: severity = .error
-    case .warning: severity = .warning
-    case .refactoring: severity = .warning
-    case .convention: severity = .warning
-    }
     return Diagnostic(
-      severity: severity,
       location: finding.location.map(Diagnostic.Location.init),
       category: "\(finding.category)",
       message: "\(finding.message.text)"

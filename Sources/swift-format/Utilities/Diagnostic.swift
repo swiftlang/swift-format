@@ -16,12 +16,6 @@ import SwiftSyntax
 /// Diagnostic data that retains the separation of a finding category (if present) from the rest of
 /// the message, allowing diagnostic printers that want to print those values separately to do so.
 struct Diagnostic {
-  /// The severity of the diagnostic.
-  enum Severity {
-    case note
-    case warning
-    case error
-  }
 
   /// Represents the location of a diagnostic.
   struct Location {
@@ -49,9 +43,6 @@ struct Diagnostic {
     }
   }
 
-  /// The severity of the diagnostic.
-  var severity: Severity
-
   /// The location where the diagnostic occurred, if known.
   var location: Location?
 
@@ -69,10 +60,9 @@ struct Diagnostic {
     }
   }
 
-  /// Creates a new diagnostic with the given severity, location, optional category, and
+  /// Creates a new diagnostic with the given location, optional category, and
   /// message.
-  init(severity: Severity, location: Location?, category: String? = nil, message: String) {
-    self.severity = severity
+  init(location: Location?, category: String? = nil, message: String) {
     self.location = location
     self.category = category
     self.message = message

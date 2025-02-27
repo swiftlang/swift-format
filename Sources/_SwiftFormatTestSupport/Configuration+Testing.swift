@@ -44,4 +44,24 @@ extension Configuration {
     config.indentBlankLines = false
     return config
   }
+
+  public static func forTesting(enabledRule: String) -> Configuration {
+    var config = Configuration.forTesting.disableAllRules()
+    config.rules[enabledRule] = true
+    return config
+  }
+}
+
+extension Configuration {
+  public func disableAllRules() -> Self {
+    var config = self
+    config.rules = config.rules.mapValues({ _ in false })
+    return config
+  }
+
+  public func enable(_ rule: String, enabled: Bool) -> Self {
+    var config = self
+    config.rules[rule] = enabled
+    return config
+  }
 }

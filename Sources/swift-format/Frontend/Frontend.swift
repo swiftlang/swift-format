@@ -40,7 +40,7 @@ class Frontend {
       // That way they will be printed out, but we'll continue execution on the valid rules.
       let invalidRules = configuration.rules.filter { !RuleRegistry.rules.keys.contains($0.key) }
       for rule in invalidRules {
-        diagnosticsEngine.emitWarning("Configuration contains an unrecognized rule: \(rule.key)", location: nil)
+        diagnosticsEngine.emitError("Configuration contains an unrecognized rule: \(rule.key)", location: nil)
       }
     }
 
@@ -216,7 +216,7 @@ class Frontend {
     if lintFormatOptions.paths == ["-"] {
       processStandardInput()
     } else if lintFormatOptions.paths.isEmpty {
-      diagnosticsEngine.emitWarning(
+      diagnosticsEngine.emitError(
         """
         Running swift-format without input paths is deprecated and will be removed in the future.
 
