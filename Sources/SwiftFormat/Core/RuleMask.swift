@@ -95,6 +95,34 @@ extension SourceRange {
   }
 }
 
+/// Represents the kind of ignore directive encountered in the source.
+enum IgnoreDirective: CustomStringConvertible {
+  /// A node-level directive that disables rules for the following node and its children.
+  case node
+  /// A file-level directive that disables rules for the entire file.
+  case file
+
+  var description: String {
+    switch self {
+    case .node:
+      return "swift-format-ignore"
+    case .file:
+      return "swift-format-ignore-file"
+    }
+  }
+
+  /// Regex pattern to match an ignore comment. This pattern supports 0 or more comma delimited rule
+  /// names. The rule name(s), when present, are in capture group #3.
+  private var pattern: String {
+    return #"^\s*\/\/\s*"# + description + #"((:\s+(([A-z0-9]+[,\s]*)+))?$|\s+$)"#
+  }
+
+  /// Rule ignore regex object.
+  fileprivate var regex: NSRegularExpression {
+    return try! NSRegularExpression(pattern: pattern, options: [])
+  }
+}
+
 /// A syntax visitor that finds `SourceRange`s of nodes that have rule status modifying comment
 /// directives. The changes requested in each comment is parsed and collected into a map to support
 /// status lookup per rule name.
@@ -116,20 +144,6 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
   /// Computes source locations and ranges for syntax nodes in a source file.
   private let sourceLocationConverter: SourceLocationConverter
 
-  /// Regex pattern to match an ignore comment. This pattern supports 0 or more comma delimited rule
-  /// names. The rule name(s), when present, are in capture group #3.
-  private let ignorePattern =
-    #"^\s*\/\/\s*swift-format-ignore((:\s+(([A-z0-9]+[,\s]*)+))?$|\s+$)"#
-
-  /// Rule ignore regex object.
-  private let ignoreRegex: NSRegularExpression
-
-  /// Regex pattern to match an ignore comment that applies to an entire file.
-  private let ignoreFilePattern = #"^\s*\/\/\s*swift-format-ignore-file((:\s+(([A-z0-9]+[,\s]*)+))?$|\s+$)"#
-
-  /// Rule ignore regex object.
-  private let ignoreFileRegex: NSRegularExpression
-
   /// Stores the source ranges in which all rules are ignored.
   var allRulesIgnoredRanges: [SourceRange] = []
 
@@ -137,9 +151,6 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
   var ruleMap: [String: [SourceRange]] = [:]
 
   init(sourceLocationConverter: SourceLocationConverter) {
-    ignoreRegex = try! NSRegularExpression(pattern: ignorePattern, options: [])
-    ignoreFileRegex = try! NSRegularExpression(pattern: ignoreFilePattern, options: [])
-
     self.sourceLocationConverter = sourceLocationConverter
     super.init(viewMode: .sourceAccurate)
   }
@@ -155,7 +166,7 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
       afterLeadingTrivia: false,
       afterTrailingTrivia: true
     )
-    return appendRuleStatusDirectives(from: firstToken, of: sourceRange, using: ignoreFileRegex)
+    return appendRuleStatus(from: firstToken, of: sourceRange, for: .file)
   }
 
   override func visit(_ node: CodeBlockItemSyntax) -> SyntaxVisitorContinueKind {
@@ -163,7 +174,7 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
       return .visitChildren
     }
     let sourceRange = node.sourceRange(converter: sourceLocationConverter)
-    return appendRuleStatusDirectives(from: firstToken, of: sourceRange, using: ignoreRegex)
+    return appendRuleStatus(from: firstToken, of: sourceRange, for: .node)
   }
 
   override func visit(_ node: MemberBlockItemSyntax) -> SyntaxVisitorContinueKind {
@@ -171,7 +182,7 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
       return .visitChildren
     }
     let sourceRange = node.sourceRange(converter: sourceLocationConverter)
-    return appendRuleStatusDirectives(from: firstToken, of: sourceRange, using: ignoreRegex)
+    return appendRuleStatus(from: firstToken, of: sourceRange, for: .node)
   }
 
   // MARK: - Helper Methods
@@ -183,16 +194,16 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
   ///   - token: A token that may have comments that modify the status of rules.
   ///   - sourceRange: The range covering the node to which `token` belongs. If an ignore directive
   ///     is found among the comments, this entire range is used to ignore the specified rules.
-  ///   - regex: The regular expression used to detect ignore directives.
-  private func appendRuleStatusDirectives(
+  ///   - directive: The type of ignore directive to look for.
+  private func appendRuleStatus(
     from token: TokenSyntax,
     of sourceRange: SourceRange,
-    using regex: NSRegularExpression
+    for directive: IgnoreDirective
   ) -> SyntaxVisitorContinueKind {
     let isFirstInFile = token.previousToken(viewMode: .sourceAccurate) == nil
     let comments = loneLineComments(in: token.leadingTrivia, isFirstToken: isFirstInFile)
     for comment in comments {
-      guard let matchResult = ruleStatusDirectiveMatch(in: comment, using: regex) else { continue }
+      guard let matchResult = ruleStatusDirectiveMatch(in: comment, using: directive.regex) else { continue }
       switch matchResult {
       case .all:
         allRulesIgnoredRanges.append(sourceRange)

@@ -86,7 +86,7 @@ public final class OrderedImports: SyntaxFormatRule {
       if atStartOfFile {
         switch line.type {
         case .comment:
-          if line.description.contains("swift-format-ignore-file") {
+          if line.description.contains(IgnoreDirective.file.description) {
             fileHeader.append(line)
           } else {
             commentBuffer.append(line)
