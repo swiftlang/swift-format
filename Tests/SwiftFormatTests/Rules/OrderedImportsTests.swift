@@ -651,4 +651,36 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       ]
     )
   }
+
+  func testImportsOrderWithFileIgnoreDirective() {
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        // swift-format-ignore-file: DoNotUseSemicolons, FullyIndirectEnum
+        // Line comment for Zoo
+        import Zoo
+        // Line comment for Array
+        1️⃣import Arrays
+
+        struct Foo {
+          func foo() { bar();baz(); }
+        }
+        """,
+      expected: """
+        // swift-format-ignore-file: DoNotUseSemicolons, FullyIndirectEnum
+
+        // Line comment for Array
+        import Arrays
+        // Line comment for Zoo
+        import Zoo
+
+        struct Foo {
+          func foo() { bar();baz(); }
+        }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
+      ]
+    )
+  }
 }
