@@ -651,4 +651,126 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       ]
     )
   }
+
+  func testFileIgnoreDirectiveOnly() {
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        // swift-format-ignore-file: DoNotUseSemicolons, FullyIndirectEnum
+        import Zoo
+        1️⃣import Arrays
+
+        struct Foo {
+          func foo() { bar();baz(); }
+        }
+        """,
+      expected: """
+        // swift-format-ignore-file: DoNotUseSemicolons, FullyIndirectEnum
+
+        import Arrays
+        import Zoo
+
+        struct Foo {
+          func foo() { bar();baz(); }
+        }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
+      ]
+    )
+  }
+
+  func testFileIgnoreDirectiveWithAlreadySortedImports() {
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        // swift-format-ignore-file: DoNotUseSemicolons, FullyIndirectEnum
+        import Arrays
+        import Zoo
+
+        struct Foo {
+          func foo() { bar();baz(); }
+        }
+        """,
+      expected: """
+        // swift-format-ignore-file: DoNotUseSemicolons, FullyIndirectEnum
+
+        import Arrays
+        import Zoo
+
+        struct Foo {
+          func foo() { bar();baz(); }
+        }
+        """
+    )
+  }
+
+  func testFileIgnoreDirectiveWithOtherComments() {
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        // We need to ignore this file because it is generated
+        // swift-format-ignore-file: DoNotUseSemicolons, FullyIndirectEnum
+        // Line comment for Zoo
+        import Zoo
+        // Line comment for Array
+        1️⃣import Arrays
+
+        struct Foo {
+          func foo() { bar();baz(); }
+        }
+        """,
+      expected: """
+        // We need to ignore this file because it is generated
+        // swift-format-ignore-file: DoNotUseSemicolons, FullyIndirectEnum
+
+        // Line comment for Array
+        import Arrays
+        // Line comment for Zoo
+        import Zoo
+
+        struct Foo {
+          func foo() { bar();baz(); }
+        }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
+      ]
+    )
+  }
+
+  func testFileHeaderContainsFileIgnoreDirective() {
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        // This file has important contents.
+        // swift-format-ignore-file: DoNotUseSemicolons
+        // swift-format-ignore-file: FullyIndirectEnum
+        // Everything in this file is ignored.
+
+        import Zoo
+        1️⃣import Arrays
+
+        struct Foo {
+          func foo() { bar();baz(); }
+        }
+        """,
+      expected: """
+        // This file has important contents.
+        // swift-format-ignore-file: DoNotUseSemicolons
+        // swift-format-ignore-file: FullyIndirectEnum
+        // Everything in this file is ignored.
+
+        import Arrays
+        import Zoo
+
+        struct Foo {
+          func foo() { bar();baz(); }
+        }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
+      ]
+    )
+  }
 }
