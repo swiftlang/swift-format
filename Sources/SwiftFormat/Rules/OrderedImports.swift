@@ -86,7 +86,11 @@ public final class OrderedImports: SyntaxFormatRule {
       if atStartOfFile {
         switch line.type {
         case .comment:
-          commentBuffer.append(line)
+          if line.description.contains(IgnoreDirective.file.description) {
+            fileHeader.append(line)
+          } else {
+            commentBuffer.append(line)
+          }
           continue
 
         case .blankLine:
@@ -520,8 +524,8 @@ fileprivate class Line {
   }
 }
 
-extension Line: CustomDebugStringConvertible {
-  var debugDescription: String {
+extension Line: CustomStringConvertible {
+  var description: String {
     var description = ""
     if !leadingTrivia.isEmpty {
       var newlinesCount = 0
