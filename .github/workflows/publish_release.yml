@@ -99,7 +99,6 @@ jobs:
       matrix:
         release: [true, false]
     with:
-      enable_windows_docker: false  # Dockerless Windows is 5-10 minutes faster than Docker on Windows
       linux_pre_build_command: |
         git config --global --add safe.directory "$(realpath .)"
         git config --local user.name 'swift-ci'
