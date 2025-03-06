@@ -2,3 +2,6 @@
 
 # Match the maximum line length in Swift files.
 max-line-length = 120
+
+# E265, E266 and conflict with the header expected by the license header check
+ignore = E265, E266
