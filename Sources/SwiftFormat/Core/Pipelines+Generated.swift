@@ -642,6 +642,7 @@ extension FormatPipeline {
     node = UseSingleLinePropertyGetter(context: context).rewrite(node)
     node = UseTripleSlashForDocumentationComments(context: context).rewrite(node)
     node = UseWhereClausesInForLoops(context: context).rewrite(node)
+    node = ValidateDocumentationComments(context: context).rewrite(node)
     return node
   }
 }

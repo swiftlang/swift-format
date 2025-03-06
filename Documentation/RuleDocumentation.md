@@ -4,7 +4,7 @@
 
 Use the rules below in the `rules` block of your `.swift-format`
 configuration file, as described in
-[Configuration](Configuration.md). All of these rules can be
+[Configuration](Documentation/Configuration.md). All of these rules can be
 applied in the linter, but only some of them can format your source code
 automatically.
 
@@ -578,4 +578,7 @@ Documentation comments must be complete and valid.
 Lint: Documentation comments that are incomplete (e.g. missing parameter documentation) or
       invalid (uses `Parameters` when there is only one parameter) will yield a lint error.
 
-`ValidateDocumentationComments` is a linter-only rule.
+Format: Documentation comments that use `Parameters` with only one parameter, or that use
+        multiple `Parameter` lines, will be corrected.
+
+`ValidateDocumentationComments` rule can format your code automatically.

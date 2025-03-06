@@ -20,23 +20,26 @@ import SwiftSyntax
 ///
 /// Lint: Documentation comments that are incomplete (e.g. missing parameter documentation) or
 ///       invalid (uses `Parameters` when there is only one parameter) will yield a lint error.
+///
+/// Format: Documentation comments that use `Parameters` with only one parameter, or that use
+///         multiple `Parameter` lines, will be corrected.
 @_spi(Rules)
-public final class ValidateDocumentationComments: SyntaxLintRule {
+public final class ValidateDocumentationComments: SyntaxFormatRule {
   /// Identifies this rule as being opt-in. Accurate and complete documentation comments are
   /// important, but this rule isn't able to handle situations where portions of documentation are
   /// redundant. For example when the returns clause is redundant for a simple declaration.
   public override class var isOptIn: Bool { return true }
 
-  public override func visit(_ node: InitializerDeclSyntax) -> SyntaxVisitorContinueKind {
-    return checkFunctionLikeDocumentation(
+  public override func visit(_ node: InitializerDeclSyntax) -> DeclSyntax {
+    checkFunctionLikeDocumentation(
       DeclSyntax(node),
       name: "init",
       signature: node.signature
     )
   }
 
-  public override func visit(_ node: FunctionDeclSyntax) -> SyntaxVisitorContinueKind {
-    return checkFunctionLikeDocumentation(
+  public override func visit(_ node: FunctionDeclSyntax) -> DeclSyntax {
+    checkFunctionLikeDocumentation(
       DeclSyntax(node),
       name: node.name.text,
       signature: node.signature,
@@ -49,12 +52,12 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
     name: String,
     signature: FunctionSignatureSyntax,
     returnClause: ReturnClauseSyntax? = nil
-  ) -> SyntaxVisitorContinueKind {
+  ) -> DeclSyntax {
     guard
       let docComment = DocumentationComment(extractedFrom: node),
       !docComment.parameters.isEmpty
     else {
-      return .skipChildren
+      return node
     }
 
     // If a single sentence summary is the only documentation, parameter(s) and
@@ -64,7 +67,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
       && docComment.parameters.isEmpty
       && docComment.returns == nil
     {
-      return .skipChildren
+      return node
     }
 
     validateThrows(
@@ -80,27 +83,34 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
       node: node
     )
     let funcParameters = funcParametersIdentifiers(in: signature.parameterClause.parameters)
+    // Note: Don't try to restructure the documentation if there's a mismatch in
+    // the number of described parameters.
+    let docCountMatchesDeclCount = docComment.parameters.count == funcParameters.count
 
-    // If the documentation of the parameters is wrong 'docCommentInfo' won't
-    // parse the parameters correctly. First the documentation has to be fix
+    // If the documentation of the parameters is wrong, 'docCommentInfo' won't
+    // parse the parameters correctly. The documentation has to be fixed
     // in order to validate the other conditions.
     if docComment.parameterLayout != .separated && funcParameters.count == 1 {
       diagnose(.useSingularParameter, on: node)
-      return .skipChildren
+      return docCountMatchesDeclCount
+        ? convertToSeparated(node, docComment: docComment)
+        : node
     } else if docComment.parameterLayout != .outline && funcParameters.count > 1 {
       diagnose(.usePluralParameters, on: node)
-      return .skipChildren
+      return docCountMatchesDeclCount
+        ? convertToOutline(node, docComment: docComment)
+        : node
     }
 
     // Ensures that the parameters of the documentation and the function signature
     // are the same.
-    if (docComment.parameters.count != funcParameters.count)
+    if !docCountMatchesDeclCount
       || !parametersAreEqual(params: docComment.parameters, funcParam: funcParameters)
     {
       diagnose(.parametersDontMatch(funcName: name), on: node)
     }
 
-    return .skipChildren
+    return node
   }
 
   /// Ensures the function has a return documentation if it actually returns
@@ -146,6 +156,91 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
       diagnose(.documentErrorsThrown(funcName: name), on: throwsOrRethrowsKeyword)
     }
   }
+
+  private func convertToSeparated(
+    _ node: DeclSyntax,
+    docComment: DocumentationComment
+  ) -> DeclSyntax {
+    guard #available(macOS 13, *) else { return node }  // Regexes ahead
+    guard docComment.parameterLayout == .outline else { return node }
+
+    // Find the start of the documentation that is attached to this
+    // identifier, skipping over any trivia that doesn't actually
+    // attach (like `//` comments or full blank lines).
+    var docCommentTrivia = Array(node.leadingTrivia)
+    guard let startOfActualDocumentation = findStartOfDocComments(in: docCommentTrivia)
+    else { return node }
+
+    // We're required to have a '- Parameters:' header followed by exactly one
+    // '- identifier: ....' block; find the index of both of those lines.
+    guard
+      let headerIndex = docCommentTrivia[startOfActualDocumentation...]
+        .firstIndex(where: \.isOutlineParameterHeader)
+    else { return node }
+
+    guard
+      let paramIndex = docCommentTrivia[headerIndex...].dropFirst()
+        .firstIndex(where: \.isOutlineParameter),
+      let originalCommentLine = docCommentTrivia[paramIndex].docLineString
+    else { return node }
+
+    // Update the comment to be a single parameter description, and then remove
+    // the outline header.
+    docCommentTrivia[paramIndex] = .docLineComment(
+      originalCommentLine.replacing("///   - ", with: "/// - Parameter ")
+    )
+
+    let endOfHeader = docCommentTrivia[headerIndex...].dropFirst()
+      .firstIndex(where: { !$0.isWhitespace })!
+    docCommentTrivia.removeSubrange(headerIndex..<endOfHeader)
+
+    // Return the original node with the modified trivia.
+    var result = node
+    result.leadingTrivia = Trivia(pieces: docCommentTrivia)
+    return result
+  }
+
+  private func convertToOutline(
+    _ node: DeclSyntax,
+    docComment: DocumentationComment
+  ) -> DeclSyntax {
+    guard #available(macOS 13, *) else { return node }  // Regexes ahead
+    guard docComment.parameterLayout == .separated else { return node }
+
+    // Find the start of the documentation that is attached to this
+    // identifier, skipping over any trivia that doesn't actually
+    // attach (like `//` comments or full blank lines).
+    var docCommentTrivia = Array(node.leadingTrivia)
+    guard let startOfActualDocumentation = findStartOfDocComments(in: docCommentTrivia)
+    else { return node }
+
+    // Find the indexes of all the lines that start with a separate parameter
+    // doc pattern, then convert them to outline syntax.
+    let parameterIndexes = docCommentTrivia[startOfActualDocumentation...]
+      .indices
+      .filter { i in docCommentTrivia[i].isSeparateParameter }
+
+    for i in parameterIndexes {
+      docCommentTrivia[i] = .docLineComment(
+        docCommentTrivia[i].docLineString!.replacing("/// - Parameter ", with: "///   - ")
+      )
+    }
+
+    // Add in the parameter outline header.
+    guard let firstParamIndex = parameterIndexes.first else { return node }
+    let interstitialSpace = docCommentTrivia[firstParamIndex...].dropFirst()
+      .prefix(while: \.isWhitespace)
+
+    docCommentTrivia.insert(
+      contentsOf: [.docLineComment("/// - Parameters:")] + interstitialSpace,
+      at: firstParamIndex
+    )
+
+    // Return the original node with the modified trivia.
+    var result = node
+    result.leadingTrivia = Trivia(pieces: docCommentTrivia)
+    return result
+  }
 }
 
 /// Iterates through every parameter of paramList and returns a list of the
@@ -174,6 +269,78 @@ fileprivate func parametersAreEqual(
     }
   }
   return true
+}
+
+fileprivate func findStartOfDocComments(in trivia: [TriviaPiece]) -> Int? {
+  let startOfCommentSection =
+    trivia
+    .lastIndex(where: { !$0.continuesDocComment })
+    ?? trivia.startIndex
+  return trivia[startOfCommentSection...].firstIndex(where: \.isDocComment)
+}
+
+extension TriviaPiece {
+  fileprivate var docLineString: String? {
+    if case .docLineComment(let str) = self { return str } else { return nil }
+  }
+
+  fileprivate var isDocComment: Bool {
+    switch self {
+    case .docBlockComment, .docLineComment: return true
+    default: return false
+    }
+  }
+
+  fileprivate var continuesDocComment: Bool {
+    if isDocComment { return true }
+    switch self {
+    // Any amount of horizontal whitespace is okay
+    case .spaces, .tabs:
+      return true
+    // One line break is okay
+    case .newlines(1), .carriageReturns(1), .carriageReturnLineFeeds(1):
+      return true
+    default:
+      return false
+    }
+  }
+}
+
+@available(macOS 13, *)
+extension TriviaPiece {
+  fileprivate var isOutlineParameterHeader: Bool {
+    guard let docLineString else { return false }
+    return docLineString.contains(#/^\s*/// - Parameters:/#)
+  }
+
+  fileprivate var isOutlineParameter: Bool {
+    guard let docLineString else { return false }
+    return docLineString.contains(#/^\s*///   - .+?:/#)
+  }
+
+  fileprivate var isSeparateParameter: Bool {
+    guard let docLineString else { return false }
+    return docLineString.contains(#/^\s*/// - Parameter .+?:/#)
+  }
+
+  fileprivate var isCommentBlankLine: Bool {
+    guard let docLineString else { return false }
+    return docLineString.contains(#/^\s*///\s*$/#)
+  }
+}
+
+extension BidirectionalCollection {
+  fileprivate func suffix(while predicate: (Element) throws -> Bool) rethrows -> SubSequence {
+    var current = endIndex
+    while current > startIndex {
+      let prev = index(before: current)
+      if try !predicate(self[prev]) {
+        return self[current...]
+      }
+      current = prev
+    }
+    return self[...]
+  }
 }
 
 extension Finding.Message {
