@@ -88,8 +88,9 @@ public struct DocumentationComment {
     }
 
     // Disable smart quotes and dash conversion since we want to preserve the original content of
-    // the comments instead of doing documentation generation.
-    let doc = Document(parsing: commentInfo.text, options: [.disableSmartOpts])
+    // the comments instead of doing documentation generation. For the same reason, parse
+    // symbol links to preserve the double-backtick delimiters.
+    let doc = Document(parsing: commentInfo.text, options: [.disableSmartOpts, .parseSymbolLinks])
     self.init(markup: doc)
   }
 
@@ -129,8 +130,11 @@ public struct DocumentationComment {
 
         extractSimpleFields(from: &list)
 
-        // If the list is now empty, don't add it to the body nodes below.
-        guard !list.isEmpty else { continue }
+        // Add the list if non-empty, then `continue` so that we don't add the original node.
+        if !list.isEmpty {
+          bodyNodes.append(list)
+        }
+        continue
       }
 
       bodyNodes.append(child.detachedFromParent)
@@ -342,5 +346,139 @@ private struct SimpleFieldMarkupRewriter: MarkupRewriter {
 
     self.fieldName = name
     return Text(String(nameAndRemainder[1]))
+  }
+}
+
+extension DocumentationComment {
+  /// Returns a trivia collection containing this documentation comment,
+  /// formatted and rewrapped to the given line width.
+  ///
+  /// - Parameters:
+  ///   - lineWidth: The expected line width, including leading spaces, the
+  ///     triple-slash prefix, and the documentation text.
+  ///   - joiningTrivia: The trivia to put between each line of documentation
+  ///     text. `joiningTrivia` must include a `.newlines` trivia piece.
+  /// - Returns: A trivia collection that represents this documentation comment
+  ///   in standardized form.
+  func renderForSource(lineWidth: Int, joiningTrivia: some Collection<TriviaPiece>) -> Trivia {
+    // The width of the prefix is 4 (`/// `) plus the number of spaces in `joiningTrivia`.
+    let prefixWidth =
+      4
+      + joiningTrivia.map {
+        switch $0 {
+        case .spaces(let n): n
+        default: 0
+        }
+      }.reduce(0, +)
+
+    let options = MarkupFormatter.Options(
+      orderedListNumerals: .incrementing(start: 1),
+      preferredLineLimit: .init(maxLength: lineWidth - prefixWidth, breakWith: .softBreak)
+    )
+
+    var strings: [String] = []
+    if let briefSummary {
+      strings.append(
+        contentsOf: briefSummary.formatForSource(options: options)
+      )
+    }
+
+    if !bodyNodes.isEmpty {
+      if !strings.isEmpty { strings.append("") }
+
+      let renderedBody = bodyNodes.map {
+        $0.formatForSource(options: options)
+      }.joined(separator: [""])
+      strings.append(contentsOf: renderedBody)
+    }
+
+    // Empty line between discussion and the params/returns/throws documentation.
+    if !strings.isEmpty && (!parameters.isEmpty || returns != nil || `throws` != nil) {
+      strings.append("")
+    }
+
+    // FIXME: Need to recurse rather than only using the `briefSummary`
+    switch parameters.count {
+    case 0: break
+    case 1:
+      // Output a single parameter item.
+      let summary = parameters[0].comment.briefSummary ?? Paragraph()
+      let summaryWithLabel =
+        summary
+        .prefixed(with: "Parameter \(parameters[0].name):")
+      let list = UnorderedList([ListItem(summaryWithLabel)])
+      strings.append(contentsOf: list.formatForSource(options: options))
+
+    default:
+      // Build the list of parameters.
+      let paramItems = parameters.map { parameter in
+        let summary = parameter.comment.briefSummary ?? Paragraph()
+        let summaryWithLabel =
+          summary
+          .prefixed(with: "\(parameter.name):")
+        return ListItem(summaryWithLabel)
+      }
+      let paramList = UnorderedList(paramItems)
+
+      // Create a list with a single item: the label, followed by the list of parameters.
+      let listItem = ListItem(
+        Paragraph(Text("Parameters:")),
+        paramList
+      )
+      strings.append(
+        contentsOf: UnorderedList(listItem).formatForSource(options: options)
+      )
+    }
+
+    if let returns {
+      let returnsWithLabel = returns.prefixed(with: "Returns:")
+      let list = UnorderedList([ListItem(returnsWithLabel)])
+      strings.append(contentsOf: list.formatForSource(options: options))
+    }
+
+    if let `throws` {
+      let throwsWithLabel = `throws`.prefixed(with: "Throws:")
+      let list = UnorderedList([ListItem(throwsWithLabel)])
+      strings.append(contentsOf: list.formatForSource(options: options))
+    }
+
+    // Convert the pieces into trivia, then join them with the provided spacing.
+    let pieces = strings.map {
+      $0.isEmpty
+        ? TriviaPiece.docLineComment("///")
+        : TriviaPiece.docLineComment("/// " + $0)
+    }
+    let spacedPieces: [TriviaPiece] = pieces.reduce(into: []) { result, piece in
+      result.append(piece)
+      result.append(contentsOf: joiningTrivia)
+    }
+
+    return Trivia(pieces: spacedPieces)
+  }
+}
+
+extension Markup {
+  func formatForSource(options: MarkupFormatter.Options) -> [String] {
+    format(options: options)
+      .split(separator: "\n", omittingEmptySubsequences: false)
+      .map { $0.trimmingTrailingWhitespace() }
+  }
+}
+
+extension Paragraph {
+  func prefixed(with str: String) -> Paragraph {
+    struct ParagraphPrefixMarkupRewriter: MarkupRewriter {
+      /// The list item to which the rewriter will be applied.
+      let prefix: String
+
+      mutating func visitText(_ text: Text) -> Markup? {
+        // Only manipulate the first text node (of the first paragraph).
+        guard text.indexInParent == 0 else { return text }
+        return Text(String(prefix + text.string))
+      }
+    }
+
+    var rewriter = ParagraphPrefixMarkupRewriter(prefix: str)
+    return self.accept(&rewriter) as? Paragraph ?? self
   }
 }
