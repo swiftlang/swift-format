@@ -77,6 +77,25 @@ final class RuleMaskTests: XCTestCase {
     XCTAssertEqual(mask.ruleState("rule2", at: location(ofLine: 8)), .default)
   }
 
+  func testIgnoreComplexRuleNames() {
+    let text =
+      """
+      // swift-format-ignore: ru_le, rule!, ru&le, rule?, rule[], rule(), rule;
+      let a = 123
+      """
+
+    let mask = createMask(sourceText: text)
+
+    XCTAssertEqual(mask.ruleState("ru_le", at: location(ofLine: 2)), .disabled)
+    XCTAssertEqual(mask.ruleState("rule!", at: location(ofLine: 2)), .disabled)
+    XCTAssertEqual(mask.ruleState("ru&le", at: location(ofLine: 2)), .disabled)
+    XCTAssertEqual(mask.ruleState("rule?", at: location(ofLine: 2)), .disabled)
+    XCTAssertEqual(mask.ruleState("rule[]", at: location(ofLine: 2)), .disabled)
+    XCTAssertEqual(mask.ruleState("rule()", at: location(ofLine: 2)), .disabled)
+    XCTAssertEqual(mask.ruleState("rule;", at: location(ofLine: 2)), .disabled)
+    XCTAssertEqual(mask.ruleState("default", at: location(ofLine: 2)), .default)
+  }
+
   func testDuplicateNested() {
     let text =
       """

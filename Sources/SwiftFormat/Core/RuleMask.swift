@@ -97,6 +97,8 @@ extension SourceRange {
 
 /// Represents the kind of ignore directive encountered in the source.
 enum IgnoreDirective: CustomStringConvertible {
+  typealias RegexExpression = Regex<(Substring, ruleNames: Substring?)>
+
   /// A node-level directive that disables rules for the following node and its children.
   case node
   /// A file-level directive that disables rules for the entire file.
@@ -111,10 +113,14 @@ enum IgnoreDirective: CustomStringConvertible {
     }
   }
 
-  /// Regex pattern to match an ignore comment. This pattern supports 0 or more comma delimited rule
-  /// names. The rule name(s), when present, are in capture group #3.
-  fileprivate var pattern: String {
-    return #"^\s*\/\/\s*"# + description + #"((:\s+(([A-z0-9]+[,\s]*)+))?$|\s+$)"#
+  /// Regex pattern to match an ignore directive comment.
+  /// - Captures rule names when `:` is present.
+  ///
+  /// Note: We are using a string-based regex instead of a regex literal (`#/regex/#`)
+  /// because Windows did not have full support for regex literals until Swift 5.10.
+  fileprivate func makeRegex() -> RegexExpression {
+    let pattern = #"^\s*\/\/\s*"# + description + #"(?:\s*:\s*(?<ruleNames>.+))?$"#
+    return try! Regex(pattern)
   }
 }
 
@@ -140,10 +146,10 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
   private let sourceLocationConverter: SourceLocationConverter
 
   /// Cached regex object for ignoring rules at the node.
-  private let ignoreRegex: NSRegularExpression
+  private let ignoreRegex: IgnoreDirective.RegexExpression
 
   /// Cached regex object for ignoring rules at the file.
-  private let ignoreFileRegex: NSRegularExpression
+  private let ignoreFileRegex: IgnoreDirective.RegexExpression
 
   /// Stores the source ranges in which all rules are ignored.
   var allRulesIgnoredRanges: [SourceRange] = []
@@ -152,8 +158,8 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
   var ruleMap: [String: [SourceRange]] = [:]
 
   init(sourceLocationConverter: SourceLocationConverter) {
-    ignoreRegex = try! NSRegularExpression(pattern: IgnoreDirective.node.pattern, options: [])
-    ignoreFileRegex = try! NSRegularExpression(pattern: IgnoreDirective.file.pattern, options: [])
+    ignoreRegex = IgnoreDirective.node.makeRegex()
+    ignoreFileRegex = IgnoreDirective.file.makeRegex()
 
     self.sourceLocationConverter = sourceLocationConverter
     super.init(viewMode: .sourceAccurate)
@@ -202,7 +208,7 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
   private func appendRuleStatus(
     from token: TokenSyntax,
     of sourceRange: SourceRange,
-    using regex: NSRegularExpression
+    using regex: IgnoreDirective.RegexExpression
   ) -> SyntaxVisitorContinueKind {
     let isFirstInFile = token.previousToken(viewMode: .sourceAccurate) == nil
     let comments = loneLineComments(in: token.leadingTrivia, isFirstToken: isFirstInFile)
@@ -227,18 +233,15 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
   /// match, its contents (e.g. list of rule names) are returned.
   private func ruleStatusDirectiveMatch(
     in text: String,
-    using regex: NSRegularExpression
+    using regex: IgnoreDirective.RegexExpression
   ) -> RuleStatusDirectiveMatch? {
-    let textRange = NSRange(text.startIndex..<text.endIndex, in: text)
-    guard let match = regex.firstMatch(in: text, options: [], range: textRange) else {
+    guard let match = text.firstMatch(of: regex) else {
       return nil
     }
-    guard match.numberOfRanges == 5 else { return .all }
-    let matchRange = match.range(at: 3)
-    guard matchRange.location != NSNotFound, let ruleNamesRange = Range(matchRange, in: text) else {
+    guard let matchedRuleNames = match.output.ruleNames else {
       return .all
     }
-    let rules = text[ruleNamesRange].split(separator: ",")
+    let rules = matchedRuleNames.split(separator: ",")
       .map { $0.trimmingCharacters(in: .whitespaces) }
       .filter { $0.count > 0 }
     return .subset(ruleNames: rules)

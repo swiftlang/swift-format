@@ -225,54 +225,45 @@ open class DiagnosingTestCase: XCTestCase {
     file: StaticString = #file,
     line: UInt = #line
   ) {
-    // Use `CollectionDifference` on supported platforms to get `diff`-like line-based output. On
-    // older platforms, fall back to simple string comparison.
-    if #available(macOS 10.15, *) {
-      let actualLines = actual.components(separatedBy: .newlines)
-      let expectedLines = expected.components(separatedBy: .newlines)
+    let actualLines = actual.components(separatedBy: .newlines)
+    let expectedLines = expected.components(separatedBy: .newlines)
 
-      let difference = actualLines.difference(from: expectedLines)
-      if difference.isEmpty { return }
+    let difference = actualLines.difference(from: expectedLines)
+    if difference.isEmpty { return }
 
-      var result = ""
+    var result = ""
 
-      var insertions = [Int: String]()
-      var removals = [Int: String]()
+    var insertions = [Int: String]()
+    var removals = [Int: String]()
 
-      for change in difference {
-        switch change {
-        case .insert(let offset, let element, _):
-          insertions[offset] = element
-        case .remove(let offset, let element, _):
-          removals[offset] = element
-        }
+    for change in difference {
+      switch change {
+      case .insert(let offset, let element, _):
+        insertions[offset] = element
+      case .remove(let offset, let element, _):
+        removals[offset] = element
       }
-
-      var expectedLine = 0
-      var actualLine = 0
-
-      while expectedLine < expectedLines.count || actualLine < actualLines.count {
-        if let removal = removals[expectedLine] {
-          result += "-\(removal)\n"
-          expectedLine += 1
-        } else if let insertion = insertions[actualLine] {
-          result += "+\(insertion)\n"
-          actualLine += 1
-        } else {
-          result += " \(expectedLines[expectedLine])\n"
-          expectedLine += 1
-          actualLine += 1
-        }
-      }
-
-      let failureMessage = "Actual output (+) differed from expected output (-):\n\(result)"
-      let fullMessage = message.isEmpty ? failureMessage : "\(message) - \(failureMessage)"
-      XCTFail(fullMessage, file: file, line: line)
-    } else {
-      // Fall back to simple string comparison on platforms that don't support CollectionDifference.
-      let failureMessage = "Actual output differed from expected output:"
-      let fullMessage = message.isEmpty ? failureMessage : "\(message) - \(failureMessage)"
-      XCTAssertEqual(actual, expected, fullMessage, file: file, line: line)
     }
+
+    var expectedLine = 0
+    var actualLine = 0
+
+    while expectedLine < expectedLines.count || actualLine < actualLines.count {
+      if let removal = removals[expectedLine] {
+        result += "-\(removal)\n"
+        expectedLine += 1
+      } else if let insertion = insertions[actualLine] {
+        result += "+\(insertion)\n"
+        actualLine += 1
+      } else {
+        result += " \(expectedLines[expectedLine])\n"
+        expectedLine += 1
+        actualLine += 1
+      }
+    }
+
+    let failureMessage = "Actual output (+) differed from expected output (-):\n\(result)"
+    let fullMessage = message.isEmpty ? failureMessage : "\(message) - \(failureMessage)"
+    XCTFail(fullMessage, file: file, line: line)
   }
 }
