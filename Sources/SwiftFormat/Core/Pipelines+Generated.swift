@@ -44,13 +44,23 @@ class LintPipeline: SyntaxVisitor {
     onVisitPost(rule: NoEmptyLinesOpeningClosingBraces.self, for: node)
   }
 
+  override func visit(_ node: AccessorDeclSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
+    return .visitChildren
+  }
+  override func visitPost(_ node: AccessorDeclSyntax) {
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
+  }
+
   override func visit(_ node: ActorDeclSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
     visitIfEnabled(TypeNamesShouldBeCapitalized.visit, for: node)
     return .visitChildren
   }
   override func visitPost(_ node: ActorDeclSyntax) {
     onVisitPost(rule: AllPublicDeclarationsHaveDocumentation.self, for: node)
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
     onVisitPost(rule: TypeNamesShouldBeCapitalized.self, for: node)
   }
 
@@ -65,12 +75,14 @@ class LintPipeline: SyntaxVisitor {
   override func visit(_ node: AssociatedTypeDeclSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
     visitIfEnabled(TypeNamesShouldBeCapitalized.visit, for: node)
     return .visitChildren
   }
   override func visitPost(_ node: AssociatedTypeDeclSyntax) {
     onVisitPost(rule: BeginDocumentationCommentWithOneLineSummary.self, for: node)
     onVisitPost(rule: NoLeadingUnderscores.self, for: node)
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
     onVisitPost(rule: TypeNamesShouldBeCapitalized.self, for: node)
   }
 
@@ -87,6 +99,7 @@ class LintPipeline: SyntaxVisitor {
     visitIfEnabled(AlwaysUseLowerCamelCase.visit, for: node)
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
     visitIfEnabled(TypeNamesShouldBeCapitalized.visit, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     return .visitChildren
@@ -96,6 +109,7 @@ class LintPipeline: SyntaxVisitor {
     onVisitPost(rule: AlwaysUseLowerCamelCase.self, for: node)
     onVisitPost(rule: BeginDocumentationCommentWithOneLineSummary.self, for: node)
     onVisitPost(rule: NoLeadingUnderscores.self, for: node)
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
     onVisitPost(rule: TypeNamesShouldBeCapitalized.self, for: node)
     onVisitPost(rule: UseTripleSlashForDocumentationComments.self, for: node)
   }
@@ -165,13 +179,31 @@ class LintPipeline: SyntaxVisitor {
   override func visit(_ node: DeinitializerDeclSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     return .visitChildren
   }
   override func visitPost(_ node: DeinitializerDeclSyntax) {
     onVisitPost(rule: AllPublicDeclarationsHaveDocumentation.self, for: node)
     onVisitPost(rule: BeginDocumentationCommentWithOneLineSummary.self, for: node)
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
     onVisitPost(rule: UseTripleSlashForDocumentationComments.self, for: node)
+  }
+
+  override func visit(_ node: EditorPlaceholderDeclSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
+    return .visitChildren
+  }
+  override func visitPost(_ node: EditorPlaceholderDeclSyntax) {
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
+  }
+
+  override func visit(_ node: EnumCaseDeclSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
+    return .visitChildren
+  }
+  override func visitPost(_ node: EnumCaseDeclSyntax) {
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
   }
 
   override func visit(_ node: EnumCaseElementSyntax) -> SyntaxVisitorContinueKind {
@@ -198,6 +230,7 @@ class LintPipeline: SyntaxVisitor {
     visitIfEnabled(FullyIndirectEnum.visit, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)
     visitIfEnabled(OneCasePerLine.visit, for: node)
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
     visitIfEnabled(TypeNamesShouldBeCapitalized.visit, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     return .visitChildren
@@ -208,6 +241,7 @@ class LintPipeline: SyntaxVisitor {
     onVisitPost(rule: FullyIndirectEnum.self, for: node)
     onVisitPost(rule: NoLeadingUnderscores.self, for: node)
     onVisitPost(rule: OneCasePerLine.self, for: node)
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
     onVisitPost(rule: TypeNamesShouldBeCapitalized.self, for: node)
     onVisitPost(rule: UseTripleSlashForDocumentationComments.self, for: node)
   }
@@ -215,12 +249,14 @@ class LintPipeline: SyntaxVisitor {
   override func visit(_ node: ExtensionDeclSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AvoidRetroactiveConformances.visit, for: node)
     visitIfEnabled(NoAccessLevelOnExtensionDeclaration.visit, for: node)
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     return .visitChildren
   }
   override func visitPost(_ node: ExtensionDeclSyntax) {
     onVisitPost(rule: AvoidRetroactiveConformances.self, for: node)
     onVisitPost(rule: NoAccessLevelOnExtensionDeclaration.self, for: node)
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
     onVisitPost(rule: UseTripleSlashForDocumentationComments.self, for: node)
   }
 
@@ -260,6 +296,7 @@ class LintPipeline: SyntaxVisitor {
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)
     visitIfEnabled(OmitExplicitReturns.visit, for: node)
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     visitIfEnabled(ValidateDocumentationComments.visit, for: node)
     return .visitChildren
@@ -270,6 +307,7 @@ class LintPipeline: SyntaxVisitor {
     onVisitPost(rule: BeginDocumentationCommentWithOneLineSummary.self, for: node)
     onVisitPost(rule: NoLeadingUnderscores.self, for: node)
     onVisitPost(rule: OmitExplicitReturns.self, for: node)
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
     onVisitPost(rule: UseTripleSlashForDocumentationComments.self, for: node)
     onVisitPost(rule: ValidateDocumentationComments.self, for: node)
   }
@@ -342,12 +380,28 @@ class LintPipeline: SyntaxVisitor {
     onVisitPost(rule: UseShorthandTypeNames.self, for: node)
   }
 
+  override func visit(_ node: IfConfigDeclSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
+    return .visitChildren
+  }
+  override func visitPost(_ node: IfConfigDeclSyntax) {
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
+  }
+
   override func visit(_ node: IfExprSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(NoParensAroundConditions.visit, for: node)
     return .visitChildren
   }
   override func visitPost(_ node: IfExprSyntax) {
     onVisitPost(rule: NoParensAroundConditions.self, for: node)
+  }
+
+  override func visit(_ node: ImportDeclSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
+    return .visitChildren
+  }
+  override func visitPost(_ node: ImportDeclSyntax) {
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
   }
 
   override func visit(_ node: InfixOperatorExprSyntax) -> SyntaxVisitorContinueKind {
@@ -361,6 +415,7 @@ class LintPipeline: SyntaxVisitor {
   override func visit(_ node: InitializerDeclSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     visitIfEnabled(ValidateDocumentationComments.visit, for: node)
     return .visitChildren
@@ -368,6 +423,7 @@ class LintPipeline: SyntaxVisitor {
   override func visitPost(_ node: InitializerDeclSyntax) {
     onVisitPost(rule: AllPublicDeclarationsHaveDocumentation.self, for: node)
     onVisitPost(rule: BeginDocumentationCommentWithOneLineSummary.self, for: node)
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
     onVisitPost(rule: UseTripleSlashForDocumentationComments.self, for: node)
     onVisitPost(rule: ValidateDocumentationComments.self, for: node)
   }
@@ -378,6 +434,22 @@ class LintPipeline: SyntaxVisitor {
   }
   override func visitPost(_ node: IntegerLiteralExprSyntax) {
     onVisitPost(rule: GroupNumericLiterals.self, for: node)
+  }
+
+  override func visit(_ node: MacroDeclSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
+    return .visitChildren
+  }
+  override func visitPost(_ node: MacroDeclSyntax) {
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
+  }
+
+  override func visit(_ node: MacroExpansionDeclSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
+    return .visitChildren
+  }
+  override func visitPost(_ node: MacroExpansionDeclSyntax) {
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
   }
 
   override func visit(_ node: MacroExpansionExprSyntax) -> SyntaxVisitorContinueKind {
@@ -414,6 +486,22 @@ class LintPipeline: SyntaxVisitor {
     onVisitPost(rule: NoEmptyLinesOpeningClosingBraces.self, for: node)
   }
 
+  override func visit(_ node: MissingDeclSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
+    return .visitChildren
+  }
+  override func visitPost(_ node: MissingDeclSyntax) {
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
+  }
+
+  override func visit(_ node: OperatorDeclSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
+    return .visitChildren
+  }
+  override func visitPost(_ node: OperatorDeclSyntax) {
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
+  }
+
   override func visit(_ node: OptionalBindingConditionSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AlwaysUseLowerCamelCase.visit, for: node)
     return .visitChildren
@@ -434,20 +522,31 @@ class LintPipeline: SyntaxVisitor {
     onVisitPost(rule: UseSingleLinePropertyGetter.self, for: node)
   }
 
+  override func visit(_ node: PoundSourceLocationSyntax) -> SyntaxVisitorContinueKind {
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
+    return .visitChildren
+  }
+  override func visitPost(_ node: PoundSourceLocationSyntax) {
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
+  }
+
   override func visit(_ node: PrecedenceGroupDeclSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(NoEmptyLinesOpeningClosingBraces.visit, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
     return .visitChildren
   }
   override func visitPost(_ node: PrecedenceGroupDeclSyntax) {
     onVisitPost(rule: NoEmptyLinesOpeningClosingBraces.self, for: node)
     onVisitPost(rule: NoLeadingUnderscores.self, for: node)
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
   }
 
   override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
     visitIfEnabled(TypeNamesShouldBeCapitalized.visit, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     return .visitChildren
@@ -456,6 +555,7 @@ class LintPipeline: SyntaxVisitor {
     onVisitPost(rule: AllPublicDeclarationsHaveDocumentation.self, for: node)
     onVisitPost(rule: BeginDocumentationCommentWithOneLineSummary.self, for: node)
     onVisitPost(rule: NoLeadingUnderscores.self, for: node)
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
     onVisitPost(rule: TypeNamesShouldBeCapitalized.self, for: node)
     onVisitPost(rule: UseTripleSlashForDocumentationComments.self, for: node)
   }
@@ -492,6 +592,7 @@ class LintPipeline: SyntaxVisitor {
     visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
     visitIfEnabled(TypeNamesShouldBeCapitalized.visit, for: node)
     visitIfEnabled(UseSynthesizedInitializer.visit, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
@@ -501,6 +602,7 @@ class LintPipeline: SyntaxVisitor {
     onVisitPost(rule: AllPublicDeclarationsHaveDocumentation.self, for: node)
     onVisitPost(rule: BeginDocumentationCommentWithOneLineSummary.self, for: node)
     onVisitPost(rule: NoLeadingUnderscores.self, for: node)
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
     onVisitPost(rule: TypeNamesShouldBeCapitalized.self, for: node)
     onVisitPost(rule: UseSynthesizedInitializer.self, for: node)
     onVisitPost(rule: UseTripleSlashForDocumentationComments.self, for: node)
@@ -510,6 +612,7 @@ class LintPipeline: SyntaxVisitor {
     visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
     visitIfEnabled(OmitExplicitReturns.visit, for: node)
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     return .visitChildren
   }
@@ -517,6 +620,7 @@ class LintPipeline: SyntaxVisitor {
     onVisitPost(rule: AllPublicDeclarationsHaveDocumentation.self, for: node)
     onVisitPost(rule: BeginDocumentationCommentWithOneLineSummary.self, for: node)
     onVisitPost(rule: OmitExplicitReturns.self, for: node)
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
     onVisitPost(rule: UseTripleSlashForDocumentationComments.self, for: node)
   }
 
@@ -574,6 +678,7 @@ class LintPipeline: SyntaxVisitor {
     visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
     visitIfEnabled(TypeNamesShouldBeCapitalized.visit, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     return .visitChildren
@@ -582,6 +687,7 @@ class LintPipeline: SyntaxVisitor {
     onVisitPost(rule: AllPublicDeclarationsHaveDocumentation.self, for: node)
     onVisitPost(rule: BeginDocumentationCommentWithOneLineSummary.self, for: node)
     onVisitPost(rule: NoLeadingUnderscores.self, for: node)
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
     onVisitPost(rule: TypeNamesShouldBeCapitalized.self, for: node)
     onVisitPost(rule: UseTripleSlashForDocumentationComments.self, for: node)
   }
@@ -592,6 +698,7 @@ class LintPipeline: SyntaxVisitor {
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
     visitIfEnabled(DontRepeatTypeInStaticProperties.visit, for: node)
     visitIfEnabled(NeverUseImplicitlyUnwrappedOptionals.visit, for: node)
+    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     return .visitChildren
   }
@@ -601,6 +708,7 @@ class LintPipeline: SyntaxVisitor {
     onVisitPost(rule: BeginDocumentationCommentWithOneLineSummary.self, for: node)
     onVisitPost(rule: DontRepeatTypeInStaticProperties.self, for: node)
     onVisitPost(rule: NeverUseImplicitlyUnwrappedOptionals.self, for: node)
+    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
     onVisitPost(rule: UseTripleSlashForDocumentationComments.self, for: node)
   }
 
@@ -635,6 +743,7 @@ extension FormatPipeline {
     node = OneVariableDeclarationPerLine(context: context).rewrite(node)
     node = OrderedImports(context: context).rewrite(node)
     node = ReturnVoidInsteadOfEmptyTuple(context: context).rewrite(node)
+    node = StandardizeDocumentationComments(context: context).rewrite(node)
     node = UseEarlyExits(context: context).rewrite(node)
     node = UseExplicitNilCheckInConditions(context: context).rewrite(node)
     node = UseLetInEveryBoundCaseVariable(context: context).rewrite(node)

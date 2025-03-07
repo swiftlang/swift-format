@@ -4,7 +4,7 @@
 
 Use the rules below in the `rules` block of your `.swift-format`
 configuration file, as described in
-[Configuration](Configuration.md). All of these rules can be
+[Configuration](Documentation/Configuration.md). All of these rules can be
 applied in the linter, but only some of them can format your source code
 automatically.
 
@@ -43,6 +43,7 @@ Here's the list of available rules:
 - [OrderedImports](#OrderedImports)
 - [ReplaceForEachWithForLoop](#ReplaceForEachWithForLoop)
 - [ReturnVoidInsteadOfEmptyTuple](#ReturnVoidInsteadOfEmptyTuple)
+- [StandardizeDocumentationComments](#StandardizeDocumentationComments)
 - [TypeNamesShouldBeCapitalized](#TypeNamesShouldBeCapitalized)
 - [UseEarlyExits](#UseEarlyExits)
 - [UseExplicitNilCheckInConditions](#UseExplicitNilCheckInConditions)
@@ -439,6 +440,22 @@ Lint: Returning `()` in a signature yields a lint error.
 Format: `-> ()` is replaced with `-> Void`
 
 `ReturnVoidInsteadOfEmptyTuple` rule can format your code automatically.
+
+### StandardizeDocumentationComments
+
+Reformats documentation comments to a standard structure.
+
+Format: Documentation is reflowed in a standard format:
+- All documentation comments are rendered as `///`-prefixed.
+- Documentation comments are re-wrapped to the preferred line length.
+- The order of elements in a documentation comment is standard:
+  - Abstract
+  - Discussion w/ paragraphs, code samples, lists, etc.
+  - Param docs (outlined if > 1)
+  - Return docs
+  - Throw docs
+
+`StandardizeDocumentationComments` rule can format your code automatically.
 
 ### TypeNamesShouldBeCapitalized
 

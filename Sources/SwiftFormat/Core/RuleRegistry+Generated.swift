@@ -47,6 +47,7 @@
     "OrderedImports": true,
     "ReplaceForEachWithForLoop": true,
     "ReturnVoidInsteadOfEmptyTuple": true,
+    "StandardizeDocumentationComments": false,
     "TypeNamesShouldBeCapitalized": true,
     "UseEarlyExits": false,
     "UseExplicitNilCheckInConditions": true,

@@ -48,6 +48,7 @@ public let ruleNameCache: [ObjectIdentifier: String] = [
   ObjectIdentifier(OrderedImports.self): "OrderedImports",
   ObjectIdentifier(ReplaceForEachWithForLoop.self): "ReplaceForEachWithForLoop",
   ObjectIdentifier(ReturnVoidInsteadOfEmptyTuple.self): "ReturnVoidInsteadOfEmptyTuple",
+  ObjectIdentifier(StandardizeDocumentationComments.self): "StandardizeDocumentationComments",
   ObjectIdentifier(TypeNamesShouldBeCapitalized.self): "TypeNamesShouldBeCapitalized",
   ObjectIdentifier(UseEarlyExits.self): "UseEarlyExits",
   ObjectIdentifier(UseExplicitNilCheckInConditions.self): "UseExplicitNilCheckInConditions",
