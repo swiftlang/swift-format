@@ -1,0 +1,11 @@
+.flake8
+.gitignore
+.swiftci
+*.md
+*.txt
+*.yaml
+*.yml
+**/*.docc/**
+**/*.modulemap
+CODEOWNERS
+Package.swift

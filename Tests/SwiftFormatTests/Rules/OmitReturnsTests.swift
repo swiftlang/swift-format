@@ -1,3 +1,15 @@
+//===----------------------------------------------------------------------===//
+//
+// This source file is part of the Swift.org open source project
+//
+// Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
+// Licensed under Apache License v2.0 with Runtime Library Exception
+//
+// See https://swift.org/LICENSE.txt for license information
+// See https://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
+//
+//===----------------------------------------------------------------------===//
+
 @_spi(Rules) import SwiftFormat
 import _SwiftFormatTestSupport
 
@@ -125,13 +137,13 @@ final class OmitReturnsTests: LintOrFormatRuleTestCase {
       OmitExplicitReturns.self,
       input: """
           var f = l.filter { 1️⃣return $0.a != o }
-          var bar = l.filter { 
+          var bar = l.filter {
             2️⃣return $0.a != o
           }
         """,
       expected: """
           var f = l.filter { $0.a != o }
-          var bar = l.filter { 
+          var bar = l.filter {
             $0.a != o
           }
         """,
@@ -146,12 +158,12 @@ final class OmitReturnsTests: LintOrFormatRuleTestCase {
     assertFormatting(
       OmitExplicitReturns.self,
       input: """
-          var f = l.filter { 
+          var f = l.filter {
             1️⃣return $0.a != o // comment
           }
         """,
       expected: """
-          var f = l.filter { 
+          var f = l.filter {
             $0.a != o // comment
           }
         """,

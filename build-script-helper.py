@@ -1,16 +1,15 @@
 #!/usr/bin/env python3
-
-"""
-  This source file is part of the Swift.org open source project
-  Copyright (c) 2014 - 2020 Apple Inc. and the Swift project authors
-  Licensed under Apache License v2.0 with Runtime Library Exception
-  See https://swift.org/LICENSE.txt for license information
-  See https://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
- ------------------------------------------------------------------------------
- This is a helper script for the main swift repository's build-script.py that
- knows how to build and install the stress tester utilities given a swift
- workspace.
-"""
+##===----------------------------------------------------------------------===##
+##
+## This source file is part of the Swift.org open source project
+##
+## Copyright (c) 2014 - 2020 Apple Inc. and the Swift project authors
+## Licensed under Apache License v2.0 with Runtime Library Exception
+##
+## See https://swift.org/LICENSE.txt for license information
+## See https://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
+##
+##===----------------------------------------------------------------------===##
 
 from __future__ import print_function
 
