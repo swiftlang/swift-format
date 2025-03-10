@@ -150,16 +150,13 @@ public struct DocumentationComment {
   private init(parameterMarkup markup: Markup) {
     // Extract the first paragraph as the brief summary. It will *not* be included in the body
     // nodes.
-    let remainingChildren: DropFirstSequence<MarkupChildren>
     if let firstParagraph = markup.child(through: [(0, Paragraph.self)]) {
       briefSummary = firstParagraph.detachedFromParent as? Paragraph
-      remainingChildren = markup.children.dropFirst()
+      bodyNodes = markup.children.dropFirst().map { $0.detachedFromParent }
     } else {
       briefSummary = nil
-      remainingChildren = markup.children.dropFirst(0)
+      bodyNodes = markup.children.map { $0.detachedFromParent }
     }
-
-    bodyNodes = remainingChildren.map(\.detachedFromParent)
   }
 
   /// Extracts parameter fields in an outlined parameters list (i.e., `- Parameters:` containing a
