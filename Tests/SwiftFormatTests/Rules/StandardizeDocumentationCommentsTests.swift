@@ -156,7 +156,7 @@ class StandardizeDocumentationCommentsTests: LintOrFormatRuleTestCase {
       configuration: Self.configuration
     )
   }
-  
+
   func testDetailedParameters() {
     assertFormatting(
       StandardizeDocumentationComments.self,
@@ -232,9 +232,9 @@ class StandardizeDocumentationCommentsTests: LintOrFormatRuleTestCase {
       configuration: Self.configuration
     )
   }
-  
+
   // MARK: Nominal decl tests
-  
+
   func testActorDecl() {
     assertFormatting(
       StandardizeDocumentationComments.self,
@@ -255,7 +255,7 @@ class StandardizeDocumentationCommentsTests: LintOrFormatRuleTestCase {
       configuration: Self.configuration
     )
   }
-  
+
   func testAssociatedTypeDecl() {
     assertFormatting(
       StandardizeDocumentationComments.self,
@@ -276,7 +276,7 @@ class StandardizeDocumentationCommentsTests: LintOrFormatRuleTestCase {
       configuration: Self.configuration
     )
   }
-  
+
   func testClassDecl() {
     assertFormatting(
       StandardizeDocumentationComments.self,

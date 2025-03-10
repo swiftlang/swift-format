@@ -386,8 +386,7 @@ extension DocumentationComment {
     let prefixWidth =
       4
       + joiningTrivia.map {
-        if case .spaces(let n) = $0 { return n }
-        else { return 0 }
+        if case .spaces(let n) = $0 { return n } else { return 0 }
       }.reduce(0, +)
 
     let options = MarkupFormatter.Options(
@@ -498,6 +497,7 @@ extension DocumentationComment.Parameter {
     let label = asSingle ? "Parameter \(name):" : "\(name):"
     let summaryWithLabel = summary.prefixed(with: label)
     return ListItem(
-      [summaryWithLabel] + comment.bodyNodes.map { $0 as! BlockMarkup })
+      [summaryWithLabel] + comment.bodyNodes.map { $0 as! BlockMarkup }
+    )
   }
 }
