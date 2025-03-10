@@ -44,14 +44,6 @@ class LintPipeline: SyntaxVisitor {
     onVisitPost(rule: NoEmptyLinesOpeningClosingBraces.self, for: node)
   }
 
-  override func visit(_ node: AccessorDeclSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
-    return .visitChildren
-  }
-  override func visitPost(_ node: AccessorDeclSyntax) {
-    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
-  }
-
   override func visit(_ node: ActorDeclSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
     visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
@@ -179,23 +171,13 @@ class LintPipeline: SyntaxVisitor {
   override func visit(_ node: DeinitializerDeclSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
-    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     return .visitChildren
   }
   override func visitPost(_ node: DeinitializerDeclSyntax) {
     onVisitPost(rule: AllPublicDeclarationsHaveDocumentation.self, for: node)
     onVisitPost(rule: BeginDocumentationCommentWithOneLineSummary.self, for: node)
-    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
     onVisitPost(rule: UseTripleSlashForDocumentationComments.self, for: node)
-  }
-
-  override func visit(_ node: EditorPlaceholderDeclSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
-    return .visitChildren
-  }
-  override func visitPost(_ node: EditorPlaceholderDeclSyntax) {
-    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
   }
 
   override func visit(_ node: EnumCaseDeclSyntax) -> SyntaxVisitorContinueKind {
@@ -380,28 +362,12 @@ class LintPipeline: SyntaxVisitor {
     onVisitPost(rule: UseShorthandTypeNames.self, for: node)
   }
 
-  override func visit(_ node: IfConfigDeclSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
-    return .visitChildren
-  }
-  override func visitPost(_ node: IfConfigDeclSyntax) {
-    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
-  }
-
   override func visit(_ node: IfExprSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(NoParensAroundConditions.visit, for: node)
     return .visitChildren
   }
   override func visitPost(_ node: IfExprSyntax) {
     onVisitPost(rule: NoParensAroundConditions.self, for: node)
-  }
-
-  override func visit(_ node: ImportDeclSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
-    return .visitChildren
-  }
-  override func visitPost(_ node: ImportDeclSyntax) {
-    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
   }
 
   override func visit(_ node: InfixOperatorExprSyntax) -> SyntaxVisitorContinueKind {
@@ -444,14 +410,6 @@ class LintPipeline: SyntaxVisitor {
     onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
   }
 
-  override func visit(_ node: MacroExpansionDeclSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
-    return .visitChildren
-  }
-  override func visitPost(_ node: MacroExpansionDeclSyntax) {
-    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
-  }
-
   override func visit(_ node: MacroExpansionExprSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(NoPlaygroundLiterals.visit, for: node)
     return .visitChildren
@@ -486,14 +444,6 @@ class LintPipeline: SyntaxVisitor {
     onVisitPost(rule: NoEmptyLinesOpeningClosingBraces.self, for: node)
   }
 
-  override func visit(_ node: MissingDeclSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
-    return .visitChildren
-  }
-  override func visitPost(_ node: MissingDeclSyntax) {
-    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
-  }
-
   override func visit(_ node: OperatorDeclSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
     return .visitChildren
@@ -522,24 +472,14 @@ class LintPipeline: SyntaxVisitor {
     onVisitPost(rule: UseSingleLinePropertyGetter.self, for: node)
   }
 
-  override func visit(_ node: PoundSourceLocationSyntax) -> SyntaxVisitorContinueKind {
-    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
-    return .visitChildren
-  }
-  override func visitPost(_ node: PoundSourceLocationSyntax) {
-    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
-  }
-
   override func visit(_ node: PrecedenceGroupDeclSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(NoEmptyLinesOpeningClosingBraces.visit, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)
-    visitIfEnabled(StandardizeDocumentationComments.visit, for: node)
     return .visitChildren
   }
   override func visitPost(_ node: PrecedenceGroupDeclSyntax) {
     onVisitPost(rule: NoEmptyLinesOpeningClosingBraces.self, for: node)
     onVisitPost(rule: NoLeadingUnderscores.self, for: node)
-    onVisitPost(rule: StandardizeDocumentationComments.self, for: node)
   }
 
   override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {

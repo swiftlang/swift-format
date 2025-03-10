@@ -34,14 +34,6 @@ public final class StandardizeDocumentationComments: SyntaxFormatRule {
   // different for different node types (e.g. an accessor has a `body`, while an
   // actor has a `memberBlock`).
 
-  public override func visit(_ node: AccessorDeclSyntax) -> DeclSyntax {
-    if var decl = reformatDocumentation(node) {
-      decl.body = decl.body.map(visit)
-      return DeclSyntax(decl)
-    }
-    return super.visit(node)
-  }
-
   public override func visit(_ node: ActorDeclSyntax) -> DeclSyntax {
     if var decl = reformatDocumentation(node) {
       decl.memberBlock = visit(decl.memberBlock)
@@ -60,14 +52,6 @@ public final class StandardizeDocumentationComments: SyntaxFormatRule {
       return DeclSyntax(decl)
     }
     return super.visit(node)
-  }
-
-  public override func visit(_ node: DeinitializerDeclSyntax) -> DeclSyntax {
-    reformatDocumentation(DeclSyntax(node)) ?? super.visit(node)
-  }
-
-  public override func visit(_ node: EditorPlaceholderDeclSyntax) -> DeclSyntax {
-    reformatDocumentation(DeclSyntax(node)) ?? super.visit(node)
   }
 
   public override func visit(_ node: EnumCaseDeclSyntax) -> DeclSyntax {
@@ -98,18 +82,6 @@ public final class StandardizeDocumentationComments: SyntaxFormatRule {
     return super.visit(node)
   }
 
-  public override func visit(_ node: IfConfigDeclSyntax) -> DeclSyntax {
-    if var decl = reformatDocumentation(node) {
-      decl.clauses = visit(decl.clauses)
-      return DeclSyntax(decl)
-    }
-    return super.visit(node)
-  }
-
-  public override func visit(_ node: ImportDeclSyntax) -> DeclSyntax {
-    reformatDocumentation(DeclSyntax(node)) ?? super.visit(node)
-  }
-
   public override func visit(_ node: InitializerDeclSyntax) -> DeclSyntax {
     if var decl = reformatDocumentation(node) {
       decl.body = decl.body.map(visit)
@@ -122,23 +94,7 @@ public final class StandardizeDocumentationComments: SyntaxFormatRule {
     reformatDocumentation(DeclSyntax(node)) ?? super.visit(node)
   }
 
-  public override func visit(_ node: MacroExpansionDeclSyntax) -> DeclSyntax {
-    reformatDocumentation(DeclSyntax(node)) ?? super.visit(node)
-  }
-
-  public override func visit(_ node: MissingDeclSyntax) -> DeclSyntax {
-    reformatDocumentation(DeclSyntax(node)) ?? super.visit(node)
-  }
-
   public override func visit(_ node: OperatorDeclSyntax) -> DeclSyntax {
-    reformatDocumentation(DeclSyntax(node)) ?? super.visit(node)
-  }
-
-  public override func visit(_ node: PoundSourceLocationSyntax) -> DeclSyntax {
-    reformatDocumentation(DeclSyntax(node)) ?? super.visit(node)
-  }
-
-  public override func visit(_ node: PrecedenceGroupDeclSyntax) -> DeclSyntax {
     reformatDocumentation(DeclSyntax(node)) ?? super.visit(node)
   }
 
