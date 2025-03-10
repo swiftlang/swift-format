@@ -28,9 +28,9 @@ public struct DocumentationComment {
 
     /// The documentation comment of the parameter.
     ///
-    /// Typically, only the `briefSummary` field of this value will be populated. However, for more
-    /// complex cases like parameters whose types are functions, the grammar permits full
-    /// descriptions including `Parameter(s)`, `Returns`, and `Throws` fields to be present.
+    /// Typically, only the `briefSummary` field of this value will be populated. However,
+    /// parameters can also include a full discussion, although special fields like
+    /// `Parameter(s)`, `Returns`, and `Throws` are not specifically recognized.
     public var comment: DocumentationComment
   }
 
@@ -141,6 +141,27 @@ public struct DocumentationComment {
     }
   }
 
+  /// Creates a new `DocumentationComment` from the given `Markup` node, treated as
+  /// the documentation for a parameter.
+  ///
+  /// Within the `parameterMarkup` node, only the brief summary is treated separately.
+  /// All other nodes are treated as body nodes, without special treatment for parameters
+  /// or return/throws documentation.
+  private init(parameterMarkup markup: Markup) {
+    // Extract the first paragraph as the brief summary. It will *not* be included in the body
+    // nodes.
+    let remainingChildren: DropFirstSequence<MarkupChildren>
+    if let firstParagraph = markup.child(through: [(0, Paragraph.self)]) {
+      briefSummary = firstParagraph.detachedFromParent as? Paragraph
+      remainingChildren = markup.children.dropFirst()
+    } else {
+      briefSummary = nil
+      remainingChildren = markup.children.dropFirst(0)
+    }
+
+    bodyNodes = remainingChildren.map(\.detachedFromParent)
+  }
+
   /// Extracts parameter fields in an outlined parameters list (i.e., `- Parameters:` containing a
   /// nested list of parameter fields) from the given unordered list.
   ///
@@ -227,7 +248,7 @@ public struct DocumentationComment {
       let name = rewriter.parameterName
     else { return nil }
 
-    return Parameter(name: name, comment: DocumentationComment(markup: newListItem))
+    return Parameter(name: name, comment: DocumentationComment(parameterMarkup: newListItem))
   }
 
   /// Extracts simple fields like `- Returns:` and `- Throws:` from the top-level list in the
