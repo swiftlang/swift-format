@@ -233,5 +233,374 @@ class StandardizeDocumentationCommentsTests: LintOrFormatRuleTestCase {
     )
   }
   
+  // MARK: Nominal decl tests
+  
+  func testActorDecl() {
+    assertFormatting(
+      StandardizeDocumentationComments.self,
+      input: """
+        /// An actor declaration
+        /// with documentation
+        /// that needs to be
+        /// rewrapped to 
+        /// the correct width.
+        package actor MyActor {}
+        """,
+      expected: """
+        /// An actor declaration with documentation that needs to be rewrapped to the
+        /// correct width.
+        package actor MyActor {}
+        """,
+      findings: [],
+      configuration: Self.configuration
+    )
+  }
+  
+  func testAssociatedTypeDecl() {
+    assertFormatting(
+      StandardizeDocumentationComments.self,
+      input: """
+        /// An associated type declaration
+        /// with documentation
+        /// that needs to be
+        /// rewrapped to 
+        /// the correct width.
+        associatedtype MyAssociatedType = Int
+        """,
+      expected: """
+        /// An associated type declaration with documentation that needs to be
+        /// rewrapped to the correct width.
+        associatedtype MyAssociatedType = Int
+        """,
+      findings: [],
+      configuration: Self.configuration
+    )
+  }
+  
+  func testClassDecl() {
+    assertFormatting(
+      StandardizeDocumentationComments.self,
+      input: """
+        /// A class declaration
+        /// with documentation
+        /// that needs to be
+        /// rewrapped to 
+        /// the correct width.
+        public class MyClass {}
+        """,
+      expected: """
+        /// A class declaration with documentation that needs to be rewrapped to the
+        /// correct width.
+        public class MyClass {}
+        """,
+      findings: [],
+      configuration: Self.configuration
+    )
+  }
 
+  func testEnumAndEnumCaseDecl() {
+    assertFormatting(
+      StandardizeDocumentationComments.self,
+      input: """
+        /// An enum declaration
+        /// with documentation
+        /// that needs to be
+        /// rewrapped to 
+        /// the correct width.
+        public enum MyEnum {
+          /// An enum case declaration
+          /// with documentation
+          /// that needs to be
+          /// rewrapped to 
+          /// the correct width.
+          case myCase
+        }
+        """,
+      expected: """
+        /// An enum declaration with documentation that needs to be rewrapped to the
+        /// correct width.
+        public enum MyEnum {
+          /// An enum case declaration with documentation that needs to be rewrapped to
+          /// the correct width.
+          case myCase
+        }
+        """,
+      findings: [],
+      configuration: Self.configuration
+    )
+  }
+
+  func testExtensionDecl() {
+    assertFormatting(
+      StandardizeDocumentationComments.self,
+      input: """
+        /// An extension
+        /// with documentation
+        /// that needs to be
+        /// rewrapped to 
+        /// the correct width.
+        extension MyClass {}
+        """,
+      expected: """
+        /// An extension with documentation that needs to be rewrapped to the correct
+        /// width.
+        extension MyClass {}
+        """,
+      findings: [],
+      configuration: Self.configuration
+    )
+  }
+
+  func testFunctionDecl() {
+    assertFormatting(
+      StandardizeDocumentationComments.self,
+      input: """
+        /// A function declaration
+        /// with documentation
+        /// that needs to be
+        /// rewrapped to 
+        /// the correct width.
+        ///
+        /// - Returns: A value.
+        /// - Throws: An error.
+        ///
+        /// - Parameters:
+        ///   - param: A single parameter.
+        /// - Parameter another: A second single parameter.
+        func myFunction(param: String, and another: Int) -> Value {}
+        """,
+      expected: """
+        /// A function declaration with documentation that needs to be rewrapped to the
+        /// correct width.
+        ///
+        /// - Parameters:
+        ///   - param: A single parameter.
+        ///   - another: A second single parameter.
+        /// - Returns: A value.
+        /// - Throws: An error.
+        func myFunction(param: String, and another: Int) -> Value {}
+        """,
+      findings: [],
+      configuration: Self.configuration
+    )
+  }
+
+  func testInitializerDecl() {
+    assertFormatting(
+      StandardizeDocumentationComments.self,
+      input: """
+        /// An initializer declaration
+        /// with documentation
+        /// that needs to be
+        /// rewrapped to 
+        /// the correct width.
+        ///
+        /// - Throws: An error.
+        ///
+        /// - Parameters:
+        ///   - param: A single parameter.
+        /// - Parameter another: A second single parameter.
+        public init(param: String, and another: Int) {}
+        """,
+      expected: """
+        /// An initializer declaration with documentation that needs to be rewrapped to
+        /// the correct width.
+        ///
+        /// - Parameters:
+        ///   - param: A single parameter.
+        ///   - another: A second single parameter.
+        /// - Throws: An error.
+        public init(param: String, and another: Int) {}
+        """,
+      findings: [],
+      configuration: Self.configuration
+    )
+  }
+
+  func testMacroDecl() {
+    assertFormatting(
+      StandardizeDocumentationComments.self,
+      input: """
+        /// A macro declaration
+        /// with documentation
+        /// that needs to be
+        /// rewrapped to 
+        /// the correct width.
+        ///
+        /// - Throws: An error.
+        ///
+        /// - Parameters:
+        ///   - param: A single parameter.
+        /// - Parameter another: A second single parameter.
+        @freestanding(expression)
+        public macro prohibitBinaryOperators<T>(_ param: T, another: [String]) -> T =
+            #externalMacro(module: "ExampleMacros", type: "ProhibitBinaryOperators")
+        """,
+      expected: """
+        /// A macro declaration with documentation that needs to be rewrapped to the
+        /// correct width.
+        ///
+        /// - Parameters:
+        ///   - param: A single parameter.
+        ///   - another: A second single parameter.
+        /// - Throws: An error.
+        @freestanding(expression)
+        public macro prohibitBinaryOperators<T>(_ param: T, another: [String]) -> T =
+            #externalMacro(module: "ExampleMacros", type: "ProhibitBinaryOperators")
+        """,
+      findings: [],
+      configuration: Self.configuration
+    )
+  }
+
+  func testOperatorDecl() {
+    assertFormatting(
+      StandardizeDocumentationComments.self,
+      input: """
+        extension Int {
+          /// An operator declaration
+          /// with documentation
+          /// that needs to be
+          /// rewrapped to 
+          /// the correct width.
+          ///
+          /// - Parameters:
+          ///   - lhs: A single parameter.
+          /// - Parameter rhs: A second single parameter.
+          static func -+-(lhs: Int, rhs: Int) -> Int {}
+        }
+        """,
+      expected: """
+        extension Int {
+          /// An operator declaration with documentation that needs to be rewrapped to
+          /// the correct width.
+          ///
+          /// - Parameters:
+          ///   - lhs: A single parameter.
+          ///   - rhs: A second single parameter.
+          static func -+-(lhs: Int, rhs: Int) -> Int {}
+        }
+        """,
+      findings: [],
+      configuration: Self.configuration
+    )
+  }
+
+  func testProtocolDecl() {
+    assertFormatting(
+      StandardizeDocumentationComments.self,
+      input: """
+        /// A protocol declaration
+        /// with documentation
+        /// that needs to be
+        /// rewrapped to 
+        /// the correct width.
+        protocol MyProto {}
+        """,
+      expected: """
+        /// A protocol declaration with documentation that needs to be rewrapped to the
+        /// correct width.
+        protocol MyProto {}
+        """,
+      findings: [],
+      configuration: Self.configuration
+    )
+  }
+
+  func testStructDecl() {
+    assertFormatting(
+      StandardizeDocumentationComments.self,
+      input: """
+        /// A struct declaration
+        /// with documentation
+        /// that needs to be
+        /// rewrapped to 
+        /// the correct width.
+        struct MyStruct {}
+        """,
+      expected: """
+        /// A struct declaration with documentation that needs to be rewrapped to the
+        /// correct width.
+        struct MyStruct {}
+        """,
+      findings: [],
+      configuration: Self.configuration
+    )
+  }
+
+  func testSubscriptDecl() {
+    assertFormatting(
+      StandardizeDocumentationComments.self,
+      input: """
+        /// A subscript declaration
+        /// with documentation
+        /// that needs to be
+        /// rewrapped to 
+        /// the correct width.
+        ///
+        /// - Returns: A value.
+        /// - Throws: An error.
+        ///
+        /// - Parameters:
+        ///   - param: A single parameter.
+        /// - Parameter another: A second single parameter.
+        public subscript(param: String, and another: Int) -> Value {}
+        """,
+      expected: """
+        /// A subscript declaration with documentation that needs to be rewrapped to
+        /// the correct width.
+        ///
+        /// - Parameters:
+        ///   - param: A single parameter.
+        ///   - another: A second single parameter.
+        /// - Returns: A value.
+        /// - Throws: An error.
+        public subscript(param: String, and another: Int) -> Value {}
+        """,
+      findings: [],
+      configuration: Self.configuration
+    )
+  }
+
+  func testTypeAliasDecl() {
+    assertFormatting(
+      StandardizeDocumentationComments.self,
+      input: """
+        /// A type alias declaration
+        /// with documentation
+        /// that needs to be
+        /// rewrapped to 
+        /// the correct width.
+        typealias MyAlias {}
+        """,
+      expected: """
+        /// A type alias declaration with documentation that needs to be rewrapped to
+        /// the correct width.
+        typealias MyAlias {}
+        """,
+      findings: [],
+      configuration: Self.configuration
+    )
+  }
+
+  func testVariableDecl() {
+    assertFormatting(
+      StandardizeDocumentationComments.self,
+      input: """
+        /// A variable declaration
+        /// with documentation
+        /// that needs to be
+        /// rewrapped to 
+        /// the correct width.
+        var myVariable: Int = 5
+        """,
+      expected: """
+        /// A variable declaration with documentation that needs to be rewrapped to the
+        /// correct width.
+        var myVariable: Int = 5
+        """,
+      findings: [],
+      configuration: Self.configuration
+    )
+  }
 }
