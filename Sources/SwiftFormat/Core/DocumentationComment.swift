@@ -75,6 +75,13 @@ public struct DocumentationComment {
   /// `Throws:` prefix removed for convenience.
   public var `throws`: Paragraph? = nil
 
+  /// A collection of _all_ body nodes at the top level of the comment text.
+  ///
+  /// If a brief summary paragraph was extracted from the comment, it will not be present in this
+  /// collection. Any special fields extracted (parameters, returns, and throws) from `bodyNodes`
+  /// will be present in this collection.
+  internal var allBodyNodes: [Markup] = []
+
   /// Creates a new `DocumentationComment` with information extracted from the leading trivia of the
   /// given syntax node.
   ///
@@ -107,6 +114,9 @@ public struct DocumentationComment {
       remainingChildren = markup.children.dropFirst(0)
     }
 
+    // Capture all the body nodes before filtering out any special fields.
+    allBodyNodes = remainingChildren.map { $0.detachedFromParent }
+
     for child in remainingChildren {
       if var list = child.detachedFromParent as? UnorderedList {
         // An unordered list could be one of the following:
@@ -138,24 +148,6 @@ public struct DocumentationComment {
       }
 
       bodyNodes.append(child.detachedFromParent)
-    }
-  }
-
-  /// Creates a new `DocumentationComment` from the given `Markup` node, treated as
-  /// the documentation for a parameter.
-  ///
-  /// Within the `parameterMarkup` node, only the brief summary is treated separately.
-  /// All other nodes are treated as body nodes, without special treatment for parameters
-  /// or return/throws documentation.
-  private init(parameterMarkup markup: Markup) {
-    // Extract the first paragraph as the brief summary. It will *not* be included in the body
-    // nodes.
-    if let firstParagraph = markup.child(through: [(0, Paragraph.self)]) {
-      briefSummary = firstParagraph.detachedFromParent as? Paragraph
-      bodyNodes = markup.children.dropFirst().map { $0.detachedFromParent }
-    } else {
-      briefSummary = nil
-      bodyNodes = markup.children.map { $0.detachedFromParent }
     }
   }
 
@@ -245,7 +237,7 @@ public struct DocumentationComment {
       let name = rewriter.parameterName
     else { return nil }
 
-    return Parameter(name: name, comment: DocumentationComment(parameterMarkup: newListItem))
+    return Parameter(name: name, comment: DocumentationComment(markup: newListItem))
   }
 
   /// Extracts simple fields like `- Returns:` and `- Throws:` from the top-level list in the
@@ -494,7 +486,7 @@ extension DocumentationComment.Parameter {
     let label = asSingle ? "Parameter \(name):" : "\(name):"
     let summaryWithLabel = summary.prefixed(with: label)
     return ListItem(
-      [summaryWithLabel] + comment.bodyNodes.map { $0 as! BlockMarkup }
+      [summaryWithLabel] + comment.allBodyNodes.map { $0 as! BlockMarkup }
     )
   }
 }
