@@ -269,32 +269,24 @@ final class DocumentationCommentTests: XCTestCase {
       └─ Text " A function."
       """
     )
-    XCTAssertTrue(paramComment.bodyNodes.isEmpty)
-    XCTAssertEqual(paramComment.parameterLayout, .separated)
-    XCTAssertEqual(paramComment.parameters.count, 2)
-    XCTAssertEqual(paramComment.parameters[0].name, "x")
+    XCTAssertEqual(paramComment.bodyNodes.count, 1)
     XCTAssertEqual(
-      paramComment.parameters[0].comment.briefSummary?.debugDescription(),
+      paramComment.bodyNodes[0].debugDescription(),
       """
-      Paragraph
-      └─ Text " A value."
+      UnorderedList
+      ├─ ListItem
+      │  └─ Paragraph
+      │     └─ Text "Parameter x: A value."
+      ├─ ListItem
+      │  └─ Paragraph
+      │     └─ Text "Parameter y: Another value."
+      └─ ListItem
+         └─ Paragraph
+            └─ Text "Returns: A result."
       """
     )
-    XCTAssertEqual(paramComment.parameters[1].name, "y")
-    XCTAssertEqual(
-      paramComment.parameters[1].comment.briefSummary?.debugDescription(),
-      """
-      Paragraph
-      └─ Text " Another value."
-      """
-    )
-    XCTAssertEqual(
-      paramComment.returns?.debugDescription(),
-      """
-      Paragraph
-      └─ Text " A result."
-      """
-    )
+    XCTAssertTrue(paramComment.parameters.isEmpty)
+    XCTAssertNil(paramComment.returns)
     XCTAssertNil(paramComment.throws)
   }
 }
