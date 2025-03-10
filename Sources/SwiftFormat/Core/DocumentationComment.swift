@@ -421,22 +421,12 @@ extension DocumentationComment {
     case 0: break
     case 1:
       // Output a single parameter item.
-      let summary = parameters[0].comment.briefSummary ?? Paragraph()
-      let summaryWithLabel =
-        summary
-        .prefixed(with: "Parameter \(parameters[0].name):")
-      let list = UnorderedList([ListItem(summaryWithLabel)])
+      let list = UnorderedList([parameters[0].listItem(asSingle: true)])
       strings.append(contentsOf: list.formatForSource(options: options))
 
     default:
       // Build the list of parameters.
-      let paramItems = parameters.map { parameter in
-        let summary = parameter.comment.briefSummary ?? Paragraph()
-        let summaryWithLabel =
-          summary
-          .prefixed(with: "\(parameter.name):")
-        return ListItem(summaryWithLabel)
-      }
+      let paramItems = parameters.map { $0.listItem() }
       let paramList = UnorderedList(paramItems)
 
       // Create a list with a single item: the label, followed by the list of parameters.
@@ -499,5 +489,15 @@ extension Paragraph {
 
     var rewriter = ParagraphPrefixMarkupRewriter(prefix: str)
     return self.accept(&rewriter) as? Paragraph ?? self
+  }
+}
+
+extension DocumentationComment.Parameter {
+  func listItem(asSingle: Bool = false) -> ListItem {
+    let summary = comment.briefSummary ?? Paragraph()
+    let label = asSingle ? "Parameter \(name):" : "\(name):"
+    let summaryWithLabel = summary.prefixed(with: label)
+    return ListItem(
+      [summaryWithLabel] + comment.bodyNodes.map { $0 as! BlockMarkup })
   }
 }
