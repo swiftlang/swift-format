@@ -365,10 +365,8 @@ extension DocumentationComment {
     let prefixWidth =
       4
       + joiningTrivia.map {
-        switch $0 {
-        case .spaces(let n): n
-        default: 0
-        }
+        if case .spaces(let n) = $0 { return n }
+        else { return 0 }
       }.reduce(0, +)
 
     let options = MarkupFormatter.Options(
