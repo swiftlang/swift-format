@@ -18,7 +18,6 @@ import SwiftSyntax
 struct Diagnostic {
   /// The severity of the diagnostic.
   enum Severity {
-    case note
     case warning
     case error
   }
