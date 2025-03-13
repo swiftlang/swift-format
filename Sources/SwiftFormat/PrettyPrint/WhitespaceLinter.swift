@@ -312,13 +312,14 @@ public class WhitespaceLinter {
     formattedRun: ArraySlice<UTF8.CodeUnit>
   ) {
     guard userRun != formattedRun else { return }
-
+    let userString = String(decoding: userRun, as: UTF8.self)
+    let formattedString = String(decoding: formattedRun, as: UTF8.self)
     // This assumes tabs will always be forbidden for inter-token spacing (but not for leading
     // indentation).
     if userRun.contains(utf8Tab) {
       diagnose(.spacingCharError, category: .spacingCharacter, utf8Offset: userIndex)
-    } else if formattedRun.count != userRun.count {
-      let delta = formattedRun.count - userRun.count
+    } else if formattedString.count != userString.count {
+      let delta = formattedString.count - userString.count
       diagnose(.spacingError(delta), category: .spacing, utf8Offset: userIndex)
     }
   }
@@ -339,20 +340,26 @@ public class WhitespaceLinter {
     startingAt offset: Int,
     in data: [UTF8.CodeUnit]
   ) -> ArraySlice<UTF8.CodeUnit> {
-    func isWhitespace(_ char: UTF8.CodeUnit) -> Bool {
-      switch char {
-      case UInt8(ascii: " "), UInt8(ascii: "\n"), UInt8(ascii: "\t"), UInt8(ascii: "\r"), /*VT*/ 0x0B, /*FF*/ 0x0C:
-        return true
+    var currentIndex = offset
+    while currentIndex < data.count {
+      if let unicodeException = UnicodeWhitespace.allCases.first(where: { exception in
+        let bytes = exception.utf8Bytes
+        return currentIndex + bytes.count <= data.count
+          && data[currentIndex..<currentIndex + bytes.count].elementsEqual(bytes)
+      }) {
+        currentIndex += unicodeException.utf8Bytes.count
+        continue
+      }
+
+      switch data[currentIndex] {
+      case UInt8(ascii: " "), UInt8(ascii: "\n"), UInt8(ascii: "\t"), UInt8(ascii: "\r"),
+        /*VT*/ 0x0B, /*FF*/ 0x0C:
+        currentIndex += 1
       default:
-        return false
+        return data[offset..<currentIndex]
       }
     }
-    guard
-      let whitespaceEnd = data[offset...].firstIndex(where: { !isWhitespace($0) })
-    else {
-      return data[offset..<data.endIndex]
-    }
-    return data[offset..<whitespaceEnd]
+    return data[offset..<currentIndex]
   }
 
   /// Returns the code unit at the given index, or nil if the index is the end of the data.
@@ -409,6 +416,22 @@ public class WhitespaceLinter {
       return .homogeneous(onlyIndent)
     }
     return .heterogeneous(indents)
+  }
+}
+
+/// A collection of Unicode code points that represent non-standard whitespace.
+private enum UnicodeWhitespace: CaseIterable {
+  case u2028  // U+2028 LINE SEPARATOR
+  case u2029  // U+2029 PARAGRAPH SEPARATOR
+
+  /// Returns the UTF-8 byte sequence corresponding to the Unicode exception.
+  var utf8Bytes: [UTF8.CodeUnit] {
+    switch self {
+    case .u2028:
+      return [0xE2, 0x80, 0xA8]
+    case .u2029:
+      return [0xE2, 0x80, 0xA9]
+    }
   }
 }
 
