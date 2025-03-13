@@ -1094,4 +1094,17 @@ final class CommentTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: input, linelength: 80)
   }
+
+  func testUnexpectedUnicodeCharacters() {
+    let input =
+      """
+      // Hello World\u{2028}
+      // Hello\u{20}\u{2028}World
+      // Hello World\u{2028}\u{2029}\u{2029}
+      // Hello World\u{20}\u{20}\u{20}\u{2028}
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: input, linelength: 80)
+  }
 }

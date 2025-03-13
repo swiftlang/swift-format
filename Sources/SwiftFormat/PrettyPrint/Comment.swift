@@ -21,13 +21,27 @@ extension StringProtocol {
   /// - Returns: The string with trailing whitespace removed.
   func trimmingTrailingWhitespace() -> String {
     if isEmpty { return String() }
-    let scalars = unicodeScalars
-    var idx = scalars.index(before: scalars.endIndex)
-    while scalars[idx].properties.isWhitespace {
-      if idx == scalars.startIndex { return String() }
-      idx = scalars.index(before: idx)
+    let utf8Array = Array(utf8)
+    var idx = utf8Array.endIndex - 1
+    while utf8Array[idx].isWhitespace {
+      if idx == utf8Array.startIndex { return String() }
+      idx -= 1
     }
-    return String(String.UnicodeScalarView(scalars[...idx]))
+    return String(decoding: utf8Array[...idx], as: UTF8.self)
+  }
+}
+
+extension UTF8.CodeUnit {
+  /// Checks if the UTF-8 code unit represents a whitespace character.
+  ///
+  /// - Returns: `true` if the code unit represents a whitespace character, otherwise `false`.
+  var isWhitespace: Bool {
+    switch self {
+    case UInt8(ascii: " "), UInt8(ascii: "\n"), UInt8(ascii: "\t"), UInt8(ascii: "\r"), /*VT*/ 0x0B, /*FF*/ 0x0C:
+      return true
+    default:
+      return false
+    }
   }
 }
 
