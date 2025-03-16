@@ -11,6 +11,9 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
+#if canImport(Android)
+import Android
+#endif
 
 /// Returns a value indicating whether or not the stream is a TTY.
 func isTTY(_ fileHandle: FileHandle) -> Bool {
