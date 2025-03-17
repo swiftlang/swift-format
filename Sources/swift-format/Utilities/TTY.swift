@@ -12,6 +12,10 @@
 
 import Foundation
 
+#if os(Android)
+import Android
+#endif
+
 /// Returns a value indicating whether or not the stream is a TTY.
 func isTTY(_ fileHandle: FileHandle) -> Bool {
   // The implementation of this function is adapted from `TerminalController.swift` in
