@@ -11,7 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-#if canImport(Android)
+#if os(Android)
 import Android
 #endif
 
