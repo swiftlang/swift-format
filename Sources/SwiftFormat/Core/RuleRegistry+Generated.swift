@@ -57,5 +57,14 @@
     "UseTripleSlashForDocumentationComments": true,
     "UseWhereClausesInForLoops": false,
     "ValidateDocumentationComments": false,
+    "AddLines": true,
+    "EndOfLineComment": true,
+    "Indentation": true,
+    "LineLength": true,
+    "RemoveLine": true,
+    "Spacing": true,
+    "SpacingCharacter": true,
+    "TrailingComma": true,
+    "TrailingWhitespace": true,
   ]
 }
