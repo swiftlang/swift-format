@@ -120,7 +120,7 @@ enum IgnoreDirective: CustomStringConvertible {
   /// because Windows did not have full support for regex literals until Swift 5.10.
   fileprivate func makeRegex() -> RegexExpression {
     let pattern = #"^\s*\/\/\s*"# + description + #"(?:\s*:\s*(?<ruleNames>.+))?$"#
-    return try! Regex(pattern)
+    return try! Regex(pattern).matchingSemantics(.unicodeScalar)
   }
 }
 
@@ -142,14 +142,14 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
     case subset(ruleNames: [String])
   }
 
-  /// Computes source locations and ranges for syntax nodes in a source file.
-  private let sourceLocationConverter: SourceLocationConverter
-
   /// Cached regex object for ignoring rules at the node.
-  private let ignoreRegex: IgnoreDirective.RegexExpression
+  private static let ignoreRegex: IgnoreDirective.RegexExpression = IgnoreDirective.node.makeRegex()
 
   /// Cached regex object for ignoring rules at the file.
-  private let ignoreFileRegex: IgnoreDirective.RegexExpression
+  private static let ignoreFileRegex: IgnoreDirective.RegexExpression = IgnoreDirective.file.makeRegex()
+
+  /// Computes source locations and ranges for syntax nodes in a source file.
+  private let sourceLocationConverter: SourceLocationConverter
 
   /// Stores the source ranges in which all rules are ignored.
   var allRulesIgnoredRanges: [SourceRange] = []
@@ -158,9 +158,6 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
   var ruleMap: [String: [SourceRange]] = [:]
 
   init(sourceLocationConverter: SourceLocationConverter) {
-    ignoreRegex = IgnoreDirective.node.makeRegex()
-    ignoreFileRegex = IgnoreDirective.file.makeRegex()
-
     self.sourceLocationConverter = sourceLocationConverter
     super.init(viewMode: .sourceAccurate)
   }
@@ -176,7 +173,7 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
       afterLeadingTrivia: false,
       afterTrailingTrivia: true
     )
-    return appendRuleStatus(from: firstToken, of: sourceRange, using: ignoreFileRegex)
+    return appendRuleStatus(from: firstToken, of: sourceRange, using: Self.ignoreFileRegex)
   }
 
   override func visit(_ node: CodeBlockItemSyntax) -> SyntaxVisitorContinueKind {
@@ -184,7 +181,7 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
       return .visitChildren
     }
     let sourceRange = node.sourceRange(converter: sourceLocationConverter)
-    return appendRuleStatus(from: firstToken, of: sourceRange, using: ignoreRegex)
+    return appendRuleStatus(from: firstToken, of: sourceRange, using: Self.ignoreRegex)
   }
 
   override func visit(_ node: MemberBlockItemSyntax) -> SyntaxVisitorContinueKind {
@@ -192,7 +189,7 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
       return .visitChildren
     }
     let sourceRange = node.sourceRange(converter: sourceLocationConverter)
-    return appendRuleStatus(from: firstToken, of: sourceRange, using: ignoreRegex)
+    return appendRuleStatus(from: firstToken, of: sourceRange, using: Self.ignoreRegex)
   }
 
   // MARK: - Helper Methods
