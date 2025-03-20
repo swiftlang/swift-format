@@ -34,7 +34,7 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
     }
 
     funcDecl.body?.statements = rewrapReturnedExpression(returnStmt)
-    diagnose(.omitReturnStatement, on: returnStmt, severity: .refactoring)
+    diagnose(.omitReturnStatement, on: returnStmt)
     return DeclSyntax(funcDecl)
   }
 
@@ -78,7 +78,7 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
     }
 
     closureExpr.statements = rewrapReturnedExpression(returnStmt)
-    diagnose(.omitReturnStatement, on: returnStmt, severity: .refactoring)
+    diagnose(.omitReturnStatement, on: returnStmt)
     return ExprSyntax(closureExpr)
   }
 
@@ -111,7 +111,7 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
 
       getter.body?.statements = rewrapReturnedExpression(returnStmt)
 
-      diagnose(.omitReturnStatement, on: returnStmt, severity: .refactoring)
+      diagnose(.omitReturnStatement, on: returnStmt)
 
       accessors[getterAt] = getter
       var newBlock = accessorBlock
@@ -123,7 +123,7 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
         return nil
       }
 
-      diagnose(.omitReturnStatement, on: returnStmt, severity: .refactoring)
+      diagnose(.omitReturnStatement, on: returnStmt)
 
       var newBlock = accessorBlock
       newBlock.accessors = .getter(rewrapReturnedExpression(returnStmt))

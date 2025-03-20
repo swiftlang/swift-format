@@ -48,13 +48,10 @@ final class FindingEmitter {
   ) {
     guard let consumer = self.consumer else { return }
 
-    // TODO: Provide a way via the formatter configuration for users to customize the severity of
-    // findings based on their category, falling back to the default if it isn't overridden.
     consumer(
       Finding(
         category: category,
         message: message,
-        severity: category.defaultSeverity,
         location: location,
         notes: notes
       )

@@ -134,15 +134,8 @@ final class DiagnosticsEngine {
   /// Converts a lint finding into a diagnostic message that can be used by the `TSCBasic`
   /// diagnostics engine and returns it.
   private func diagnosticMessage(for finding: Finding) -> Diagnostic {
-    let severity: Diagnostic.Severity
-    switch finding.severity {
-    case .error: severity = .error
-    case .warning: severity = .warning
-    case .refactoring: severity = .warning
-    case .convention: severity = .warning
-    }
     return Diagnostic(
-      severity: severity,
+      severity: .error,
       location: finding.location.map(Diagnostic.Location.init),
       category: "\(finding.category)",
       message: "\(finding.message.text)"
