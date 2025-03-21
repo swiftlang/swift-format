@@ -356,4 +356,38 @@ final class NoAccessLevelOnExtensionDeclarationTests: LintOrFormatRuleTestCase {
       ]
     )
   }
+
+  func testIfConfigMembers() {
+    assertFormatting(
+      NoAccessLevelOnExtensionDeclaration.self,
+      input: """
+        1️⃣public extension Foo {
+          #if os(macOS)
+            2️⃣var x: Bool
+          #else
+            3️⃣var y: String
+          #endif
+        }
+        """,
+      expected: """
+        extension Foo {
+          #if os(macOS)
+            public var x: Bool
+          #else
+            public var y: String
+          #endif
+        }
+        """,
+      findings: [
+        FindingSpec(
+          "1️⃣",
+          message: "move this 'public' access modifier to precede each member inside this extension",
+          notes: [
+            NoteSpec("2️⃣", message: "add 'public' access modifier to this declaration"),
+            NoteSpec("3️⃣", message: "add 'public' access modifier to this declaration"),
+          ]
+        )
+      ]
+    )
+  }
 }
