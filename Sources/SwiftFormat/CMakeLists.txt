@@ -42,6 +42,7 @@ add_library(SwiftFormat
   Core/SyntaxFormatRule.swift
   Core/SyntaxLintRule.swift
   Core/SyntaxProtocol+Convenience.swift
+  Core/SyntaxTraits.swift
   Core/Trivia+Convenience.swift
   Core/WithAttributesSyntax+Convenience.swift
   Core/WithSemicolonSyntax.swift

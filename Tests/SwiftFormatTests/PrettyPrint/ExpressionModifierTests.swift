@@ -12,7 +12,80 @@
 
 import SwiftFormat
 
-final class AwaitExprTests: PrettyPrintTestCase {
+/// These tests verify the breaking and grouping behavior of expression modifiers like `try`,
+/// `await`, and `unsafe`.
+final class ExpressionModifierTests: PrettyPrintTestCase {
+  func testBasicTries() {
+    let input =
+      """
+      let a = try possiblyFailingFunc()
+      let a = try? possiblyFailingFunc()
+      let a = try! possiblyFailingFunc()
+      """
+
+    let expected =
+      """
+      let a = try possiblyFailingFunc()
+      let a = try? possiblyFailingFunc()
+      let a = try! possiblyFailingFunc()
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+  }
+
+  func testTryKeywordBreaking() {
+    let input =
+      """
+      let aVeryLongArgumentName = try foo.bar()
+      let aVeryLongArgumentName = try
+        foo.bar()
+      let aVeryLongArgumentName = try? foo.bar()
+      let abc = try foo.baz().quxxe(a, b, c).bar()
+      let abc = try foo
+        .baz().quxxe(a, b, c).bar()
+      let abc = try [1, 2, 3, 4, 5, 6, 7].baz().quxxe(a, b, c).bar()
+      let abc = try [1, 2, 3, 4, 5, 6, 7]
+        .baz().quxxe(a, b, c).bar()
+      let abc = try foo.baz().quxxe(a, b, c).bar[0]
+      let abc = try foo
+        .baz().quxxe(a, b, c).bar[0]
+      let abc = try
+        foo
+        .baz().quxxe(a, b, c).bar[0]
+      """
+
+    let expected =
+      """
+      let aVeryLongArgumentName =
+        try foo.bar()
+      let aVeryLongArgumentName =
+        try foo.bar()
+      let aVeryLongArgumentName =
+        try? foo.bar()
+      let abc = try foo.baz().quxxe(a, b, c)
+        .bar()
+      let abc =
+        try foo
+        .baz().quxxe(a, b, c).bar()
+      let abc = try [1, 2, 3, 4, 5, 6, 7]
+        .baz().quxxe(a, b, c).bar()
+      let abc = try [1, 2, 3, 4, 5, 6, 7]
+        .baz().quxxe(a, b, c).bar()
+      let abc = try foo.baz().quxxe(a, b, c)
+        .bar[0]
+      let abc =
+        try foo
+        .baz().quxxe(a, b, c).bar[0]
+      let abc =
+        try foo
+        .baz().quxxe(a, b, c).bar[0]
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+  }
+
   func testBasicAwaits() {
     let input =
       """
@@ -135,5 +208,81 @@ final class AwaitExprTests: PrettyPrintTestCase {
       """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 46)
+  }
+
+  func testBasicUnsafe() {
+    // NOTE: Even though the third line will be overlong, it cannot be broken after `unsafe`
+    // because the result would fail to parse.
+    let input =
+      """
+      let a = unsafe unsafeFunction()
+      let b = unsafe longerUnsafeFunction()
+      let c = unsafe evenLongerAndLongerUnsafeFunction()
+      """
+
+    let expected =
+      """
+      let a = unsafe unsafeFunction()
+      let b =
+        unsafe longerUnsafeFunction()
+      let c =
+        unsafe evenLongerAndLongerUnsafeFunction()
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 32)
+  }
+
+  func testMultipleModifierBreaking() {
+    assertPrettyPrintEqual(
+      input: """
+        let a = unsafe try await
+          modifiedFunction()
+        let b = unsafe try await
+          longerModifiedFunction()
+        let c = unsafe try await
+          evenLongerAndLongerModifiedFunction(arg: 1)
+        """,
+      expected: """
+        let a =
+          unsafe try await modifiedFunction()
+        let b =
+          unsafe try await
+          longerModifiedFunction()
+        let c =
+          unsafe try await
+          evenLongerAndLongerModifiedFunction(
+            arg: 1)
+
+        """,
+      linelength: 35
+    )
+
+    assertPrettyPrintEqual(
+      input: """
+        let a = unsafe try await smol()
+        """,
+      expected: """
+        let a =
+          unsafe try
+          await smol()
+
+        """,
+      linelength: 13
+    )
+
+    assertPrettyPrintEqual(
+      input: """
+        let a = unsafe try await smol()
+        """,
+      expected: """
+        let a =
+          unsafe try
+          await
+          smol()
+
+        """,
+      linelength: 10
+    )
   }
 }
