@@ -26,8 +26,7 @@ final class ValueGenericsTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(
       input: input,
       expected: expected,
-      linelength: 20,
-      experimentalFeatures: [.valueGenerics]
+      linelength: 20
     )
   }
 
@@ -51,8 +50,7 @@ final class ValueGenericsTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(
       input: input,
       expected: expected,
-      linelength: 15,
-      experimentalFeatures: [.valueGenerics]
+      linelength: 15
     )
   }
 }
