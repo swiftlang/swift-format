@@ -1068,14 +1068,12 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
 
     if let calledMemberAccessExpr = node.calledExpression.as(MemberAccessExprSyntax.self) {
       if let base = calledMemberAccessExpr.base, base.is(DeclReferenceExprSyntax.self) {
-        // When this function call is wrapped by a try-expr or await-expr, the group applied when
-        // visiting that wrapping expression is sufficient. Adding another group here in that case
-        // can result in unnecessarily breaking after the try/await keyword.
-        if !(base.firstToken(viewMode: .sourceAccurate)?.previousToken(viewMode: .all)?.parent?.is(TryExprSyntax.self)
-          ?? false
-          || base.firstToken(viewMode: .sourceAccurate)?.previousToken(viewMode: .all)?.parent?.is(AwaitExprSyntax.self)
-            ?? false)
-        {
+        // When this function call is wrapped by a keyword-modified expression, the group applied
+        // when visiting that wrapping expression is sufficient. Adding another group here in that
+        // case can result in unnecessarily breaking after the modifier keyword.
+        if !(base.firstToken(viewMode: .sourceAccurate)?.previousToken(viewMode: .all)?.parent?.isProtocol(
+          KeywordModifiedExprSyntaxProtocol.self
+        ) ?? false) {
           before(base.firstToken(viewMode: .sourceAccurate), tokens: .open)
           after(calledMemberAccessExpr.declName.baseName.lastToken(viewMode: .sourceAccurate), tokens: .close)
         }
@@ -1780,8 +1778,11 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true))
     )
 
-    // Check for an anchor token inside of the expression to group with the try keyword.
-    if let anchorToken = findTryAwaitExprConnectingToken(inExpr: node.expression) {
+    // Check for an anchor token inside of the expression to end a group starting with the `try`
+    // keyword.
+    if !(node.parent?.isProtocol(KeywordModifiedExprSyntaxProtocol.self) ?? false),
+      let anchorToken = connectingTokenForKeywordModifiedExpr(inSubExpr: node.expression)
+    {
       before(node.tryKeyword, tokens: .open)
       after(anchorToken, tokens: .close)
     }
@@ -1795,9 +1796,10 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true))
     )
 
-    // Check for an anchor token inside of the expression to group with the await keyword.
-    if !(node.parent?.is(TryExprSyntax.self) ?? false),
-      let anchorToken = findTryAwaitExprConnectingToken(inExpr: node.expression)
+    // Check for an anchor token inside of the expression to end a group starting with the `await`
+    // keyword.
+    if !(node.parent?.isProtocol(KeywordModifiedExprSyntaxProtocol.self) ?? false),
+      let anchorToken = connectingTokenForKeywordModifiedExpr(inSubExpr: node.expression)
     {
       before(node.awaitKeyword, tokens: .open)
       after(anchorToken, tokens: .close)
@@ -1806,18 +1808,37 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
-  /// Searches the AST from `expr` to find a token that should be grouped with an enclosing
-  /// try-expr or await-expr. Returns that token, or nil when no such token is found.
+  override func visit(_ node: UnsafeExprSyntax) -> SyntaxVisitorContinueKind {
+    // Unlike `try` and `await`, `unsafe` is a contextual keyword that may not be separated from
+    // the following token by a line break. Keep them glued together with `.space`.
+    before(node.expression.firstToken(viewMode: .sourceAccurate), tokens: .space)
+
+    // Check for an anchor token inside of the expression to end a group starting with the `unsafe`
+    // keyword.
+    if !(node.parent?.isProtocol(KeywordModifiedExprSyntaxProtocol.self) ?? false),
+      let anchorToken = connectingTokenForKeywordModifiedExpr(inSubExpr: node.expression)
+    {
+      before(node.unsafeKeyword, tokens: .open)
+      after(anchorToken, tokens: .close)
+    }
+
+    return .visitChildren
+  }
+
+  /// Searches within a subexpression of a keyword-modified expression to find the last token in a
+  /// range that should be grouped with the leading keyword modifier.
   ///
-  /// - Parameter expr: An expression that is wrapped by a try-expr or await-expr.
-  /// - Returns: A token that should be grouped with the try-expr or await-expr, or nil.
-  func findTryAwaitExprConnectingToken(inExpr expr: ExprSyntax) -> TokenSyntax? {
-    if let awaitExpr = expr.as(AwaitExprSyntax.self) {
-      // If we were called from the `try` of a `try await <expr>`, drill into the child expression.
-      return findTryAwaitExprConnectingToken(inExpr: awaitExpr.expression)
+  /// - Parameter expr: An expression that is wrapped by a keyword-modified expression.
+  /// - Returns: The token that should end the group that is started by the modifier keyword, or
+  ///   nil if there should be no group.
+  func connectingTokenForKeywordModifiedExpr(inSubExpr expr: ExprSyntax) -> TokenSyntax? {
+    if let modifiedExpr = expr.asProtocol(KeywordModifiedExprSyntaxProtocol.self) {
+      // If we were called from a keyword-modified expression like `try`, `await`, or `unsafe`,
+      // recursively drill into the child expression.
+      return connectingTokenForKeywordModifiedExpr(inSubExpr: modifiedExpr.expression)
     }
     if let callingExpr = expr.asProtocol(CallingExprSyntaxProtocol.self) {
-      return findTryAwaitExprConnectingToken(inExpr: callingExpr.calledExpression)
+      return connectingTokenForKeywordModifiedExpr(inSubExpr: callingExpr.calledExpression)
     }
     if let memberAccessExpr = expr.as(MemberAccessExprSyntax.self), let base = memberAccessExpr.base {
       // When there's a simple base (i.e. identifier), group the entire `try/await <base>.<name>`
@@ -1826,7 +1847,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       if base.is(DeclReferenceExprSyntax.self) {
         return memberAccessExpr.declName.baseName.lastToken(viewMode: .sourceAccurate)
       }
-      return findTryAwaitExprConnectingToken(inExpr: base)
+      return connectingTokenForKeywordModifiedExpr(inSubExpr: base)
     }
     if expr.is(DeclReferenceExprSyntax.self) {
       return expr.lastToken(viewMode: .sourceAccurate)
@@ -3820,13 +3841,12 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   /// that are known to wrap an expression, e.g. try expressions, are handled by checking the
   /// expression that they contain.
   private func isCompoundExpression(_ expr: ExprSyntax) -> Bool {
+    if let modifiedExpr = expr.asProtocol(KeywordModifiedExprSyntaxProtocol.self) {
+      return isCompoundExpression(modifiedExpr.expression)
+    }
     switch Syntax(expr).as(SyntaxEnum.self) {
-    case .awaitExpr(let awaitExpr):
-      return isCompoundExpression(awaitExpr.expression)
     case .infixOperatorExpr, .ternaryExpr, .isExpr, .asExpr:
       return true
-    case .tryExpr(let tryExpr):
-      return isCompoundExpression(tryExpr.expression)
     case .tupleExpr(let tupleExpr) where tupleExpr.elements.count == 1:
       return isCompoundExpression(tupleExpr.elements.first!.expression)
     default:
@@ -4498,31 +4518,5 @@ extension NewlineBehavior {
     case (.hard(let lhsCount), .hard(let rhsCount)):
       return .hard(count: lhsCount + rhsCount)
     }
-  }
-}
-
-/// Common protocol implemented by expression syntax types that support calling another expression.
-protocol CallingExprSyntaxProtocol: ExprSyntaxProtocol {
-  var calledExpression: ExprSyntax { get }
-}
-
-extension FunctionCallExprSyntax: CallingExprSyntaxProtocol {}
-extension SubscriptCallExprSyntax: CallingExprSyntaxProtocol {}
-
-extension Syntax {
-  func asProtocol(_: CallingExprSyntaxProtocol.Protocol) -> CallingExprSyntaxProtocol? {
-    return self.asProtocol(SyntaxProtocol.self) as? CallingExprSyntaxProtocol
-  }
-  func isProtocol(_: CallingExprSyntaxProtocol.Protocol) -> Bool {
-    return self.asProtocol(CallingExprSyntaxProtocol.self) != nil
-  }
-}
-
-extension ExprSyntax {
-  func asProtocol(_: CallingExprSyntaxProtocol.Protocol) -> CallingExprSyntaxProtocol? {
-    return Syntax(self).asProtocol(SyntaxProtocol.self) as? CallingExprSyntaxProtocol
-  }
-  func isProtocol(_: CallingExprSyntaxProtocol.Protocol) -> Bool {
-    return self.asProtocol(CallingExprSyntaxProtocol.self) != nil
   }
 }
