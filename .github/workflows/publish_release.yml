@@ -67,6 +67,25 @@ jobs:
           echo "swift_format_version=$SWIFT_FORMAT_VERSION" >> "$GITHUB_OUTPUT"
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Create version commit if version changed
+        run: |
+          # Without this, we can't perform git operations in GitHub actions.
+          git config --global --add safe.directory "$(realpath .)"
+          git config --local user.name 'swift-ci'
+          git config --local user.email 'swift-ci@users.noreply.github.com'
+
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+
+          sed -E -i "s#print\(\".*\"\)#print\(\"${{ steps.swift_format_version.outputs.swift_format_version }}\"\)#" Sources/swift-format/PrintVersion.swift
+
+          if ! git diff --quiet Sources/swift-format/PrintVersion.swift; then
+            echo "Detected change in PrintVersion.swift — committing and pushing"
+            git add Sources/swift-format/PrintVersion.swift
+            git commit -m "Change version to ${{ steps.swift_format_version.outputs.swift_format_version }}"
+            git push origin HEAD:$BRANCH_NAME
+          else
+            echo "No changes in PrintVersion.swift — skipping commit/push"
+          fi
       - name: Create release commits
         id: create_release_commits
         run: |
@@ -75,15 +94,13 @@ jobs:
           git config --local user.name 'swift-ci'
           git config --local user.email 'swift-ci@users.noreply.github.com'
 
+          BRANCH_NAME="${GITHUB_REF#refs/heads/}"
+          git pull origin "$BRANCH_NAME"
           BASE_COMMIT=$(git rev-parse HEAD)
 
           sed -E -i "s#branch: \"(main|release/[0-9]+\.[0-9]+)\"#from: \"${{ steps.swift_syntax_tag.outputs.swift_syntax_tag }}\"#" Package.swift
           git add Package.swift
           git commit -m "Change swift-syntax dependency to ${{ steps.swift_syntax_tag.outputs.swift_syntax_tag }}"
-
-          sed -E -i "s#print\(\".*\"\)#print\(\"${{ steps.swift_format_version.outputs.swift_format_version }}\"\)#" Sources/swift-format/PrintVersion.swift
-          git add Sources/swift-format/PrintVersion.swift
-          git commit -m "Change version to ${{ steps.swift_format_version.outputs.swift_format_version }}"
 
           {
             echo 'release_commit_patch<<EOF'
