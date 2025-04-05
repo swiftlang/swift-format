@@ -197,7 +197,7 @@ public struct Configuration: Codable, Equatable {
   public var multiElementCollectionTrailingCommas: Bool
 
   /// Determines how multiline string literals should reflow when formatted.
-  public enum MultilineStringReflowBehavior: Codable {
+  public enum MultilineStringReflowBehavior: String, Codable {
     /// Never reflow multiline string literals.
     case never
     /// Reflow lines in string literal that exceed the maximum line length. For example with a line length of 10:
