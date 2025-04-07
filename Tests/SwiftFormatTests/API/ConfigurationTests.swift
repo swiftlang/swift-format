@@ -66,12 +66,10 @@ final class ConfigurationTests: XCTestCase {
   }
 
   func testDecodingReflowMultilineStringLiteralsAsString() throws {
-    typealias MultilineStringReflowBehavior = Configuration.MultilineStringReflowBehavior
-
-    let testCases = [
-      "never": MultilineStringReflowBehavior.never,
-      "always": MultilineStringReflowBehavior.always,
-      "onlyLinesOverLength": MultilineStringReflowBehavior.onlyLinesOverLength,
+    let testCases: [String: Configuration.MultilineStringReflowBehavior] = [
+      "never": .never,
+      "always": .always,
+      "onlyLinesOverLength": .onlyLinesOverLength,
     ]
 
     for (jsonString, expectedBehavior) in testCases {
@@ -87,12 +85,11 @@ final class ConfigurationTests: XCTestCase {
   }
 
   func testDecodingReflowMultilineStringLiteralsAsObject() throws {
-    typealias MultilineStringReflowBehavior = Configuration.MultilineStringReflowBehavior
 
-    let testCases = [
-      "{ \"never\": {} }": MultilineStringReflowBehavior.never,
-      "{ \"always\": {} }": MultilineStringReflowBehavior.always,
-      "{ \"onlyLinesOverLength\": {} }": MultilineStringReflowBehavior.onlyLinesOverLength,
+    let testCases: [String: Configuration.MultilineStringReflowBehavior] = [
+      "{ \"never\": {} }": .never,
+      "{ \"always\": {} }": .always,
+      "{ \"onlyLinesOverLength\": {} }": .onlyLinesOverLength,
     ]
 
     for (jsonString, expectedBehavior) in testCases {
