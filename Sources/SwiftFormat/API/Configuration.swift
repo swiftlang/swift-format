@@ -265,14 +265,6 @@ public struct Configuration: Codable, Equatable {
     case onlyLinesOverLength
     case always
 
-    var isNever: Bool {
-      self == .never
-    }
-
-    var isAlways: Bool {
-      self == .always
-    }
-
     /// Converts this legacy enum to the corresponding `MultilineStringReflowBehavior` value.
     func toMultilineStringReflowBehavior() -> MultilineStringReflowBehavior {
       switch self {
