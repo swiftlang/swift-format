@@ -206,8 +206,8 @@ switch someValue {
 ### `reflowMultilineStringLiterals`
 
 > [!NOTE]
-> This setting should be specified as a string value (e.g. "never")
-> For backward compatibility with swift-format version 601.0.0, the configuration also accepts the legacy object format where the setting is specified as an object with a single key (e.g., ⁠{ "never": {} }).
+> This setting should be specified as a string value (e.g. `"never"`)
+> For backward compatibility with swift-format version 601.0.0, the configuration also accepts the legacy object format where the setting is specified as an object with a single key (e.g., ⁠`{ "never": {} }`).
 
 **type:** `string` or `object` (legacy)
 
