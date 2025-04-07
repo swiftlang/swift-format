@@ -241,21 +241,11 @@ public struct Configuration: Codable, Equatable {
     case always
 
     var isNever: Bool {
-      switch self {
-      case .never:
-        return true
-      default:
-        return false
-      }
+      self == .never
     }
 
     var isAlways: Bool {
-      switch self {
-      case .always:
-        return true
-      default:
-        return false
-      }
+      self == .always
     }
   }
 
@@ -276,32 +266,19 @@ public struct Configuration: Codable, Equatable {
     case always
 
     var isNever: Bool {
-      switch self {
-      case .never:
-        return true
-      default:
-        return false
-      }
+      self == .never
     }
 
     var isAlways: Bool {
-      switch self {
-      case .always:
-        return true
-      default:
-        return false
-      }
+      self == .always
     }
 
     /// Converts this legacy enum to the corresponding `MultilineStringReflowBehavior` value.
     func toMultilineStringReflowBehavior() -> MultilineStringReflowBehavior {
       switch self {
-      case .never:
-        return .never
-      case .always:
-        return .always
-      case .onlyLinesOverLength:
-        return .onlyLinesOverLength
+      case .never: .never
+      case .always: .always
+      case .onlyLinesOverLength: .onlyLinesOverLength
       }
     }
   }
