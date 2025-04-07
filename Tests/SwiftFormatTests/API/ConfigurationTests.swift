@@ -64,4 +64,47 @@ final class ConfigurationTests: XCTestCase {
     let path = #"\\mount\test.swift"#
     XCTAssertNil(Configuration.url(forConfigurationFileApplyingTo: URL(fileURLWithPath: path)))
   }
+
+  func testDecodingReflowMultilineStringLiteralsAsString() throws {
+    typealias MultilineStringReflowBehavior = Configuration.MultilineStringReflowBehavior
+
+    let testCases = [
+      "never": MultilineStringReflowBehavior.never,
+      "always": MultilineStringReflowBehavior.always,
+      "onlyLinesOverLength": MultilineStringReflowBehavior.onlyLinesOverLength,
+    ]
+
+    for (jsonString, expectedBehavior) in testCases {
+      let jsonData = """
+        {
+            "reflowMultilineStringLiterals": "\(jsonString)"
+        }
+        """.data(using: .utf8)!
+
+      let config = try JSONDecoder().decode(Configuration.self, from: jsonData)
+      XCTAssertEqual(config.reflowMultilineStringLiterals, expectedBehavior)
+    }
+  }
+
+  func testDecodingReflowMultilineStringLiteralsAsObject() throws {
+    typealias MultilineStringReflowBehavior = Configuration.MultilineStringReflowBehavior
+
+    let testCases = [
+      "{ \"never\": {} }": MultilineStringReflowBehavior.never,
+      "{ \"always\": {} }": MultilineStringReflowBehavior.always,
+      "{ \"onlyLinesOverLength\": {} }": MultilineStringReflowBehavior.onlyLinesOverLength,
+    ]
+
+    for (jsonString, expectedBehavior) in testCases {
+      let jsonData = """
+        {
+            "reflowMultilineStringLiterals": \(jsonString)
+        }
+        """.data(using: .utf8)!
+
+      let config = try JSONDecoder().decode(Configuration.self, from: jsonData)
+      XCTAssertEqual(config.reflowMultilineStringLiterals, expectedBehavior)
+    }
+  }
+
 }
