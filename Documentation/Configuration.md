@@ -204,7 +204,30 @@ switch someValue {
 ---
 
 ### `reflowMultilineStringLiterals`
-**type:** `string`
+
+> [!NOTE]
+> This setting should be specified as a string value (e.g. `"never"`)
+> For backward compatibility with swift-format version 601.0.0, the configuration also accepts the legacy object format where the setting is specified as an object with a single key (e.g., ⁠`{ "never": {} }`).
+
+**type:** `string` or `object` (legacy)
+
+**example:**
+
+For all versions above 601.0.0, the configuration should be specified as a string, for example:
+```json
+{
+  "reflowMultilineStringLiterals": "never"
+}
+```
+
+For version 601.0.0, the configuration should be specified as an object, for example:
+```json
+{
+  "reflowMultilineStringLiterals": {
+    "never": {}
+  }
+}
+```
 
 **description:** Determines how multiline string literals should reflow when formatted.
 
