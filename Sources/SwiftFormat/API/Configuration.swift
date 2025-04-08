@@ -47,6 +47,7 @@ public struct Configuration: Codable, Equatable {
     case multiElementCollectionTrailingCommas
     case reflowMultilineStringLiterals
     case indentBlankLines
+    case alwaysBreakOnNewScopes
   }
 
   /// A dictionary containing the default enabled/disabled states of rules, keyed by the rules'
@@ -284,6 +285,9 @@ public struct Configuration: Codable, Equatable {
   /// If false (the default), the whitespace in blank lines will be removed entirely.
   public var indentBlankLines: Bool
 
+  /// Determines whether to always break on new scopes.
+  public var alwaysBreakOnNewScopes: Bool
+
   /// Creates a new `Configuration` by loading it from a configuration file.
   public init(contentsOf url: URL) throws {
     let data = try Data(contentsOf: url)
@@ -419,6 +423,10 @@ public struct Configuration: Codable, Equatable {
       )
       ?? defaults.indentBlankLines
 
+    self.alwaysBreakOnNewScopes =
+      try container.decodeIfPresent(Bool.self, forKey: .alwaysBreakOnNewScopes)
+      ?? false
+
     // If the `rules` key is not present at all, default it to the built-in set
     // so that the behavior is the same as if the configuration had been
     // default-initialized. To get an empty rules dictionary, one can explicitly
@@ -458,6 +466,7 @@ public struct Configuration: Codable, Equatable {
     try container.encode(multiElementCollectionTrailingCommas, forKey: .multiElementCollectionTrailingCommas)
     try container.encode(reflowMultilineStringLiterals, forKey: .reflowMultilineStringLiterals)
     try container.encode(rules, forKey: .rules)
+    try container.encode(alwaysBreakOnNewScopes, forKey: .alwaysBreakOnNewScopes)
   }
 
   /// Returns the URL of the configuration file that applies to the given file or directory.
