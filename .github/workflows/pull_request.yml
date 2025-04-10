@@ -20,3 +20,35 @@ jobs:
     with:
       license_header_check_project_name: "Swift.org"
       api_breakage_check_allowlist_path: "api-breakages.txt"
+  performance_test:
+    runs-on: ubuntu-latest
+    container:
+      image: swift:latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Download performance comparison script
+        run: |
+          apt-get update && apt-get install -y curl
+          curl -s https://raw.githubusercontent.com/ahoppen/swift-format/refs/heads/main/.github/workflows/scripts/compare-performance-measurements.swift > /tmp/compare-performance-measurements.swift
+      - name: Measure performance with PR changes
+        id: pr_performance
+        run: |
+          OUTPUT=$(echo "Random: $(random)")
+          echo "output=$OUTPUT" >> "$GITHUB_OUTPUT"
+      - name: Measure baseline performance
+        id: baseline_performance
+        run: |
+          OUTPUT=$(echo "Random: $(random)")
+          echo "output=$OUTPUT" >> "$GITHUB_OUTPUT"
+      - name: Post comment if performance changed
+        run: |
+          if ! OUTPUT=$(swift /tmp/compare-performance-measurements.swift "${{ steps.baseline_performance.outputs.output }}" "${{ steps.pr_performance.outputs.output }}" 0.5); then
+            gh pr comment --body "$OUTPUT"
+          else
+            echo "No significant performance change detected"
+            echo "$OUTPUT"
+          fi
+
