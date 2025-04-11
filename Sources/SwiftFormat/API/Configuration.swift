@@ -197,7 +197,7 @@ public struct Configuration: Codable, Equatable {
   public var multiElementCollectionTrailingCommas: Bool
 
   /// Determines how multiline string literals should reflow when formatted.
-  public enum MultilineStringReflowBehavior: Codable {
+  public enum MultilineStringReflowBehavior: String, Codable {
     /// Never reflow multiline string literals.
     case never
     /// Reflow lines in string literal that exceed the maximum line length. For example with a line length of 10:
@@ -241,20 +241,36 @@ public struct Configuration: Codable, Equatable {
     case always
 
     var isNever: Bool {
-      switch self {
-      case .never:
-        return true
-      default:
-        return false
-      }
+      self == .never
     }
 
     var isAlways: Bool {
+      self == .always
+    }
+  }
+
+  /// A private enum created to maintain backward compatibility with swift-format version 601.0.0,
+  /// which had a `MultilineStringReflowBehavior` enum without a String raw type.
+  ///
+  /// In version 601.0.0, the `reflowMultilineStringLiterals` configuration was encoded as an object
+  /// with a single key (e.g., `{ "never": {} }`) rather than as a string (e.g., `"never"`). This
+  /// enum allows decoding from both formats:
+  /// - First, we attempt to decode as a String using `MultilineStringReflowBehavior`
+  /// - If that fails, we fall back to this legacy format
+  /// - If both attempts fail, an error will be thrown
+  ///
+  /// This approach preserves compatibility without requiring a configuration version bump.
+  private enum LegacyMultilineStringReflowBehavior: Codable {
+    case never
+    case onlyLinesOverLength
+    case always
+
+    /// Converts this legacy enum to the corresponding `MultilineStringReflowBehavior` value.
+    func toMultilineStringReflowBehavior() -> MultilineStringReflowBehavior {
       switch self {
-      case .always:
-        return true
-      default:
-        return false
+      case .never: .never
+      case .always: .always
+      case .onlyLinesOverLength: .onlyLinesOverLength
       }
     }
   }
@@ -371,9 +387,31 @@ public struct Configuration: Codable, Equatable {
       )
       ?? defaults.multiElementCollectionTrailingCommas
 
-    self.reflowMultilineStringLiterals =
-      try container.decodeIfPresent(MultilineStringReflowBehavior.self, forKey: .reflowMultilineStringLiterals)
-      ?? defaults.reflowMultilineStringLiterals
+    self.reflowMultilineStringLiterals = try {
+      // Try to decode `reflowMultilineStringLiterals` as a string
+      // This handles configurations using the String raw value format (e.g. "never").
+      // If an error occurs, we'll silently bypass it and fall back to the legacy behavior.
+      if let behavior = try? container.decodeIfPresent(
+        MultilineStringReflowBehavior.self,
+        forKey: .reflowMultilineStringLiterals
+      ) {
+        return behavior
+      }
+
+      // If the modern format fails, try to decode as an object with a single key.
+      // This handles configurations from swift-format v601.0.0 (e.g. { "never": {} }).
+      // If an error occurs in this step, we'll propagate it to the caller.
+      if let legacyBehavior = try container.decodeIfPresent(
+        LegacyMultilineStringReflowBehavior.self,
+        forKey: .reflowMultilineStringLiterals
+      ) {
+        return legacyBehavior.toMultilineStringReflowBehavior()
+      }
+
+      // If the key is not present in the configuration at all, use the default value.
+      return defaults.reflowMultilineStringLiterals
+    }()
+
     self.indentBlankLines =
       try container.decodeIfPresent(
         Bool.self,
