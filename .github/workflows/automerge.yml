@@ -1,53 +1,17 @@
 name: Create PR to merge main into release branch
-
 # In the first period after branching the release branch, we typically want to include all changes from `main` also in the release branch. This workflow automatically creates a PR every Monday to merge main into the release branch.
 # Later in the release cycle we should stop this practice to avoid landing risky changes by disabling this workflow. To do so, disable the workflow as described in https://docs.github.com/en/actions/managing-workflow-runs-and-deployments/managing-workflow-runs/disabling-and-enabling-a-workflow
-
 on:
   schedule:
-    - cron: '0 0 * * MON'
+    - cron: '0 9 * * MON'
   workflow_dispatch:
-
 jobs:
   create_merge_pr:
     name: Create PR to merge main into release branch
-    runs-on: ubuntu-latest
+    uses: swiftlang/github-workflows/.github/workflows/create_automerge_pr.yml@main
+    with:
+      base_branch: release/6.2
+    permissions:
+      contents: write
+      pull-requests: write
     if: (github.event_name == 'schedule' && github.repository == 'swiftlang/swift-format') || (github.event_name != 'schedule')  # Ensure that we don't run this on a schedule in a fork
-    steps:
-      - name: Set up variables
-        id: variables
-        run: |
-          echo "release_branch=release/6.2" >> "$GITHUB_OUTPUT"
-          echo "pr_branch=automerge/merge-main-$(date +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
-      - name: Checkout repository
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-      - name: Create merge commit
-        id: create_merge_commit
-        run: |
-          # Without this, we can't perform git operations in GitHub actions.
-          git config --global --add safe.directory "$(realpath .)"
-          git config --local user.name 'swift-ci'
-          git config --local user.email 'swift-ci@users.noreply.github.com'
-
-          git checkout ${{ steps.variables.outputs.release_branch }}
-          git merge main
-
-          if [[ "$(git rev-parse HEAD)" = "$(git rev-parse main)" ]]; then
-            echo "has_merged_commits=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "has_merged_commits=false" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Push branch and create PR
-        id: push_branch
-        if: ${{ steps.create_merge_commit.outputs.has_merged_commits }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          git checkout -b "${{ steps.variables.outputs.pr_branch }}"
-          git push --set-upstream origin "${{ steps.variables.outputs.pr_branch }}"
-
-          gh pr create -B "${{ steps.variables.outputs.release_branch }}" -H "${{ steps.variables.outputs.pr_branch }}" \
-            --title 'Merge `main` into `${{ steps.variables.outputs.release_branch }}`' \
-            --body 'This PR was automatically opened by a GitHub action. Review the changes included in this PR and determine if they should be included in the release branch. If yes, merge the PR. Otherwise revert changes that should not be included on this branch.'
