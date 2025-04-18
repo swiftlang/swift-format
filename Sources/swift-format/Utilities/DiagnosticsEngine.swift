@@ -26,20 +26,28 @@ final class DiagnosticsEngine {
   /// A Boolean value indicating whether any warnings were emitted by the diagnostics engine.
   private(set) var hasWarnings: Bool
 
+  /// Whether to upgrade all warnings to errors.
+  private let treatWarningsAsErrors: Bool
+
   /// Creates a new diagnostics engine with the given diagnostic handlers.
   ///
   /// - Parameter diagnosticsHandlers: An array of functions, each of which takes a `Diagnostic` as
   ///   its sole argument and returns `Void`. The functions are called whenever a diagnostic is
   ///   received by the engine.
-  init(diagnosticsHandlers: [(Diagnostic) -> Void]) {
+  init(diagnosticsHandlers: [(Diagnostic) -> Void], treatWarningsAsErrors: Bool = false) {
     self.handlers = diagnosticsHandlers
     self.hasErrors = false
     self.hasWarnings = false
+    self.treatWarningsAsErrors = treatWarningsAsErrors
   }
 
   /// Emits the diagnostic by passing it to the registered handlers, and tracks whether it was an
   /// error or warning diagnostic.
   private func emit(_ diagnostic: Diagnostic) {
+    var diagnostic = diagnostic
+    if treatWarningsAsErrors, diagnostic.severity == .warning {
+      diagnostic.severity = .error
+    }
     switch diagnostic.severity {
     case .error: self.hasErrors = true
     case .warning: self.hasWarnings = true
@@ -135,7 +143,7 @@ final class DiagnosticsEngine {
   /// diagnostics engine and returns it.
   private func diagnosticMessage(for finding: Finding) -> Diagnostic {
     return Diagnostic(
-      severity: .error,
+      severity: .warning,
       location: finding.location.map(Diagnostic.Location.init),
       category: "\(finding.category)",
       message: "\(finding.message.text)"

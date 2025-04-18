@@ -200,14 +200,21 @@ class Frontend {
   /// Creates a new frontend with the given options.
   ///
   /// - Parameter lintFormatOptions: Options that apply during formatting or linting.
-  init(configurationOptions: ConfigurationOptions, lintFormatOptions: LintFormatOptions) {
+  init(
+    configurationOptions: ConfigurationOptions,
+    lintFormatOptions: LintFormatOptions,
+    treatWarningsAsErrors: Bool = false
+  ) {
     self.configurationOptions = configurationOptions
     self.lintFormatOptions = lintFormatOptions
 
     self.diagnosticPrinter = StderrDiagnosticPrinter(
       colorMode: lintFormatOptions.colorDiagnostics.map { $0 ? .on : .off } ?? .auto
     )
-    self.diagnosticsEngine = DiagnosticsEngine(diagnosticsHandlers: [diagnosticPrinter.printDiagnostic])
+    self.diagnosticsEngine = DiagnosticsEngine(
+      diagnosticsHandlers: [diagnosticPrinter.printDiagnostic],
+      treatWarningsAsErrors: treatWarningsAsErrors
+    )
     self.configurationProvider = ConfigurationProvider(diagnosticsEngine: self.diagnosticsEngine)
   }
 
