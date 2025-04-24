@@ -96,7 +96,7 @@ var targets: [Target] = [
       "_SwiftFormatInstructionCounter",
       "SwiftFormat",
       .product(name: "ArgumentParser", package: "swift-argument-parser"),
-    ] + swiftSyntaxDependencies(["SwiftParser", "SwiftSyntax"]),
+    ] + swiftSyntaxDependencies(["SwiftDiagnostics", "SwiftParser", "SwiftSyntax"]),
     exclude: ["CMakeLists.txt"],
     linkerSettings: swiftformatLinkSettings
   ),
