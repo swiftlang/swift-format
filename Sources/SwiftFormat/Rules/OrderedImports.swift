@@ -57,7 +57,14 @@ public final class OrderedImports: SyntaxFormatRule {
       testableImports = formatImports(testableImports)
       formatCodeblocks(&codeBlocks)
 
-      let joined = joinLines(fileHeader, regularImports, declImports, implementationOnlyImports, testableImports, codeBlocks)
+      let joined = joinLines(
+        fileHeader,
+        regularImports,
+        declImports,
+        implementationOnlyImports,
+        testableImports,
+        codeBlocks
+      )
       formattedLines.append(contentsOf: joined)
 
       regularImports = []

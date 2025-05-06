@@ -103,51 +103,50 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       ]
     )
   }
-    
-    func testImportsWithAttributes() {
-        assertFormatting(
-          OrderedImports.self,
-          input: """
-            import Foundation
-            1️⃣@preconcurrency import AVFoundation
-            
-            @preconcurrency @_implementationOnly import InternalModuleC
-            
-            2️⃣@_implementationOnly import InternalModuleA
-            
-            3️⃣import Core
-            
-            @testable @preconcurrency import TestServiceB
-            4️⃣@preconcurrency @testable import TestServiceA
-            
-            5️⃣@_implementationOnly @preconcurrency import InternalModuleB
-            
-            let a = 3
-            """,
-          expected: """
-            @preconcurrency import AVFoundation
-            import Core
-            import Foundation
-            
-            @_implementationOnly import InternalModuleA
-            @_implementationOnly @preconcurrency import InternalModuleB
-            @preconcurrency @_implementationOnly import InternalModuleC
 
-            @preconcurrency @testable import TestServiceA
-            @testable @preconcurrency import TestServiceB
-            
-            let a = 3
-            """,
-          findings: [
-            FindingSpec("1️⃣", message: "sort import statements lexicographically"),
-            FindingSpec("2️⃣", message: "sort import statements lexicographically"),
-            FindingSpec("3️⃣", message: "place regular imports before implementationOnly imports"),
-            FindingSpec("4️⃣", message: "sort import statements lexicographically"),
-            FindingSpec("5️⃣", message: "place implementationOnly imports before testable imports")
-          ]
-        )
-      }
+  func testImportsWithAttributes() {
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import Foundation
+        1️⃣@preconcurrency import AVFoundation
 
+        @preconcurrency @_implementationOnly import InternalModuleC
+
+        2️⃣@_implementationOnly import InternalModuleA
+
+        3️⃣import Core
+
+        @testable @preconcurrency import TestServiceB
+        4️⃣@preconcurrency @testable import TestServiceA
+
+        5️⃣@_implementationOnly @preconcurrency import InternalModuleB
+
+        let a = 3
+        """,
+      expected: """
+        @preconcurrency import AVFoundation
+        import Core
+        import Foundation
+
+        @_implementationOnly import InternalModuleA
+        @_implementationOnly @preconcurrency import InternalModuleB
+        @preconcurrency @_implementationOnly import InternalModuleC
+
+        @preconcurrency @testable import TestServiceA
+        @testable @preconcurrency import TestServiceB
+
+        let a = 3
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("2️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("3️⃣", message: "place regular imports before implementationOnly imports"),
+        FindingSpec("4️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("5️⃣", message: "place implementationOnly imports before testable imports"),
+      ]
+    )
+  }
 
   func testImportsOrderWithDocComment() {
     assertFormatting(
@@ -198,7 +197,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         import UIKit
 
         import func Darwin.C.isatty
-        
+
         @_implementationOnly import InternalModuleA
         @preconcurrency @_implementationOnly import InternalModuleB
 
@@ -211,7 +210,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         import UIKit
 
         import func Darwin.C.isatty
-        
+
         @_implementationOnly import InternalModuleA
         @preconcurrency @_implementationOnly import InternalModuleB
 
