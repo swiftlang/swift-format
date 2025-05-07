@@ -16,7 +16,7 @@ jobs:
     # As a workaround, we mark automerge PRs that are created by GitHub actions as draft and trigger the GitHub actions by marking the PR as ready for review. But we don't want to re-trigger testing this when a normal user's PR is marked as ready for review.
     if: (github.event.action != 'ready_for_review') || (github.event.action == 'ready_for_review' && github.event.pull_request.user.login == 'github-actions[bot]')
     with:
-      linux_exclude_swift_versions: "[{\"swift_version\": \"5.8\"}]"
+      enable_macos_checks: true
   soundness:
     name: Soundness
     uses: swiftlang/github-workflows/.github/workflows/soundness.yml@main
