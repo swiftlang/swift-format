@@ -23,6 +23,7 @@ final class ConfigurationTests: XCTestCase {
 
     let emptyDictionaryData = "{}\n".data(using: .utf8)!
     let jsonDecoder = JSONDecoder()
+    jsonDecoder.allowsJSON5 = true
     let emptyJSONConfig =
       try! jsonDecoder.decode(Configuration.self, from: emptyDictionaryData)
 
@@ -79,7 +80,9 @@ final class ConfigurationTests: XCTestCase {
         }
         """.data(using: .utf8)!
 
-      let config = try JSONDecoder().decode(Configuration.self, from: jsonData)
+      let jsonDecoder = JSONDecoder()
+      jsonDecoder.allowsJSON5 = true
+      let config = try jsonDecoder.decode(Configuration.self, from: jsonData)
       XCTAssertEqual(config.reflowMultilineStringLiterals, expectedBehavior)
     }
   }
@@ -99,9 +102,26 @@ final class ConfigurationTests: XCTestCase {
         }
         """.data(using: .utf8)!
 
-      let config = try JSONDecoder().decode(Configuration.self, from: jsonData)
+      let jsonDecoder = JSONDecoder()
+      jsonDecoder.allowsJSON5 = true
+      let config = try jsonDecoder.decode(Configuration.self, from: jsonData)
       XCTAssertEqual(config.reflowMultilineStringLiterals, expectedBehavior)
     }
   }
 
+  func testConfigurationWithComments() throws {
+    let expected = Configuration()
+
+    let jsonData = """
+      {
+          // Indicates the configuration schema version.
+          "version": 1,
+      }
+      """.data(using: .utf8)!
+
+    let jsonDecoder = JSONDecoder()
+    jsonDecoder.allowsJSON5 = true
+    let config = try jsonDecoder.decode(Configuration.self, from: jsonData)
+    XCTAssertEqual(config, expected)
+  }
 }
