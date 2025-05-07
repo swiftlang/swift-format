@@ -407,9 +407,9 @@ Lint: If a function call with a trailing closure also contains a non-trailing cl
 ### OrderedImports
 
 Imports must be lexicographically ordered and logically grouped at the top of each source file.
-The order of the import groups is 1) regular imports, 2) declaration imports, and 3) @testable
-imports. These groups are separated by a single blank line. Blank lines in between the import
-declarations are removed.
+The order of the import groups is 1) regular imports, 2) declaration imports, 3) @_implementationOnly
+imports, and 4) @testable imports. These groups are separated by a single blank line. Blank lines in
+between the import declarations are removed.
 
 Lint: If an import appears anywhere other than the beginning of the file it resides in,
       not lexicographically ordered, or  not in the appropriate import group, a lint error is

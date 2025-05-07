@@ -27,14 +27,17 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         import UIKit
 
         @testable import SwiftFormat
-        8️⃣import enum Darwin.D.isatty
+        🔟import enum Darwin.D.isatty
         // Starts Test
         3️⃣@testable import MyModuleUnderTest
         // Starts Ind
-        2️⃣7️⃣import func Darwin.C.isatty
+        2️⃣8️⃣import func Darwin.C.isatty
+
+        // Starts ImplementationOnly
+        9️⃣@_implementationOnly import InternalModule
 
         let a = 3
-        4️⃣5️⃣6️⃣import SwiftSyntax
+        4️⃣5️⃣6️⃣7️⃣import SwiftSyntax
         """,
       expected: """
         // Starts Imports
@@ -48,6 +51,9 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         import func Darwin.C.isatty
         import enum Darwin.D.isatty
 
+        // Starts ImplementationOnly
+        @_implementationOnly import InternalModule
+
         // Starts Test
         @testable import MyModuleUnderTest
         @testable import SwiftFormat
@@ -60,9 +66,11 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         FindingSpec("3️⃣", message: "sort import statements lexicographically"),
         FindingSpec("4️⃣", message: "place imports at the top of the file"),
         FindingSpec("5️⃣", message: "place regular imports before testable imports"),
-        FindingSpec("6️⃣", message: "place regular imports before declaration imports"),
-        FindingSpec("7️⃣", message: "sort import statements lexicographically"),
-        FindingSpec("8️⃣", message: "place declaration imports before testable imports"),
+        FindingSpec("6️⃣", message: "place regular imports before implementationOnly imports"),
+        FindingSpec("7️⃣", message: "place regular imports before declaration imports"),
+        FindingSpec("8️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("9️⃣", message: "place implementationOnly imports before testable imports"),
+        FindingSpec("🔟", message: "place declaration imports before testable imports"),
       ]
     )
   }
@@ -92,6 +100,50 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         FindingSpec("2️⃣", message: "place declaration imports before testable imports"),
         FindingSpec("3️⃣", message: "sort import statements lexicographically"),
         FindingSpec("4️⃣", message: "sort import statements lexicographically"),
+      ]
+    )
+  }
+
+  func testImportsWithAttributes() {
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import Foundation
+        1️⃣@preconcurrency import AVFoundation
+
+        @preconcurrency @_implementationOnly import InternalModuleC
+
+        2️⃣@_implementationOnly import InternalModuleA
+
+        3️⃣import Core
+
+        @testable @preconcurrency import TestServiceB
+        4️⃣@preconcurrency @testable import TestServiceA
+
+        5️⃣@_implementationOnly @preconcurrency import InternalModuleB
+
+        let a = 3
+        """,
+      expected: """
+        @preconcurrency import AVFoundation
+        import Core
+        import Foundation
+
+        @_implementationOnly import InternalModuleA
+        @_implementationOnly @preconcurrency import InternalModuleB
+        @preconcurrency @_implementationOnly import InternalModuleC
+
+        @preconcurrency @testable import TestServiceA
+        @testable @preconcurrency import TestServiceB
+
+        let a = 3
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("2️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("3️⃣", message: "place regular imports before implementationOnly imports"),
+        FindingSpec("4️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("5️⃣", message: "place implementationOnly imports before testable imports"),
       ]
     )
   }
@@ -146,6 +198,9 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
 
         import func Darwin.C.isatty
 
+        @_implementationOnly import InternalModuleA
+        @preconcurrency @_implementationOnly import InternalModuleB
+
         @testable import MyModuleUnderTest
         """,
       expected: """
@@ -155,6 +210,9 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         import UIKit
 
         import func Darwin.C.isatty
+
+        @_implementationOnly import InternalModuleA
+        @preconcurrency @_implementationOnly import InternalModuleB
 
         @testable import MyModuleUnderTest
         """,
@@ -324,7 +382,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         @testable import testZ  // trailing comment about testZ
         3️⃣@testable import testC
         // swift-format-ignore
-        @testable import testB
+        @_implementationOnly import testB
         // Comment about Bar
         import enum Bar
 
@@ -350,7 +408,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         @testable import testZ  // trailing comment about testZ
 
         // swift-format-ignore
-        @testable import testB
+        @_implementationOnly import testB
 
         // Comment about Bar
         import enum Bar
@@ -513,7 +571,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       input: """
         // exported import of bar
         @_exported import bar
-        @_implementationOnly import bar
+        @preconcurrency import bar
         import bar
         import foo
         // second import of foo
@@ -531,7 +589,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       expected: """
         // exported import of bar
         @_exported import bar
-        @_implementationOnly import bar
+        @preconcurrency import bar
         import bar
         // second import of foo
         import foo
