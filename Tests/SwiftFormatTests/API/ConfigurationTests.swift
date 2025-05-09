@@ -118,7 +118,7 @@ final class ConfigurationTests: XCTestCase {
   func testConfigurationWithComments() throws {
     #if !canImport(Darwin) && compiler(<6)
     try XCTSkipIf(true, "JSONDecoder does not support JSON5")
-    #endif
+    #else
     let expected = Configuration()
 
     let jsonData = """
@@ -133,5 +133,6 @@ final class ConfigurationTests: XCTestCase {
     jsonDecoder.allowsJSON5 = true
     let config = try jsonDecoder.decode(Configuration.self, from: jsonData)
     XCTAssertEqual(config, expected)
+    #endif
   }
 }
