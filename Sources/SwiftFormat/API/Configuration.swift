@@ -293,7 +293,9 @@ public struct Configuration: Codable, Equatable {
   /// Creates a new `Configuration` by decoding it from the UTF-8 representation in the given data.
   public init(data: Data) throws {
     let jsonDecoder = JSONDecoder()
+    #if compiler(>=6)
     jsonDecoder.allowsJSON5 = true
+    #endif
     self = try jsonDecoder.decode(Configuration.self, from: data)
   }
 

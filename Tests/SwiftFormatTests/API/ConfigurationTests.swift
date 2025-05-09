@@ -23,7 +23,9 @@ final class ConfigurationTests: XCTestCase {
 
     let emptyDictionaryData = "{}\n".data(using: .utf8)!
     let jsonDecoder = JSONDecoder()
+    #if compiler(>=6)
     jsonDecoder.allowsJSON5 = true
+    #endif
     let emptyJSONConfig =
       try! jsonDecoder.decode(Configuration.self, from: emptyDictionaryData)
 
@@ -81,7 +83,9 @@ final class ConfigurationTests: XCTestCase {
         """.data(using: .utf8)!
 
       let jsonDecoder = JSONDecoder()
+      #if compiler(>=6)
       jsonDecoder.allowsJSON5 = true
+      #endif
       let config = try jsonDecoder.decode(Configuration.self, from: jsonData)
       XCTAssertEqual(config.reflowMultilineStringLiterals, expectedBehavior)
     }
@@ -103,7 +107,9 @@ final class ConfigurationTests: XCTestCase {
         """.data(using: .utf8)!
 
       let jsonDecoder = JSONDecoder()
+      #if compiler(>=6)
       jsonDecoder.allowsJSON5 = true
+      #endif
       let config = try jsonDecoder.decode(Configuration.self, from: jsonData)
       XCTAssertEqual(config.reflowMultilineStringLiterals, expectedBehavior)
     }
@@ -120,7 +126,9 @@ final class ConfigurationTests: XCTestCase {
       """.data(using: .utf8)!
 
     let jsonDecoder = JSONDecoder()
+    #if compiler(>=6)
     jsonDecoder.allowsJSON5 = true
+    #endif
     let config = try jsonDecoder.decode(Configuration.self, from: jsonData)
     XCTAssertEqual(config, expected)
   }
