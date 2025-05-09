@@ -23,7 +23,7 @@ final class ConfigurationTests: XCTestCase {
 
     let emptyDictionaryData = "{}\n".data(using: .utf8)!
     let jsonDecoder = JSONDecoder()
-    #if compiler(>=6)
+    #if canImport(Darwin) || compiler(>=6)
     jsonDecoder.allowsJSON5 = true
     #endif
     let emptyJSONConfig =
@@ -83,7 +83,7 @@ final class ConfigurationTests: XCTestCase {
         """.data(using: .utf8)!
 
       let jsonDecoder = JSONDecoder()
-      #if compiler(>=6)
+      #if canImport(Darwin) || compiler(>=6)
       jsonDecoder.allowsJSON5 = true
       #endif
       let config = try jsonDecoder.decode(Configuration.self, from: jsonData)
@@ -107,7 +107,7 @@ final class ConfigurationTests: XCTestCase {
         """.data(using: .utf8)!
 
       let jsonDecoder = JSONDecoder()
-      #if compiler(>=6)
+      #if canImport(Darwin) || compiler(>=6)
       jsonDecoder.allowsJSON5 = true
       #endif
       let config = try jsonDecoder.decode(Configuration.self, from: jsonData)
@@ -116,6 +116,9 @@ final class ConfigurationTests: XCTestCase {
   }
 
   func testConfigurationWithComments() throws {
+    #if !canImport(Darwin) && compiler(<6)
+    try XCTSkipIf(true, "JSONDecoder does not support JSON5")
+    #endif
     let expected = Configuration()
 
     let jsonData = """
@@ -126,9 +129,8 @@ final class ConfigurationTests: XCTestCase {
       """.data(using: .utf8)!
 
     let jsonDecoder = JSONDecoder()
-    #if compiler(>=6)
+
     jsonDecoder.allowsJSON5 = true
-    #endif
     let config = try jsonDecoder.decode(Configuration.self, from: jsonData)
     XCTAssertEqual(config, expected)
   }
