@@ -644,4 +644,42 @@ final class AttributeTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
+
+  func testAttributesWithComment() {
+    let input =
+      """
+      @foo // comment
+      @bar
+      import Baz
+
+      """
+    let expected =
+      """
+      @foo  // comment
+      @bar import Baz
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
+  }
+
+  func testAttributesWithLineAndBlockComments() {
+    let input =
+      """
+      @foo // comment
+      @bar /* comment */
+      @zoo // comment
+      import Baz
+
+      """
+    let expected =
+      """
+      @foo  // comment
+      @bar /* comment */ @zoo  // comment
+      import Baz
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
+  }
 }
