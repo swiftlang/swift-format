@@ -99,6 +99,14 @@ jobs:
       matrix:
         release: [true, false]
     with:
+      enable_macos_checks: true
+      macos_pre_build_command: |
+        git config --global --add safe.directory "$(realpath .)"
+        git config --local user.name 'swift-ci'
+        git config --local user.email 'swift-ci@users.noreply.github.com'
+        git am << EOF
+        ${{ needs.create_release_commits.outputs.release_commit_patch }}
+        EOF
       linux_pre_build_command: |
         git config --global --add safe.directory "$(realpath .)"
         git config --local user.name 'swift-ci'
@@ -116,6 +124,7 @@ jobs:
         # fatal: empty ident name (for <>) not allowed
         cmd /c "type $env:TEMP\patch.diff | git am || (exit /b 1)"
       # We require that releases of swift-format build without warnings
+      macos_build_command: swift test -Xswiftc -warnings-as-errors ${{ matrix.release && '-c release' || '' }}
       linux_build_command: swift test -Xswiftc -warnings-as-errors ${{ matrix.release && '-c release' || '' }}
       windows_build_command: swift test -Xswiftc -warnings-as-errors ${{ matrix.release && '-c release' || '' }}
   create_tag:
