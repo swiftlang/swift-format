@@ -434,7 +434,14 @@ public class PrettyPrinter {
         mustBreak = true
       }
 
-      let suppressBreaking = isBreakingSuppressed && !overrideBreakingSuppressed
+      let previousToken = idx > 0 ? tokens[idx - 1] : nil
+      let isAfterLineComment: Bool
+      if case .comment(let comment, _) = previousToken {
+        isAfterLineComment = comment.kind == .line || comment.kind == .docLine
+      } else {
+        isAfterLineComment = false
+      }
+      let suppressBreaking = !isAfterLineComment && isBreakingSuppressed && !overrideBreakingSuppressed
       if !suppressBreaking && (!canFit(length) || mustBreak) {
         currentLineIsContinuation = isContinuationIfBreakFires
         if case .escaped = newline {
