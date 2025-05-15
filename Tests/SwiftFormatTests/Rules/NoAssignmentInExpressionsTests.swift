@@ -187,19 +187,21 @@ final class NoAssignmentInExpressionsTests: LintOrFormatRuleTestCase {
     )
   }
 
-  func testTryAndAwaitAssignmentExpressionsAreUnchanged() {
+  func testTryAndAwaitAndUnsafeAssignmentExpressionsAreUnchanged() {
     assertFormatting(
       NoAssignmentInExpressions.self,
       input: """
         func foo() {
           try a.b = c
           await a.b = c
+          unsafe a.b = c
         }
         """,
       expected: """
         func foo() {
           try a.b = c
           await a.b = c
+          unsafe a.b = c
         }
         """,
       findings: []
