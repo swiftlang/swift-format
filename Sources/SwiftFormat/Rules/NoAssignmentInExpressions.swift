@@ -113,15 +113,15 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
 
   /// Returns a value indicating whether the given node is a standalone assignment statement.
   ///
-  /// This function considers try/await expressions and automatically walks up through them as
-  /// needed. This is because `try f().x = y` should still be a standalone assignment for our
+  /// This function considers try/await/unsafe expressions and automatically walks up through them
+  /// as needed. This is because `try f().x = y` should still be a standalone assignment for our
   /// purposes, even though a `TryExpr` will wrap the `InfixOperatorExpr` and thus would not be
   /// considered a standalone assignment if we only checked the infix expression for a
   /// `CodeBlockItem` parent.
   private func isStandaloneAssignmentStatement(_ node: InfixOperatorExprSyntax) -> Bool {
     var node = Syntax(node)
     while let parent = node.parent,
-      parent.is(TryExprSyntax.self) || parent.is(AwaitExprSyntax.self)
+      parent.is(TryExprSyntax.self) || parent.is(AwaitExprSyntax.self) || parent.is(UnsafeExprSyntax.self)
     {
       node = parent
     }
