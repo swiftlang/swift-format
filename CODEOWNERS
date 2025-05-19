@@ -8,7 +8,7 @@
 # See https://swift.org/CONTRIBUTORS.txt for Swift project authors
 #
 
-* @allevato @bnbarham @shawnhyam
+* @ahoppen @allevato @bnbarham @shawnhyam
 
-.github/ @bnbarham @shahmishal
-.swiftci/ @bnbarham @shahmishal
+.github/ @ahoppen @bnbarham @shahmishal
+.swiftci/ @ahoppen @bnbarham @shahmishal
