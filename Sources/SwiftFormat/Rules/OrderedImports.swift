@@ -13,9 +13,9 @@
 import SwiftSyntax
 
 /// Imports must be lexicographically ordered and logically grouped at the top of each source file.
-/// The order of the import groups is 1) regular imports, 2) declaration imports, 3) @_implementationOnly
-/// imports, and 4) @testable imports. These groups are separated by a single blank line. Blank lines in
-/// between the import declarations are removed.
+/// The order of the import groups is 1) regular imports, 2) declaration imports, and 3) @testable
+/// imports. These groups are separated by a single blank line. Blank lines in between the import
+/// declarations are removed.
 ///
 /// Lint: If an import appears anywhere other than the beginning of the file it resides in,
 ///       not lexicographically ordered, or  not in the appropriate import group, a lint error is
@@ -34,7 +34,6 @@ public final class OrderedImports: SyntaxFormatRule {
 
     var regularImports: [Line] = []
     var declImports: [Line] = []
-    var implementationOnlyImports: [Line] = []
     var testableImports: [Line] = []
     var codeBlocks: [Line] = []
     var fileHeader: [Line] = []
@@ -53,23 +52,14 @@ public final class OrderedImports: SyntaxFormatRule {
 
       regularImports = formatImports(regularImports)
       declImports = formatImports(declImports)
-      implementationOnlyImports = formatImports(implementationOnlyImports)
       testableImports = formatImports(testableImports)
       formatCodeblocks(&codeBlocks)
 
-      let joined = joinLines(
-        fileHeader,
-        regularImports,
-        declImports,
-        implementationOnlyImports,
-        testableImports,
-        codeBlocks
-      )
+      let joined = joinLines(fileHeader, regularImports, declImports, testableImports, codeBlocks)
       formattedLines.append(contentsOf: joined)
 
       regularImports = []
       declImports = []
-      implementationOnlyImports = []
       testableImports = []
       codeBlocks = []
       fileHeader = []
@@ -125,11 +115,6 @@ public final class OrderedImports: SyntaxFormatRule {
         regularImports.append(line)
         commentBuffer = []
 
-      case .implementationOnlyImport:
-        implementationOnlyImports.append(contentsOf: commentBuffer)
-        implementationOnlyImports.append(line)
-        commentBuffer = []
-
       case .testableImport:
         testableImports.append(contentsOf: commentBuffer)
         testableImports.append(line)
@@ -163,7 +148,6 @@ public final class OrderedImports: SyntaxFormatRule {
   /// statements do not appear at the top of the file.
   private func checkGrouping<C: Collection>(_ lines: C) where C.Element == Line {
     var declGroup = false
-    var implementationOnlyGroup = false
     var testableGroup = false
     var codeGroup = false
 
@@ -173,8 +157,6 @@ public final class OrderedImports: SyntaxFormatRule {
       switch lineType {
       case .declImport:
         declGroup = true
-      case .implementationOnlyImport:
-        implementationOnlyGroup = true
       case .testableImport:
         testableGroup = true
       case .codeBlock:
@@ -184,7 +166,7 @@ public final class OrderedImports: SyntaxFormatRule {
 
       if codeGroup {
         switch lineType {
-        case .regularImport, .declImport, .implementationOnlyImport, .testableImport:
+        case .regularImport, .declImport, .testableImport:
           diagnose(.placeAtTopOfFile, on: line.firstToken)
         default: ()
         }
@@ -192,20 +174,9 @@ public final class OrderedImports: SyntaxFormatRule {
 
       if testableGroup {
         switch lineType {
-        case .regularImport, .declImport, .implementationOnlyImport:
-          diagnose(
-            .groupImports(before: lineType, after: LineType.testableImport),
-            on: line.firstToken
-          )
-        default: ()
-        }
-      }
-
-      if implementationOnlyGroup {
-        switch lineType {
         case .regularImport, .declImport:
           diagnose(
-            .groupImports(before: lineType, after: LineType.implementationOnlyImport),
+            .groupImports(before: lineType, after: LineType.testableImport),
             on: line.firstToken
           )
         default: ()
@@ -237,7 +208,7 @@ public final class OrderedImports: SyntaxFormatRule {
 
     for line in imports {
       switch line.type {
-      case .regularImport, .declImport, .implementationOnlyImport, .testableImport:
+      case .regularImport, .declImport, .testableImport:
         let fullyQualifiedImport = line.fullyQualifiedImport
         // Check for duplicate imports and potentially remove them.
         if let previousMatchingImportIndex = visitedImports[fullyQualifiedImport] {
@@ -419,7 +390,6 @@ fileprivate func convertToCodeBlockItems(lines: [Line]) -> [CodeBlockItemSyntax]
 public enum LineType: CustomStringConvertible {
   case regularImport
   case declImport
-  case implementationOnlyImport
   case testableImport
   case codeBlock
   case comment
@@ -431,8 +401,6 @@ public enum LineType: CustomStringConvertible {
       return "regular"
     case .declImport:
       return "declaration"
-    case .implementationOnlyImport:
-      return "implementationOnly"
     case .testableImport:
       return "testable"
     case .codeBlock:
@@ -547,15 +515,11 @@ fileprivate class Line {
 
   /// Returns a `LineType` the represents the type of import from the given import decl.
   private func importType(of importDecl: ImportDeclSyntax) -> LineType {
-
-    let importIdentifierTypes = importDecl.attributes.compactMap { $0.as(AttributeSyntax.self)?.attributeName }
-    let importAttributeNames = importIdentifierTypes.compactMap { $0.as(IdentifierTypeSyntax.self)?.name.text }
-
-    if importAttributeNames.contains("testable") {
+    if let attr = importDecl.attributes.firstToken(viewMode: .sourceAccurate),
+      attr.tokenKind == .atSign,
+      attr.nextToken(viewMode: .sourceAccurate)?.text == "testable"
+    {
       return .testableImport
-    }
-    if importAttributeNames.contains("_implementationOnly") {
-      return .implementationOnlyImport
     }
     if importDecl.importKindSpecifier != nil {
       return .declImport
