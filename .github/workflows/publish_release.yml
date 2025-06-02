@@ -67,6 +67,9 @@ jobs:
           echo "swift_format_version=$SWIFT_FORMAT_VERSION" >> "$GITHUB_OUTPUT"
       - name: Checkout repository
         uses: actions/checkout@v4
+      - name: Check version matches
+        run: |
+          grep '"${{ steps.swift_format_version.outputs.swift_format_version }}"' Sources/swift-format/PrintVersion.swift
       - name: Create release commits
         id: create_release_commits
         run: |
@@ -80,10 +83,6 @@ jobs:
           sed -E -i "s#branch: \"(main|release/[0-9]+\.[0-9]+)\"#from: \"${{ steps.swift_syntax_tag.outputs.swift_syntax_tag }}\"#" Package.swift
           git add Package.swift
           git commit -m "Change swift-syntax dependency to ${{ steps.swift_syntax_tag.outputs.swift_syntax_tag }}"
-
-          sed -E -i "s#print\(\".*\"\)#print\(\"${{ steps.swift_format_version.outputs.swift_format_version }}\"\)#" Sources/swift-format/PrintVersion.swift
-          git add Sources/swift-format/PrintVersion.swift
-          git commit -m "Change version to ${{ steps.swift_format_version.outputs.swift_format_version }}"
 
           {
             echo 'release_commit_patch<<EOF'
