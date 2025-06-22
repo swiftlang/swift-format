@@ -1129,8 +1129,8 @@ final class FunctionDeclTests: PrettyPrintTestCase {
           .InnerMember,
       ) {}
       func foo(
-        cmp: @escaping (R) ->
-          ()
+        cmp:
+          @escaping (R) -> ()
       ) {}
       func foo(
         cmp:

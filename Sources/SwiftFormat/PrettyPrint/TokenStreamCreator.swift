@@ -2385,6 +2385,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: AttributedTypeSyntax) -> SyntaxVisitorContinueKind {
+    before(node.firstToken(viewMode: .sourceAccurate), tokens: .open)
     arrangeAttributeList(node.attributes)
     for specifier in node.specifiers {
       after(
@@ -2392,6 +2393,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
         tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true))
       )
     }
+    after(node.lastToken(viewMode: .sourceAccurate), tokens: .close)
     return .visitChildren
   }
 

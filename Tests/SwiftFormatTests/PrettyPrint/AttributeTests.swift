@@ -623,4 +623,25 @@ final class AttributeTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
+
+  func testAttributeLineBreakInInheritanceClause() {
+    let input =
+      """
+      public class MyClass: Foo, @unchecked Sendable, Bar {
+        // …
+      }
+
+      """
+    let expected =
+      """
+      public class MyClass: Foo,
+        @unchecked Sendable, Bar
+      {
+        // …
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
+  }
 }
