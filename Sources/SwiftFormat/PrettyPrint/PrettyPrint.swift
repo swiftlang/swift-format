@@ -146,6 +146,10 @@ public class PrettyPrinter {
   /// enabled (see ``isBreakingSuppressed``).
   private var allowSuppressedDiscretionaryBreaks = false
 
+  /// Overrides break suppression for line or doc comments, or similar cases where a line break is required.
+  /// Reset after handling the break.
+  private var shouldOverrideBreakSuppression = false
+
   /// The computed indentation level, as a number of spaces, based on the state of any unclosed
   /// delimiters and whether or not the current line is a continuation line.
   private var currentIndentation: [Indent] {
@@ -426,7 +430,8 @@ public class PrettyPrinter {
       case .soft(_, let discretionary):
         // A discretionary newline (i.e. from the source) should create a line break even if the
         // rules for breaking are disabled.
-        overrideBreakingSuppressed = discretionary && allowSuppressedDiscretionaryBreaks
+        overrideBreakingSuppressed =
+          shouldOverrideBreakSuppression || (discretionary && allowSuppressedDiscretionaryBreaks)
         mustBreak = true
       case .hard:
         // A hard newline must always create a line break, regardless of the context.
@@ -455,6 +460,7 @@ public class PrettyPrinter {
         outputBuffer.enqueueSpaces(size)
         lastBreak = false
       }
+      shouldOverrideBreakSuppression = false
 
     // Print out the number of spaces according to the size, and adjust spaceRemaining.
     case .space(let size, _):
@@ -472,7 +478,7 @@ public class PrettyPrinter {
 
     case .comment(let comment, let wasEndOfLine):
       lastBreak = false
-
+      shouldOverrideBreakSuppression = comment.kind == .docLine || comment.kind == .line
       if wasEndOfLine {
         if !(canFit(comment.length) || isBreakingSuppressed) {
           diagnose(.moveEndOfLineComment, category: .endOfLineComment)
