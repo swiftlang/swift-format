@@ -80,13 +80,19 @@ extension Trivia {
       })
   }
 
-  /// Returns `true` if this trivia contains any backslashes (used for multiline string newline
-  /// suppression).
-  var containsBackslashes: Bool {
-    return contains(
-      where: {
-        if case .backslashes = $0 { return true }
-        return false
-      })
+  /// Returns the prefix of this trivia that corresponds to the backslash and pound signs used to
+  /// represent a non-line-break continuation of a multiline string, or nil if the trivia does not
+  /// represent such a continuation.
+  var multilineStringContinuation: String? {
+    var result = ""
+    for piece in pieces {
+      switch piece {
+      case .backslashes, .pounds:
+        piece.write(to: &result)
+      default:
+        break
+      }
+    }
+    return result.isEmpty ? nil : result
   }
 }

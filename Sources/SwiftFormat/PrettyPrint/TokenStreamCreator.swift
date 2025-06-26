@@ -2637,11 +2637,13 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       emitSegmentTextTokens(segmentText[...])
     }
 
-    if node.trailingTrivia.containsBackslashes && !config.reflowMultilineStringLiterals.isAlways {
-      // Segments with trailing backslashes won't end with a literal newline; the backslash is
-      // considered trivia. To preserve the original text and wrapping, we need to manually render
-      // the backslash and a break into the token stream.
-      appendToken(.syntax("\\"))
+    if !config.reflowMultilineStringLiterals.isAlways,
+      let continuation = node.trailingTrivia.multilineStringContinuation
+    {
+      // Segments with trailing backslashes won't end with a literal newline; the backslash and any
+      // `#` delimiters for raw strings are considered trivia. To preserve the original text and
+      // wrapping, we need to manually render them break into the token stream.
+      appendToken(.syntax(continuation))
       appendToken(.break(breakKind, newlines: .hard(count: 1)))
     }
     return .skipChildren
