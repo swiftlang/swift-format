@@ -739,4 +739,41 @@ final class StringTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 20)
   }
+
+  func testMultilineStringWithContinuations() {
+    let input =
+      ##"""
+      let someString =
+        """
+        lines \
+        \nare \
+        short.
+        """
+      let someString =
+        #"""
+        lines \#
+        \#nare \#
+        short.
+        """#
+      """##
+
+    let expected =
+      ##"""
+      let someString =
+        """
+        lines \
+        \nare \
+        short.
+        """
+      let someString =
+        #"""
+        lines \#
+        \#nare \#
+        short.
+        """#
+
+      """##
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
+  }
 }
