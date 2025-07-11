@@ -302,4 +302,72 @@ final class ArrayDeclTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 32)
   }
+
+  func testInlineArrayTypeSugar() {
+    let input =
+      """
+      let a: [3 of Int]
+      let a: [[3 of Int]]
+      let a: [3 of [3 of Int]]
+      let a: [n of Int]
+      let fiveIntegers: [5 of _] = .init(repeating: 99)
+      let fourBytes: [_ of Int8] = [1, 2, 3, 4]
+      let fourIntegers: [_ of _] = [1, 2, 3, 4]
+      let fiveDoubles = [5 of _](repeating: 1.23)
+
+      """
+
+    let expected =
+      """
+      let a: [3 of Int]
+      let a: [[3 of Int]]
+      let a: [3 of [3 of Int]]
+      let a: [n of Int]
+      let fiveIntegers: [5 of _] = .init(repeating: 99)
+      let fourBytes: [_ of Int8] = [1, 2, 3, 4]
+      let fourIntegers: [_ of _] = [1, 2, 3, 4]
+      let fiveDoubles = [5 of _](repeating: 1.23)
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
+  }
+
+  func testInlineArrayTypeSugarWhenLineLengthExceeded() {
+    let input =
+      """
+      let a: [3 of VeryLongGenericTypeNameThatCausesWrapping]
+      let a: [3 of [3 of VeryLongGenericTypeNameThatCausesWrapping]]
+      let a = [3 of VeryLongGenericTypeNameThatCausesWrapping](repeating: foo)
+
+      """
+
+    let expected =
+      """
+      let a:
+        [
+          3 of
+            VeryLongGenericTypeNameThatCausesWrapping
+        ]
+      let a:
+        [
+          3 of
+            [
+              3 of
+                VeryLongGenericTypeNameThatCausesWrapping
+            ]
+        ]
+      let a =
+        [
+          3 of
+            VeryLongGenericTypeNameThatCausesWrapping
+        ](
+          repeating:
+            foo
+        )
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 5)
+  }
 }
