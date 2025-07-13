@@ -39,6 +39,7 @@ extension Configuration {
     self.indentSwitchCaseLabels = false
     self.spacesAroundRangeFormationOperators = false
     self.noAssignmentInExpressions = NoAssignmentInExpressionsConfiguration()
+    self.multilineTrailingCommaBehavior = .keptAsWritten
     self.multiElementCollectionTrailingCommas = true
     self.reflowMultilineStringLiterals = .never
     self.indentBlankLines = false
