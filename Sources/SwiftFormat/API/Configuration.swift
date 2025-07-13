@@ -44,6 +44,7 @@ public struct Configuration: Codable, Equatable {
     case rules
     case spacesAroundRangeFormationOperators
     case noAssignmentInExpressions
+    case trailingCommasInMultilineLists
     case multiElementCollectionTrailingCommas
     case reflowMultilineStringLiterals
     case indentBlankLines
@@ -172,6 +173,22 @@ public struct Configuration: Codable, Equatable {
 
   /// Contains exceptions for the `NoAssignmentInExpressions` rule.
   public var noAssignmentInExpressions: NoAssignmentInExpressionsConfiguration
+
+  /// Determines how trailing commas in comma-separated lists should be handled during formatting.
+  public enum TrailingCommasInMultilineLists: String, Codable {
+    case always
+    case never
+    case ignore
+  }
+
+  /// Determines how trailing commas in comma-separated lists are handled during formatting.
+  ///
+  /// This setting takes precedence over `multiElementCollectionTrailingCommas`.
+  /// If set to `.ignore` (the default), the formatter defers to `multiElementCollectionTrailingCommas`
+  /// for collections only. In all other cases, existing trailing commas are preserved as-is and not modified.
+  /// If set to `.always` or `.never`, that behavior is applied uniformly across all list types,
+  /// regardless of `multiElementCollectionTrailingCommas`.
+  public var trailingCommasInMultilineLists: TrailingCommasInMultilineLists
 
   /// Determines if multi-element collection literals should have trailing commas.
   ///
@@ -384,6 +401,9 @@ public struct Configuration: Codable, Equatable {
         forKey: .noAssignmentInExpressions
       )
       ?? defaults.noAssignmentInExpressions
+    self.trailingCommasInMultilineLists =
+      try container.decodeIfPresent(TrailingCommasInMultilineLists.self, forKey: .trailingCommasInMultilineLists)
+      ?? defaults.trailingCommasInMultilineLists
     self.multiElementCollectionTrailingCommas =
       try container.decodeIfPresent(
         Bool.self,
