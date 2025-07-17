@@ -13,24 +13,24 @@
 import Foundation
 
 /// Generates the extensions to the lint and format pipelines.
-final class PipelineGenerator: FileGenerator {
+@_spi(Internal) public final class PipelineGenerator: FileGenerator {
 
   /// The rules collected by scanning the formatter source code.
   let ruleCollector: RuleCollector
 
   /// Creates a new pipeline generator.
-  init(ruleCollector: RuleCollector) {
+  public init(ruleCollector: RuleCollector) {
     self.ruleCollector = ruleCollector
   }
 
-  func write(into handle: FileHandle) throws {
-    handle.write(
-      """
+  public func generateContent() -> String {
+    var result = ""
+    result += """
       //===----------------------------------------------------------------------===//
       //
       // This source file is part of the Swift.org open source project
       //
-      // Copyright (c) 2014 - 2019 Apple Inc. and the Swift project authors
+      // Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
       // Licensed under Apache License v2.0 with Runtime Library Exception
       //
       // See https://swift.org/LICENSE.txt for license information
@@ -65,58 +65,41 @@ final class PipelineGenerator: FileGenerator {
         }
 
       """
-    )
 
     for (nodeType, lintRules) in ruleCollector.syntaxNodeLinters.sorted(by: { $0.key < $1.key }) {
-      handle.write(
-        """
+      result += """
 
           override func visit(_ node: \(nodeType)) -> SyntaxVisitorContinueKind {
 
         """
-      )
-
       for ruleName in lintRules.sorted() {
-        handle.write(
-          """
+        result += """
               visitIfEnabled(\(ruleName).visit, for: node)
 
           """
-        )
       }
-
-      handle.write(
-        """
+      result += """
             return .visitChildren
           }
 
         """
-      )
-
-      handle.write(
-        """
+      result += """
           override func visitPost(_ node: \(nodeType)) {
 
         """
-      )
       for ruleName in lintRules.sorted() {
-        handle.write(
-          """
+        result += """
               onVisitPost(rule: \(ruleName).self, for: node)
 
           """
-        )
       }
-      handle.write(
-        """
+      result += """
           }
 
         """
-      )
     }
 
-    handle.write(
-      """
+    result += """
       }
 
       extension FormatPipeline {
@@ -125,24 +108,18 @@ final class PipelineGenerator: FileGenerator {
           var node = node
 
       """
-    )
-
     for ruleName in ruleCollector.allFormatters.map({ $0.typeName }).sorted() {
-      handle.write(
-        """
+      result += """
             node = \(ruleName)(context: context).rewrite(node)
 
         """
-      )
     }
-
-    handle.write(
-      """
+    result += """
           return node
         }
       }
 
       """
-    )
+    return result
   }
 }
