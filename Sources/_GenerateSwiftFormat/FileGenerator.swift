@@ -13,10 +13,9 @@
 import Foundation
 
 /// Common behavior used to generate source files.
-protocol FileGenerator {
-  /// Types conforming to this protocol must implement this method to write their content into the
-  /// given file handle.
-  func write(into handle: FileHandle) throws
+@_spi(Internal) public protocol FileGenerator {
+  /// Generates the file content as a String.
+  func generateContent() -> String
 }
 
 private struct FailedToCreateFileError: Error {
@@ -25,26 +24,12 @@ private struct FailedToCreateFileError: Error {
 
 extension FileGenerator {
   /// Generates a file at the given URL, overwriting it if it already exists.
-  func generateFile(at url: URL) throws {
+  public func generateFile(at url: URL) throws {
     let fm = FileManager.default
     if fm.fileExists(atPath: url.path) {
       try fm.removeItem(at: url)
     }
-
-    if !fm.createFile(atPath: url.path, contents: nil, attributes: nil) {
-      throw FailedToCreateFileError(url: url)
-    }
-    let handle = try FileHandle(forWritingTo: url)
-    defer { handle.closeFile() }
-
-    try write(into: handle)
-  }
-}
-
-extension FileHandle {
-  /// Writes the provided string as data to a file output stream.
-  public func write(_ string: String) {
-    guard let data = string.data(using: .utf8) else { return }
-    write(data)
+    let content = generateContent()
+    try content.write(to: url, atomically: true, encoding: .utf8)
   }
 }

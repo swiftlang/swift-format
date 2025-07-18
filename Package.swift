@@ -58,6 +58,10 @@ var targets: [Target] = [
         "SwiftOperators", "SwiftParser", "SwiftParserDiagnostics", "SwiftSyntax", "SwiftSyntaxBuilder",
       ])
   ),
+  .target(
+    name: "_GenerateSwiftFormat",
+    dependencies: ["SwiftFormat"]
+  ),
   .plugin(
     name: "Format Source Code",
     capability: .command(
@@ -86,9 +90,7 @@ var targets: [Target] = [
   ),
   .executableTarget(
     name: "generate-swift-format",
-    dependencies: [
-      "SwiftFormat"
-    ]
+    dependencies: ["_GenerateSwiftFormat"]
   ),
   .executableTarget(
     name: "swift-format",
@@ -113,6 +115,7 @@ var targets: [Target] = [
     dependencies: [
       "SwiftFormat",
       "_SwiftFormatTestSupport",
+      "_GenerateSwiftFormat",
       .product(name: "Markdown", package: "swift-markdown"),
     ] + swiftSyntaxDependencies(["SwiftOperators", "SwiftParser", "SwiftSyntax", "SwiftSyntaxBuilder"])
   ),

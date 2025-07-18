@@ -13,24 +13,24 @@
 import Foundation
 
 /// Generates the rule registry file used to populate the default configuration.
-final class RuleRegistryGenerator: FileGenerator {
+@_spi(Internal) public final class RuleRegistryGenerator: FileGenerator {
 
   /// The rules collected by scanning the formatter source code.
   let ruleCollector: RuleCollector
 
   /// Creates a new rule registry generator.
-  init(ruleCollector: RuleCollector) {
+  public init(ruleCollector: RuleCollector) {
     self.ruleCollector = ruleCollector
   }
 
-  func write(into handle: FileHandle) throws {
-    handle.write(
-      """
+  public func generateContent() -> String {
+    var result = ""
+    result += """
       //===----------------------------------------------------------------------===//
       //
       // This source file is part of the Swift.org open source project
       //
-      // Copyright (c) 2014 - 2019 Apple Inc. and the Swift project authors
+      // Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
       // Licensed under Apache License v2.0 with Runtime Library Exception
       //
       // See https://swift.org/LICENSE.txt for license information
@@ -44,11 +44,10 @@ final class RuleRegistryGenerator: FileGenerator {
         public static let rules: [String: Bool] = [
 
       """
-    )
-
     for detectedRule in ruleCollector.allLinters.sorted(by: { $0.typeName < $1.typeName }) {
-      handle.write("    \"\(detectedRule.typeName)\": \(!detectedRule.isOptIn),\n")
+      result += "    \"\(detectedRule.typeName)\": \(!detectedRule.isOptIn),\n"
     }
-    handle.write("  ]\n}\n")
+    result += "  ]\n}\n"
+    return result
   }
 }
