@@ -123,13 +123,14 @@ var targets: [Target] = [
 
 if buildOnlyTests {
   products = []
+  let allowedNames: Set<String> = ["_SwiftFormatTestSupport", "_GenerateSwiftFormat"]
   targets = targets.compactMap { target in
-    guard target.isTest || target.name == "_SwiftFormatTestSupport" else {
+    guard target.isTest || allowedNames.contains(target.name) else {
       return nil
     }
-    target.dependencies = target.dependencies.filter { dependency in
-      if case .byNameItem(name: "_SwiftFormatTestSupport", _) = dependency {
-        return true
+    target.dependencies = target.dependencies.filter {
+      if case .byNameItem(let name, _) = $0 {
+        return allowedNames.contains(name)
       }
       return false
     }
