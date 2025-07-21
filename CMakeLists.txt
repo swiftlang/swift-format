@@ -50,7 +50,7 @@ endif()
 find_package(cmark-gfm CONFIG)
 if(NOT cmark-gfm_FOUND)
   FetchContent_Declare(cmark-gfm
-    GIT_REPOSITORY https://github.com/apple/swift-cmark
+    GIT_REPOSITORY https://github.com/swiftlang/swift-cmark
     GIT_TAG gfm)
   list(APPEND _SF_VENDOR_DEPENDENCIES cmark-gfm)
 endif()
@@ -60,7 +60,7 @@ if(NOT SwiftMarkdown_FOUND)
   # TODO(compnerd) we need a latest version for now as we need the CMake support
   # which is untagged.
   FetchContent_Declare(Markdown
-    GIT_REPOSITORY https://github.com/apple/swift-markdown
+    GIT_REPOSITORY https://github.com/swiftlang/swift-markdown
     GIT_TAG main)
   list(APPEND _SF_VENDOR_DEPENDENCIES Markdown)
 endif()
