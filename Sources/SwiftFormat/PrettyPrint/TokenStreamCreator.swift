@@ -1732,6 +1732,14 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
+  override func visit(_ node: InlineArrayTypeSyntax) -> SyntaxVisitorContinueKind {
+    after(node.leftSquare, tokens: .break(.open, size: 0), .open)
+    before(node.separator, tokens: .space)
+    after(node.separator, tokens: .break)
+    before(node.rightSquare, tokens: .break(.close, size: 0), .close)
+    return .visitChildren
+  }
+
   override func visit(_ node: TupleTypeSyntax) -> SyntaxVisitorContinueKind {
     after(node.leftParen, tokens: .break(.open, size: 0), .open)
     before(node.rightParen, tokens: .break(.close, size: 0), .close)
