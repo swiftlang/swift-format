@@ -194,6 +194,22 @@ switch someValue {
 
 ---
 
+### `trailingCommasInMultilineLists`  
+**type:** `string`
+
+**description:** Determines how trailing commas in comma-separated lists should be handled during formatting.
+
+- If set to `"always"`, a trailing comma is always added in multi-line lists.
+- If set to `"never"`, trailing commas are removed even in multi-line contexts.
+- If set to `"ignore"` (the default), existing commas are preserved as-is, and for collections, the behavior falls back to the `multiElementCollectionTrailingCommas`.
+
+This option takes precedence over `multiElementCollectionTrailingCommas`, unless it is set to `"ignore"`.
+
+
+**default:** `"ignore"`  
+
+---
+
 ### `multiElementCollectionTrailingCommas`  
 **type:** boolean  
 
