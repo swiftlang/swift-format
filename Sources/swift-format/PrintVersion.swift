@@ -12,5 +12,5 @@
 
 func printVersionInformation() {
   // TODO: Automate updates to this somehow.
-  print("6.2.0")
+  print("602.0.0-prerelease-2025-08-11")
 }
