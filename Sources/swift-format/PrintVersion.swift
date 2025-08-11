@@ -12,5 +12,5 @@
 
 func printVersionInformation() {
   // TODO: Automate updates to this somehow.
-  print("main")
+  print("603.0.0-prerelease-2025-08-11")
 }
