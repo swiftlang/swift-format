@@ -114,7 +114,7 @@ struct Verbatim {
 }
 
 /// Returns the leading number of spaces in the given string.
-fileprivate func numberOfLeadingSpaces(in text: Substring) -> Int {
+private func numberOfLeadingSpaces(in text: Substring) -> Int {
   var count = 0
   for char in text {
     if char == " " { count += 1 } else { break }

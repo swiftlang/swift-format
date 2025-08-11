@@ -27,7 +27,7 @@ fileprivate extension AccessorBlockSyntax {
 
 /// Visits the nodes of a syntax tree and constructs a linear stream of formatting tokens that
 /// tell the pretty printer how the source text should be laid out.
-fileprivate final class TokenStreamCreator: SyntaxVisitor {
+private final class TokenStreamCreator: SyntaxVisitor {
   private var tokens = [Token]()
   private var beforeMap = [TokenSyntax: [Token]]()
   private var afterMap = [TokenSyntax: [[Token]]]()
@@ -3031,7 +3031,7 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
     }
 
     for after in afterGroups.reversed() {
-      after.forEach { afterToken in
+      for afterToken in after {
         var shouldExtractTrailingComment = false
         if wasLineComment && !hasAppendedTrailingComment {
           switch afterToken {
@@ -4455,7 +4455,7 @@ extension TriviaPiece {
 ///   - trivia: Leading trivia for a node that the formatter supports ignoring.
 ///   - isWholeFile: Whether to search for a whole-file ignore directive or per node ignore.
 /// - Returns: Whether the trivia contains the specified type of ignore directive.
-fileprivate func isFormatterIgnorePresent(inTrivia trivia: Trivia, isWholeFile: Bool) -> Bool {
+private func isFormatterIgnorePresent(inTrivia trivia: Trivia, isWholeFile: Bool) -> Bool {
   func isFormatterIgnore(in commentText: String, prefix: String, suffix: String) -> Bool {
     let trimmed =
       commentText.dropFirst(prefix.count)
@@ -4488,7 +4488,7 @@ fileprivate func isFormatterIgnorePresent(inTrivia trivia: Trivia, isWholeFile: 
 /// be safely ignored.
 ///
 /// - Parameter node: A node that can be safely ignored.
-fileprivate func shouldFormatterIgnore(node: Syntax) -> Bool {
+private func shouldFormatterIgnore(node: Syntax) -> Bool {
   // Regardless of the level of nesting, if the ignore directive is present on the first token
   // contained within the node then the entire node is eligible for ignoring.
   return isFormatterIgnorePresent(inTrivia: node.allPrecedingTrivia, isWholeFile: false)
@@ -4499,7 +4499,7 @@ fileprivate func shouldFormatterIgnore(node: Syntax) -> Bool {
 /// in the original source).
 ///
 /// - Parameter file: The root syntax node for a source file.
-fileprivate func shouldFormatterIgnore(file: SourceFileSyntax) -> Bool {
+private func shouldFormatterIgnore(file: SourceFileSyntax) -> Bool {
   return isFormatterIgnorePresent(inTrivia: file.allPrecedingTrivia, isWholeFile: true)
 }
 

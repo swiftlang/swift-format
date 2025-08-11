@@ -296,14 +296,14 @@ public final class OrderedImports: SyntaxFormatRule {
 }
 
 /// Remove any leading blank lines from the main code.
-fileprivate func formatCodeblocks(_ codeblocks: inout [Line]) {
+private func formatCodeblocks(_ codeblocks: inout [Line]) {
   if let contentIndex = codeblocks.firstIndex(where: { !$0.isBlankLine }) {
     codeblocks.removeSubrange(0..<contentIndex)
   }
 }
 
 /// Join the lists of Line objects into a single list of Lines with a blank line separating them.
-fileprivate func joinLines(_ inputLineLists: [Line]...) -> [Line] {
+private func joinLines(_ inputLineLists: [Line]...) -> [Line] {
   var lineLists = inputLineLists
   lineLists.removeAll { $0.isEmpty }
   guard lineLists.count > 0 else { return [] }
@@ -320,7 +320,7 @@ fileprivate func joinLines(_ inputLineLists: [Line]...) -> [Line] {
 /// This function transforms the statements in a CodeBlockItemListSyntax object into a list of Line
 /// objects. Blank lines and standalone comments are represented by their own Line object. Code with
 /// a trailing comment are represented together in the same Line.
-fileprivate func generateLines(
+private func generateLines(
   codeBlockItemList: CodeBlockItemListSyntax,
   context: Context
 ) -> [Line] {
@@ -380,7 +380,7 @@ fileprivate func generateLines(
 
 /// This function transforms a list of Line objects into a list of CodeBlockItemSyntax objects,
 /// replacing the trivia appropriately to ensure comments appear in the right location.
-fileprivate func convertToCodeBlockItems(lines: [Line]) -> [CodeBlockItemSyntax] {
+private func convertToCodeBlockItems(lines: [Line]) -> [CodeBlockItemSyntax] {
   var output: [CodeBlockItemSyntax] = []
   var pendingLeadingTrivia: [TriviaPiece] = []
 
@@ -450,7 +450,7 @@ public enum LineType: CustomStringConvertible {
 /// represent a single printed line. Other types of code (e.g. structs and classes) will span
 /// multiple literal lines, but can still be represented by a single Line object. This is desireable
 /// since we aren't interested in rearranging those types of structures in this rule.
-fileprivate class Line {
+private class Line {
   /// Storage for the different types of AST nodes that can be held by a `Line`.
   enum SyntaxNode {
     /// A collection of code block items that aren't imports. These types of code blocks aren't

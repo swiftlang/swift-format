@@ -27,8 +27,8 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
 
     /// Flushes any un-collapsed violations to the new cases list.
     func flushViolations() {
-      fallthroughOnlyCases.forEach {
-        newChildren.append(.switchCase(visit($0)))
+      for node in fallthroughOnlyCases {
+        newChildren.append(.switchCase(visit(node)))
       }
       fallthroughOnlyCases.removeAll()
     }

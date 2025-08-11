@@ -242,7 +242,7 @@ public class PrettyPrinter {
     // the group.
     case .open(let breaktype):
       // Determine if the break tokens in this group need to be forced.
-      if (!canFit(length) || lastBreak), case .consistent = breaktype {
+      if !canFit(length) || lastBreak, case .consistent = breaktype {
         forceBreakStack.append(true)
       } else {
         forceBreakStack.append(false)

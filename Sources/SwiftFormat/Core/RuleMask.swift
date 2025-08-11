@@ -131,7 +131,7 @@ enum IgnoreDirective: CustomStringConvertible {
 /// The rule status comment directives implementation intentionally supports exactly the same nodes
 /// as `TokenStreamCreator` to disable pretty printing. This ensures ignore comments for pretty
 /// printing and for rules are as consistent as possible.
-fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
+private class RuleStatusCollectionVisitor: SyntaxVisitor {
   /// Describes the possible matches for ignore directives, in comments.
   enum RuleStatusDirectiveMatch {
     /// There is a directive that applies to all rules.
@@ -219,7 +219,9 @@ fileprivate class RuleStatusCollectionVisitor: SyntaxVisitor {
         // node's children are irrelevant because all rules are suppressed by this node.
         return .skipChildren
       case .subset(let ruleNames):
-        ruleNames.forEach { ruleMap[$0, default: []].append(sourceRange) }
+        for ruleName in ruleNames {
+          ruleMap[ruleName, default: []].append(sourceRange)
+        }
         break
       }
     }
