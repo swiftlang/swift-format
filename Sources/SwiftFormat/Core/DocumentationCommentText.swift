@@ -204,7 +204,7 @@ private func asciiArtLength(of string: Substring, leadingSpaces: Int) -> Int {
 /// Returns the start index of the earliest comment in the Trivia if we work backwards and
 /// skip through comments, newlines, and whitespace. Then we advance a bit forward to be sure
 /// the returned index is actually a comment and not whitespace.
-private func findCommentStartIndex(_ triviaArray: Array<TriviaPiece>) -> Array<TriviaPiece>.Index {
+private func findCommentStartIndex(_ triviaArray: [TriviaPiece]) -> Array<TriviaPiece>.Index {
   func firstCommentIndex(_ slice: ArraySlice<TriviaPiece>) -> Array<TriviaPiece>.Index {
     return slice.firstIndex(where: {
       switch $0 {

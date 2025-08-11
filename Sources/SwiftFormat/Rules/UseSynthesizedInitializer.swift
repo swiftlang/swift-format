@@ -72,7 +72,9 @@ public final class UseSynthesizedInitializer: SyntaxLintRule {
     // initializer, then all of the initializers must remain.
     let initializersCount = node.memberBlock.members.filter { $0.decl.is(InitializerDeclSyntax.self) }.count
     if extraneousInitializers.count == initializersCount {
-      extraneousInitializers.forEach { diagnose(.removeRedundantInitializer, on: $0) }
+      for initializer in extraneousInitializers {
+        diagnose(.removeRedundantInitializer, on: initializer)
+      }
     }
 
     return .visitChildren
@@ -197,7 +199,7 @@ extension Finding.Message {
 }
 
 /// Defines the access levels which may be assigned to a synthesized memberwise initializer.
-fileprivate enum AccessLevel {
+private enum AccessLevel {
   case `internal`
   case `fileprivate`
   case `private`
@@ -212,7 +214,7 @@ fileprivate enum AccessLevel {
 ///
 /// - Parameter properties: The properties contained within the struct.
 /// - Returns: The synthesized memberwise initializer's access level.
-fileprivate func synthesizedInitAccessLevel(using properties: [VariableDeclSyntax]) -> AccessLevel {
+private func synthesizedInitAccessLevel(using properties: [VariableDeclSyntax]) -> AccessLevel {
   var hasFileprivate = false
   for property in properties {
     // Private takes precedence, so finding 1 private property defines the access level.

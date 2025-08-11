@@ -10,8 +10,8 @@
 //
 //===----------------------------------------------------------------------===//
 
-fileprivate let bom: Unicode.Scalar = "\u{feff}"
-fileprivate let unknownScalar: Unicode.Scalar = "\u{fffe}"
+private let bom: Unicode.Scalar = "\u{feff}"
+private let unknownScalar: Unicode.Scalar = "\u{fffe}"
 
 final class GarbageTextTests: PrettyPrintTestCase {
   func testHashBang() {

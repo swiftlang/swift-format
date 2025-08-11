@@ -150,7 +150,7 @@ public final class ValidateDocumentationComments: SyntaxLintRule {
 
 /// Iterates through every parameter of paramList and returns a list of the
 /// parameters identifiers.
-fileprivate func funcParametersIdentifiers(in paramList: FunctionParameterListSyntax) -> [String] {
+private func funcParametersIdentifiers(in paramList: FunctionParameterListSyntax) -> [String] {
   var funcParameters = [String]()
   for parameter in paramList {
     // If there is a label and an identifier, then the identifier (`secondName`) is the name that
@@ -164,7 +164,7 @@ fileprivate func funcParametersIdentifiers(in paramList: FunctionParameterListSy
 
 /// Indicates if the parameters name from the documentation and the parameters
 /// from the declaration are the same.
-fileprivate func parametersAreEqual(
+private func parametersAreEqual(
   params: [DocumentationComment.Parameter],
   funcParam: [String]
 ) -> Bool {

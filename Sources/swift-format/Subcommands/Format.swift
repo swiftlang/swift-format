@@ -45,7 +45,7 @@ extension SwiftFormatCommand {
     }
 
     func run() throws {
-      try performanceMeasurementOptions.printingInstructionCountIfRequested() {
+      try performanceMeasurementOptions.printingInstructionCountIfRequested {
         let frontend = FormatFrontend(
           configurationOptions: configurationOptions,
           lintFormatOptions: formatOptions,

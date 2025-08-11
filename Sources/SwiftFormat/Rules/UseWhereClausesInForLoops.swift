@@ -94,7 +94,7 @@ public final class UseWhereClausesInForLoops: SyntaxFormatRule {
   }
 }
 
-fileprivate func updateWithWhereCondition(
+private func updateWithWhereCondition(
   node: ForStmtSyntax,
   condition: ExprSyntax,
   statements: CodeBlockItemListSyntax

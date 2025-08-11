@@ -196,7 +196,7 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
 ///
 /// - Parameter node: A node whose identifier may be used in diagnostics.
 /// - Returns: A human readable description of the node and its identifier.
-fileprivate func identifierDescription<NodeType: SyntaxProtocol>(for node: NodeType) -> String {
+private func identifierDescription<NodeType: SyntaxProtocol>(for node: NodeType) -> String {
   switch Syntax(node).as(SyntaxEnum.self) {
   case .closureSignature: return "closure parameter"
   case .enumCaseElement: return "enum case"
