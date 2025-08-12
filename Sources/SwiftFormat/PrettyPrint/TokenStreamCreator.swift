@@ -922,9 +922,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: LabeledExprListSyntax) -> SyntaxVisitorContinueKind {
-    // Intentionally do nothing here. Since `TupleExprElement`s are used both in tuple expressions
-    // and function argument lists, which need to be formatted, differently, those nodes manually
-    // loop over the nodes and arrange them in those contexts.
+    markCommaDelimitedRegion(node, isCollectionLiteral: false)
     return .visitChildren
   }
 
@@ -967,18 +965,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
       }
     }
 
-    if let lastElement = node.last {
-      if let trailingComma = lastElement.trailingComma {
-        ignoredTokens.insert(trailingComma)
-      }
-      before(node.first?.firstToken(viewMode: .sourceAccurate), tokens: .commaDelimitedRegionStart)
-      let endToken =
-        Token.commaDelimitedRegionEnd(
-          hasTrailingComma: lastElement.trailingComma != nil,
-          isSingleElement: node.first == lastElement
-        )
-      after(lastElement.expression.lastToken(viewMode: .sourceAccurate), tokens: [endToken])
-    }
+    markCommaDelimitedRegion(node, isCollectionLiteral: true)
     return .visitChildren
   }
 
@@ -1011,18 +998,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
       }
     }
 
-    if let lastElement = node.last {
-      if let trailingComma = lastElement.trailingComma {
-        ignoredTokens.insert(trailingComma)
-      }
-      before(node.first?.firstToken(viewMode: .sourceAccurate), tokens: .commaDelimitedRegionStart)
-      let endToken =
-        Token.commaDelimitedRegionEnd(
-          hasTrailingComma: lastElement.trailingComma != nil,
-          isSingleElement: node.first == node.last
-        )
-      after(lastElement.lastToken(viewMode: .sourceAccurate), tokens: endToken)
-    }
+    markCommaDelimitedRegion(node, isCollectionLiteral: true)
     return .visitChildren
   }
 
@@ -1291,6 +1267,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
+  override func visit(_ node: ClosureCaptureListSyntax) -> SyntaxVisitorContinueKind {
+    markCommaDelimitedRegion(node, isCollectionLiteral: false)
+    return .visitChildren
+  }
+
   override func visit(_ node: ClosureCaptureSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken(viewMode: .sourceAccurate), tokens: .open)
     after(node.specifier?.lastToken(viewMode: .sourceAccurate), tokens: .break)
@@ -1405,6 +1386,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
+  override func visit(_ node: EnumCaseParameterListSyntax) -> SyntaxVisitorContinueKind {
+    markCommaDelimitedRegion(node, isCollectionLiteral: false)
+    return .visitChildren
+  }
+
   override func visit(_ node: FunctionParameterClauseSyntax) -> SyntaxVisitorContinueKind {
     // Prioritize keeping ") throws -> <return_type>" together. We can only do this if the function
     // has arguments.
@@ -1414,6 +1400,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
       before(node.rightParen, tokens: .open)
     }
 
+    return .visitChildren
+  }
+
+  override func visit(_ node: FunctionParameterListSyntax) -> SyntaxVisitorContinueKind {
+    markCommaDelimitedRegion(node, isCollectionLiteral: false)
     return .visitChildren
   }
 
@@ -1722,6 +1713,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
     return .visitChildren
   }
 
+  override func visit(_ node: GenericParameterListSyntax) -> SyntaxVisitorContinueKind {
+    markCommaDelimitedRegion(node, isCollectionLiteral: false)
+    return .visitChildren
+  }
+
   override func visit(_ node: PrimaryAssociatedTypeClauseSyntax) -> SyntaxVisitorContinueKind {
     after(node.leftAngle, tokens: .break(.open, size: 0), .open(argumentListConsistency()))
     before(node.rightAngle, tokens: .break(.close, size: 0), .close)
@@ -1777,6 +1773,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
   override func visit(_ node: TuplePatternSyntax) -> SyntaxVisitorContinueKind {
     after(node.leftParen, tokens: .break(.open, size: 0), .open)
     before(node.rightParen, tokens: .break(.close, size: 0), .close)
+    return .visitChildren
+  }
+
+  override func visit(_ node: TuplePatternElementListSyntax) -> SyntaxVisitorContinueKind {
+    markCommaDelimitedRegion(node, isCollectionLiteral: false)
     return .visitChildren
   }
 
@@ -4290,6 +4291,32 @@ private final class TokenStreamCreator: SyntaxVisitor {
     after(expr.lastToken(viewMode: .sourceAccurate), tokens: .contextualBreakingEnd)
     let hasCompoundExpression = !expr.is(DeclReferenceExprSyntax.self)
     return (hasCompoundExpression, false)
+  }
+
+  /// Marks a comma-delimited region for the given list, inserting start/end tokens
+  /// and recording the last element’s trailing comma (if any) to be ignored.
+  ///
+  /// - Parameters:
+  ///   - node: The comma-separated list syntax node.
+  ///   - isCollectionLiteral: Indicates whether the list should be treated as a collection literal during formatting.
+  ///     If `true`, the list is affected by the `multiElementCollectionTrailingCommas` configuration.
+  private func markCommaDelimitedRegion<Node: CommaSeparatedListSyntaxProtocol>(
+    _ node: Node,
+    isCollectionLiteral: Bool
+  ) {
+    if let lastElement = node.last {
+      if let trailingComma = lastElement.trailingComma {
+        ignoredTokens.insert(trailingComma)
+      }
+      before(node.first?.firstToken(viewMode: .sourceAccurate), tokens: .commaDelimitedRegionStart)
+      let endToken =
+        Token.commaDelimitedRegionEnd(
+          isCollection: isCollectionLiteral,
+          hasTrailingComma: lastElement.trailingComma != nil,
+          isSingleElement: node.first == lastElement
+        )
+      after(node.lastNodeForTrailingComma?.lastToken(viewMode: .sourceAccurate), tokens: [endToken])
+    }
   }
 }
 

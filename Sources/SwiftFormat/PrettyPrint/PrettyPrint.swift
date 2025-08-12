@@ -507,7 +507,7 @@ public class PrettyPrinter {
     case .commaDelimitedRegionStart:
       commaDelimitedRegionStack.append(openCloseBreakCompensatingLineNumber)
 
-    case .commaDelimitedRegionEnd(let hasTrailingComma, let isSingleElement):
+    case .commaDelimitedRegionEnd(let isCollection, let hasTrailingComma, let isSingleElement):
       guard let startLineNumber = commaDelimitedRegionStack.popLast() else {
         fatalError("Found trailing comma end with no corresponding start.")
       }
@@ -517,17 +517,21 @@ public class PrettyPrinter {
       // types) from a literal (where the elements are the contents of a collection instance).
       // We never want to add a trailing comma in an initializer so we disable trailing commas on
       // single element collections.
-      let shouldHaveTrailingComma =
-        startLineNumber != openCloseBreakCompensatingLineNumber && !isSingleElement
-        && configuration.multiElementCollectionTrailingCommas
-      if shouldHaveTrailingComma && !hasTrailingComma {
-        diagnose(.addTrailingComma, category: .trailingComma)
-      } else if !shouldHaveTrailingComma && hasTrailingComma {
-        diagnose(.removeTrailingComma, category: .trailingComma)
-      }
+      if let shouldHandleCommaDelimitedRegion = shouldHandleCommaDelimitedRegion(isCollection: isCollection) {
+        let shouldHaveTrailingComma =
+          startLineNumber != openCloseBreakCompensatingLineNumber && !isSingleElement
+          && shouldHandleCommaDelimitedRegion
+        if shouldHaveTrailingComma && !hasTrailingComma {
+          diagnose(.addTrailingComma, category: .trailingComma)
+        } else if !shouldHaveTrailingComma && hasTrailingComma {
+          diagnose(.removeTrailingComma, category: .trailingComma)
+        }
 
-      let shouldWriteComma = whitespaceOnly ? hasTrailingComma : shouldHaveTrailingComma
-      if shouldWriteComma {
+        let shouldWriteComma = whitespaceOnly ? hasTrailingComma : shouldHaveTrailingComma
+        if shouldWriteComma {
+          outputBuffer.write(",")
+        }
+      } else if hasTrailingComma {
         outputBuffer.write(",")
       }
 
@@ -692,15 +696,19 @@ public class PrettyPrinter {
       case .commaDelimitedRegionStart:
         lengths.append(0)
 
-      case .commaDelimitedRegionEnd(_, let isSingleElement):
+      case .commaDelimitedRegionEnd(let isCollection, _, let isSingleElement):
         // The token's length is only necessary when a comma will be printed, but it's impossible to
         // know at this point whether the region-start token will be on the same line as this token.
         // Without adding this length to the total, it would be possible for this comma to be
         // printed in column `maxLineLength`. Unfortunately, this can cause breaks to fire
         // unnecessarily when the enclosed tokens comma would fit within `maxLineLength`.
-        let length = isSingleElement ? 0 : 1
-        total += length
-        lengths.append(length)
+        if shouldHandleCommaDelimitedRegion(isCollection: isCollection) == true {
+          let length = isSingleElement ? 0 : 1
+          total += length
+          lengths.append(length)
+        } else {
+          lengths.append(0)
+        }
 
       case .enableFormatting, .disableFormatting:
         // no effect on length calculations
@@ -727,6 +735,19 @@ public class PrettyPrinter {
     }
 
     return outputBuffer.output
+  }
+
+  /// Returns whether trailing comma insertion or removal should be performed for the given comma-delimited region,
+  /// or `nil` to keep as written.
+  private func shouldHandleCommaDelimitedRegion(isCollection: Bool) -> Bool? {
+    switch configuration.multilineTrailingCommaBehavior {
+    case .alwaysUsed:
+      return true
+    case .neverUsed:
+      return false
+    case .keptAsWritten:
+      return isCollection ? configuration.multiElementCollectionTrailingCommas : nil
+    }
   }
 
   /// Used to track the indentation level for the debug token stream output.
