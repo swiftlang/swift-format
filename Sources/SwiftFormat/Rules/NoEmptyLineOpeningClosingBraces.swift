@@ -97,58 +97,6 @@ public final class NoEmptyLinesOpeningClosingBraces: SyntaxFormatRule {
   }
 }
 
-extension Trivia {
-  func trimmingSuperfluousNewlines(fromClosingBrace: Bool) -> (Trivia, Int) {
-    var trimmmed = 0
-    var pendingNewlineCount = 0
-    let pieces = self.indices.reduce([TriviaPiece]()) { (partialResult, index) in
-      let piece = self[index]
-      // Collapse consecutive newlines into a single one
-      if case .newlines(let count) = piece {
-        if fromClosingBrace {
-          if index == self.count - 1 {
-            // For the last index(newline right before the closing brace), collapse into a single newline
-            trimmmed += count - 1
-            return partialResult + [.newlines(1)]
-          } else {
-            pendingNewlineCount += count
-            return partialResult
-          }
-        } else {
-          if let last = partialResult.last, last.isNewline {
-            trimmmed += count
-            return partialResult
-          } else if index == 0 {
-            // For leading trivia not associated with a closing brace, collapse the first newline into a single one
-            trimmmed += count - 1
-            return partialResult + [.newlines(1)]
-          } else {
-            return partialResult + [piece]
-          }
-        }
-      }
-      // Remove spaces/tabs surrounded by newlines
-      if piece.isSpaceOrTab, index > 0, index < self.count - 1, self[index - 1].isNewline, self[index + 1].isNewline {
-        return partialResult
-      }
-      // Handle pending newlines if there are any
-      if pendingNewlineCount > 0 {
-        if index < self.count - 1 {
-          let newlines = TriviaPiece.newlines(pendingNewlineCount)
-          pendingNewlineCount = 0
-          return partialResult + [newlines] + [piece]
-        } else {
-          return partialResult + [.newlines(1)] + [piece]
-        }
-      }
-      // Retain other trivia pieces
-      return partialResult + [piece]
-    }
-
-    return (Trivia(pieces: pieces), trimmmed)
-  }
-}
-
 extension Finding.Message {
   fileprivate static func removeEmptyLinesAfter(_ count: Int) -> Finding.Message {
     "remove empty \(count > 1 ? "lines" : "line") after '{'"
