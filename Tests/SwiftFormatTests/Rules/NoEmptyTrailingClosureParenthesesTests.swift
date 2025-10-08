@@ -46,7 +46,7 @@ final class NoEmptyTrailingClosureParenthesesTests: LintOrFormatRuleTestCase {
             greetEnthusiastically8️⃣() { "Willis" }
           }
         }
-        foo(bar🔟() { baz })9️⃣() { blah }
+        foo(bar9️⃣() { baz }) { blah }
         """,
       expected: """
         func greetEnthusiastically(_ nameProvider: () -> String) {
@@ -89,8 +89,7 @@ final class NoEmptyTrailingClosureParenthesesTests: LintOrFormatRuleTestCase {
         FindingSpec("6️⃣", message: "remove the empty parentheses following 'async'"),
         FindingSpec("7️⃣", message: "remove the empty parentheses following 'greetEnthusiastically'"),
         FindingSpec("8️⃣", message: "remove the empty parentheses following 'greetEnthusiastically'"),
-        FindingSpec("9️⃣", message: "remove the empty parentheses following ')'"),
-        FindingSpec("🔟", message: "remove the empty parentheses following 'bar'"),
+        FindingSpec("9️⃣", message: "remove the empty parentheses following 'bar'"),
       ]
     )
   }
@@ -115,6 +114,23 @@ final class NoEmptyTrailingClosureParenthesesTests: LintOrFormatRuleTestCase {
         greetEnthusiastically(
           // oldArg: x
         ) { "John" }
+        """,
+      findings: []
+    )
+  }
+
+  func testDoNotRemoveParensInCurriedCalls() {
+    assertFormatting(
+      NoEmptyTrailingClosureParentheses.self,
+      input: """
+        perform()() { foo }
+        Executor.execute(executor)() { bar }
+        withSubscript[baz]() { blah }
+        """,
+      expected: """
+        perform()() { foo }
+        Executor.execute(executor)() { bar }
+        withSubscript[baz]() { blah }
         """,
       findings: []
     )

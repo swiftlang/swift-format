@@ -38,6 +38,15 @@ public final class NoEmptyTrailingClosureParentheses: SyntaxFormatRule {
       return super.visit(node)
     }
 
+    // Keep the empty parentheses when in a curried call to avoid the trailing closure
+    // getting associated with the called call expression.
+    guard
+      !node.calledExpression.is(FunctionCallExprSyntax.self)
+        && !node.calledExpression.is(SubscriptCallExprSyntax.self)
+    else {
+      return super.visit(node)
+    }
+
     diagnose(.removeEmptyTrailingParentheses(name: "\(name.trimmedDescription)"), on: leftParen)
 
     // Need to visit `calledExpression` before creating a new node so that the location data (column
