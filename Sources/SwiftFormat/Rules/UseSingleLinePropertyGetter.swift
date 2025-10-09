@@ -35,7 +35,27 @@ public final class UseSingleLinePropertyGetter: SyntaxFormatRule {
     diagnose(.removeExtraneousGetBlock, on: acc)
 
     var result = node
-    result.accessorBlock?.accessors = .getter(body.statements)
+    result.accessorBlock?.accessors = .getter(body.statements.trimmed)
+
+    var triviaBeforeStatements = Trivia()
+    if let accessorPrecedingTrivia = node.accessorBlock?.accessors.allPrecedingTrivia {
+      triviaBeforeStatements += accessorPrecedingTrivia
+    }
+    if acc.accessorSpecifier.trailingTrivia.hasAnyComments {
+      triviaBeforeStatements += acc.accessorSpecifier.trailingTrivia
+      triviaBeforeStatements += .newline
+    }
+    triviaBeforeStatements += body.statements.allPrecedingTrivia
+    result.accessorBlock?.leftBrace.trailingTrivia =
+      triviaBeforeStatements.trimmingSuperfluousNewlines(fromClosingBrace: false).0
+
+    var triviaAfterStatements = body.statements.allFollowingTrivia
+    if let accessorsFollowingTrivia = node.accessorBlock?.accessors.allFollowingTrivia {
+      triviaAfterStatements += accessorsFollowingTrivia
+    }
+    result.accessorBlock?.accessors.trailingTrivia =
+      triviaAfterStatements.trimmingSuperfluousNewlines(fromClosingBrace: true).0
+    result.accessorBlock?.rightBrace.leadingTrivia = []
     return result
   }
 }

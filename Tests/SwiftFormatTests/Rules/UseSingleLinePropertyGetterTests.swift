@@ -21,7 +21,7 @@ final class UseSingleLinePropertyGetterTests: LintOrFormatRuleTestCase {
         var g: Int { return 4 }
         var h: Int {
           1️⃣get {
-            return 4
+              return 4
           }
         }
         var i: Int {
@@ -50,7 +50,7 @@ final class UseSingleLinePropertyGetterTests: LintOrFormatRuleTestCase {
       expected: """
         var g: Int { return 4 }
         var h: Int {
-            return 4
+              return 4
         }
         var i: Int {
           get { return 0 }
@@ -73,6 +73,176 @@ final class UseSingleLinePropertyGetterTests: LintOrFormatRuleTestCase {
           get async throws {
             return 4
           }
+        }
+        """,
+      findings: [
+        FindingSpec(
+          "1️⃣",
+          message: "remove 'get {...}' around the accessor and move its body directly into the computed property"
+        )
+      ]
+    )
+  }
+
+  func testSingleLineGetterWithInlineComments() {
+    assertFormatting(
+      UseSingleLinePropertyGetter.self,
+      input: """
+        var x: Int {
+          // A comment
+          1️⃣get { 1 }
+        }
+        var y: Int {
+          2️⃣get { 1 } // A comment
+        }
+        var z: Int {
+          3️⃣get { 1 }
+          // A comment
+        }
+        """,
+      expected: """
+        var x: Int {
+          // A comment
+           1 
+        }
+        var y: Int {
+           1  // A comment
+        }
+        var z: Int {
+           1 
+          // A comment
+        }
+        """,
+      findings: [
+        FindingSpec(
+          "1️⃣",
+          message: "remove 'get {...}' around the accessor and move its body directly into the computed property"
+        ),
+        FindingSpec(
+          "2️⃣",
+          message: "remove 'get {...}' around the accessor and move its body directly into the computed property"
+        ),
+        FindingSpec(
+          "3️⃣",
+          message: "remove 'get {...}' around the accessor and move its body directly into the computed property"
+        ),
+      ]
+    )
+  }
+
+  func testMultiLineGetterWithCommentsInsideBody() {
+    assertFormatting(
+      UseSingleLinePropertyGetter.self,
+      input: """
+        var x: Int {
+          1️⃣get {
+            // A comment
+            1
+          }
+        }
+        var x: Int {
+          2️⃣get {
+            1 // A comment
+          }
+        }
+        var x: Int {
+          3️⃣get {
+            1
+            // A comment
+          }
+        }
+        """,
+      expected: """
+        var x: Int {
+            // A comment
+            1
+        }
+        var x: Int {
+            1 // A comment
+        }
+        var x: Int {
+            1
+            // A comment
+        }
+        """,
+      findings: [
+        FindingSpec(
+          "1️⃣",
+          message: "remove 'get {...}' around the accessor and move its body directly into the computed property"
+        ),
+        FindingSpec(
+          "2️⃣",
+          message: "remove 'get {...}' around the accessor and move its body directly into the computed property"
+        ),
+        FindingSpec(
+          "3️⃣",
+          message: "remove 'get {...}' around the accessor and move its body directly into the computed property"
+        ),
+      ]
+    )
+  }
+
+  func testGetterWithCommentsAfterGetKeyword() {
+    assertFormatting(
+      UseSingleLinePropertyGetter.self,
+      input: """
+        var x: Int {
+          1️⃣get // hello
+          { 1 }
+        }
+
+        var x: Int {
+          2️⃣get /* hello */ { 1 }
+        }
+        """,
+      expected: """
+        var x: Int {
+           // hello
+         1 
+        }
+
+        var x: Int {
+           /* hello */ 
+         1 
+        }
+        """,
+      findings: [
+        FindingSpec(
+          "1️⃣",
+          message: "remove 'get {...}' around the accessor and move its body directly into the computed property"
+        ),
+        FindingSpec(
+          "2️⃣",
+          message: "remove 'get {...}' around the accessor and move its body directly into the computed property"
+        ),
+      ]
+    )
+  }
+
+  func testGetterWithCommentsAroundBracesAndBody() {
+    assertFormatting(
+      UseSingleLinePropertyGetter.self,
+      input: """
+        var x: Int { // A comment
+          // B comment
+          1️⃣get /* C comment */ { // D comment
+            // E comment
+            1 // F comment
+            // G comment
+          } // H comment
+          // I comment
+        }
+        """,
+      expected: """
+        var x: Int { // A comment
+          // B comment
+           /* C comment */ 
+         // D comment
+            // E comment
+            1 // F comment
+            // G comment
+           // H comment
+          // I comment
         }
         """,
       findings: [
