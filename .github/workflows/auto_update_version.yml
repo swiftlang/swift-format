@@ -1,0 +1,67 @@
+name: Update PrintVersion on release branch creation
+
+on:
+  create:
+    branches:
+      - "release/*"
+
+jobs:
+  update-version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ github.token }}
+
+      - name: Extract version from branch name
+        run: |
+          BRANCH_NAME="${GITHUB_REF_NAME}"
+          VERSION="${BRANCH_NAME#release/}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+          echo "RELEASE_BRANCH=$BRANCH_NAME" >> $GITHUB_ENV
+          echo "UPDATE_BRANCH=updateversion/$VERSION" >> $GITHUB_ENV
+
+      - name: Create updateversion branch
+        run: |
+          git checkout -b $UPDATE_BRANCH $RELEASE_BRANCH
+
+      - name: Update PrintVersion.swift
+        id: update_version
+        run: |
+          FILE=Sources/swift-format/PrintVersion.swift
+
+          if grep -q "print(\"$VERSION\")" "$FILE"; then
+            echo "Version already $VERSION; skipping update."
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          sed -i "s/print(\".*\")/print(\"$VERSION\")/" "$FILE"
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Commit and push changes
+        if: steps.update_version.outputs.changed == 'true'
+        run: |
+          git config user.name "swift-ci"
+          git config user.email "swift-ci@users.noreply.github.com"
+          git add Sources/swift-format/PrintVersion.swift
+          git commit -m "Update version to $VERSION"
+          git push origin $UPDATE_BRANCH
+
+      - name: Create Pull Request
+        if: steps.update_version.outputs.changed == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh pr create \
+            --base "${{ env.RELEASE_BRANCH }}" \
+            --head "${{ env.UPDATE_BRANCH }}" \
+            --title "[${{ env.VERSION }}] Update version to ${{ env.VERSION }}" \
+            --body "This PR was automatically opened by a GitHub action on creation of a release branch (\`${{ env.RELEASE_BRANCH }}\`).
+            Review the version update and merge if correct, otherwise update the version manually." \
+            --draft
