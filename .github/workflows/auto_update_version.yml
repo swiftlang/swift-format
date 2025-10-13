@@ -1,12 +1,11 @@
 name: Update PrintVersion on release branch creation
 
 on:
-  create:
-    branches:
-      - "release/*"
+  create
 
 jobs:
   update-version:
+    if: ${{ github.ref_type == 'branch' && startsWith(github.ref_name, 'release/') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -16,6 +15,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.ref }}
           token: ${{ github.token }}
 
       - name: Extract version from branch name
