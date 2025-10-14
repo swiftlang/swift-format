@@ -490,6 +490,10 @@ than binding and immediately discarding the value.
 For example, `if let _ = someValue { ... }` is forbidden. Use `if someValue != nil { ... }`
 instead.
 
+Note: If the conditional binding carries an explicit type annotation (e.g. `if let _: S? = expr`),
+we skip the transformation. Such annotations can be necessary to drive generic type inference
+when a function mentions a type only in its return position.
+
 Lint: `let _ = expr` inside a condition list will yield a lint error.
 
 Format: `let _ = expr` inside a condition list will be replaced by `expr != nil`.

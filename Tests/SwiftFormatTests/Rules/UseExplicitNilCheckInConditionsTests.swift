@@ -160,4 +160,18 @@ final class UseExplicitNilCheckInConditionsTests: LintOrFormatRuleTestCase {
       ]
     )
   }
+
+  func testTypeAnnotations() {
+    assertFormatting(
+      UseExplicitNilCheckInConditions.self,
+      input: """
+        if let _: F = foo() {}
+        if let _: S? = foo() {}
+        """,
+      expected: """
+        if let _: F = foo() {}
+        if let _: S? = foo() {}
+        """
+    )
+  }
 }
