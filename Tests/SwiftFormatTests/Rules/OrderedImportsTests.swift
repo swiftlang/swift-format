@@ -616,11 +616,13 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         import Zebras
         1️⃣import Apples
         #if canImport(Darwin)
-          import Darwin
+          import Foundation
+          2️⃣import Darwin
         #elseif canImport(Glibc)
           import Glibc
+          3️⃣import Foundation
         #endif
-        2️⃣import Aardvarks
+        4️⃣import Aardvarks
 
         foo()
         bar()
@@ -633,7 +635,9 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
 
         #if canImport(Darwin)
           import Darwin
+          import Foundation
         #elseif canImport(Glibc)
+          import Foundation
           import Glibc
         #endif
 
@@ -643,7 +647,9 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         """,
       findings: [
         FindingSpec("1️⃣", message: "sort import statements lexicographically"),
-        FindingSpec("2️⃣", message: "place imports at the top of the file"),
+        FindingSpec("2️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("3️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("4️⃣", message: "place imports at the top of the file"),
       ]
     )
   }
