@@ -26,7 +26,16 @@ import SwiftSyntax
 public final class OrderedImports: SyntaxFormatRule {
 
   public override func visit(_ node: SourceFileSyntax) -> SourceFileSyntax {
-    let lines = generateLines(codeBlockItemList: node.statements, context: context)
+    var newNode = node
+    newNode.statements = orderImports(in: node.statements, atStartOfFile: true)
+    return newNode
+  }
+
+  private func orderImports(
+    in codeBlockItemList: CodeBlockItemListSyntax,
+    atStartOfFile: Bool
+  ) -> CodeBlockItemListSyntax {
+    let lines = generateLines(codeBlockItemList: codeBlockItemList, context: context)
 
     // Stores the formatted and sorted lines that will be used to reconstruct the list of code block
     // items later.
@@ -38,7 +47,7 @@ public final class OrderedImports: SyntaxFormatRule {
     var testableImports: [Line] = []
     var codeBlocks: [Line] = []
     var fileHeader: [Line] = []
-    var atStartOfFile = true
+    var atStartOfFile = atStartOfFile
     var commentBuffer: [Line] = []
 
     func formatAndAppend(linesSection: ArraySlice<Line>) {
@@ -118,6 +127,24 @@ public final class OrderedImports: SyntaxFormatRule {
         }
       }
 
+      if let syntaxNode = line.syntaxNode, case .ifConfigCodeBlock(let ifConfigCodeBlock) = syntaxNode {
+        var ifConfigDecl = ifConfigCodeBlock.item.cast(IfConfigDeclSyntax.self)
+
+        let newClauses = ifConfigDecl.clauses.map { clause in
+          guard case .statements(let codeBlockItemList) = clause.elements else {
+            return clause
+          }
+          var newClause = clause
+          var newCodeBlockItemList = orderImports(in: codeBlockItemList, atStartOfFile: false)
+          newCodeBlockItemList.leadingTrivia = .newline + newCodeBlockItemList.leadingTrivia
+          newClause.elements = .statements(newCodeBlockItemList)
+          return newClause
+        }
+
+        ifConfigDecl.clauses = IfConfigClauseListSyntax(newClauses)
+        line.syntaxNode = .ifConfigCodeBlock(CodeBlockItemSyntax(item: .decl(DeclSyntax(ifConfigDecl))))
+      }
+
       // Separate lines into different categories along with any associated comments.
       switch line.type {
       case .regularImport:
@@ -154,9 +181,7 @@ public final class OrderedImports: SyntaxFormatRule {
       formatAndAppend(linesSection: lines[lastSliceStartIndex..<lines.endIndex])
     }
 
-    var newNode = node
-    newNode.statements = CodeBlockItemListSyntax(convertToCodeBlockItems(lines: formattedLines))
-    return newNode
+    return CodeBlockItemListSyntax(convertToCodeBlockItems(lines: formattedLines))
   }
 
   /// Raise lint errors if the different import types appear in the wrong order, and if import
@@ -354,11 +379,16 @@ private func generateLines(
       var blockWithoutTrailingTrivia = block
       blockWithoutTrailingTrivia.trailingTrivia = []
       currentLine.syntaxNode = .importCodeBlock(blockWithoutTrailingTrivia, sortable: sortable)
+    } else if block.item.is(IfConfigDeclSyntax.self) {
+      if currentLine.syntaxNode != nil {
+        appendNewLine()
+      }
+      currentLine.syntaxNode = .ifConfigCodeBlock(block)
     } else {
       if let syntaxNode = currentLine.syntaxNode {
         // Multiple code blocks can be merged, as long as there isn't an import statement.
         switch syntaxNode {
-        case .importCodeBlock:
+        case .importCodeBlock, .ifConfigCodeBlock:
           appendNewLine()
           currentLine.syntaxNode = .nonImportCodeBlocks([block])
         case .nonImportCodeBlocks(let existingCodeBlocks):
@@ -400,6 +430,8 @@ private func convertToCodeBlockItems(lines: [Line]) -> [CodeBlockItemSyntax] {
       switch syntaxNode {
       case .importCodeBlock(let codeBlock, _):
         append(codeBlockItem: codeBlock)
+      case .ifConfigCodeBlock(let ifConfigCodeBlock):
+        append(codeBlockItem: ifConfigCodeBlock)
       case .nonImportCodeBlocks(let codeBlocks):
         codeBlocks.forEach(append(codeBlockItem:))
       }
@@ -458,6 +490,9 @@ private class Line {
     case nonImportCodeBlocks([CodeBlockItemSyntax])
     /// A single code block item whose content must be an import decl.
     case importCodeBlock(CodeBlockItemSyntax, sortable: Bool)
+    /// A single code block item whose content must be an if config decl.
+    /// This is used to sort conditional imports.
+    case ifConfigCodeBlock(CodeBlockItemSyntax)
   }
 
   /// Stores line comments. `syntaxNode` need not be defined, since a comment can exist by itself on
@@ -478,7 +513,7 @@ private class Line {
   var type: LineType {
     if let syntaxNode = syntaxNode {
       switch syntaxNode {
-      case .nonImportCodeBlocks:
+      case .nonImportCodeBlocks, .ifConfigCodeBlock:
         return .codeBlock
       case .importCodeBlock(let importCodeBlock, _):
         guard let importDecl = importCodeBlock.item.as(ImportDeclSyntax.self) else {
@@ -542,6 +577,8 @@ private class Line {
       return codeBlock.firstToken(viewMode: .sourceAccurate)
     case .nonImportCodeBlocks(let codeBlocks):
       return codeBlocks.first?.firstToken(viewMode: .sourceAccurate)
+    case .ifConfigCodeBlock(let codeBlock):
+      return codeBlock.firstToken(viewMode: .sourceAccurate)
     }
   }
 
@@ -592,6 +629,8 @@ extension Line: CustomStringConvertible {
         description += "\(codeBlocks.count) code blocks "
       case .importCodeBlock(_, let sortable):
         description += "\(sortable ? "sorted" : "unsorted") import \(importName) "
+      case .ifConfigCodeBlock:
+        description += "if config code block "
       }
     }
 
