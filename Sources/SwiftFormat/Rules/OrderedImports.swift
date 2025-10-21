@@ -127,7 +127,10 @@ public final class OrderedImports: SyntaxFormatRule {
         }
       }
 
-      if let syntaxNode = line.syntaxNode, case .ifConfigCodeBlock(let ifConfigCodeBlock) = syntaxNode {
+      if context.configuration.orderedImports.includeConditionalImports,
+        let syntaxNode = line.syntaxNode,
+        case .ifConfigCodeBlock(let ifConfigCodeBlock) = syntaxNode
+      {
         var ifConfigDecl = ifConfigCodeBlock.item.cast(IfConfigDeclSyntax.self)
 
         let newClauses = ifConfigDecl.clauses.map { clause in

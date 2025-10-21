@@ -48,6 +48,7 @@ public struct Configuration: Codable, Equatable {
     case multiElementCollectionTrailingCommas
     case reflowMultilineStringLiterals
     case indentBlankLines
+    case orderedImports
   }
 
   /// A dictionary containing the default enabled/disabled states of rules, keyed by the rules'
@@ -301,6 +302,9 @@ public struct Configuration: Codable, Equatable {
   /// If false (the default), the whitespace in blank lines will be removed entirely.
   public var indentBlankLines: Bool
 
+  /// Configuration for the `OrderedImports` rule.
+  public var orderedImports: OrderedImportsConfiguration
+
   /// Creates a new `Configuration` by loading it from a configuration file.
   public init(contentsOf url: URL) throws {
     let data = try Data(contentsOf: url)
@@ -443,6 +447,13 @@ public struct Configuration: Codable, Equatable {
       )
       ?? defaults.indentBlankLines
 
+    self.orderedImports =
+      try container.decodeIfPresent(
+        OrderedImportsConfiguration.self,
+        forKey: .orderedImports
+      )
+      ?? defaults.orderedImports
+
     // If the `rules` key is not present at all, default it to the built-in set
     // so that the behavior is the same as if the configuration had been
     // default-initialized. To get an empty rules dictionary, one can explicitly
@@ -481,6 +492,8 @@ public struct Configuration: Codable, Equatable {
     try container.encode(noAssignmentInExpressions, forKey: .noAssignmentInExpressions)
     try container.encode(multiElementCollectionTrailingCommas, forKey: .multiElementCollectionTrailingCommas)
     try container.encode(reflowMultilineStringLiterals, forKey: .reflowMultilineStringLiterals)
+    try container.encode(indentBlankLines, forKey: .indentBlankLines)
+    try container.encode(orderedImports, forKey: .orderedImports)
     try container.encode(rules, forKey: .rules)
   }
 
@@ -543,6 +556,14 @@ public struct NoAssignmentInExpressionsConfiguration: Codable, Equatable {
     // in the test.
     "XCTAssertNoThrow"
   ]
+
+  public init() {}
+}
+
+/// Configuration for the `OrderedImports` rule.
+public struct OrderedImportsConfiguration: Codable, Equatable {
+  /// Determines whether imports within conditional compilation blocks should be ordered.
+  public var includeConditionalImports: Bool = false
 
   public init() {}
 }
