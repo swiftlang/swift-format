@@ -1,5 +1,8 @@
 name: Update PrintVersion on release branch creation
 
+permissions:
+  contents: read
+
 on:
   create
 
