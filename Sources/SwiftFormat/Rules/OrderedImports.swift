@@ -17,6 +17,9 @@ import SwiftSyntax
 /// imports, and 4) @testable imports. These groups are separated by a single blank line. Blank lines in
 /// between the import declarations are removed.
 ///
+/// By default, imports within conditional compilation blocks (`#if`, `#elseif`, `#else`) are not ordered.
+/// This behavior can be controlled via the `orderedImports.includeConditionalImports` configuration option.
+///
 /// Lint: If an import appears anywhere other than the beginning of the file it resides in,
 ///       not lexicographically ordered, or  not in the appropriate import group, a lint error is
 ///       raised.
