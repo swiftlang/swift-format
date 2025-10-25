@@ -296,6 +296,19 @@ too long.
 
 **default:** `false`
 
+---
+
+### `orderedImports`
+**type:** object
+
+**description:** Configuration for the `OrderedImports` rule.
+
+- `includeConditionalImports` _(boolean)_: Determines whether imports within conditional compilation blocks (`#if`, `#elseif`, `#else`) should be ordered. When `true`, imports inside conditional blocks will be sorted and organized according to the same rules as top-level imports. When `false`, imports within conditional blocks are left in their original order.
+
+**default:** `{ "includeConditionalImports" : false }`
+
+---
+
 > TODO: Add support for enabling/disabling specific syntax transformations in
 > the pipeline.
 
