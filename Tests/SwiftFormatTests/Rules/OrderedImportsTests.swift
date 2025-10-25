@@ -706,7 +706,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
   }
 
   func testNestedConditionalImports() {
-    var configuration = Configuration()
+    var configuration = Configuration.forTesting
     configuration.orderedImports.includeConditionalImports = true
 
     assertFormatting(
@@ -947,6 +947,75 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       findings: [
         FindingSpec("1️⃣", message: "sort import statements lexicographically")
       ]
+    )
+  }
+
+  func testPreservesEmptyConditionalCompilationBlock() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.includeConditionalImports = true
+
+    let code = """
+      import Apples
+      import Zebras
+
+      #if FOO
+      #endif
+
+      foo()
+      """
+
+    assertFormatting(
+      OrderedImports.self,
+      input: code,
+      expected: code,
+      configuration: configuration
+    )
+  }
+
+  func testPreservesHeaderCommentInConditionalCompilationBlock() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.includeConditionalImports = true
+
+    let code = """
+      import Apples
+
+      #if FOO
+        // Performing FOO-specific logic
+
+        import Foundation
+      #endif
+
+      foo()
+      """
+
+    assertFormatting(
+      OrderedImports.self,
+      input: code,
+      expected: code,
+      configuration: configuration
+    )
+  }
+
+  func testPreservesCommentsOnlyInConditionalCompilationBlock() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.includeConditionalImports = true
+
+    let code = """
+      import Apples
+
+      #if FOO
+        // Just a comment
+        // Another comment
+      #endif
+
+      foo()
+      """
+
+    assertFormatting(
+      OrderedImports.self,
+      input: code,
+      expected: code,
+      configuration: configuration
     )
   }
 }

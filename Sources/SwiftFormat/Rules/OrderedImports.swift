@@ -27,14 +27,11 @@ public final class OrderedImports: SyntaxFormatRule {
 
   public override func visit(_ node: SourceFileSyntax) -> SourceFileSyntax {
     var newNode = node
-    newNode.statements = orderImports(in: node.statements, atStartOfFile: true)
+    newNode.statements = orderImports(in: node.statements)
     return newNode
   }
 
-  private func orderImports(
-    in codeBlockItemList: CodeBlockItemListSyntax,
-    atStartOfFile: Bool
-  ) -> CodeBlockItemListSyntax {
+  private func orderImports(in codeBlockItemList: CodeBlockItemListSyntax) -> CodeBlockItemListSyntax {
     let lines = generateLines(codeBlockItemList: codeBlockItemList, context: context)
 
     // Stores the formatted and sorted lines that will be used to reconstruct the list of code block
@@ -47,7 +44,7 @@ public final class OrderedImports: SyntaxFormatRule {
     var testableImports: [Line] = []
     var codeBlocks: [Line] = []
     var fileHeader: [Line] = []
-    var atStartOfFile = atStartOfFile
+    var atStartOfFile = true
     var commentBuffer: [Line] = []
 
     func formatAndAppend(linesSection: ArraySlice<Line>) {
@@ -55,6 +52,10 @@ public final class OrderedImports: SyntaxFormatRule {
 
       // Perform linting on the grouping of the imports.
       checkGrouping(linesSection)
+
+      if let firstLine = fileHeader.first, firstLine.type == .blankLine {
+        fileHeader.removeFirst()
+      }
 
       if let lastLine = fileHeader.last, lastLine.type == .blankLine {
         fileHeader.removeLast()
@@ -138,7 +139,7 @@ public final class OrderedImports: SyntaxFormatRule {
             return clause
           }
           var newClause = clause
-          var newCodeBlockItemList = orderImports(in: codeBlockItemList, atStartOfFile: false)
+          var newCodeBlockItemList = orderImports(in: codeBlockItemList)
           newCodeBlockItemList.leadingTrivia = .newline + newCodeBlockItemList.leadingTrivia
           newClause.elements = .statements(newCodeBlockItemList)
           return newClause
