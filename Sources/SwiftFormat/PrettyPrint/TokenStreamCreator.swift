@@ -2395,13 +2395,25 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: AttributedTypeSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken(viewMode: .sourceAccurate), tokens: .open)
-    arrangeAttributeList(node.attributes)
+
+    let breakToken: Token = .break(.continue, newlines: .elective(ignoresDiscretionary: true))
     for specifier in node.specifiers {
       after(
-        specifier.firstToken(viewMode: .sourceAccurate),
-        tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true))
+        specifier.lastToken(viewMode: .sourceAccurate),
+        tokens: breakToken
       )
     }
+    arrangeAttributeList(node.attributes, suppressFinalBreak: false, lineBreak: breakToken, shouldGroup: false)
+    for specifier in node.lateSpecifiers {
+      after(
+        specifier.lastToken(viewMode: .sourceAccurate),
+        tokens: breakToken
+      )
+    }
+
+    before(node.baseType.firstToken(viewMode: .sourceAccurate), tokens: .open)
+    after(node.baseType.lastToken(viewMode: .sourceAccurate), tokens: .close)
+
     after(node.lastToken(viewMode: .sourceAccurate), tokens: .close)
     return .visitChildren
   }
@@ -3067,40 +3079,73 @@ private final class TokenStreamCreator: SyntaxVisitor {
   private func arrangeAttributeList(
     _ attributes: AttributeListSyntax?,
     suppressFinalBreak: Bool = false,
-    separateByLineBreaks: Bool = false
+    separateByLineBreaks: Bool = false,
+    shouldGroup: Bool = true
   ) {
-    if let attributes = attributes {
-      let behavior: NewlineBehavior = separateByLineBreaks ? .hard : .elective
+    let behavior: NewlineBehavior = separateByLineBreaks ? .hard : .elective
+    arrangeAttributeList(
+      attributes,
+      suppressFinalBreak: suppressFinalBreak,
+      lineBreak: .break(.same, newlines: behavior),
+      shouldGroup: shouldGroup
+    )
+  }
+
+  /// Applies formatting tokens around and between the attributes in an attribute list.
+  private func arrangeAttributeList(
+    _ attributes: AttributeListSyntax?,
+    suppressFinalBreak: Bool,
+    lineBreak: Token,
+    shouldGroup: Bool
+  ) {
+    guard let attributes, !attributes.isEmpty else {
+      return
+    }
+
+    if shouldGroup {
       before(attributes.firstToken(viewMode: .sourceAccurate), tokens: .open)
-      if attributes.dropLast().isEmpty,
-        let ifConfig = attributes.first?.as(IfConfigDeclSyntax.self)
-      {
-        for clause in ifConfig.clauses {
-          if let nestedAttributes = AttributeListSyntax(clause.elements) {
-            arrangeAttributeList(nestedAttributes, suppressFinalBreak: true, separateByLineBreaks: separateByLineBreaks)
-          }
+    }
+
+    if attributes.dropLast().isEmpty,
+      let ifConfig = attributes.first?.as(IfConfigDeclSyntax.self)
+    {
+      for clause in ifConfig.clauses {
+        if let nestedAttributes = AttributeListSyntax(clause.elements) {
+          arrangeAttributeList(
+            nestedAttributes,
+            suppressFinalBreak: true,
+            lineBreak: lineBreak,
+            shouldGroup: shouldGroup
+          )
         }
-      } else {
-        for element in attributes.dropLast() {
-          if let ifConfig = element.as(IfConfigDeclSyntax.self) {
-            for clause in ifConfig.clauses {
-              if let nestedAttributes = AttributeListSyntax(clause.elements) {
-                arrangeAttributeList(
-                  nestedAttributes,
-                  suppressFinalBreak: true,
-                  separateByLineBreaks: separateByLineBreaks
-                )
-              }
+      }
+    } else {
+      for element in attributes.dropLast() {
+        if let ifConfig = element.as(IfConfigDeclSyntax.self) {
+          for clause in ifConfig.clauses {
+            if let nestedAttributes = AttributeListSyntax(clause.elements) {
+              arrangeAttributeList(
+                nestedAttributes,
+                suppressFinalBreak: true,
+                lineBreak: lineBreak,
+                shouldGroup: shouldGroup
+              )
             }
-          } else {
-            after(element.lastToken(viewMode: .sourceAccurate), tokens: .break(.same, newlines: behavior))
           }
+        } else {
+          after(element.lastToken(viewMode: .sourceAccurate), tokens: lineBreak)
         }
       }
-      var afterAttributeTokens = [Token.close]
-      if !suppressFinalBreak {
-        afterAttributeTokens.append(.break(.same, newlines: behavior))
-      }
+    }
+
+    var afterAttributeTokens = [Token]()
+    if shouldGroup {
+      afterAttributeTokens.append(.close)
+    }
+    if !suppressFinalBreak {
+      afterAttributeTokens.append(lineBreak)
+    }
+    if !afterAttributeTokens.isEmpty {
       after(attributes.lastToken(viewMode: .sourceAccurate), tokens: afterAttributeTokens)
     }
   }
