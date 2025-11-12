@@ -316,15 +316,15 @@ final class FunctionTypeTests: PrettyPrintTestCase {
       expected: """
         func f(
           _ body:
-            nonisolated(nonsending)
-            () async -> Void
+            nonisolated(nonsending) ()
+            async -> Void
         ) {}
 
         func f(
           _ body:
             @Foo @Bar
-            nonisolated(nonsending)
-            () async -> Void
+            nonisolated(nonsending) ()
+            async -> Void
         ) {}
 
         func f(
@@ -336,8 +336,8 @@ final class FunctionTypeTests: PrettyPrintTestCase {
         func f(
           _ body:
             inout @Foo @Bar
-            nonisolated(nonsending)
-            () async -> Void
+            nonisolated(nonsending) ()
+            async -> Void
         ) {}
 
         """,

@@ -2410,9 +2410,6 @@ fileprivate final class TokenStreamCreator: SyntaxVisitor {
       )
     }
 
-    before(node.baseType.firstToken(viewMode: .sourceAccurate), tokens: .open)
-    after(node.baseType.lastToken(viewMode: .sourceAccurate), tokens: .close)
-
     after(node.lastToken(viewMode: .sourceAccurate), tokens: .close)
     return .visitChildren
   }
