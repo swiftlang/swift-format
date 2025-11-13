@@ -8,7 +8,7 @@ on:
 
 jobs:
   update-version:
-    if: ${{ github.ref_type == 'branch' && startsWith(github.ref_name, 'release/') }}
+    if: ${{ github.repository == 'swiftlang/swift-format' && github.ref_type == 'branch' && startsWith(github.ref_name, 'release/') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
