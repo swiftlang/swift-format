@@ -65,12 +65,12 @@ final class StderrDiagnosticPrinter {
 
       switch diagnostic.severity {
       case .error: stderr.write("\(ansiSGR(.boldRed))error: ")
-      case .warning: stderr.write("\(ansiSGR(.boldMagenta))warning: ")
+      case .warning: stderr.write("\(ansiSGR(.boldYellow))warning: ")
       case .note: stderr.write("\(ansiSGR(.boldGray))note: ")
       }
 
       if let category = diagnostic.category {
-        stderr.write("\(ansiSGR(.boldYellow))[\(category)] ")
+        stderr.write("\(ansiSGR(.boldMagenta))[\(category)] ")
       }
       stderr.write("\(ansiSGR(.reset))\(ansiSGR(.bold))\(diagnostic.message)\(ansiSGR(.reset))\n")
     }
