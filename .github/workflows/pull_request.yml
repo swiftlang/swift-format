@@ -26,3 +26,39 @@ jobs:
     with:
       license_header_check_project_name: "Swift.org"
       api_breakage_check_allowlist_path: "api-breakages.txt"
+  compatibility_check:
+    # Format a list of real-world projects that enforce formatting using the latest swift-format version.
+    name: Check compatibility with real world projects
+    runs-on: ubuntu-latest
+    container:
+      image: swift:6.2
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - name: Check out related PRs
+        run: |
+          apt-get update && apt-get install -y curl
+          curl -s https://raw.githubusercontent.com/swiftlang/github-workflows/refs/heads/main/.github/workflows/scripts/cross-pr-checkout.swift > /tmp/cross-pr-checkout.swift
+          swift /tmp/cross-pr-checkout.swift "${{ github.repository }}" "${{ github.event.number }}"
+      - name: Build
+        run: swift build --configuration release
+      - name: Format swift-format
+        run: .build/release/swift-format lint --parallel --recursive --strict .
+      - name: Checkout swift-syntax
+        uses: actions/checkout@v4
+        with:
+          repository: swiftlang/swift-syntax
+          persist-credentials: false
+          path: swift-syntax
+      - name: Format swift-syntax
+        run: .build/release/swift-format lint --parallel --recursive --strict swift-syntax
+      - name: Checkout sourcekit-lsp
+        uses: actions/checkout@v4
+        with:
+          repository: swiftlang/sourcekit-lsp
+          persist-credentials: false
+          path: sourcekit-lsp
+      - name: Format sourcekit-lsp
+        run: .build/release/swift-format lint --parallel --recursive --strict sourcekit-lsp
