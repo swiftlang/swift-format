@@ -44,8 +44,21 @@ jobs:
           swift /tmp/cross-pr-checkout.swift "${{ github.repository }}" "${{ github.event.number }}"
       - name: Build
         run: swift build --configuration release
+      - name: Write check script
+        run: |
+          cat > /tmp/check-formatting.sh <<EOL
+          #!/usr/bin/env sh
+          set -ex
+          cd "\$1"
+          # Format and run 'git diff' first because this yields more insightful results than 'swift-format lint'
+          .build/release/swift-format --in-place --parallel --recursive .
+          git diff
+          # Linting may discover issues that weren't changed during formatting (such as diagnosing lowercase classes). Check that we didn't introduce any new lint errors.
+          .build/release/swift-format lint --parallel --recursive --strict .
+          EOL
+          chmod a+x /tmp/check-formatting.sh
       - name: Format swift-format
-        run: .build/release/swift-format lint --parallel --recursive --strict .
+        run: /tmp/check-formatting.sh .
       - name: Checkout swift-syntax
         uses: actions/checkout@v4
         with:
@@ -53,7 +66,7 @@ jobs:
           persist-credentials: false
           path: swift-syntax
       - name: Format swift-syntax
-        run: .build/release/swift-format lint --parallel --recursive --strict swift-syntax
+        run: /tmp/check-formatting.sh swift-syntax
       - name: Checkout sourcekit-lsp
         uses: actions/checkout@v4
         with:
@@ -61,4 +74,4 @@ jobs:
           persist-credentials: false
           path: sourcekit-lsp
       - name: Format sourcekit-lsp
-        run: .build/release/swift-format lint --parallel --recursive --strict sourcekit-lsp
+        run: /tmp/check-formatting.sh sourcekit-lsp
