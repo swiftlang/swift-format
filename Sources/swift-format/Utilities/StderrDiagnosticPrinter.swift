@@ -33,8 +33,8 @@ final class StderrDiagnosticPrinter {
     case boldRed = "1;31"
     case boldYellow = "1;33"
     case boldMagenta = "1;35"
-    case boldWhite = "1;37"
     case boldGray = "1;90"
+    case bold = "1"
     case reset = "0"
   }
 
@@ -61,18 +61,18 @@ final class StderrDiagnosticPrinter {
     printQueue.sync {
       let stderr = FileHandleTextOutputStream(FileHandle.standardError)
 
-      stderr.write("\(ansiSGR(.boldWhite))\(description(of: diagnostic.location)): ")
+      stderr.write("\(ansiSGR(.reset))\(description(of: diagnostic.location)): ")
 
       switch diagnostic.severity {
       case .error: stderr.write("\(ansiSGR(.boldRed))error: ")
-      case .warning: stderr.write("\(ansiSGR(.boldMagenta))warning: ")
+      case .warning: stderr.write("\(ansiSGR(.boldYellow))warning: ")
       case .note: stderr.write("\(ansiSGR(.boldGray))note: ")
       }
 
       if let category = diagnostic.category {
-        stderr.write("\(ansiSGR(.boldYellow))[\(category)] ")
+        stderr.write("\(ansiSGR(.boldMagenta))[\(category)] ")
       }
-      stderr.write("\(ansiSGR(.boldWhite))\(diagnostic.message)\(ansiSGR(.reset))\n")
+      stderr.write("\(ansiSGR(.reset))\(ansiSGR(.bold))\(diagnostic.message)\(ansiSGR(.reset))\n")
     }
   }
 
