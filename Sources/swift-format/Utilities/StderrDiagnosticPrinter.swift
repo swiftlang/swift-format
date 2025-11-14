@@ -61,7 +61,7 @@ final class StderrDiagnosticPrinter {
     printQueue.sync {
       let stderr = FileHandleTextOutputStream(FileHandle.standardError)
 
-      stderr.write("\(ansiSGR(.bold))\(description(of: diagnostic.location)): ")
+      stderr.write("\(ansiSGR(.reset))\(description(of: diagnostic.location)): ")
 
       switch diagnostic.severity {
       case .error: stderr.write("\(ansiSGR(.boldRed))error: ")
