@@ -48,7 +48,7 @@ open class DiagnosingTestCase: XCTestCase {
     markerLocations: [String: Int],
     emittedFindings: [Finding],
     context: Context,
-    file: StaticString = #file,
+    file: StaticString = #filePath,
     line: UInt = #line
   ) {
     var emittedFindings = emittedFindings
@@ -86,7 +86,7 @@ open class DiagnosingTestCase: XCTestCase {
     markerLocations: [String: Int],
     emittedFindings: inout [Finding],
     context: Context,
-    file: StaticString = #file,
+    file: StaticString = #filePath,
     line: UInt = #line
   ) {
     guard let utf8Offset = markerLocations[findingSpec.marker] else {
@@ -164,7 +164,7 @@ open class DiagnosingTestCase: XCTestCase {
     markerLocations: [String: Int],
     emittedNotes: inout [Finding.Note],
     context: Context,
-    file: StaticString = #file,
+    file: StaticString = #filePath,
     line: UInt = #line
   ) {
     guard let utf8Offset = markerLocations[noteSpec.marker] else {
@@ -222,7 +222,7 @@ open class DiagnosingTestCase: XCTestCase {
     _ actual: String,
     _ expected: String,
     _ message: String = "",
-    file: StaticString = #file,
+    file: StaticString = #filePath,
     line: UInt = #line
   ) {
     let actualLines = actual.components(separatedBy: .newlines)

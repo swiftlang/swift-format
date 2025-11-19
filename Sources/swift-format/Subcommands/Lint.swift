@@ -14,8 +14,8 @@ import ArgumentParser
 
 extension SwiftFormatCommand {
   /// Emits style diagnostics for one or more files containing Swift code.
-  struct Lint: ParsableCommand {
-    static var configuration = CommandConfiguration(
+  struct Lint: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
       abstract: "Diagnose style issues in Swift source code",
       discussion: "When no files are specified, it expects the source from standard input."
     )
@@ -35,16 +35,25 @@ extension SwiftFormatCommand {
     @OptionGroup(visibility: .hidden)
     var performanceMeasurementOptions: PerformanceMeasurementsOptions
 
-    func run() throws {
-      try performanceMeasurementOptions.printingInstructionCountIfRequested {
-        let frontend = LintFrontend(
-          configurationOptions: configurationOptions,
-          lintFormatOptions: lintOptions,
-          treatWarningsAsErrors: strict
+    func run() async throws {
+      try await self.performanceMeasurementOptions.printingInstructionCountIfRequested {
+        let diagnosticPrinter = StderrDiagnosticPrinter(
+          colorMode: self.lintOptions.diagnosticsColorMode
         )
-        frontend.run()
 
-        if frontend.diagnosticsEngine.hasErrors {
+        let diagnosticsEngine = DiagnosticsEngine(
+          diagnosticsHandlers: [diagnosticPrinter.printDiagnostic],
+          treatWarningsAsErrors: self.strict
+        )
+
+        let frontend = LintFrontend(
+          diagnosticEngine: diagnosticsEngine,
+          configurationOptions: configurationOptions,
+          lintFormatOptions: lintOptions
+        )
+        await frontend.run()
+
+        if diagnosticsEngine.hasErrors {
           throw ExitCode.failure
         }
       }

@@ -34,7 +34,7 @@ class WhitespaceTestCase: DiagnosingTestCase {
     expected: String,
     linelength: Int? = nil,
     findings: [FindingSpec],
-    file: StaticString = #file,
+    file: StaticString = #filePath,
     line: UInt = #line
   ) {
     let markedText = MarkedText(textWithMarkers: input)

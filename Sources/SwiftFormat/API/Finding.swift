@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2021 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -39,7 +39,7 @@ public struct Finding {
   /// an `extension` of the `Finding.Message` type and add `static` properties or functions of type
   /// `Finding.Message`; these can be initialized using string literals or string interpolations.
   public struct Message:
-    CustomStringConvertible, ExpressibleByStringLiteral, ExpressibleByStringInterpolation
+    CustomStringConvertible, ExpressibleByStringLiteral, ExpressibleByStringInterpolation, Sendable
   {
     /// The message text of the diagnostic.
     public var text: String

@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2023 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -19,15 +19,17 @@ struct PerformanceMeasurementsOptions: ParsableArguments {
 
   /// If `measureInstructions` is set, execute `body` and print the number of instructions
   /// executed by it. Otherwise, just execute `body`
-  func printingInstructionCountIfRequested<T>(_ body: () throws -> T) rethrows -> T {
+  func printingInstructionCountIfRequested<T>(
+    _ body: () async throws -> T
+  ) async rethrows -> T {
     if !measureInstructions {
-      return try body()
+      return try await body()
     } else {
       let startInstructions = getInstructionsExecuted()
       defer {
         print("Instructions executed: \(getInstructionsExecuted() - startInstructions)")
       }
-      return try body()
+      return try await body()
     }
   }
 }

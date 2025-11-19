@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2019 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -11,7 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Represents an indentation unit that is applied to lines that are pretty-printed.
-public enum Indent: Hashable, Codable {
+public enum Indent: Hashable, Codable, Sendable {
 
   /// An indentation unit equal to the given number of tab characters.
   ///

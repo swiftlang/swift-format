@@ -174,7 +174,7 @@ final class FileScopedDeclarationPrivacyTests: LintOrFormatRuleTestCase {
   private func runWithMultipleConfigurations(
     source: String,
     testConfigurations: [TestConfiguration],
-    file: StaticString = #file,
+    file: StaticString = #filePath,
     line: UInt = #line,
     findingsProvider: (String, String) -> [FindingSpec]
   ) {

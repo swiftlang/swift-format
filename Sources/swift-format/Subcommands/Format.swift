@@ -14,8 +14,8 @@ import ArgumentParser
 
 extension SwiftFormatCommand {
   /// Formats one or more files containing Swift code.
-  struct Format: ParsableCommand {
-    static var configuration = CommandConfiguration(
+  struct Format: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
       abstract: "Format Swift source code",
       discussion: "When no files are specified, it expects the source from standard input."
     )
@@ -44,15 +44,25 @@ extension SwiftFormatCommand {
       }
     }
 
-    func run() throws {
-      try performanceMeasurementOptions.printingInstructionCountIfRequested {
+    func run() async throws {
+      try await self.performanceMeasurementOptions.printingInstructionCountIfRequested {
+        let diagnosticPrinter = StderrDiagnosticPrinter(
+          colorMode: self.formatOptions.diagnosticsColorMode
+        )
+
+        let diagnosticsEngine = DiagnosticsEngine(
+          diagnosticsHandlers: [diagnosticPrinter.printDiagnostic],
+          treatWarningsAsErrors: false
+        )
+
         let frontend = FormatFrontend(
+          diagnosticEngine: diagnosticsEngine,
           configurationOptions: configurationOptions,
           lintFormatOptions: formatOptions,
           inPlace: inPlace
         )
-        frontend.run()
-        if frontend.diagnosticsEngine.hasErrors { throw ExitCode.failure }
+        await frontend.run()
+        if diagnosticsEngine.hasErrors { throw ExitCode.failure }
       }
     }
   }

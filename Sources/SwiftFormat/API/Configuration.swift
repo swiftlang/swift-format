@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2023 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -22,7 +22,7 @@ import Foundation
 internal let highestSupportedConfigurationVersion = 1
 
 /// Holds the complete set of configured values and defaults.
-public struct Configuration: Codable, Equatable {
+public struct Configuration: Codable, Equatable, Sendable {
 
   private enum CodingKeys: CodingKey {
     case version
@@ -176,7 +176,7 @@ public struct Configuration: Codable, Equatable {
   public var noAssignmentInExpressions: NoAssignmentInExpressionsConfiguration
 
   /// Determines how trailing commas in comma-separated lists should be handled during formatting.
-  public enum MultilineTrailingCommaBehavior: String, Codable {
+  public enum MultilineTrailingCommaBehavior: String, Codable, Sendable {
     case alwaysUsed
     case neverUsed
     case keptAsWritten
@@ -215,7 +215,7 @@ public struct Configuration: Codable, Equatable {
   public var multiElementCollectionTrailingCommas: Bool
 
   /// Determines how multiline string literals should reflow when formatted.
-  public enum MultilineStringReflowBehavior: String, Codable {
+  public enum MultilineStringReflowBehavior: String, Codable, Sendable {
     /// Never reflow multiline string literals.
     case never
     /// Reflow lines in string literal that exceed the maximum line length. For example with a line length of 10:
@@ -524,8 +524,8 @@ public struct Configuration: Codable, Equatable {
 }
 
 /// Configuration for the `FileScopedDeclarationPrivacy` rule.
-public struct FileScopedDeclarationPrivacyConfiguration: Codable, Equatable {
-  public enum AccessLevel: String, Codable {
+public struct FileScopedDeclarationPrivacyConfiguration: Codable, Equatable, Sendable {
+  public enum AccessLevel: String, Codable, Sendable {
     /// Private file-scoped declarations should be declared `private`.
     ///
     /// If a file-scoped declaration is declared `fileprivate`, it will be diagnosed (in lint mode)
@@ -547,7 +547,7 @@ public struct FileScopedDeclarationPrivacyConfiguration: Codable, Equatable {
 }
 
 /// Configuration for the `NoAssignmentInExpressions` rule.
-public struct NoAssignmentInExpressionsConfiguration: Codable, Equatable {
+public struct NoAssignmentInExpressionsConfiguration: Codable, Equatable, Sendable {
   /// A list of function names where assignments are allowed to be embedded in expressions that are
   /// passed as parameters to that function.
   public var allowedFunctions: [String] = [
@@ -561,7 +561,7 @@ public struct NoAssignmentInExpressionsConfiguration: Codable, Equatable {
 }
 
 /// Configuration for the `OrderedImports` rule.
-public struct OrderedImportsConfiguration: Codable, Equatable {
+public struct OrderedImportsConfiguration: Codable, Equatable, Sendable {
   /// Determines whether imports within conditional compilation blocks should be ordered.
   public var includeConditionalImports: Bool = false
 

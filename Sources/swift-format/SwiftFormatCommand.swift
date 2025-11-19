@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2020 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -15,8 +15,8 @@ import ArgumentParser
 /// Collects the command line options that were passed to `swift-format` and dispatches to the
 /// appropriate subcommand.
 @main
-struct SwiftFormatCommand: ParsableCommand {
-  static var configuration = CommandConfiguration(
+struct SwiftFormatCommand: AsyncParsableCommand {
+  static let configuration = CommandConfiguration(
     commandName: "swift-format",
     abstract: "Format or lint Swift source code",
     subcommands: [

@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2019 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -29,7 +29,7 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
   /// even on platforms that support the latter (currently only Apple OSes).
   ///
   /// This allows test runs on those platforms to test both implementations.
-  public static var _forcesFallbackModeForTesting = false
+  nonisolated(unsafe) package static var _forcesFallbackModeForTesting = false
 
   /// Identifies this rule as being opt-in. Well written docs on declarations are important, but
   /// this rule isn't linguistically advanced enough on all platforms to be applied universally.
