@@ -10,6 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import SwiftFormat
 @_spi(Rules) import SwiftFormat
 import SwiftSyntax

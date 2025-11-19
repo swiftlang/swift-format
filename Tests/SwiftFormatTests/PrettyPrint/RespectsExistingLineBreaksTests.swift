@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 import SwiftFormat
+import _SwiftFormatTestSupport
 
 /// Basic checks and regression tests for the `respectsExistingLineBreaks` configuration setting
 /// in both true and false states.

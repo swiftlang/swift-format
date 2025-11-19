@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2023 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -10,7 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SwiftFormat
+package import SwiftFormat
 
 extension Configuration {
   /// The default configuration to be used during unit tests.
@@ -22,7 +22,7 @@ extension Configuration {
   /// delegate to another initializer first, which defeats the purpose). So, users adding new
   /// configuration settings should be sure to supply a default here for testing, otherwise they
   /// will be implicitly relying on the real default.
-  public static var forTesting: Configuration {
+  package static var forTesting: Configuration {
     var config = Configuration()
     config.rules = Configuration.defaultRuleEnablements
     config.maximumBlankLines = 1
@@ -45,7 +45,7 @@ extension Configuration {
     return config
   }
 
-  public static func forTesting(enabledRule: String) -> Configuration {
+  package static func forTesting(enabledRule: String) -> Configuration {
     var config = Configuration.forTesting
     config.rules = config.rules.mapValues({ _ in false })
     config.rules[enabledRule] = true

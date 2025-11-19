@@ -125,6 +125,25 @@ var targets: [Target] = [
   ),
 ]
 
+// Apply global Swift settings to targets.
+do {
+  let globalSwiftSettings: [SwiftSetting] = [
+    // Swift 7 mode upcoming features. These must be compatible with 'swift-tools-version'.
+    .enableUpcomingFeature("InternalImportsByDefault"),
+    .enableUpcomingFeature("MemberImportVisibility"),
+    .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+  ]
+
+  for target in targets where target.type != .plugin {
+    if let swiftSettings = target.swiftSettings {
+      // Target-specific settings should come last.
+      target.swiftSettings = globalSwiftSettings + swiftSettings
+    } else {
+      target.swiftSettings = globalSwiftSettings
+    }
+  }
+}
+
 if buildOnlyTests {
   products = []
   let allowedNames: Set<String> = ["_SwiftFormatTestSupport", "_GenerateSwiftFormat"]

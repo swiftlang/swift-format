@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class BinaryOperatorExprTests: PrettyPrintTestCase {
   func testNonRangeFormationOperatorsAreSurroundedByBreaks() {

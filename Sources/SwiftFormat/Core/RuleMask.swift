@@ -11,7 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import SwiftSyntax
+public import SwiftSyntax
 
 /// This class takes the raw source text and scans through it searching for comments that instruct
 /// the formatter to change the status of rules for the following node. The comments may include no

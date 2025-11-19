@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2023 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -10,22 +10,22 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SwiftFormat
+package import SwiftFormat
 import SwiftSyntax
 
 /// Encapsulates the locations of emoji markers extracted from source text.
-public struct MarkedText {
+package struct MarkedText {
   /// A mapping from marker names to the UTF-8 offset where the marker was found in the string.
-  public let markers: [String: Int]
+  package let markers: [String: Int]
 
   /// The text with all markers removed.
-  public let textWithoutMarkers: String
+  package let textWithoutMarkers: String
 
   /// If the marked text contains "⏩" and "⏪", they're used to create a selection
-  public var selection: Selection
+  package var selection: Selection
 
   /// Creates a new `MarkedText` value by extracting emoji markers from the given text.
-  public init(textWithMarkers markedText: String) {
+  package init(textWithMarkers markedText: String) {
     var text = ""
     var markers = [String: Int]()
     var lastIndex = markedText.startIndex

@@ -10,10 +10,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SwiftFormat
-@_spi(Rules) @_spi(Testing) import SwiftFormat
-import SwiftSyntax
-import XCTest
+@_spi(Rules) @_spi(Testing) public import SwiftFormat
+import SwiftOperators
+public import SwiftSyntax
+public import XCTest
 
 /// DiagnosingTestCase is an XCTestCase subclass meant to inject diagnostic-specific testing
 /// routines into specific formatting test cases.
@@ -218,7 +218,7 @@ open class DiagnosingTestCase: XCTestCase {
   ///     which this function was called.
   ///   - line: The line number on which failure occurred. Defaults to the line number on which this
   ///     function was called.
-  public final func assertStringsEqualWithDiff(
+  package final func assertStringsEqualWithDiff(
     _ actual: String,
     _ expected: String,
     _ message: String = "",

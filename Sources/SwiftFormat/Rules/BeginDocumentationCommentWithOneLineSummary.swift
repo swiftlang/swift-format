@@ -12,7 +12,7 @@
 
 import Foundation
 import Markdown
-import SwiftSyntax
+public import SwiftSyntax
 
 #if os(macOS)
 import NaturalLanguage

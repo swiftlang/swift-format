@@ -10,7 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import ArgumentParser
+public import ArgumentParser
 import Foundation
 
 /// Common arguments used by the `lint` and `format` subcommands.
