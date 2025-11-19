@@ -109,7 +109,7 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
   /// given type.
   private func isCodeBlockItem(
     _ node: some SyntaxProtocol,
-    containingStmtType stmtType: StmtSyntaxProtocol.Type
+    containingStmtType stmtType: any StmtSyntaxProtocol.Type
   ) -> Bool {
     if let codeBlockItem = node.as(CodeBlockItemSyntax.self),
       case .stmt(let stmt) = codeBlockItem.item,

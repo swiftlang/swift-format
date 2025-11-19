@@ -24,11 +24,11 @@ class LintPipeline: SyntaxVisitor {
 
   /// Stores lint and format rule instances, indexed by the `ObjectIdentifier` of a rule's
   /// class type.
-  var ruleCache = [ObjectIdentifier: Rule]()
+  var ruleCache = [ObjectIdentifier: any Rule]()
 
   /// Rules present in this dictionary skip visiting children until they leave the
   /// syntax node stored as their value
-  var shouldSkipChildren = [ObjectIdentifier: SyntaxProtocol]()
+  var shouldSkipChildren = [ObjectIdentifier: any SyntaxProtocol]()
 
   /// Creates a new lint pipeline.
   init(context: Context) {

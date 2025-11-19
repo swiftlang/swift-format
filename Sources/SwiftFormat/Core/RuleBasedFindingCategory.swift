@@ -18,12 +18,12 @@
 /// defaults to the rule's type name).
 struct RuleBasedFindingCategory: FindingCategorizing {
   /// The type of the rule associated with this category.
-  private let ruleType: Rule.Type
+  private let ruleType: any Rule.Type
 
   var description: String { ruleType.ruleName }
 
   /// Creates a finding category that wraps the given rule type.
-  init(ruleType: Rule.Type) {
+  init(ruleType: any Rule.Type) {
     self.ruleType = ruleType
   }
 }

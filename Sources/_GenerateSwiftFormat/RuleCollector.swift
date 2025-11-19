@@ -142,7 +142,7 @@ import SwiftSyntax
       /// Ignore it if it doesn't have any; there's no point in putting no-op rules in the pipeline.
       /// Otherwise, return it (we don't need to look at the rest of the inheritances).
       guard !visitedNodes.isEmpty else { return nil }
-      guard let ruleType = _typeByName("SwiftFormat.\(typeName)") as? Rule.Type else {
+      guard let ruleType = _typeByName("SwiftFormat.\(typeName)") as? any Rule.Type else {
         preconditionFailure("Failed to find type for rule named \(typeName)")
       }
       return DetectedRule(

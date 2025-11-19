@@ -127,12 +127,21 @@ var targets: [Target] = [
 
 // Apply global Swift settings to targets.
 do {
-  let globalSwiftSettings: [SwiftSetting] = [
+  var globalSwiftSettings: [SwiftSetting] = [
     // Swift 7 mode upcoming features. These must be compatible with 'swift-tools-version'.
+    .enableUpcomingFeature("ExistentialAny"),
     .enableUpcomingFeature("InternalImportsByDefault"),
     .enableUpcomingFeature("MemberImportVisibility"),
     .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
   ]
+
+  #if compiler(>=6.1)
+  globalSwiftSettings.append(
+    .unsafeFlags(["-Werror", "ExistentialAny"])
+  )
+  #endif
+
+  globalSwiftSettings += []  // avoid unused warning
 
   for target in targets where target.type != .plugin {
     if let swiftSettings = target.swiftSettings {

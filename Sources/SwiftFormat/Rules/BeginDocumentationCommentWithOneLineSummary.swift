@@ -240,7 +240,7 @@ extension Finding.Message {
 }
 
 struct InlineCodeRemover: MarkupRewriter {
-  mutating func visitInlineCode(_ inlineCode: InlineCode) -> Markup? {
+  mutating func visitInlineCode(_ inlineCode: InlineCode) -> (any Markup)? {
     nil
   }
 }

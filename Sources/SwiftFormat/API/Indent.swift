@@ -27,7 +27,7 @@ public enum Indent: Hashable, Codable, Sendable {
     case spaces
   }
 
-  public init(from decoder: Decoder) throws {
+  public init(from decoder: any Decoder) throws {
     let container = try decoder.container(keyedBy: CodingKeys.self)
     let spacesCount = try container.decodeIfPresent(Int.self, forKey: .spaces)
     let tabsCount = try container.decodeIfPresent(Int.self, forKey: .tabs)
@@ -57,7 +57,7 @@ public enum Indent: Hashable, Codable, Sendable {
     )
   }
 
-  public func encode(to encoder: Encoder) throws {
+  public func encode(to encoder: any Encoder) throws {
     var container = encoder.container(keyedBy: CodingKeys.self)
     switch self {
     case .tabs(let count):

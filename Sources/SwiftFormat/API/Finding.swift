@@ -71,7 +71,7 @@ public struct Finding {
   }
 
   /// The category associated with the finding.
-  public let category: FindingCategorizing
+  public let category: any FindingCategorizing
 
   /// The finding's message.
   public let message: Message
@@ -85,7 +85,7 @@ public struct Finding {
   /// Creates a new finding with the given category, message, optional location, and
   /// notes.
   init(
-    category: FindingCategorizing,
+    category: any FindingCategorizing,
     message: Message,
     location: Location? = nil,
     notes: [Note] = []

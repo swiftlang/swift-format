@@ -42,7 +42,7 @@ final class FindingEmitter {
   ///     related locations in the source file.
   public func emit(
     _ message: Finding.Message,
-    category: FindingCategorizing,
+    category: any FindingCategorizing,
     location: Finding.Location? = nil,
     notes: [Finding.Note] = []
   ) {

@@ -144,7 +144,7 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
     // allows modifiers but doesn't already have an access level modifier.
     guard
       case .insideExtension(let accessKeyword) = state,
-      let modifiers = decl.asProtocol(WithModifiersSyntax.self)?.modifiers,
+      let modifiers = decl.asProtocol((any WithModifiersSyntax).self)?.modifiers,
       modifiers.accessLevelModifier == nil
     else {
       return DeclSyntax(decl)
