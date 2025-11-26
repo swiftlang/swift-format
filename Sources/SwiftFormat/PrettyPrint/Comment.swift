@@ -102,7 +102,7 @@ struct Comment {
     }
   }
 
-  func print(indent: [Indent]) -> String {
+  func print(indent: [Indent], shouldIndentBlankLines: Bool = true) -> String {
     switch self.kind {
     case .line, .docLine:
       let separator = "\n" + indent.indentation() + kind.prefix
@@ -121,9 +121,13 @@ struct Comment {
           return result
         }
         if hasLeading, let first = self.text.first, !rest.isEmpty {
+          let indentation = indent.indentation()
           let restStr = rest.map {
+            guard !$0.isEmpty else {
+              return shouldIndentBlankLines ? indentation : ""
+            }
             let stripped = $0.dropFirst(leadingIndent.text.count)
-            return indent.indentation() + stripped
+            return indentation + stripped
           }.joined(separator: separator)
           return kind.prefix + first + separator + restStr + "*/"
         }
