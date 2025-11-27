@@ -28,6 +28,7 @@ public final class UseSingleLinePropertyGetter: SyntaxFormatRule {
       let body = acc.body,
       accessors.count == 1,
       acc.accessorSpecifier.tokenKind == .keyword(.get),
+      acc.attributes.isEmpty,
       acc.modifier == nil,
       acc.effectSpecifiers == nil
     else { return node }
