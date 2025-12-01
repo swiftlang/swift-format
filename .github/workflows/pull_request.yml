@@ -37,15 +37,29 @@ jobs:
         uses: actions/checkout@v4
         with:
           persist-credentials: false
+      - name: Mark the workspace as safe
+        # https://github.com/actions/checkout/issues/766
+        run: git config --global --add safe.directory ${GITHUB_WORKSPACE}
       - name: Check out related PRs
         run: |
           apt-get update && apt-get install -y curl
           curl -s https://raw.githubusercontent.com/swiftlang/github-workflows/refs/heads/main/.github/workflows/scripts/cross-pr-checkout.swift > /tmp/cross-pr-checkout.swift
           swift /tmp/cross-pr-checkout.swift "${{ github.repository }}" "${{ github.event.number }}"
       - name: Build
-        run: swift build --configuration release
+        run: |
+          swift build --configuration release
+      - name: Add local swift-format to PATH
+        run: |
+          # Add the locally built version of swift-format to PATH so it gets picked up by check-swift-format.sh
+          echo "PATH=$(pwd)/.build/release:$PATH" >> "$GITHUB_ENV"
+      - name: Download check format script
+        run: |
+          curl https://raw.githubusercontent.com/swiftlang/github-workflows/refs/heads/main/.github/workflows/scripts/check-swift-format.sh > /tmp/check-swift-format.sh
+          chmod +x /tmp/check-swift-format.sh
       - name: Format swift-format
-        run: .build/release/swift-format lint --parallel --recursive --strict .
+        run: |
+          cd "$GITHUB_WORKSPACE"
+          /tmp/check-swift-format.sh
       - name: Checkout swift-syntax
         uses: actions/checkout@v4
         with:
@@ -53,7 +67,9 @@ jobs:
           persist-credentials: false
           path: swift-syntax
       - name: Format swift-syntax
-        run: .build/release/swift-format lint --parallel --recursive --strict swift-syntax
+        run: |
+          cd "$GITHUB_WORKSPACE/swift-syntax"
+          /tmp/check-swift-format.sh
       - name: Checkout sourcekit-lsp
         uses: actions/checkout@v4
         with:
@@ -61,4 +77,6 @@ jobs:
           persist-credentials: false
           path: sourcekit-lsp
       - name: Format sourcekit-lsp
-        run: .build/release/swift-format lint --parallel --recursive --strict sourcekit-lsp
+        run: |
+          cd "$GITHUB_WORKSPACE/sourcekit-lsp"
+          /tmp/check-swift-format.sh
