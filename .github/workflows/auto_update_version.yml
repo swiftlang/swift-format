@@ -44,21 +44,38 @@ jobs:
           git checkout -b $UPDATE_BRANCH $RELEASE_BRANCH
 
       - name: Update PrintVersion.swift
-        id: update_version
         run: |
           FILE=Sources/swift-format/PrintVersion.swift
 
           if grep -q "print(\"$VERSION\")" "$FILE"; then
             echo "Version already $VERSION; skipping update."
-            echo "changed=false" >> "$GITHUB_OUTPUT"
             exit 0
           fi
 
           sed -i "s/print(\".*\")/print(\"$VERSION\")/" "$FILE"
-          echo "changed=true" >> "$GITHUB_OUTPUT"
+
+      - name: Update automerge.yml
+        run: |
+          FILE=.github/workflows/automerge.yml
+
+          if grep -q "base_branch: $RELEASE_BRANCH" "$FILE"; then
+            echo "Branch already $RELEASE_BRANCH; skipping update."
+            exit 0
+          fi
+
+          sed -i "s/base_branch: .*/base_branch: $RELEASE_BRANCH/" "$FILE"
+
+      - name: Checking for changes
+        id: change_check
+        run: |
+          if git diff --exit-code; then
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Commit and push changes
-        if: steps.update_version.outputs.changed == 'true'
+        if: steps.change_check.outputs.changed == 'true'
         run: |
           git config user.name "swift-ci"
           git config user.email "swift-ci@users.noreply.github.com"
@@ -67,7 +84,7 @@ jobs:
           git push origin $UPDATE_BRANCH
 
       - name: Create Pull Request
-        if: steps.update_version.outputs.changed == 'true'
+        if: steps.change_check.outputs.changed == 'true'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
