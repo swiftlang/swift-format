@@ -303,4 +303,72 @@ final class IndentBlankLinesTests: PrettyPrintTestCase {
     config.indentBlankLines = true
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 80, configuration: config)
   }
+
+  func testBlockCommentWhenIndentBlankLinesDisabled() {
+    let input =
+      """
+      struct Foo {
+      \u{0020}\u{0020}/**\u{0020}\u{0020}
+      \u{0020}\u{0020}foo bar baz\u{0020}\u{0020}
+      \u{0020}\u{0020}\u{0020}\u{0020}\u{0020}\u{0020}
+      \u{0020}\u{0020}quxx\u{0020}\u{0020}
+      \u{0020}\u{0020}
+
+      \u{0020}\u{0020}*/\u{0020}\u{0020}
+      \u{0020}\u{0020}func foo() {}
+      }
+      """
+
+    let expected =
+      """
+      struct Foo {
+      \u{0020}\u{0020}/**
+      \u{0020}\u{0020}foo bar baz
+
+      \u{0020}\u{0020}quxx
+
+
+      \u{0020}\u{0020}*/
+      \u{0020}\u{0020}func foo() {}
+      }
+
+      """
+    var config = Configuration.forTesting
+    config.indentBlankLines = false
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80, configuration: config)
+  }
+
+  func testBlockCommentWhenIndentBlankLinesEnabled() {
+    let input =
+      """
+      struct Foo {
+      \u{0020}\u{0020}/**\u{0020}\u{0020}
+      \u{0020}\u{0020}foo bar baz\u{0020}\u{0020}
+      \u{0020}\u{0020}\u{0020}\u{0020}\u{0020}\u{0020}
+      \u{0020}\u{0020}quxx\u{0020}\u{0020}
+      \u{0020}\u{0020}
+
+      \u{0020}\u{0020}*/\u{0020}\u{0020}
+      \u{0020}\u{0020}func foo() {}
+      }
+      """
+
+    let expected =
+      """
+      struct Foo {
+      \u{0020}\u{0020}/**
+      \u{0020}\u{0020}foo bar baz
+      \u{0020}\u{0020}
+      \u{0020}\u{0020}quxx
+      \u{0020}\u{0020}
+      \u{0020}\u{0020}
+      \u{0020}\u{0020}*/
+      \u{0020}\u{0020}func foo() {}
+      }
+
+      """
+    var config = Configuration.forTesting
+    config.indentBlankLines = true
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80, configuration: config)
+  }
 }

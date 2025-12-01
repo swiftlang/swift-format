@@ -484,7 +484,12 @@ public class PrettyPrinter {
           diagnose(.moveEndOfLineComment, category: .endOfLineComment)
         }
       }
-      outputBuffer.write(comment.print(indent: currentIndentation))
+      outputBuffer.write(
+        comment.print(
+          indent: currentIndentation,
+          shouldIndentBlankLines: configuration.indentBlankLines
+        )
+      )
 
     case .verbatim(let verbatim):
       outputBuffer.writeVerbatim(verbatim.print(indent: currentIndentation), length)
