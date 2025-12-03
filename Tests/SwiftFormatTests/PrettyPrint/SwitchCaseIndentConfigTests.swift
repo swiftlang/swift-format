@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 import SwiftFormat
+import _SwiftFormatTestSupport
 
 /// Tests the `indentSwitchCaseLabels` config option
 final class SwitchCaseIndentConfigTests: PrettyPrintTestCase {

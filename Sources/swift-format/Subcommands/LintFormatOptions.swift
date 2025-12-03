@@ -10,7 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import ArgumentParser
+public import ArgumentParser
 import Foundation
 
 /// Common arguments used by the `lint` and `format` subcommands.
@@ -75,7 +75,15 @@ struct LintFormatOptions: ParsableArguments {
       to not use colors otherwise.
       """
   )
-  var colorDiagnostics: Bool?
+  private var colorDiagnostics: Bool?
+
+  var diagnosticsColorMode: StderrDiagnosticPrinter.ColorMode {
+    switch colorDiagnostics {
+    case .none: .auto
+    case .some(true): .on
+    case .some(false): .off
+    }
+  }
 
   /// Whether symlinks should be followed.
   @Flag(

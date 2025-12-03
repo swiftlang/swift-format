@@ -12,6 +12,7 @@
 
 import SwiftFormat
 import XCTest
+import _SwiftFormatTestSupport
 
 final class IfStmtTests: PrettyPrintTestCase {
   func testIfStatement() {

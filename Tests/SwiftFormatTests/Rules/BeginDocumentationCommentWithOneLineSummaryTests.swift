@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 @_spi(Rules) import SwiftFormat
+import XCTest
 import _SwiftFormatTestSupport
 
 // FIXME: We should place the diagnostic somewhere in the comment, not on the declaration.

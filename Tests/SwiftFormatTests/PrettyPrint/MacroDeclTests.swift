@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class MacroDeclTests: PrettyPrintTestCase {
   func testBasicMacroDeclarations_noPackArguments() {

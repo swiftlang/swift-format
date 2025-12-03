@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class ClosureExprTests: PrettyPrintTestCase {
   func testBasicFunctionClosures_noPackArguments() {

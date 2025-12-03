@@ -37,7 +37,7 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
     _ markedSource: String,
     findings: [FindingSpec] = [],
     experimentalFeatures: Parser.ExperimentalFeatures = [],
-    file: StaticString = #file,
+    file: StaticString = #filePath,
     line: UInt = #line
   ) {
     let markedText = MarkedText(textWithMarkers: markedSource)
@@ -103,7 +103,7 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
     findings: [FindingSpec] = [],
     configuration: Configuration? = nil,
     experimentalFeatures: Parser.ExperimentalFeatures = [],
-    file: StaticString = #file,
+    file: StaticString = #filePath,
     line: UInt = #line
   ) {
     let markedInput = MarkedText(textWithMarkers: input)

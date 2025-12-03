@@ -1,9 +1,9 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 6.0
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2019 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -47,7 +47,11 @@ var targets: [Target] = [
       + swiftSyntaxDependencies([
         "SwiftOperators", "SwiftParser", "SwiftParserDiagnostics", "SwiftSyntax", "SwiftSyntaxBuilder",
       ]),
-    exclude: ["CMakeLists.txt"]
+    exclude: ["CMakeLists.txt"],
+    swiftSettings: [
+      // TODO: Does not compile with Swift 6 in Swift 6 mode due to Swift concurrency bugs. Remove once swift-tools-version is bumped to 6.1.
+      .swiftLanguageMode(.v5)
+    ]
   ),
   .target(
     name: "_SwiftFormatTestSupport",
@@ -121,6 +125,34 @@ var targets: [Target] = [
   ),
 ]
 
+// Apply global Swift settings to targets.
+do {
+  var globalSwiftSettings: [SwiftSetting] = [
+    // Swift 7 mode upcoming features. These must be compatible with 'swift-tools-version'.
+    .enableUpcomingFeature("ExistentialAny"),
+    .enableUpcomingFeature("InternalImportsByDefault"),
+    .enableUpcomingFeature("MemberImportVisibility"),
+    .enableUpcomingFeature("NonisolatedNonsendingByDefault"),
+  ]
+
+  #if compiler(>=6.1)
+  globalSwiftSettings.append(
+    .unsafeFlags(["-Werror", "ExistentialAny"])
+  )
+  #endif
+
+  globalSwiftSettings += []  // avoid unused warning
+
+  for target in targets where target.type != .plugin {
+    if let swiftSettings = target.swiftSettings {
+      // Target-specific settings should come last.
+      target.swiftSettings = globalSwiftSettings + swiftSettings
+    } else {
+      target.swiftSettings = globalSwiftSettings
+    }
+  }
+}
+
 if buildOnlyTests {
   products = []
   let allowedNames: Set<String> = ["_SwiftFormatTestSupport", "_GenerateSwiftFormat"]
@@ -146,9 +178,11 @@ let package = Package(
   ],
   products: products,
   dependencies: dependencies,
-  targets: targets
+  targets: targets,
+  swiftLanguageModes: [.v5, .v6]
 )
 
+@MainActor
 func swiftSyntaxDependencies(_ names: [String]) -> [Target.Dependency] {
   if buildDynamicSwiftSyntaxLibrary {
     return [.product(name: "_SwiftSyntaxDynamic", package: "swift-syntax")]

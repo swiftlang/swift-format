@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2023 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -16,15 +16,21 @@ import SwiftSyntax
 
 /// Unifies the handling of findings from the linter, parsing errors from the syntax parser, and
 /// generic errors from the frontend so that they are emitted in a uniform fashion.
-final class DiagnosticsEngine {
+final class DiagnosticsEngine: Sendable {
   /// The handler functions that will be called to process diagnostics that are emitted.
-  private let handlers: [(Diagnostic) -> Void]
+  private let handlers: [@Sendable (Diagnostic) -> Void]
 
   /// A Boolean value indicating whether any errors were emitted by the diagnostics engine.
-  private(set) var hasErrors: Bool
+  var hasErrors: Bool {
+    self._hasErrors.value
+  }
+  private let _hasErrors = ThreadSafeBox<Bool>(false)
 
   /// A Boolean value indicating whether any warnings were emitted by the diagnostics engine.
-  private(set) var hasWarnings: Bool
+  var hasWarnings: Bool {
+    self._hasWarnings.value
+  }
+  private let _hasWarnings = ThreadSafeBox<Bool>(false)
 
   /// Whether to upgrade all warnings to errors.
   private let treatWarningsAsErrors: Bool
@@ -34,23 +40,23 @@ final class DiagnosticsEngine {
   /// - Parameter diagnosticsHandlers: An array of functions, each of which takes a `Diagnostic` as
   ///   its sole argument and returns `Void`. The functions are called whenever a diagnostic is
   ///   received by the engine.
-  init(diagnosticsHandlers: [(Diagnostic) -> Void], treatWarningsAsErrors: Bool = false) {
+  init(
+    diagnosticsHandlers: [@Sendable (Diagnostic) -> Void],
+    treatWarningsAsErrors: Bool = false
+  ) {
     self.handlers = diagnosticsHandlers
-    self.hasErrors = false
-    self.hasWarnings = false
     self.treatWarningsAsErrors = treatWarningsAsErrors
   }
 
   /// Emits the diagnostic by passing it to the registered handlers, and tracks whether it was an
   /// error or warning diagnostic.
-  private func emit(_ diagnostic: Diagnostic) {
-    var diagnostic = diagnostic
+  private func emit(_ diagnostic: consuming Diagnostic) {
     if treatWarningsAsErrors, diagnostic.severity == .warning {
       diagnostic.severity = .error
     }
     switch diagnostic.severity {
-    case .error: self.hasErrors = true
-    case .warning: self.hasWarnings = true
+    case .error: self._hasErrors.value = true
+    case .warning: self._hasWarnings.value = true
     default: break
     }
 
@@ -95,7 +101,7 @@ final class DiagnosticsEngine {
   ///
   /// - Parameter finding: The finding that should be emitted.
   func consumeFinding(_ finding: Finding) {
-    emit(diagnosticMessage(for: finding))
+    emit(DiagnosticsEngine.diagnosticMessage(for: finding))
 
     for note in finding.notes {
       emit(
@@ -115,13 +121,13 @@ final class DiagnosticsEngine {
     _ diagnostic: SwiftDiagnostics.Diagnostic,
     _ location: SourceLocation
   ) {
-    emit(diagnosticMessage(for: diagnostic.diagMessage, at: location))
+    emit(DiagnosticsEngine.diagnosticMessage(for: diagnostic.diagMessage, at: location))
   }
 
   /// Converts a diagnostic message from the syntax parser into a diagnostic message that can be
   /// used by the `TSCBasic` diagnostics engine and returns it.
-  private func diagnosticMessage(
-    for message: SwiftDiagnostics.DiagnosticMessage,
+  private static func diagnosticMessage(
+    for message: any SwiftDiagnostics.DiagnosticMessage,
     at location: SourceLocation
   ) -> Diagnostic {
     let severity: Diagnostic.Severity
@@ -141,7 +147,7 @@ final class DiagnosticsEngine {
 
   /// Converts a lint finding into a diagnostic message that can be used by the `TSCBasic`
   /// diagnostics engine and returns it.
-  private func diagnosticMessage(for finding: Finding) -> Diagnostic {
+  private static func diagnosticMessage(for finding: Finding) -> Diagnostic {
     return Diagnostic(
       severity: .warning,
       location: finding.location.map(Diagnostic.Location.init),

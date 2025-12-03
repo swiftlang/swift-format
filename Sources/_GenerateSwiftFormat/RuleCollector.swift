@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2019 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -10,7 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
+public import Foundation
 @_spi(Rules) import SwiftFormat
 import SwiftParser
 import SwiftSyntax
@@ -142,7 +142,7 @@ import SwiftSyntax
       /// Ignore it if it doesn't have any; there's no point in putting no-op rules in the pipeline.
       /// Otherwise, return it (we don't need to look at the rest of the inheritances).
       guard !visitedNodes.isEmpty else { return nil }
-      guard let ruleType = _typeByName("SwiftFormat.\(typeName)") as? Rule.Type else {
+      guard let ruleType = _typeByName("SwiftFormat.\(typeName)") as? any Rule.Type else {
         preconditionFailure("Failed to find type for rule named \(typeName)")
       }
       return DetectedRule(

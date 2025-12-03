@@ -16,16 +16,39 @@ import SwiftFormat
 import SwiftSyntax
 
 /// The frontend for formatting operations.
-class FormatFrontend: Frontend {
+struct FormatFrontend: Frontend {
+  /// The diagnostic engine to which warnings and errors will be emitted.
+  let diagnosticsEngine: DiagnosticsEngine
+
+  /// Options that control the tool's configuration.
+  let configurationOptions: ConfigurationOptions
+
+  /// Options that apply during formatting.
+  let lintFormatOptions: LintFormatOptions
+
+  /// The provider for formatter configurations.
+  let configurationProvider: ConfigurationProvider
+
   /// Whether or not to format the Swift file in-place.
   private let inPlace: Bool
 
-  init(configurationOptions: ConfigurationOptions, lintFormatOptions: LintFormatOptions, inPlace: Bool) {
+  /// Creates a new frontend with the given options.
+  ///
+  /// - Parameter lintFormatOptions: Options that apply during formatting.
+  init(
+    diagnosticEngine: DiagnosticsEngine,
+    configurationOptions: ConfigurationOptions,
+    lintFormatOptions: LintFormatOptions,
+    inPlace: Bool
+  ) {
+    self.diagnosticsEngine = diagnosticEngine
+    self.configurationOptions = configurationOptions
+    self.lintFormatOptions = lintFormatOptions
     self.inPlace = inPlace
-    super.init(configurationOptions: configurationOptions, lintFormatOptions: lintFormatOptions)
+    self.configurationProvider = ConfigurationProvider(diagnosticsEngine: self.diagnosticsEngine)
   }
 
-  override func processFile(_ fileToProcess: FileToProcess) {
+  nonisolated func processFile(_ fileToProcess: borrowing FileToProcess) {
     // In format mode, the diagnostics engine is reserved for fatal messages. Pass nil as the
     // finding consumer to ignore findings emitted while the syntax tree is processed because they
     // will be fixed automatically if they can be, or ignored otherwise.
@@ -33,7 +56,7 @@ class FormatFrontend: Frontend {
     formatter.debugOptions = debugOptions
 
     let url = fileToProcess.url
-    guard let source = fileToProcess.sourceText else {
+    guard let source = fileToProcess.readString() else {
       diagnosticsEngine.emitError(
         "Unable to format \(url.relativePath): file is not readable or does not exist."
       )

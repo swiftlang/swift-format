@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2019 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -10,7 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SwiftSyntax
+public import SwiftSyntax
 
 /// Specifying an access level for an extension declaration is forbidden.
 ///
@@ -144,7 +144,7 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
     // allows modifiers but doesn't already have an access level modifier.
     guard
       case .insideExtension(let accessKeyword) = state,
-      let modifiers = decl.asProtocol(WithModifiersSyntax.self)?.modifiers,
+      let modifiers = decl.asProtocol((any WithModifiersSyntax).self)?.modifiers,
       modifiers.accessLevelModifier == nil
     else {
       return DeclSyntax(decl)

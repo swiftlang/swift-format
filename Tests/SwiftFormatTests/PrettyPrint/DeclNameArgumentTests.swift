@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class DeclNameArgumentTests: PrettyPrintTestCase {
   func testSelectors_noPackArguments() {

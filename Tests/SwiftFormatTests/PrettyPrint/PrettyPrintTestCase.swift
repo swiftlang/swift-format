@@ -44,7 +44,7 @@ class PrettyPrintTestCase: DiagnosingTestCase {
     whitespaceOnly: Bool = false,
     findings: [FindingSpec] = [],
     experimentalFeatures: Parser.ExperimentalFeatures = [],
-    file: StaticString = #file,
+    file: StaticString = #filePath,
     line: UInt = #line
   ) {
     var configuration = configuration

@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2020 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -11,13 +11,38 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import SwiftDiagnostics
 import SwiftFormat
 import SwiftSyntax
 
 /// The frontend for linting operations.
-class LintFrontend: Frontend {
-  override func processFile(_ fileToProcess: FileToProcess) {
+struct LintFrontend: Frontend {
+  /// The diagnostic engine to which warnings and errors will be emitted.
+  let diagnosticsEngine: DiagnosticsEngine
+
+  /// Options that control the tool's configuration.
+  let configurationOptions: ConfigurationOptions
+
+  /// Options that apply during linting.
+  let lintFormatOptions: LintFormatOptions
+
+  /// The provider for formatter configurations.
+  let configurationProvider: ConfigurationProvider
+
+  /// Creates a new frontend with the given options.
+  ///
+  /// - Parameter lintFormatOptions: Options that apply during linting.
+  init(
+    diagnosticEngine: DiagnosticsEngine,
+    configurationOptions: ConfigurationOptions,
+    lintFormatOptions: LintFormatOptions
+  ) {
+    self.diagnosticsEngine = diagnosticEngine
+    self.configurationOptions = configurationOptions
+    self.lintFormatOptions = lintFormatOptions
+    self.configurationProvider = ConfigurationProvider(diagnosticsEngine: self.diagnosticsEngine)
+  }
+
+  nonisolated func processFile(_ fileToProcess: borrowing FileToProcess) {
     let linter = SwiftLinter(
       configuration: fileToProcess.configuration,
       findingConsumer: diagnosticsEngine.consumeFinding
@@ -25,7 +50,7 @@ class LintFrontend: Frontend {
     linter.debugOptions = debugOptions
 
     let url = fileToProcess.url
-    guard let source = fileToProcess.sourceText else {
+    guard let source = fileToProcess.readString() else {
       diagnosticsEngine.emitError(
         "Unable to lint \(url.relativePath): file is not readable or does not exist."
       )

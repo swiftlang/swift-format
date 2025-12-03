@@ -15,7 +15,7 @@ import SwiftFormat
 
 /// Loads formatter configurations, caching them in memory so that multiple operations in the same
 /// directory do not repeatedly hit the file system.
-struct ConfigurationLoader {
+struct ConfigurationLoader: ~Copyable {
   /// The cache of previously loaded configurations.
   private var cache = [String: Configuration]()
 

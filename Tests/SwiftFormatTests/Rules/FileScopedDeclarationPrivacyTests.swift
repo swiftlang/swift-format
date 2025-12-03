@@ -10,6 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
+import Foundation
 import SwiftFormat
 @_spi(Rules) import SwiftFormat
 import SwiftSyntax
@@ -174,7 +175,7 @@ final class FileScopedDeclarationPrivacyTests: LintOrFormatRuleTestCase {
   private func runWithMultipleConfigurations(
     source: String,
     testConfigurations: [TestConfiguration],
-    file: StaticString = #file,
+    file: StaticString = #filePath,
     line: UInt = #line,
     findingsProvider: (String, String) -> [FindingSpec]
   ) {

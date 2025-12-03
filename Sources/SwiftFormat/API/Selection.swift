@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2024 Apple Inc. and the Swift project authors
+// Copyright (c) 2024 - 2025 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -11,10 +11,10 @@
 //===----------------------------------------------------------------------===//
 
 import Foundation
-import SwiftSyntax
+public import SwiftSyntax
 
 /// The selection as given on the command line - an array of offets and lengths
-public enum Selection {
+public enum Selection: Sendable {
   case infinite
   case ranges([Range<AbsolutePosition>])
 

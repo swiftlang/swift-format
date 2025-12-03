@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2019 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -10,7 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SwiftSyntax
+public import SwiftSyntax
 
 /// Semicolons should not be present in Swift code.
 ///
@@ -109,7 +109,7 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
   /// given type.
   private func isCodeBlockItem(
     _ node: some SyntaxProtocol,
-    containingStmtType stmtType: StmtSyntaxProtocol.Type
+    containingStmtType stmtType: any StmtSyntaxProtocol.Type
   ) -> Bool {
     if let codeBlockItem = node.as(CodeBlockItemSyntax.self),
       case .stmt(let stmt) = codeBlockItem.item,

@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2024 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -10,10 +10,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Foundation
-import SwiftDiagnostics
-import SwiftOperators
-import SwiftSyntax
+public import Foundation
+public import SwiftDiagnostics
+public import SwiftOperators
+public import SwiftSyntax
 
 /// Formats Swift source code or syntax trees according to the Swift style guidelines.
 public final class SwiftFormatter {

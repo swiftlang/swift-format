@@ -10,10 +10,10 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SwiftFormat
-@_spi(Rules) @_spi(Testing) import SwiftFormat
-import SwiftSyntax
-import XCTest
+@_spi(Rules) @_spi(Testing) public import SwiftFormat
+import SwiftOperators
+public import SwiftSyntax
+public import XCTest
 
 /// DiagnosingTestCase is an XCTestCase subclass meant to inject diagnostic-specific testing
 /// routines into specific formatting test cases.
@@ -48,7 +48,7 @@ open class DiagnosingTestCase: XCTestCase {
     markerLocations: [String: Int],
     emittedFindings: [Finding],
     context: Context,
-    file: StaticString = #file,
+    file: StaticString = #filePath,
     line: UInt = #line
   ) {
     var emittedFindings = emittedFindings
@@ -86,7 +86,7 @@ open class DiagnosingTestCase: XCTestCase {
     markerLocations: [String: Int],
     emittedFindings: inout [Finding],
     context: Context,
-    file: StaticString = #file,
+    file: StaticString = #filePath,
     line: UInt = #line
   ) {
     guard let utf8Offset = markerLocations[findingSpec.marker] else {
@@ -164,7 +164,7 @@ open class DiagnosingTestCase: XCTestCase {
     markerLocations: [String: Int],
     emittedNotes: inout [Finding.Note],
     context: Context,
-    file: StaticString = #file,
+    file: StaticString = #filePath,
     line: UInt = #line
   ) {
     guard let utf8Offset = markerLocations[noteSpec.marker] else {
@@ -218,11 +218,11 @@ open class DiagnosingTestCase: XCTestCase {
   ///     which this function was called.
   ///   - line: The line number on which failure occurred. Defaults to the line number on which this
   ///     function was called.
-  public final func assertStringsEqualWithDiff(
+  package final func assertStringsEqualWithDiff(
     _ actual: String,
     _ expected: String,
     _ message: String = "",
-    file: StaticString = #file,
+    file: StaticString = #filePath,
     line: UInt = #line
   ) {
     let actualLines = actual.components(separatedBy: .newlines)

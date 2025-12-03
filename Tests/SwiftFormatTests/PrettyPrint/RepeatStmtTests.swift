@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class RepeatStmtTests: PrettyPrintTestCase {
   func testBasicRepeatTests_noBreakBeforeWhile() {

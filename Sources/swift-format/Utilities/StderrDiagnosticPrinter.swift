@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2021 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -14,7 +14,7 @@ import Dispatch
 import Foundation
 
 /// Manages printing of diagnostics to standard error.
-final class StderrDiagnosticPrinter {
+struct StderrDiagnosticPrinter {
   /// Determines how colors are used in printed diagnostics.
   enum ColorMode {
     /// Colors are used if stderr is detected to be connected to a TTY; otherwise, colors will not
@@ -57,6 +57,7 @@ final class StderrDiagnosticPrinter {
   }
 
   /// Prints a diagnostic to standard error.
+  @Sendable
   func printDiagnostic(_ diagnostic: Diagnostic) {
     printQueue.sync {
       let stderr = FileHandleTextOutputStream(FileHandle.standardError)

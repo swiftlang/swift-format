@@ -11,6 +11,7 @@
 //===----------------------------------------------------------------------===//
 
 @_spi(Rules) @_spi(Testing) import SwiftFormat
+import _SwiftFormatTestSupport
 
 final class StringTests: PrettyPrintTestCase {
   func testStrings() {

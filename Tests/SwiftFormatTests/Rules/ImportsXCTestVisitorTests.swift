@@ -12,6 +12,7 @@
 
 import SwiftFormat
 @_spi(Rules) @_spi(Testing) import SwiftFormat
+import SwiftOperators
 import SwiftParser
 import XCTest
 

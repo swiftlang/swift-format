@@ -16,8 +16,8 @@ import SwiftFormat
 
 extension SwiftFormatCommand {
   /// Dumps the tool's configuration in JSON format to standard output.
-  struct DumpConfiguration: ParsableCommand {
-    static var configuration = CommandConfiguration(
+  struct DumpConfiguration: AsyncParsableCommand {
+    static let configuration = CommandConfiguration(
       abstract: "Dump the configuration in JSON format to standard output",
       discussion: """
         Without any options, dumps the default configuration. When '--effective' is set, dumps the configuration that \
@@ -39,16 +39,16 @@ extension SwiftFormatCommand {
       }
     }
 
-    func run() throws {
+    func run() async throws {
       let diagnosticPrinter = StderrDiagnosticPrinter(colorMode: .auto)
       let diagnosticsEngine = DiagnosticsEngine(diagnosticsHandlers: [diagnosticPrinter.printDiagnostic])
 
       let configuration: Configuration
       if effective {
-        var configurationProvider = Frontend.ConfigurationProvider(diagnosticsEngine: diagnosticsEngine)
+        let configurationProvider = ConfigurationProvider(diagnosticsEngine: diagnosticsEngine)
 
         guard
-          let effectiveConfiguration = configurationProvider.provide(
+          let effectiveConfiguration = await configurationProvider.provide(
             forConfigPathOrString: configurationOptions.configuration,
             orForSwiftFileAt: nil
           )
