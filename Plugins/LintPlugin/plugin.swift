@@ -16,7 +16,7 @@ import PackagePlugin
 @main
 struct LintPlugin {
   func lint(tool: PluginContext.Tool, targetDirectories: [String], configurationFilePath: String?) throws {
-    let swiftFormatExec = URL(fileURLWithPath: tool.path.string)
+    let swiftFormatExec = tool.url
 
     var arguments: [String] = ["lint"]
 
@@ -59,7 +59,8 @@ extension LintPlugin: CommandPlugin {
 
     try lint(
       tool: swiftFormatTool,
-      targetDirectories: sourceCodeTargets.map(\.directory.string),
+      // This should be `directoryURL`, but it's only available in 6.1+
+      targetDirectories: sourceCodeTargets.map { String(describing: $0.directory) },
       configurationFilePath: configurationFilePath
     )
   }
@@ -76,7 +77,7 @@ extension LintPlugin: XcodeCommandPlugin {
 
     try lint(
       tool: swiftFormatTool,
-      targetDirectories: [context.xcodeProject.directory.string],
+      targetDirectories: [context.xcodeProject.directoryURL.path()],
       configurationFilePath: configurationFilePath
     )
   }
