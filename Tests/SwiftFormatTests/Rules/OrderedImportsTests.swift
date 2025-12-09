@@ -609,16 +609,70 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
     )
   }
 
-  func testConditionalImports() {
+  func testConditionalImportsWhenEnabled() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.includeConditionalImports = true
+
     assertFormatting(
       OrderedImports.self,
       input: """
         import Zebras
         1️⃣import Apples
         #if canImport(Darwin)
+          import Foundation
+          2️⃣import Darwin
+        #elseif canImport(Glibc)
+          import Glibc
+          3️⃣import Foundation
+        #endif
+        4️⃣import Aardvarks
+
+        foo()
+        bar()
+        baz()
+        """,
+      expected: """
+        import Aardvarks
+        import Apples
+        import Zebras
+
+        #if canImport(Darwin)
+          import Darwin
+          import Foundation
+        #elseif canImport(Glibc)
+          import Foundation
+          import Glibc
+        #endif
+
+        foo()
+        bar()
+        baz()
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("2️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("3️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("4️⃣", message: "place imports at the top of the file"),
+      ],
+      configuration: configuration
+    )
+  }
+
+  func testConditionalImportsWhenDisabled() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.includeConditionalImports = false
+
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import Zebras
+        1️⃣import Apples
+        #if canImport(Darwin)
+          import Foundation
           import Darwin
         #elseif canImport(Glibc)
           import Glibc
+          import Foundation
         #endif
         2️⃣import Aardvarks
 
@@ -632,9 +686,11 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         import Zebras
 
         #if canImport(Darwin)
+          import Foundation
           import Darwin
         #elseif canImport(Glibc)
           import Glibc
+          import Foundation
         #endif
 
         foo()
@@ -644,7 +700,57 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       findings: [
         FindingSpec("1️⃣", message: "sort import statements lexicographically"),
         FindingSpec("2️⃣", message: "place imports at the top of the file"),
-      ]
+      ],
+      configuration: configuration
+    )
+  }
+
+  func testNestedConditionalImports() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.includeConditionalImports = true
+
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import A
+        #if FOO
+          import D
+          #if BAR
+            import F
+            1️⃣import E
+          #else
+            import H
+            2️⃣import G
+          #endif
+          3️⃣5️⃣import C
+        #endif
+        4️⃣import B
+        """,
+      expected: """
+        import A
+        import B
+
+        #if FOO
+          import C
+          import D
+
+          #if BAR
+            import E
+            import F
+          #else
+            import G
+            import H
+          #endif
+        #endif
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("2️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("3️⃣", message: "place imports at the top of the file"),
+        FindingSpec("4️⃣", message: "place imports at the top of the file"),
+        FindingSpec("5️⃣", message: "sort import statements lexicographically"),
+      ],
+      configuration: configuration
     )
   }
 
@@ -841,6 +947,75 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       findings: [
         FindingSpec("1️⃣", message: "sort import statements lexicographically")
       ]
+    )
+  }
+
+  func testPreservesEmptyConditionalCompilationBlock() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.includeConditionalImports = true
+
+    let code = """
+      import Apples
+      import Zebras
+
+      #if FOO
+      #endif
+
+      foo()
+      """
+
+    assertFormatting(
+      OrderedImports.self,
+      input: code,
+      expected: code,
+      configuration: configuration
+    )
+  }
+
+  func testPreservesHeaderCommentInConditionalCompilationBlock() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.includeConditionalImports = true
+
+    let code = """
+      import Apples
+
+      #if FOO
+        // Performing FOO-specific logic
+
+        import Foundation
+      #endif
+
+      foo()
+      """
+
+    assertFormatting(
+      OrderedImports.self,
+      input: code,
+      expected: code,
+      configuration: configuration
+    )
+  }
+
+  func testPreservesCommentsOnlyInConditionalCompilationBlock() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.includeConditionalImports = true
+
+    let code = """
+      import Apples
+
+      #if FOO
+        // Just a comment
+        // Another comment
+      #endif
+
+      foo()
+      """
+
+    assertFormatting(
+      OrderedImports.self,
+      input: code,
+      expected: code,
+      configuration: configuration
     )
   }
 }

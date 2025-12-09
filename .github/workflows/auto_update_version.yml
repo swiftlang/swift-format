@@ -8,7 +8,7 @@ on:
 
 jobs:
   update-version:
-    if: ${{ github.ref_type == 'branch' && startsWith(github.ref_name, 'release/') }}
+    if: ${{ github.repository == 'swiftlang/swift-format' && github.ref_type == 'branch' && startsWith(github.ref_name, 'release/') }}
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -21,13 +21,23 @@ jobs:
           ref: ${{ github.ref }}
           token: ${{ github.token }}
 
-      - name: Extract version from branch name
+      - name: Extract version from branch name (normalize to x.y.z)
         run: |
           BRANCH_NAME="${GITHUB_REF_NAME}"
-          VERSION="${BRANCH_NAME#release/}"
+          RAW_VERSION="${BRANCH_NAME#release/}"
+
+          IFS='.' read -ra PARTS <<< "$RAW_VERSION"
+
+          while [ "${#PARTS[@]}" -lt 3 ]; do
+            PARTS+=("0")
+          done
+
+          VERSION="${PARTS[0]}.${PARTS[1]}.${PARTS[2]}"
+
+          echo "RAW_VERSION=$RAW_VERSION" >> $GITHUB_ENV
           echo "VERSION=$VERSION" >> $GITHUB_ENV
           echo "RELEASE_BRANCH=$BRANCH_NAME" >> $GITHUB_ENV
-          echo "UPDATE_BRANCH=updateversion/$VERSION" >> $GITHUB_ENV
+          echo "UPDATE_BRANCH=updateversion/$RAW_VERSION" >> "$GITHUB_ENV"
 
       - name: Create updateversion branch
         run: |
@@ -64,7 +74,7 @@ jobs:
           gh pr create \
             --base "${{ env.RELEASE_BRANCH }}" \
             --head "${{ env.UPDATE_BRANCH }}" \
-            --title "[${{ env.VERSION }}] Update version to ${{ env.VERSION }}" \
+            --title "[${{ env.RAW_VERSION }}] Update version to ${{ env.VERSION }}" \
             --body "This PR was automatically opened by a GitHub action on creation of a release branch (\`${{ env.RELEASE_BRANCH }}\`).
             Review the version update and merge if correct, otherwise update the version manually." \
             --draft
