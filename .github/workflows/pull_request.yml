@@ -36,7 +36,7 @@ jobs:
       image: swift:6.2
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           persist-credentials: false
       - name: Mark the workspace as safe
@@ -63,7 +63,7 @@ jobs:
           cd "$GITHUB_WORKSPACE"
           /tmp/check-swift-format.sh
       - name: Checkout swift-syntax
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: swiftlang/swift-syntax
           persist-credentials: false
@@ -73,7 +73,7 @@ jobs:
           cd "$GITHUB_WORKSPACE/swift-syntax"
           /tmp/check-swift-format.sh
       - name: Checkout sourcekit-lsp
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: swiftlang/sourcekit-lsp
           persist-credentials: false
