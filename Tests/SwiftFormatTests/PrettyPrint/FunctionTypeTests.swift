@@ -283,4 +283,65 @@ final class FunctionTypeTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 17)
   }
+
+  func testFunctionTypeWithTypeSpecifier() {
+    let input =
+      """
+      func f(_ body: nonisolated(nonsending) () async -> Void) {}
+
+      func f(_ body: @Foo @Bar nonisolated(nonsending) () async -> Void) {}
+
+      func f(_ body: nonisolated(nonsending) @Foo @Bar () async -> Void) {}
+
+      func f(_ body: inout @Foo @Bar nonisolated(nonsending) () async -> Void) {}
+      """
+
+    assertPrettyPrintEqual(
+      input: input,
+      expected: """
+        func f(_ body: nonisolated(nonsending) () async -> Void) {}
+
+        func f(_ body: @Foo @Bar nonisolated(nonsending) () async -> Void) {}
+
+        func f(_ body: nonisolated(nonsending) @Foo @Bar () async -> Void) {}
+
+        func f(_ body: inout @Foo @Bar nonisolated(nonsending) () async -> Void) {}
+
+        """,
+      linelength: 80
+    )
+
+    assertPrettyPrintEqual(
+      input: input,
+      expected: """
+        func f(
+          _ body:
+            nonisolated(nonsending) ()
+            async -> Void
+        ) {}
+
+        func f(
+          _ body:
+            @Foo @Bar
+            nonisolated(nonsending) ()
+            async -> Void
+        ) {}
+
+        func f(
+          _ body:
+            nonisolated(nonsending)
+            @Foo @Bar () async -> Void
+        ) {}
+
+        func f(
+          _ body:
+            inout @Foo @Bar
+            nonisolated(nonsending) ()
+            async -> Void
+        ) {}
+
+        """,
+      linelength: 30
+    )
+  }
 }
