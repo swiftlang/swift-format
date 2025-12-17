@@ -102,6 +102,8 @@ jobs:
       matrix:
         release: [true, false]
     with:
+      linux_exclude_swift_versions: "[{\"swift_version\": \"5.9\"}, {\"swift_version\": \"5.10\"}]"
+      windows_exclude_swift_versions: "[{\"swift_version\": \"5.9\"}]"
       linux_pre_build_command: |
         git config --global --add safe.directory "$(realpath .)"
         git config --local user.name 'swift-ci'
