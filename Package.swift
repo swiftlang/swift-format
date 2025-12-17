@@ -204,7 +204,7 @@ var dependencies: [Package.Dependency] {
     return [
       .package(url: "https://github.com/apple/swift-argument-parser.git", from: "1.2.2"),
       .package(url: "https://github.com/swiftlang/swift-markdown.git", from: "0.2.0"),
-      .package(url: "https://github.com/swiftlang/swift-syntax.git", branch: "main"),
+      .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "604.0.0-prerelease-2025-12-15"),
     ]
   }
 }
