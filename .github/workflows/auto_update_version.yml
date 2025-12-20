@@ -43,26 +43,38 @@ jobs:
         run: |
           git checkout -b $UPDATE_BRANCH $RELEASE_BRANCH
 
-      - name: Update PrintVersion.swift
+      - name: Update version and dependencies
         id: update_version
         run: |
           FILE=Sources/swift-format/PrintVersion.swift
+          CHANGED=false
 
           if grep -q "print(\"$VERSION\")" "$FILE"; then
             echo "Version already $VERSION; skipping update."
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-            exit 0
+          else
+            sed -i "s/print(\".*\")/print(\"$VERSION\")/" "$FILE"
+            CHANGED=true
           fi
 
-          sed -i "s/print(\".*\")/print(\"$VERSION\")/" "$FILE"
-          echo "changed=true" >> "$GITHUB_OUTPUT"
+          if grep -q "branch: \"$RELEASE_BRANCH\"" Package.swift; then
+            echo "swift-syntax branch already $RELEASE_BRANCH; skipping update."
+          else
+            sed -i '/swift-syntax\.git/s|branch: ".*"|branch: "'"$RELEASE_BRANCH"'"|' Package.swift
+            CHANGED=true
+          fi
+
+          if [ "$CHANGED" = "true" ]; then
+            echo "changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Commit and push changes
         if: steps.update_version.outputs.changed == 'true'
         run: |
           git config user.name "swift-ci"
           git config user.email "swift-ci@users.noreply.github.com"
-          git add Sources/swift-format/PrintVersion.swift
+          git add -A
           git commit -m "Update version to $VERSION"
           git push origin $UPDATE_BRANCH
 
