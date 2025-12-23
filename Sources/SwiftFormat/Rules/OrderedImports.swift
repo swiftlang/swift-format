@@ -11,20 +11,22 @@
 //===----------------------------------------------------------------------===//
 
 import SwiftSyntax
-
-/// Imports must be lexicographically ordered and logically grouped at the top of each source file.
-/// The order of the import groups is 1) regular imports, 2) declaration imports, 3) @_implementationOnly
+/// Imports must be lexicographically ordered and (optionally) logically grouped at the top of each source file.
+/// The order of the import groups is 1) regular imports, 2) declaration imports, 3) @\_implementationOnly
 /// imports, and 4) @testable imports. These groups are separated by a single blank line. Blank lines in
 /// between the import declarations are removed.
+///
+/// Logical grouping is enabled by default but can be disabled via the `orderedImports.shouldGroupImportTypes`
+/// configuration option to limit this rule to lexicographic ordering.
 ///
 /// By default, imports within conditional compilation blocks (`#if`, `#elseif`, `#else`) are not ordered.
 /// This behavior can be controlled via the `orderedImports.includeConditionalImports` configuration option.
 ///
 /// Lint: If an import appears anywhere other than the beginning of the file it resides in,
-///       not lexicographically ordered, or  not in the appropriate import group, a lint error is
+///       not lexicographically ordered, or (optionally) not in the appropriate import group, a lint error is
 ///       raised.
 ///
-/// Format: Imports will be reordered and grouped at the top of the file.
+/// Format: Imports will be reordered and (optionally) grouped at the top of the file.
 @_spi(Rules)
 public final class OrderedImports: SyntaxFormatRule {
 
@@ -39,16 +41,19 @@ public final class OrderedImports: SyntaxFormatRule {
 
     // Stores the formatted and sorted lines that will be used to reconstruct the list of code block
     // items later.
-    var formattedLines: [Line] = []
+    var formattedLines = [Line]()
 
-    var regularImports: [Line] = []
-    var declImports: [Line] = []
-    var implementationOnlyImports: [Line] = []
-    var testableImports: [Line] = []
-    var codeBlocks: [Line] = []
-    var fileHeader: [Line] = []
+    var regularImports = [Line]()
+    var declImports = [Line]()
+    var implementationOnlyImports = [Line]()
+    var testableImports = [Line]()
+    // Used if `shouldGroupImportTypes` configuration is `false`.
+    var combinedImports = [Line]()
+
+    var codeBlocks = [Line]()
+    var fileHeader = [Line]()
     var atStartOfFile = true
-    var commentBuffer: [Line] = []
+    var commentBuffer = [Line]()
 
     func formatAndAppend(linesSection: ArraySlice<Line>) {
       codeBlocks.append(contentsOf: commentBuffer)
@@ -68,6 +73,7 @@ public final class OrderedImports: SyntaxFormatRule {
       declImports = formatImports(declImports)
       implementationOnlyImports = formatImports(implementationOnlyImports)
       testableImports = formatImports(testableImports)
+      combinedImports = formatImports(combinedImports)
       formatCodeblocks(&codeBlocks)
 
       let joined = joinLines(
@@ -76,6 +82,7 @@ public final class OrderedImports: SyntaxFormatRule {
         declImports,
         implementationOnlyImports,
         testableImports,
+        combinedImports,
         codeBlocks
       )
       formattedLines.append(contentsOf: joined)
@@ -84,6 +91,7 @@ public final class OrderedImports: SyntaxFormatRule {
       declImports = []
       implementationOnlyImports = []
       testableImports = []
+      combinedImports = []
       codeBlocks = []
       fileHeader = []
       commentBuffer = []
@@ -152,35 +160,50 @@ public final class OrderedImports: SyntaxFormatRule {
         line.syntaxNode = .ifConfigCodeBlock(CodeBlockItemSyntax(item: .decl(DeclSyntax(ifConfigDecl))))
       }
 
-      // Separate lines into different categories along with any associated comments.
-      switch line.type {
-      case .regularImport:
-        regularImports.append(contentsOf: commentBuffer)
-        regularImports.append(line)
-        commentBuffer = []
+      if context.configuration.orderedImports.shouldGroupImportTypes {
+        // Separate lines into different categories along with any associated comments.
+        switch line.type {
+        case .regularImport:
+          regularImports.append(contentsOf: commentBuffer)
+          regularImports.append(line)
+          commentBuffer = []
 
-      case .implementationOnlyImport:
-        implementationOnlyImports.append(contentsOf: commentBuffer)
-        implementationOnlyImports.append(line)
-        commentBuffer = []
+        case .implementationOnlyImport:
+          implementationOnlyImports.append(contentsOf: commentBuffer)
+          implementationOnlyImports.append(line)
+          commentBuffer = []
 
-      case .testableImport:
-        testableImports.append(contentsOf: commentBuffer)
-        testableImports.append(line)
-        commentBuffer = []
+        case .testableImport:
+          testableImports.append(contentsOf: commentBuffer)
+          testableImports.append(line)
+          commentBuffer = []
 
-      case .declImport:
-        declImports.append(contentsOf: commentBuffer)
-        declImports.append(line)
-        commentBuffer = []
+        case .declImport:
+          declImports.append(contentsOf: commentBuffer)
+          declImports.append(line)
+          commentBuffer = []
 
-      case .codeBlock, .blankLine:
-        codeBlocks.append(contentsOf: commentBuffer)
-        codeBlocks.append(line)
-        commentBuffer = []
+        case .codeBlock, .blankLine:
+          codeBlocks.append(contentsOf: commentBuffer)
+          codeBlocks.append(line)
+          commentBuffer = []
 
-      case .comment:
-        commentBuffer.append(line)
+        case .comment:
+          commentBuffer.append(line)
+        }
+      } else {
+        switch line.type {
+        case .regularImport, .implementationOnlyImport, .testableImport, .declImport:
+          combinedImports.append(contentsOf: commentBuffer)
+          combinedImports.append(line)
+        case .codeBlock, .blankLine:
+          codeBlocks.append(contentsOf: commentBuffer)
+          codeBlocks.append(line)
+          commentBuffer = []
+
+        case .comment:
+          commentBuffer.append(line)
+        }
       }
     }
 
@@ -220,6 +243,10 @@ public final class OrderedImports: SyntaxFormatRule {
           diagnose(.placeAtTopOfFile, on: line.firstToken)
         default: ()
         }
+      }
+
+      guard context.configuration.orderedImports.shouldGroupImportTypes else {
+        return
       }
 
       if testableGroup {
