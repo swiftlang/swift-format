@@ -11,4 +11,5 @@
 * @allevato @hborla @hamishknight @rintaro
 
 .github/ @hborla @shahmishal
+.github/CODEOWNERS @allevato @hborla @hamishknight @rintaro
 .swiftci/ @hborla @shahmishal
