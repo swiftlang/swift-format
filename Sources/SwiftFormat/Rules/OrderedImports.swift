@@ -16,7 +16,7 @@ import SwiftSyntax
 /// imports, and 4) @testable imports. These groups are separated by a single blank line. Blank lines in
 /// between the import declarations are removed.
 ///
-/// Logical grouping is enabled by default but can be disabled via the `orderedImports.shouldGroupImportTypes`
+/// Logical grouping is enabled by default but can be disabled via the `orderedImports.shouldGroupImports`
 /// configuration option to limit this rule to lexicographic ordering.
 ///
 /// By default, imports within conditional compilation blocks (`#if`, `#elseif`, `#else`) are not ordered.
@@ -41,19 +41,17 @@ public final class OrderedImports: SyntaxFormatRule {
 
     // Stores the formatted and sorted lines that will be used to reconstruct the list of code block
     // items later.
-    var formattedLines = [Line]()
+    var formattedLines: [Line] = []
 
-    var regularImports = [Line]()
-    var declImports = [Line]()
-    var implementationOnlyImports = [Line]()
-    var testableImports = [Line]()
-    // Used if `shouldGroupImportTypes` configuration is `false`.
-    var combinedImports = [Line]()
+    var regularImports: [Line] = []
+    var declImports: [Line] = []
+    var implementationOnlyImports: [Line] = []
+    var testableImports: [Line] = []
 
-    var codeBlocks = [Line]()
-    var fileHeader = [Line]()
+    var codeBlocks: [Line] = []
+    var fileHeader: [Line] = []
     var atStartOfFile = true
-    var commentBuffer = [Line]()
+    var commentBuffer: [Line] = []
 
     func formatAndAppend(linesSection: ArraySlice<Line>) {
       codeBlocks.append(contentsOf: commentBuffer)
@@ -73,7 +71,6 @@ public final class OrderedImports: SyntaxFormatRule {
       declImports = formatImports(declImports)
       implementationOnlyImports = formatImports(implementationOnlyImports)
       testableImports = formatImports(testableImports)
-      combinedImports = formatImports(combinedImports)
       formatCodeblocks(&codeBlocks)
 
       let joined = joinLines(
@@ -82,7 +79,6 @@ public final class OrderedImports: SyntaxFormatRule {
         declImports,
         implementationOnlyImports,
         testableImports,
-        combinedImports,
         codeBlocks
       )
       formattedLines.append(contentsOf: joined)
@@ -91,7 +87,6 @@ public final class OrderedImports: SyntaxFormatRule {
       declImports = []
       implementationOnlyImports = []
       testableImports = []
-      combinedImports = []
       codeBlocks = []
       fileHeader = []
       commentBuffer = []
@@ -160,7 +155,7 @@ public final class OrderedImports: SyntaxFormatRule {
         line.syntaxNode = .ifConfigCodeBlock(CodeBlockItemSyntax(item: .decl(DeclSyntax(ifConfigDecl))))
       }
 
-      if context.configuration.orderedImports.shouldGroupImportTypes {
+      if context.configuration.orderedImports.shouldGroupImports {
         // Separate lines into different categories along with any associated comments.
         switch line.type {
         case .regularImport:
@@ -194,8 +189,9 @@ public final class OrderedImports: SyntaxFormatRule {
       } else {
         switch line.type {
         case .regularImport, .implementationOnlyImport, .testableImport, .declImport:
-          combinedImports.append(contentsOf: commentBuffer)
-          combinedImports.append(line)
+          regularImports.append(contentsOf: commentBuffer)
+          regularImports.append(line)
+          commentBuffer = []
         case .codeBlock, .blankLine:
           codeBlocks.append(contentsOf: commentBuffer)
           codeBlocks.append(line)
@@ -245,8 +241,8 @@ public final class OrderedImports: SyntaxFormatRule {
         }
       }
 
-      guard context.configuration.orderedImports.shouldGroupImportTypes else {
-        return
+      guard context.configuration.orderedImports.shouldGroupImports else {
+        continue
       }
 
       if testableGroup {

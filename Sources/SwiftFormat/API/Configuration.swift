@@ -565,6 +565,6 @@ public struct OrderedImportsConfiguration: Codable, Equatable {
   /// Determines whether imports within conditional compilation blocks should be ordered.
   public var includeConditionalImports = false
   /// Determines whether imports are separated into groups based on their type.
-  public var shouldGroupImportTypes = true
+  public var shouldGroupImports = true
   public init() {}
 }

@@ -411,7 +411,7 @@ The order of the import groups is 1) regular imports, 2) declaration imports, 3)
 imports, and 4) @testable imports. These groups are separated by a single blank line. Blank lines in
 between the import declarations are removed.
 
-Logical grouping is enabled by default but can be disabled via the `orderedImports.shouldGroupImportTypes`
+Logical grouping is enabled by default but can be disabled via the `orderedImports.shouldGroupImports`
 configuration option to limit this rule to lexicographic ordering.
 
 By default, imports within conditional compilation blocks (`#if`, `#elseif`, `#else`) are not ordered.
