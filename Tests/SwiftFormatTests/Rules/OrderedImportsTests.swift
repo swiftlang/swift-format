@@ -1024,25 +1024,24 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
     configuration.orderedImports.shouldGroupImports = false
 
     let code = """
-        import Core
-        @testable import func Darwin.C.isatty
-        import enum Darwin.D.isatty
-        import Foundation
-        @_implementationOnly import InternalModule
-        import MyModuleUnderTest
-        @testable import SwiftFormat
-        import SwiftSyntax
-        import UIKit
+      import Core
+      @testable import func Darwin.C.isatty
+      import enum Darwin.D.isatty
+      import Foundation
+      @_implementationOnly import InternalModule
+      import MyModuleUnderTest
+      @testable import SwiftFormat
+      import SwiftSyntax
+      import UIKit
 
-        let a = 3
-        """
+      let a = 3
+      """
 
     assertFormatting(
       OrderedImports.self,
       input: code,
       expected: code,
-      findings: [
-      ],
+      findings: [],
       configuration: configuration
     )
   }
@@ -1055,7 +1054,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       OrderedImports.self,
       input: """
         // Header comment
-        
+
         import Core
         let a = 3
         1️⃣@testable import func Darwin.C.isatty
@@ -1067,14 +1066,14 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         """,
       expected: """
         // Header comment
-        
+
         import Core
         @testable import func Darwin.C.isatty
         // Second comment
         import enum Darwin.D.isatty
         // Third comment
         import Foundation
-        
+
         let a = 3
         let b = 4
         """,
@@ -1082,7 +1081,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         FindingSpec("1️⃣", message: "place imports at the top of the file"),
         FindingSpec("2️⃣", message: "place imports at the top of the file"),
         FindingSpec("3️⃣", message: "place imports at the top of the file"),
-        FindingSpec("4️⃣", message: "sort import statements lexicographically")
+        FindingSpec("4️⃣", message: "sort import statements lexicographically"),
       ],
       configuration: configuration
     )
@@ -1121,7 +1120,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         let a = 3
         """,
       findings: [
-        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
       ],
       configuration: configuration
     )
