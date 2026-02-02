@@ -563,7 +563,8 @@ public struct NoAssignmentInExpressionsConfiguration: Codable, Equatable {
 /// Configuration for the `OrderedImports` rule.
 public struct OrderedImportsConfiguration: Codable, Equatable {
   /// Determines whether imports within conditional compilation blocks should be ordered.
-  public var includeConditionalImports: Bool = false
-
+  public var includeConditionalImports = false
+  /// Determines whether imports are separated into groups based on their type.
+  public var shouldGroupImports = true
   public init() {}
 }

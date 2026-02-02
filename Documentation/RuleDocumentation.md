@@ -406,19 +406,22 @@ Lint: If a function call with a trailing closure also contains a non-trailing cl
 
 ### OrderedImports
 
-Imports must be lexicographically ordered and logically grouped at the top of each source file.
-The order of the import groups is 1) regular imports, 2) declaration imports, 3) @_implementationOnly
+Imports must be lexicographically ordered and (optionally) logically grouped at the top of each source file.
+The order of the import groups is 1) regular imports, 2) declaration imports, 3) @\_implementationOnly
 imports, and 4) @testable imports. These groups are separated by a single blank line. Blank lines in
 between the import declarations are removed.
+
+Logical grouping is enabled by default but can be disabled via the `orderedImports.shouldGroupImports`
+configuration option to limit this rule to lexicographic ordering.
 
 By default, imports within conditional compilation blocks (`#if`, `#elseif`, `#else`) are not ordered.
 This behavior can be controlled via the `orderedImports.includeConditionalImports` configuration option.
 
 Lint: If an import appears anywhere other than the beginning of the file it resides in,
-      not lexicographically ordered, or  not in the appropriate import group, a lint error is
+      not lexicographically ordered, or (optionally) not in the appropriate import group, a lint error is
       raised.
 
-Format: Imports will be reordered and grouped at the top of the file.
+Format: Imports will be reordered and (optionally) grouped at the top of the file.
 
 `OrderedImports` rule can format your code automatically.
 

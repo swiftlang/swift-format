@@ -1018,4 +1018,111 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       configuration: configuration
     )
   }
+
+  func testOrderingWithGroupingDisabled() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.shouldGroupImports = false
+
+    let code = """
+      import Core
+      @testable import func Darwin.C.isatty
+      import enum Darwin.D.isatty
+      import Foundation
+      @_implementationOnly import InternalModule
+      import MyModuleUnderTest
+      @testable import SwiftFormat
+      import SwiftSyntax
+      import UIKit
+
+      let a = 3
+      """
+
+    assertFormatting(
+      OrderedImports.self,
+      input: code,
+      expected: code,
+      findings: [],
+      configuration: configuration
+    )
+  }
+
+  func testMixedContentOrderingWithGroupingDisabled() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.shouldGroupImports = false
+
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        // Header comment
+
+        import Core
+        let a = 3
+        1️⃣@testable import func Darwin.C.isatty
+        // Third comment
+        2️⃣import Foundation
+        let b = 4
+        // Second comment
+        3️⃣4️⃣import enum Darwin.D.isatty
+        """,
+      expected: """
+        // Header comment
+
+        import Core
+        @testable import func Darwin.C.isatty
+        // Second comment
+        import enum Darwin.D.isatty
+        // Third comment
+        import Foundation
+
+        let a = 3
+        let b = 4
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "place imports at the top of the file"),
+        FindingSpec("2️⃣", message: "place imports at the top of the file"),
+        FindingSpec("3️⃣", message: "place imports at the top of the file"),
+        FindingSpec("4️⃣", message: "sort import statements lexicographically"),
+      ],
+      configuration: configuration
+    )
+  }
+
+  func testInvalidOrderingWithGroupingDisabled() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.shouldGroupImports = false
+
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import Core
+        import func Darwin.C.isatty
+        @testable import SwiftFormat
+        1️⃣import enum Darwin.D.isatty
+        @_implementationOnly import InternalModule
+        @testable import MyModuleUnderTest
+        import SwiftSyntax
+        import Foundation
+        import UIKit
+
+        let a = 3
+        """,
+      expected: """
+        import Core
+        import func Darwin.C.isatty
+        import enum Darwin.D.isatty
+        import Foundation
+        @_implementationOnly import InternalModule
+        @testable import MyModuleUnderTest
+        @testable import SwiftFormat
+        import SwiftSyntax
+        import UIKit
+
+        let a = 3
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
+      ],
+      configuration: configuration
+    )
+  }
 }

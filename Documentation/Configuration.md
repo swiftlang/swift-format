@@ -304,8 +304,9 @@ too long.
 **description:** Configuration for the `OrderedImports` rule.
 
 - `includeConditionalImports` _(boolean)_: Determines whether imports within conditional compilation blocks (`#if`, `#elseif`, `#else`) should be ordered. When `true`, imports inside conditional blocks will be sorted and organized according to the same rules as top-level imports. When `false`, imports within conditional blocks are left in their original order.
+- `shouldGroupImports` _(boolean)_: Determines whether different import types should be grouped together. When `true`, imports are grouped into the following order, with a blank line between each section: 1) regular imports, 2) declaration imports, 3) @\_implementationOnly imports, and 4) @testable imports. When `false`, imports are lexicographically ordered by name, regardless of type.
 
-**default:** `{ "includeConditionalImports" : false }`
+**default:** `{ "includeConditionalImports" : false, "shouldGroupImports": true }`
 
 ---
 
