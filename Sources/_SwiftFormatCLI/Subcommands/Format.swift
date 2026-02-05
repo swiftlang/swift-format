@@ -13,40 +13,48 @@
 import ArgumentParser
 
 extension SwiftFormatCommand {
-  /// Emits style diagnostics for one or more files containing Swift code.
-  struct Lint: ParsableCommand {
-    static var configuration = CommandConfiguration(
-      abstract: "Diagnose style issues in Swift source code",
+  /// Formats one or more files containing Swift code.
+  public struct Format: ParsableCommand {
+    public static var configuration = CommandConfiguration(
+      abstract: "Format Swift source code",
       discussion: "When no files are specified, it expects the source from standard input."
     )
 
-    @OptionGroup()
-    var configurationOptions: ConfigurationOptions
-
-    @OptionGroup()
-    var lintOptions: LintFormatOptions
-
+    /// Whether or not to format the Swift file in-place.
+    ///
+    /// If specified, the current file is overwritten when formatting.
     @Flag(
       name: .shortAndLong,
-      help: "Treat all findings as errors instead of warnings."
+      help: "Overwrite the current file when formatting."
     )
-    var strict: Bool = false
+    var inPlace: Bool = false
+
+    @OptionGroup()
+    public var configurationOptions: ConfigurationOptions
+
+    @OptionGroup()
+    public var formatOptions: LintFormatOptions
+    
+    public init() {}
 
     @OptionGroup(visibility: .hidden)
     var performanceMeasurementOptions: PerformanceMeasurementsOptions
 
-    func run() throws {
+    public func validate() throws {
+      if inPlace && formatOptions.paths.isEmpty {
+        throw ValidationError("'--in-place' is only valid when formatting files")
+      }
+    }
+
+    public func run() throws {
       try performanceMeasurementOptions.printingInstructionCountIfRequested {
-        let frontend = LintFrontend(
+        let frontend = FormatFrontend(
           configurationOptions: configurationOptions,
-          lintFormatOptions: lintOptions,
-          treatWarningsAsErrors: strict
+          lintFormatOptions: formatOptions,
+          inPlace: inPlace
         )
         frontend.run()
-
-        if frontend.diagnosticsEngine.hasErrors {
-          throw ExitCode.failure
-        }
+        if frontend.diagnosticsEngine.hasErrors { throw ExitCode.failure }
       }
     }
   }

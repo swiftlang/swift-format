@@ -2,7 +2,7 @@
 //
 // This source file is part of the Swift.org open source project
 //
-// Copyright (c) 2014 - 2020 Apple Inc. and the Swift project authors
+// Copyright (c) 2014 - 2025 Apple Inc. and the Swift project authors
 // Licensed under Apache License v2.0 with Runtime Library Exception
 //
 // See https://swift.org/LICENSE.txt for license information
@@ -10,17 +10,15 @@
 //
 //===----------------------------------------------------------------------===//
 
-import ArgumentParser
+import _SwiftFormatCLI
 
-/// Encapsulates `--version` flag behavior.
-struct VersionOptions: ParsableArguments {
-  @Flag(name: .shortAndLong, help: "Print the version and exit")
-  var version: Bool = false
+import Foundation
 
-  func validate() throws {
-    if version {
-      printVersionInformation()
-      throw ExitCode.success
-    }
-  }
+var arguments = Array(CommandLine.arguments.dropFirst())
+
+// If the executable name is `swift-lint`, default to the `lint` subcommand.
+if CommandLine.arguments[0].hasSuffix("swift-lint") {
+  arguments.insert("lint", at: 0)
 }
+
+SwiftFormatCommand.main(arguments)

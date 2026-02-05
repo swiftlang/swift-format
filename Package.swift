@@ -23,6 +23,10 @@ var products: [Product] = [
     name: "SwiftFormat",
     targets: ["SwiftFormat"]
   ),
+  .library(
+    name: "_SwiftFormatCLI",
+    targets: ["_SwiftFormatCLI"]
+  ),
   .plugin(
     name: "FormatPlugin",
     targets: ["Format Source Code"]
@@ -48,6 +52,16 @@ var targets: [Target] = [
         "SwiftOperators", "SwiftParser", "SwiftParserDiagnostics", "SwiftSyntax", "SwiftSyntaxBuilder",
       ]),
     exclude: ["CMakeLists.txt"]
+  ),
+  .target(
+    name: "_SwiftFormatCLI",
+    dependencies: [
+      "_SwiftFormatInstructionCounter",
+      "SwiftFormat",
+      .product(name: "ArgumentParser", package: "swift-argument-parser"),
+    ] + swiftSyntaxDependencies(["SwiftDiagnostics", "SwiftParser", "SwiftSyntax"]),
+    exclude: ["CMakeLists.txt"],
+    linkerSettings: swiftformatLinkSettings
   ),
   .target(
     name: "_SwiftFormatTestSupport",
@@ -95,10 +109,9 @@ var targets: [Target] = [
   .executableTarget(
     name: "swift-format",
     dependencies: [
-      "_SwiftFormatInstructionCounter",
-      "SwiftFormat",
+      "_SwiftFormatCLI",
       .product(name: "ArgumentParser", package: "swift-argument-parser"),
-    ] + swiftSyntaxDependencies(["SwiftDiagnostics", "SwiftParser", "SwiftSyntax"]),
+    ],
     exclude: ["CMakeLists.txt"],
     linkerSettings: swiftformatLinkSettings
   ),
