@@ -1481,7 +1481,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: IfConfigDeclSyntax) -> SyntaxVisitorContinueKind {
     // there has to be a break after an #endif
-    after(node.poundEndif, tokens: .break(.same, size: 0))
+    after(node.poundEndif, tokens: .break(.same, size: 0, newlines: .soft))
     return .visitChildren
   }
 
@@ -1976,17 +1976,28 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: ImportDeclSyntax) -> SyntaxVisitorContinueKind {
-    // Import declarations should never be wrapped.
-    before(
-      node.firstToken(viewMode: .sourceAccurate),
-      tokens: .printerControl(kind: .disableBreaking(allowDiscretionary: false))
-    )
+    // Import declarations ignore wrapping when it is safe to do so (no #if constructs)
+    let isSafeToIgnoreBreaking = !node.attributes.contains(where: { element in
+      return element.is(IfConfigDeclSyntax.self)
+    })
+
+    if isSafeToIgnoreBreaking {
+      before(
+        node.firstToken(viewMode: .sourceAccurate),
+        tokens: .printerControl(kind: .disableBreaking(allowDiscretionary: false))
+      )
+    }
 
     arrangeAttributeList(node.attributes)
     after(node.importKeyword, tokens: .space)
     after(node.importKindSpecifier, tokens: .space)
 
-    after(node.lastToken(viewMode: .sourceAccurate), tokens: .printerControl(kind: .enableBreaking))
+    if isSafeToIgnoreBreaking {
+      after(
+        node.lastToken(viewMode: .sourceAccurate),
+        tokens: .printerControl(kind: .enableBreaking)
+      )
+    }
     return .visitChildren
   }
 

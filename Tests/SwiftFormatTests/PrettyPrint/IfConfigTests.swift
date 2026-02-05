@@ -395,10 +395,10 @@ final class IfConfigTests: PrettyPrintTestCase {
           .toggleStyle(
             SwitchToggleStyle(tint: Color.blue))
         #endif
-        .accessibilityValue(
-          binding.wrappedValue == true
-            ? "On" : "Off"
-        )
+          .accessibilityValue(
+            binding.wrappedValue == true
+              ? "On" : "Off"
+          )
       }
 
       """
@@ -494,7 +494,7 @@ final class IfConfigTests: PrettyPrintTestCase {
       #if os(iOS)
         .iOSSpecificModifier()
       #endif
-      .commonModifier()
+        .commonModifier()
 
       """
 
@@ -522,7 +522,7 @@ final class IfConfigTests: PrettyPrintTestCase {
       #if os(iOS)
         .iOSSpecificModifier()
       #endif
-      .commonModifier()
+        .commonModifier()
 
       """
 
@@ -568,5 +568,25 @@ final class IfConfigTests: PrettyPrintTestCase {
     var configuration = Configuration.forTesting
     configuration.indentConditionalCompilationBlocks = false
     assertPrettyPrintEqual(input: input, expected: input, linelength: 45, configuration: configuration)
+  }
+
+  func testIfConfigDeclPartOfImport() {
+    let input =
+      """
+      #if os(Foo)
+      @_spiOnly
+      #elseif os(Bar)
+      @_spiOnly
+      #else
+      @_spiOnly
+      #endif
+      @_spi(Foo) import Foundation
+
+      """
+    var configuration = Configuration.forTesting
+    configuration.respectsExistingLineBreaks = false
+    configuration.indentConditionalCompilationBlocks = false
+    assertPrettyPrintEqual(input: input, expected: input, linelength: 80, configuration: configuration)
+
   }
 }
