@@ -12,4 +12,13 @@
 
 import _SwiftFormatCLI
 
-SwiftFormatCommand.main()
+import Foundation
+
+var arguments = Array(CommandLine.arguments.dropFirst())
+
+// If the executable name is `swift-lint`, default to the `lint` subcommand.
+if CommandLine.arguments[0].hasSuffix("swift-lint") {
+  arguments.insert("lint", at: 0)
+}
+
+SwiftFormatCommand.main(arguments)
