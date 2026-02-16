@@ -47,19 +47,42 @@ public struct FileIterator: Sequence, IteratorProtocol {
   /// The file extension to check for when recursing through directories.
   private let fileSuffix = ".swift"
 
+  /// Optional ignore manager for filtering files based on .swift-format-ignore files.
+  private let ignoreManager: IgnoreManager
+
   /// Create a new file iterator over the given list of file URLs.
   ///
   /// The given URLs may be files or directories. If they are directories, the iterator will recurse
   /// into them. Symlinks are never followed on Windows platforms as Foundation doesn't support it.
   /// - Parameters:
   ///   - urls: `Array` of files or directories to iterate.
-  ///   - followSymlinks: `Bool` to indicate if symbolic links should be followed when iterating.
-  ///   - workingDirectory: `URL` that indicates the current working directory. Used for testing.
-  public init(urls: [URL], followSymlinks: Bool, workingDirectory: URL = URL(fileURLWithPath: ".")) {
+  ///   - followSymlinks: `Bool` to indicate if symbolic links sthe current working directory. Used for testing.
+  ///   - ignoreManager: Optional `IgnoreManager`hould be followed when iterating.
+  ///   - workingDirectory: `URL` that indicates  to filter files based on .swift-format-ignore files.
+  package init(
+    urls: [URL],
+    followSymlinks: Bool,
+    workingDirectory: URL = URL(fileURLWithPath: "."),
+    ignoreManager: IgnoreManager
+  ) {
     self.workingDirectory = workingDirectory
     self.urls = urls
     self.urlIterator = self.urls.makeIterator()
     self.followSymlinks = followSymlinks
+    self.ignoreManager = ignoreManager
+  }
+
+  public init(
+    urls: [URL],
+    followSymlinks: Bool,
+    workingDirectory: URL = URL(fileURLWithPath: ".")
+  ) {
+    self.init(
+      urls: urls,
+      followSymlinks: followSymlinks,
+      workingDirectory: workingDirectory,
+      ignoreManager: IgnoreManager()
+    )
   }
 
   /// Iterate through the "paths" list, and emit the file paths in it. If we encounter a directory,
@@ -85,6 +108,9 @@ public struct FileIterator: Sequence, IteratorProtocol {
           continue
 
         case .typeDirectory:
+          if self.ignoreManager.shouldIgnore(file: next, isDirectory: true) {
+            continue
+          }
           dirIterator = FileManager.default.enumerator(
             at: next,
             includingPropertiesForKeys: nil,
@@ -93,12 +119,17 @@ public struct FileIterator: Sequence, IteratorProtocol {
           currentDirectory = next
 
         default:
-          // We'll get here if the path is a file, or if it doesn't exist. In the latter case,
-          // return the path anyway; we'll turn the error we get when we try to open the file into
-          // an appropriate diagnostic instead of trying to handle it here.
+          // We'll get here if the path is a file, or if it doesn't exist.
+          if self.ignoreManager.shouldIgnore(file: next, isDirectory: false) {
+            continue
+          }
+          // If the file does not exists, return the path anyway; we'll turn the
+          // error we get when we try to open the file into an appropriate
+          // diagnostic instead of trying to handle it here.
           output = next
         }
       }
+
       if let out = output, visited.contains(out.standardizedFileURL.path) {
         output = nil
       }
@@ -145,7 +176,15 @@ public struct FileIterator: Sequence, IteratorProtocol {
         } else {
           relativePath = path
         }
-        output = URL(fileURLWithPath: relativePath, isDirectory: false, relativeTo: workingDirectory)
+        let fileURL = URL(fileURLWithPath: relativePath, isDirectory: false, relativeTo: workingDirectory)
+
+        // Apply ignore filtering
+        if self.ignoreManager.shouldIgnore(file: item, isDirectory: false) {
+          output = nil
+          continue  // Skip this file and continue to next
+        }
+
+        output = fileURL
 
       default:
         break

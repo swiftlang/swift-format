@@ -100,6 +100,8 @@ add_library(SwiftFormat
   Rules/UseWhereClausesInForLoops.swift
   Rules/ValidateDocumentationComments.swift
   Utilities/FileIterator.swift
+  Utilities/GitIgnorePattern.swift
+  Utilities/IgnoreManager.swift
   Utilities/URL+isRoot.swift)
 target_link_libraries(SwiftFormat PUBLIC
   SwiftMarkdown::Markdown
