@@ -288,16 +288,22 @@ class Frontend {
 
     if parallel {
       let filesToProcess =
-        FileIterator(urls: urls, followSymlinks: lintFormatOptions.followSymlinks)
+        FileIterator(
+          urls: urls,
+          followSymlinks: lintFormatOptions.followSymlinks
+        )
         .compactMap(openAndPrepareFile)
       DispatchQueue.concurrentPerform(iterations: filesToProcess.count) { index in
         processFile(filesToProcess[index])
       }
     } else {
-      FileIterator(urls: urls, followSymlinks: lintFormatOptions.followSymlinks)
-        .lazy
-        .compactMap(openAndPrepareFile)
-        .forEach(processFile)
+      FileIterator(
+        urls: urls,
+        followSymlinks: lintFormatOptions.followSymlinks
+      )
+      .lazy
+      .compactMap(openAndPrepareFile)
+      .forEach(processFile)
     }
   }
 
