@@ -11,6 +11,5 @@
 //===----------------------------------------------------------------------===//
 
 import _SwiftFormatCLI
-import Foundation
 
-SwiftFormatCommand.main()
+SwiftFormatCommand.Lint.main()

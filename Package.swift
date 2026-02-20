@@ -19,6 +19,10 @@ var products: [Product] = [
     name: "swift-format",
     targets: ["swift-format"]
   ),
+  .executable(
+    name: "swift-lint",
+    targets: ["swift-lint"]
+  ),
   .library(
     name: "SwiftFormat",
     targets: ["SwiftFormat"]
@@ -113,6 +117,14 @@ var targets: [Target] = [
       .product(name: "ArgumentParser", package: "swift-argument-parser"),
     ],
     exclude: ["CMakeLists.txt"],
+    linkerSettings: swiftformatLinkSettings
+  ),
+  .executableTarget(
+    name: "swift-lint",
+    dependencies: [
+      "_SwiftFormatCLI",
+      .product(name: "ArgumentParser", package: "swift-argument-parser"),
+    ],
     linkerSettings: swiftformatLinkSettings
   ),
 
