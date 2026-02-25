@@ -8,8 +8,8 @@ representation is ignored by the formatter.
 
 ## Ignore A File
 
-In the event that an entire file cannot be formatted, add a comment that contains 
-`swift-format-ignore-file` at the top of the file and the formatter will leave 
+In the event that an entire file cannot be formatted, add a comment that contains
+`swift-format-ignore-file` at the top of the file and the formatter will leave
 the file completely unchanged.
 
 ```swift
@@ -90,7 +90,7 @@ struct Foo {
 }
 ```
 In this case, only the DoNotUseSemicolons and FullyIndirectEnum rules are disabled
-throughout the file, while all other formatting rules (such as line breaking and 
+throughout the file, while all other formatting rules (such as line breaking and
 indentation) remain active.
 
 ## Understanding Nodes
@@ -113,3 +113,93 @@ top level nodes that support suppressing formatting are:
   - Any member declaration inside of a declaration (e.g. properties and
     functions declared inside of a struct/class/enum). All code nested
     syntactically inside of the ignored node is also ignored by the formatter.
+
+## File-Based Ignoring with `.swift-format-ignore`
+
+In addition to the comment-based ignoring described above, `swift-format` supports
+file-based ignoring using `.swift-format-ignore` files. These files allow you to
+specify patterns for files and directories that should be completely excluded from
+formatting and linting operations.
+
+### `.swift-format-ignore` File Format
+
+`.swift-format-ignore` files use the same pattern syntax as `.gitignore` files:
+
+```
+# This is a comment
+*.generated.swift
+build/
+**/Generated/
+!important.swift
+src/**/test*.swift
+```
+
+### Pattern Syntax
+
+The `.swift-format-ignore` files supports the following pattern syntax:
+
+- Simple patterns: `file.swift` matches any file named `file.swift` anywhere in the tree
+- Wildcard patterns: `*.swift` matches all files ending with `.swift`
+- Directory patterns: `build/` matches the `build` directory and all files within it
+- Nested wildcards: `**/*.generated` matches files with `.generated` extension at any depth
+- Negation patterns: `!important.swift` excludes `important.swift` from being ignored (even if matched by other patterns)
+- Absolute patterns: `/root.swift` matches `root.swift` only at the project root
+- Complex patterns: `src/**/test*.swift` matches files starting with `test` and ending with `.swift` anywhere under `src/`
+
+### File Discovery and Precedence
+
+`swift-format` searches for `.swift-format-ignore` files by walking up the directory
+tree from each source file being processed. Multiple ignore files can exist in a
+project, with the following precedence rules:
+
+1. Closest wins: Ignore files closer to the source file take precedence
+2. Directory traversal: The tool searches from the file's directory up to the project root
+3. Pattern evaluation: Within each ignore file, patterns are evaluated in order
+4. Negation support: Later negation patterns (`!pattern`) can override earlier ignore patterns
+
+### Example Project Structure
+
+```
+project/
+├── .swift-format-ignore          # Root ignore file
+├── src/
+│   ├── .swift-format-ignore      # Overrides root for src/ directory
+│   ├── main.swift
+│   └── generated/
+│       └── Generated.swift
+├── tests/
+│   └── test.swift
+└── build/
+    └── output.swift
+```
+
+**Root `.swift-format-ignore`:**
+```
+# Ignore all generated files
+*.generated.swift
+build/
+```
+
+**`src/.swift-format-ignore`:**
+```
+# Additional rules for src directory
+generated/
+!important.generated.swift
+```
+
+### Integration with swift-format Commands
+
+The `.swift-format-ignore` functionality works automatically with all `swift-format` commands:
+
+```bash
+# Format all files except those matching ignore patterns
+swift-format --recursive src/
+
+# Lint all files except those matching ignore patterns
+swift-format lint --recursive src/
+
+# Both commands will automatically discover and respect .swift-format-ignore files
+```
+
+Files matched by `.swift-format-ignore` patterns are completely excluded from processing -
+they will not be formatted, linted, or appear in any output.
