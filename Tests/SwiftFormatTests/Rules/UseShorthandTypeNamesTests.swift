@@ -743,4 +743,32 @@ final class UseShorthandTypeNamesTests: LintOrFormatRuleTestCase {
       ]
     )
   }
+
+  func testPackElementTypesInOptionalsAreParenthesized() {
+    // If we need to insert parentheses, verify that we do, but also verify that we don't insert
+    // them unnecessarily.
+    assertFormatting(
+      UseShorthandTypeNames.self,
+      input: """
+        var x: (repeat 1️⃣Optional<each T>)
+        var y = [(repeat 2️⃣Optional<each T>)]()
+
+        var x: (repeat 3️⃣Optional<(each T)>)
+        var y = [(repeat 4️⃣Optional<(each T)>)]()
+        """,
+      expected: """
+        var x: (repeat (each T)?)
+        var y = [(repeat (each T)?)]()
+
+        var x: (repeat (each T)?)
+        var y = [(repeat (each T)?)]()
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "use shorthand syntax for this 'Optional' type"),
+        FindingSpec("2️⃣", message: "use shorthand syntax for this 'Optional' type"),
+        FindingSpec("3️⃣", message: "use shorthand syntax for this 'Optional' type"),
+        FindingSpec("4️⃣", message: "use shorthand syntax for this 'Optional' type"),
+      ]
+    )
+  }
 }

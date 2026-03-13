@@ -260,6 +260,8 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       wrappedType = parenthesizedType(functionType, leadingTrivia: leadingTrivia)
     case .someOrAnyType(let someOrAnyType):
       wrappedType = parenthesizedType(someOrAnyType, leadingTrivia: leadingTrivia)
+    case .packElementType(let packElementType):
+      wrappedType = parenthesizedType(packElementType, leadingTrivia: leadingTrivia)
     default:
       // Otherwise, the argument type can safely become an optional by simply appending a "?", but
       // we need to transfer the leading trivia from the original `Optional` token over to it.
@@ -340,7 +342,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     // the "?" from binding incorrectly when re-parsed. Attach the leading trivia to the left-paren
     // that we're adding in these cases.
     switch Syntax(wrappedType).as(SyntaxEnum.self) {
-    case .attributedType, .functionType, .someOrAnyType:
+    case .attributedType, .functionType, .someOrAnyType, .packElementType:
       wrappedTypeExpr = parenthesizedExpr(wrappedTypeExpr, leadingTrivia: leadingTrivia)
     default:
       // Otherwise, the argument type can safely become an optional by simply appending a "?". If
@@ -387,10 +389,6 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 
   /// Returns an `ExprSyntax` that is syntactically equivalent to the given `TypeSyntax`, or nil if
   /// it wouldn't be valid.
-  ///
-  /// An example of an invalid expression representation for a type would be `[Int].Index`, which
-  /// can be represented in the syntax tree but is not permitted by the compiler today; it must be
-  /// written `Array<Int>.Index` to compile correctly.
   private func expressionRepresentation(of type: TypeSyntax) -> ExprSyntax? {
     switch Syntax(type).as(SyntaxEnum.self) {
     case .identifierType(let simpleTypeIdentifier):
@@ -475,6 +473,14 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
 
     case .attributedType(let attributedType):
       return ExprSyntax(TypeExprSyntax(type: attributedType))
+
+    case .packElementType(let packElementType):
+      guard let elementExpr = expressionRepresentation(of: packElementType.pack) else { return nil }
+      let result = PackElementExprSyntax(
+        eachKeyword: packElementType.eachKeyword,
+        pack: elementExpr
+      )
+      return ExprSyntax(result)
 
     default:
       return nil
