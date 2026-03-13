@@ -99,11 +99,9 @@ jobs:
           git add Sources/swift-format/PrintVersion.swift
           git commit -m "Change version to ${SWIFT_FORMAT_VERSION}"
 
-          {
-            echo 'release_commit_patch<<EOF'
-            git format-patch "$BASE_COMMIT"..HEAD --stdout
-            echo EOF
-          } >> "$GITHUB_OUTPUT"
+          git format-patch "$BASE_COMMIT"..HEAD --stdout
+          RELEASE_COMMIT_PATCH=$(git format-patch "$BASE_COMMIT"..HEAD --stdout | base64 -w 0)
+          echo "release_commit_patch=${RELEASE_COMMIT_PATCH}" >> "$GITHUB_OUTPUT"
   test:
     name: Test in ${{ matrix.release && 'Release' || 'Debug' }} configuration
     uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@0.0.6
@@ -119,15 +117,12 @@ jobs:
         git config --global --add safe.directory "$(realpath .)"
         git config --local user.name 'swift-ci'
         git config --local user.email 'swift-ci@users.noreply.github.com'
-        git am << EOF
-        ${{ needs.create_release_commits.outputs.release_commit_patch }}
-        EOF
+        echo "${{ needs.create_release_commits.outputs.release_commit_patch }}" | base64 -d | git am
       windows_pre_build_command: |
         git config --local user.name "swift-ci"
         git config --local user.email "swift-ci@users.noreply.github.com"
-        echo @"
-        ${{ needs.create_release_commits.outputs.release_commit_patch }}
-        "@ > $env:TEMP\patch.diff
+        $patchBytes = [System.Convert]::FromBase64String("${{ needs.create_release_commits.outputs.release_commit_patch }}")
+        [System.IO.File]::WriteAllBytes("$env:TEMP\patch.diff", $patchBytes)
         # For some reason `git am` fails in Powershell with the following error. Executing it in cmd works...
         # fatal: empty ident name (for <>) not allowed
         cmd /c "type $env:TEMP\patch.diff | git am || (exit /b 1)"
@@ -150,7 +145,7 @@ jobs:
           git config --global --add safe.directory "$(realpath .)"
           git config --local user.name 'swift-ci'
           git config --local user.email 'swift-ci@users.noreply.github.com'
-          echo "${RELEASE_COMMIT_PATCH}" | git am
+          echo "${RELEASE_COMMIT_PATCH}" | base64 -d | git am
       - name: Tag release
         env:
           SWIFT_FORMAT_VERSION: ${{ needs.create_release_commits.outputs.swift_format_version }}
