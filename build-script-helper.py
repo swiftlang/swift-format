@@ -109,7 +109,12 @@ def get_swiftpm_options(
         swift_exec, cross_compile_config=cross_compile_config
     )
     build_os = build_target.split("-")[2]
-    if not build_os.startswith("macosx"):
+    if build_os.startswith('openbsd'):
+        args += [
+            '-Xlinker', '-rpath', '-Xlinker', '$ORIGIN/../lib/swift/openbsd',
+            '-Xlinker', '-z', '-Xlinker', 'origin',
+        ]
+    elif not build_os.startswith("macosx"):
         # Library rpath for swift, dispatch, Foundation, etc. when installing
         args += [
             "-Xlinker",
