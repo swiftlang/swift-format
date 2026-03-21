@@ -463,12 +463,19 @@ public class PrettyPrinter {
       shouldOverrideBreakSuppression = false
 
     // Print out the number of spaces according to the size, and adjust spaceRemaining.
-    case .space(let size, _):
-      if configuration.indentBlankLines, outputBuffer.isAtStartOfLine {
-        // An empty string write is needed to add line-leading indentation that matches the current indentation on a line that contains only whitespaces.
-        outputBuffer.write("")
+    case .space(let size, let behavior):
+      switch behavior {
+      case .fixed, .flexible:
+        if configuration.indentBlankLines, outputBuffer.isAtStartOfLine {
+          // An empty string write is needed to add line-leading indentation that matches the current indentation on a line that contains only whitespaces.
+          outputBuffer.write("")
+        }
+        outputBuffer.enqueueSpaces(size)
+      case .conditional(let condition):
+        if outputBuffer.satisfies(condition) {
+          outputBuffer.enqueueSpaces(size)
+        }
       }
-      outputBuffer.enqueueSpaces(size)
 
     // Print any indentation required, followed by the text content of the syntax token.
     case .syntax(let text):
@@ -676,9 +683,14 @@ public class PrettyPrinter {
         }
 
       // Space tokens have a length equal to its size.
-      case .space(let size, _):
-        lengths.append(size)
-        total += size
+      case .space(let size, let behavior):
+        switch behavior {
+        case .fixed, .flexible:
+          lengths.append(size)
+          total += size
+        case .conditional:
+          lengths.append(0)
+        }
 
       // Syntax tokens have a length equal to the number of columns needed to print its contents.
       case .syntax(let text):
@@ -790,9 +802,9 @@ public class PrettyPrinter {
       printDebugIndent()
       print("[CLOSE Idx: \(idx)]")
 
-    case .space(let size, let flexible):
+    case .space(let size, let behavior):
       printDebugIndent()
-      print("[SPACE Size: \(size) Flexible: \(flexible) Length: \(length) Idx: \(idx)]")
+      print("[SPACE Size: \(size) Behavior: \(behavior) Length: \(length) Idx: \(idx)]")
 
     case .comment(let comment, let wasEndOfLine):
       printDebugIndent()

@@ -104,6 +104,27 @@ final class BinaryOperatorExprTests: PrettyPrintTestCase {
     )
   }
 
+  func testOpenEndedRangeWithoutSpacesWrapsBeforeOperatorAndAddsSpaceAfterIt() {
+    let input =
+      """
+      let x = (aaa + bbb)..<(ccc + ddd)
+      let x = (aaa + bbb)...(ccc + ddd)
+      """
+
+    let expected =
+      """
+      let x =
+        (aaa + bbb)
+        ..< (ccc + ddd)
+      let x =
+        (aaa + bbb)
+        ... (ccc + ddd)
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
+  }
+
   func testRangeFormationOperatorsAreNotCompactedWhenFollowingAPostfixOperator() {
     let input =
       """
