@@ -29,7 +29,7 @@ public final class UseSingleLinePropertyGetter: SyntaxFormatRule {
       accessors.count == 1,
       acc.accessorSpecifier.tokenKind == .keyword(.get),
       acc.attributes.isEmpty,
-      acc.modifier == nil,
+      acc.modifiers.isEmpty,
       acc.effectSpecifiers == nil
     else { return node }
 
