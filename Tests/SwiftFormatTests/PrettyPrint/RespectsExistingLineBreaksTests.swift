@@ -226,6 +226,75 @@ final class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
     )
   }
 
+  func testBlockCommentAtStartOfFileKeepsRequiredLineBreak() {
+    let input =
+      """
+      /*
+       Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+       In sed feugiat risus, eget feugiat nibh.
+       */
+      final class Repro {
+        func foo() -> Int { return 0 }
+
+        func bar() -> Int { return 0 }
+      }
+
+      """
+
+    assertPrettyPrintEqual(
+      input: input,
+      expected: input,
+      linelength: 100,
+      configuration: configuration(respectingExistingLineBreaks: false)
+    )
+  }
+
+  func testBlockCommentAtStartOfLineKeepsRequiredLineBreak() {
+    let input =
+      """
+      import Foundation
+
+      /*
+       Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+       In sed feugiat risus, eget feugiat nibh.
+       */
+      final class Repro {
+        func foo() -> Int { return 0 }
+
+        func bar() -> Int { return 0 }
+      }
+
+      """
+
+    assertPrettyPrintEqual(
+      input: input,
+      expected: input,
+      linelength: 100,
+      configuration: configuration(respectingExistingLineBreaks: false)
+    )
+  }
+
+  func testIndentedBlockCommentBeforeNestedDeclarationKeepsRequiredLineBreak() {
+    let input =
+      """
+      struct Foo {
+        /*
+        Lorem ipsum dolor sit amet, consectetur adipiscing elit.
+        In sed feugiat risus, eget feugiat nibh.
+        */
+        struct Bar {}
+      }
+
+      """
+
+    assertPrettyPrintEqual(
+      input: input,
+      expected: input,
+      linelength: 100,
+      configuration: configuration(respectingExistingLineBreaks: false)
+    )
+  }
+
   /// Creates a new configuration with the given value for `respectsExistingLineBreaks` and default
   /// values for everything else.
   private func configuration(respectingExistingLineBreaks: Bool) -> Configuration {

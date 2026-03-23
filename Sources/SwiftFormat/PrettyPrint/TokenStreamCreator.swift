@@ -3563,6 +3563,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
       case .blockComment(let text):
         if index > 0 || isStartOfFile {
+          let isStandaloneLeadingComment = leadingIndent != nil || isStartOfFile
           generateEnableFormattingIfNecessary(position..<position + piece.sourceLength)
           appendToken(.comment(Comment(kind: .block, leadingIndent: leadingIndent, text: text), wasEndOfLine: false))
           generateDisableFormattingIfNecessary(position + piece.sourceLength)
@@ -3576,8 +3577,10 @@ private final class TokenStreamCreator: SyntaxVisitor {
           }
           appendToken(.break(.same, size: breakSize))
           isStartOfFile = false
+          requiresNextNewline = isStandaloneLeadingComment
+        } else {
+          requiresNextNewline = false
         }
-        requiresNextNewline = false
         leadingIndent = nil
 
       case .docLineComment(let text):
