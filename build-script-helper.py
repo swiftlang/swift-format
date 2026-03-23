@@ -212,7 +212,8 @@ def test(args: argparse.Namespace) -> None:
 
 
 def install(args: argparse.Namespace) -> None:
-    build(args)
+    if not args.install_only:
+        build(args)
 
     print("** Installing swift-format **")
 
@@ -296,6 +297,10 @@ def parse_args() -> argparse.Namespace:
         metavar="PATHS",
         help="install path",
     )
+    install_parser.add_argument(
+        "--install-only",
+        action="store_true",
+        default=False)
 
     parsed = parser.parse_args(sys.argv[1:])
 
