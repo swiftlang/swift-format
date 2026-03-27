@@ -270,11 +270,18 @@ class Frontend {
       return
     }
 
+    let selection: Selection
+    if !lintFormatOptions.lines.isEmpty {
+      selection = Selection(lineRanges: lintFormatOptions.lines)
+    } else {
+      selection = Selection(offsetRanges: lintFormatOptions.offsets)
+    }
+
     let fileToProcess = FileToProcess(
       fileHandle: FileHandle.standardInput,
       url: assumedUrl ?? URL(fileURLWithPath: "<stdin>"),
       configuration: configuration,
-      selection: Selection(offsetRanges: lintFormatOptions.offsets)
+      selection: selection
     )
     processFile(fileToProcess)
   }
@@ -321,11 +328,18 @@ class Frontend {
       return nil
     }
 
+    let selection: Selection
+    if !lintFormatOptions.lines.isEmpty {
+      selection = Selection(lineRanges: lintFormatOptions.lines)
+    } else {
+      selection = Selection(offsetRanges: lintFormatOptions.offsets)
+    }
+
     return FileToProcess(
       fileHandle: sourceFile,
       url: url,
       configuration: configuration,
-      selection: Selection(offsetRanges: lintFormatOptions.offsets)
+      selection: selection
     )
   }
 
