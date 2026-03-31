@@ -19,3 +19,4 @@ API breakage: func Configuration.MultilineStringReflowBehavior.encode(to:) has b
 API breakage: var Configuration.MultilineStringReflowBehavior.hashValue has been removed
 API breakage: constructor Configuration.MultilineStringReflowBehavior.init(from:) has been removed
 API breakage: enumelement LineType.implementationOnlyImport has been added as a new enum case
+API breakage: enumelement Selection.unresolvedLineRanges has been added as a new enum case
