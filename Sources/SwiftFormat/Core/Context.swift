@@ -78,11 +78,11 @@ public final class Context {
     self.operatorTable = operatorTable
     self.findingEmitter = FindingEmitter(consumer: findingConsumer)
     self.fileURL = fileURL
-    self.selection = selection
     self.importsXCTest = .notDetermined
     let tree = source.map { Parser.parse(source: $0) } ?? sourceFileSyntax
     self.sourceLocationConverter =
       SourceLocationConverter(fileName: fileURL.relativePath, tree: tree)
+    self.selection = selection.resolved(with: self.sourceLocationConverter)
     self.ruleMask = RuleMask(
       syntaxNode: Syntax(sourceFileSyntax),
       sourceLocationConverter: sourceLocationConverter

@@ -15,7 +15,7 @@ import Foundation
 
 /// Common arguments used by the `lint` and `format` subcommands.
 struct LintFormatOptions: ParsableArguments {
-  /// A list of comma-separated "start:end" pairs specifying UTF-8 offsets of the ranges to format.
+  /// A list of "start:end" pairs specifying UTF-8 offsets of the ranges to format.
   ///
   /// If not specified, the whole file will be formatted.
   @Option(
@@ -26,6 +26,18 @@ struct LintFormatOptions: ParsableArguments {
       """
   )
   var offsets: [Range<Int>] = []
+
+  /// A list of "start:end" pairs specifying 1-based line numbers of the ranges to format.
+  ///
+  /// If not specified, the whole file will be formatted.
+  @Option(
+    name: .long,
+    help: """
+      A "start:end" pair specifying 1-based line numbers of the range to format. Multiple ranges
+      can be formatted by specifying several --lines arguments. Line numbers are inclusive.
+      """
+  )
+  var lines: [ClosedRange<Int>] = []
 
   /// The filename for the source code when reading from standard input, to include in diagnostic
   /// messages.
@@ -115,6 +127,14 @@ struct LintFormatOptions: ParsableArguments {
       throw ValidationError("'--offsets' is only valid when processing a single file")
     }
 
+    if !lines.isEmpty && paths.count > 1 {
+      throw ValidationError("'--lines' is only valid when processing a single file")
+    }
+
+    if !offsets.isEmpty && !lines.isEmpty {
+      throw ValidationError("'--offsets' and '--lines' are mutually exclusive")
+    }
+
     if !paths.isEmpty && !recursive {
       for path in paths {
         var isDir: ObjCBool = false
@@ -142,8 +162,21 @@ extension Range<Int> {
   }
 }
 
+extension ClosedRange<Int> {
+  public init?(argument: String) {
+    let pair = argument.components(separatedBy: ":")
+    if pair.count == 2, let start = Int(pair[0]), let end = Int(pair[1]), start <= end {
+      self = start...end
+    } else {
+      return nil
+    }
+  }
+}
+
 #if compiler(>=6)
 extension Range<Int>: @retroactive ExpressibleByArgument {}
+extension ClosedRange<Int>: @retroactive ExpressibleByArgument {}
 #else
 extension Range<Int>: ExpressibleByArgument {}
+extension ClosedRange<Int>: ExpressibleByArgument {}
 #endif
