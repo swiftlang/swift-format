@@ -16,8 +16,8 @@ import SwiftFormat
 
 extension SwiftFormatCommand {
   /// Dumps the tool's configuration in JSON format to standard output.
-  struct DumpConfiguration: ParsableCommand {
-    static var configuration = CommandConfiguration(
+  public struct DumpConfiguration: ParsableCommand {
+    public static var configuration = CommandConfiguration(
       abstract: "Dump the configuration in JSON format to standard output",
       discussion: """
         Without any options, dumps the default configuration. When '--effective' is set, dumps the configuration that \
@@ -28,18 +28,20 @@ extension SwiftFormatCommand {
 
     /// Whether or not to dump the effective configuration.
     @Flag(name: .shortAndLong, help: "Dump the effective instead of the default configuration.")
-    var effective: Bool = false
+    public var effective: Bool = false
 
     @OptionGroup()
-    var configurationOptions: ConfigurationOptions
+    public var configurationOptions: ConfigurationOptions
+    
+    public init() {}
 
-    func validate() throws {
+    public func validate() throws {
       if configurationOptions.configuration != nil && !effective {
         throw ValidationError("'--configuration' is only valid in combination with '--effective'")
       }
     }
 
-    func run() throws {
+    public func run() throws {
       let diagnosticPrinter = StderrDiagnosticPrinter(colorMode: .auto)
       let diagnosticsEngine = DiagnosticsEngine(diagnosticsHandlers: [diagnosticPrinter.printDiagnostic])
 

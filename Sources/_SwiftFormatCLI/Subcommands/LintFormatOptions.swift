@@ -14,7 +14,7 @@ import ArgumentParser
 import Foundation
 
 /// Common arguments used by the `lint` and `format` subcommands.
-struct LintFormatOptions: ParsableArguments {
+public struct LintFormatOptions: ParsableArguments {
   /// A list of comma-separated "start:end" pairs specifying UTF-8 offsets of the ranges to format.
   ///
   /// If not specified, the whole file will be formatted.
@@ -25,7 +25,7 @@ struct LintFormatOptions: ParsableArguments {
       formatted by specifying several --offsets arguments.
       """
   )
-  var offsets: [Range<Int>] = []
+  public var offsets: [Range<Int>] = []
 
   /// The filename for the source code when reading from standard input, to include in diagnostic
   /// messages.
@@ -33,7 +33,7 @@ struct LintFormatOptions: ParsableArguments {
   /// If not specified and standard input is used, a dummy filename is used for diagnostic messages
   /// about the source from standard input.
   @Option(help: "When using standard input, the filename of the source to include in diagnostics.")
-  var assumeFilename: String?
+  public var assumeFilename: String?
 
   /// Whether or not to run the formatter/linter recursively.
   ///
@@ -42,7 +42,7 @@ struct LintFormatOptions: ParsableArguments {
     name: .shortAndLong,
     help: "Recursively run on '.swift' files in any provided directories."
   )
-  var recursive: Bool = false
+  public var recursive: Bool = false
 
   /// Whether unparsable files, due to syntax errors or unrecognized syntax, should be ignored or
   /// treated as containing an error. When ignored, unparsable files are output verbatim in format
@@ -54,14 +54,14 @@ struct LintFormatOptions: ParsableArguments {
       invalid syntax.
       """
   )
-  var ignoreUnparsableFiles: Bool = false
+  public var ignoreUnparsableFiles: Bool = false
 
   /// Whether or not to run the formatter/linter in parallel.
   @Flag(
     name: .shortAndLong,
     help: "Process files in parallel, simultaneously across multiple cores."
   )
-  var parallel: Bool = false
+  public var parallel: Bool = false
 
   /// Whether colors should be used in diagnostics printed to standard error.
   ///
@@ -75,7 +75,7 @@ struct LintFormatOptions: ParsableArguments {
       to not use colors otherwise.
       """
   )
-  var colorDiagnostics: Bool?
+  public var colorDiagnostics: Bool?
 
   /// Whether symlinks should be followed.
   @Flag(
@@ -84,7 +84,7 @@ struct LintFormatOptions: ParsableArguments {
       using `-r/--recursive`.
       """
   )
-  var followSymlinks: Bool = false
+  public var followSymlinks: Bool = false
 
   @Option(
     name: .customLong("enable-experimental-feature"),
@@ -93,16 +93,18 @@ struct LintFormatOptions: ParsableArguments {
       swift-format. Multiple features can be enabled by specifying this flag multiple times.
       """
   )
-  var experimentalFeatures: [String] = []
+  public var experimentalFeatures: [String] = []
 
   /// The list of paths to Swift source files that should be formatted or linted.
   @Argument(help: "Zero or more input filenames. Use `-` for stdin.")
-  var paths: [String] = []
+  public var paths: [String] = []
 
-  @Flag(help: .hidden) var debugDisablePrettyPrint: Bool = false
-  @Flag(help: .hidden) var debugDumpTokenStream: Bool = false
+  @Flag(help: .hidden) public var debugDisablePrettyPrint: Bool = false
+  @Flag(help: .hidden) public var debugDumpTokenStream: Bool = false
+  
+  public init() {}
 
-  mutating func validate() throws {
+  public mutating func validate() throws {
     if recursive && paths.isEmpty {
       throw ValidationError("'--recursive' is only valid when formatting or linting files")
     }
