@@ -32,9 +32,11 @@ jobs:
     # at the same time. If the release manager changes between users, update this condition.
     runs-on: ubuntu-latest
     steps:
-      - run: |
-          if [[ "${{ github.triggering_actor }}" != "rintaro" && "${{ github.triggering_actor }}" != "hamishknight" ]]; then
-            echo "${{ github.triggering_actor }} is not allowed to create a release"
+      - env:
+          TRIGGERING_ACTOR: ${{ github.triggering_actor }}
+        run: |
+          if [[ "${TRIGGERING_ACTOR}" != "rintaro" && "${TRIGGERING_ACTOR}" != "hamishknight" ]]; then
+            echo "${TRIGGERING_ACTOR} is not allowed to create a release"
             exit 1
           fi
   create_release_commits:
@@ -47,31 +49,40 @@ jobs:
       - name: Determine swift-syntax tag to depend on
         id: swift_syntax_tag
         shell: bash
+        env:
+          INPUT_PRERELEASE: ${{ github.event.inputs.prerelease }}
+          INPUT_SWIFT_SYNTAX_TAG: ${{ github.event.inputs.swift_syntax_tag }}
         run: |
-          if [[ "${{ github.event.inputs.prerelease }}" == "false" ]]; then
-            SWIFT_SYNTAX_TAG="${{ github.event.inputs.swift_syntax_tag }}"
+          if [[ "${INPUT_PRERELEASE}" == "false" ]]; then
+            SWIFT_SYNTAX_TAG="${INPUT_SWIFT_SYNTAX_TAG}"
           else
             git clone https://github.com/swiftlang/swift-syntax.git
             cd swift-syntax
-            SWIFT_SYNTAX_TAG="$(git tag | grep ${{ github.event.inputs.swift_syntax_tag }}-prerelease | sort -r | head -1)"
+            SWIFT_SYNTAX_TAG="$(git tag | grep "${INPUT_SWIFT_SYNTAX_TAG}"-prerelease | sort -r | head -1)"
           fi
 
-          echo "Using swift-syntax tag: $SWIFT_SYNTAX_TAG"
-          echo "swift_syntax_tag=$SWIFT_SYNTAX_TAG" >> "$GITHUB_OUTPUT"
+          echo "Using swift-syntax tag: ${SWIFT_SYNTAX_TAG}"
+          echo "swift_syntax_tag=${SWIFT_SYNTAX_TAG}" >> "$GITHUB_OUTPUT"
       - name: Determine swift-format prerelease version
         id: swift_format_version
+        env:
+          INPUT_PRERELEASE: ${{ github.event.inputs.prerelease }}
+          INPUT_SWIFT_FORMAT_VERSION: ${{ github.event.inputs.swift_format_version }}
         run: |
-          if [[ "${{ github.event.inputs.prerelease }}" == "false" ]]; then
-            SWIFT_FORMAT_VERSION="${{ github.event.inputs.swift_format_version }}"
+          if [[ "${INPUT_PRERELEASE}" == "false" ]]; then
+            SWIFT_FORMAT_VERSION="${INPUT_SWIFT_FORMAT_VERSION}"
           else
-            SWIFT_FORMAT_VERSION="${{ github.event.inputs.swift_format_version }}-prerelease-$(date +'%Y-%m-%d')"
+            SWIFT_FORMAT_VERSION="${INPUT_SWIFT_FORMAT_VERSION}-prerelease-$(date +'%Y-%m-%d')"
           fi
-          echo "Using swift-format version: $SWIFT_FORMAT_VERSION"
-          echo "swift_format_version=$SWIFT_FORMAT_VERSION" >> "$GITHUB_OUTPUT"
+          echo "Using swift-format version: ${SWIFT_FORMAT_VERSION}"
+          echo "swift_format_version=${SWIFT_FORMAT_VERSION}" >> "$GITHUB_OUTPUT"
       - name: Checkout repository
         uses: actions/checkout@v6
       - name: Create release commits
         id: create_release_commits
+        env:
+          SWIFT_SYNTAX_TAG: ${{ steps.swift_syntax_tag.outputs.swift_syntax_tag }}
+          SWIFT_FORMAT_VERSION: ${{ steps.swift_format_version.outputs.swift_format_version }}
         run: |
           # Without this, we can't perform git operations in GitHub actions.
           git config --global --add safe.directory "$(realpath .)"
@@ -80,19 +91,17 @@ jobs:
 
           BASE_COMMIT=$(git rev-parse HEAD)
 
-          sed -E -i "s#branch: \"(main|release/[0-9]+\.[0-9]+)\"#from: \"${{ steps.swift_syntax_tag.outputs.swift_syntax_tag }}\"#" Package.swift
+          sed -E -i "s#branch: \"(main|release/[0-9]+\.[0-9]+)\"#from: \"${SWIFT_SYNTAX_TAG}\"#" Package.swift
           git add Package.swift
-          git commit -m "Change swift-syntax dependency to ${{ steps.swift_syntax_tag.outputs.swift_syntax_tag }}"
+          git commit -m "Change swift-syntax dependency to ${SWIFT_SYNTAX_TAG}"
 
-          sed -E -i "s#print\(\".*\"\)#print\(\"${{ steps.swift_format_version.outputs.swift_format_version }}\"\)#" Sources/swift-format/PrintVersion.swift
+          sed -E -i "s#print\(\".*\"\)#print\(\"${SWIFT_FORMAT_VERSION}\"\)#" Sources/swift-format/PrintVersion.swift
           git add Sources/swift-format/PrintVersion.swift
-          git commit -m "Change version to ${{ steps.swift_format_version.outputs.swift_format_version }}"
+          git commit -m "Change version to ${SWIFT_FORMAT_VERSION}"
 
-          {
-            echo 'release_commit_patch<<EOF'
-            git format-patch "$BASE_COMMIT"..HEAD --stdout
-            echo EOF
-          } >> "$GITHUB_OUTPUT"
+          git format-patch "$BASE_COMMIT"..HEAD --stdout
+          RELEASE_COMMIT_PATCH=$(git format-patch "$BASE_COMMIT"..HEAD --stdout | base64 -w 0)
+          echo "release_commit_patch=${RELEASE_COMMIT_PATCH}" >> "$GITHUB_OUTPUT"
   test:
     name: Test in ${{ matrix.release && 'Release' || 'Debug' }} configuration
     uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@0.0.8
@@ -108,15 +117,12 @@ jobs:
         git config --global --add safe.directory "$(realpath .)"
         git config --local user.name 'swift-ci'
         git config --local user.email 'swift-ci@users.noreply.github.com'
-        git am << EOF
-        ${{ needs.create_release_commits.outputs.release_commit_patch }}
-        EOF
+        echo "${{ needs.create_release_commits.outputs.release_commit_patch }}" | base64 -d | git am
       windows_pre_build_command: |
         git config --local user.name "swift-ci"
         git config --local user.email "swift-ci@users.noreply.github.com"
-        echo @"
-        ${{ needs.create_release_commits.outputs.release_commit_patch }}
-        "@ > $env:TEMP\patch.diff
+        $patchBytes = [System.Convert]::FromBase64String("${{ needs.create_release_commits.outputs.release_commit_patch }}")
+        [System.IO.File]::WriteAllBytes("$env:TEMP\patch.diff", $patchBytes)
         # For some reason `git am` fails in Powershell with the following error. Executing it in cmd works...
         # fatal: empty ident name (for <>) not allowed
         cmd /c "type $env:TEMP\patch.diff | git am || (exit /b 1)"
@@ -133,17 +139,19 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
       - name: Apply release commits
+        env:
+          RELEASE_COMMIT_PATCH: ${{ needs.create_release_commits.outputs.release_commit_patch }}
         run: |
           git config --global --add safe.directory "$(realpath .)"
           git config --local user.name 'swift-ci'
           git config --local user.email 'swift-ci@users.noreply.github.com'
-          git am << EOF
-          ${{ needs.create_release_commits.outputs.release_commit_patch }}
-          EOF
+          echo "${RELEASE_COMMIT_PATCH}" | base64 -d | git am
       - name: Tag release
+        env:
+          SWIFT_FORMAT_VERSION: ${{ needs.create_release_commits.outputs.swift_format_version }}
         run: |
-          git tag "${{ needs.create_release_commits.outputs.swift_format_version }}"
-          git push origin "${{ needs.create_release_commits.outputs.swift_format_version }}"
+          git tag "${SWIFT_FORMAT_VERSION}"
+          git push origin "${SWIFT_FORMAT_VERSION}"
   create_prerelease:
     name: Create prerelease on GitHub
     runs-on: ubuntu-latest
@@ -158,7 +166,8 @@ jobs:
       - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
+          SWIFT_FORMAT_VERSION: ${{ needs.create_release_commits.outputs.swift_format_version }}
         run: |
-          gh release create "${{ needs.create_release_commits.outputs.swift_format_version }}" \
-            --title "${{ needs.create_release_commits.outputs.swift_format_version }}" \
+          gh release create "${SWIFT_FORMAT_VERSION}" \
+            --title "${SWIFT_FORMAT_VERSION}" \
             --prerelease
