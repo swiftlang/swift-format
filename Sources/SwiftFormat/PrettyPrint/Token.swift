@@ -178,12 +178,28 @@ enum PrinterControlKind {
   case enableBreaking
 }
 
+enum SpaceBehavior: Equatable {
+  /// Always print this space and do not merge it with adjacent spaces.
+  case fixed
+
+  /// Always print this space and merge it with adjacent flexible spaces.
+  case flexible
+
+  /// Print this space only if its print-time condition is satisfied.
+  case conditional(SpaceCondition)
+}
+
+enum SpaceCondition: Equatable {
+  /// Print this space only if the previous printable token started a new line.
+  case previousPrintableTokenStartedLine
+}
+
 enum Token {
   case syntax(String)
   case open(GroupBreakStyle)
   case close
   case `break`(BreakKind, size: Int, newlines: NewlineBehavior)
-  case space(size: Int, flexible: Bool)
+  case space(size: Int, behavior: SpaceBehavior)
   case comment(Comment, wasEndOfLine: Bool)
   case verbatim(Verbatim)
   case printerControl(kind: PrinterControlKind)
@@ -216,10 +232,10 @@ enum Token {
     return Token.open(breakStyle)
   }
 
-  static let space = Token.space(size: 1, flexible: false)
+  static let space = Token.space(size: 1, behavior: .fixed)
 
   static func space(size: Int) -> Token {
-    return .space(size: size, flexible: false)
+    return .space(size: size, behavior: .fixed)
   }
 
   static let `break` = Token.break(.continue, size: 1, newlines: .elective)
