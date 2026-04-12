@@ -390,4 +390,78 @@ final class ForInStmtTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 14)
   }
+
+  func testForUnsafe() {
+    let input = """
+      for unsafe x in xs {}
+      """
+
+    let expected80 = """
+      for unsafe x in xs {}
+
+      """
+    assertPrettyPrintEqual(input: input, expected: expected80, linelength: 80)
+
+    let expected10 = """
+      for unsafe
+        x in xs
+      {}
+
+      """
+    assertPrettyPrintEqual(input: input, expected: expected10, linelength: 10)
+  }
+
+  func testForTryAwaitUnsafe() {
+    let input = """
+      for try await unsafe x in xs {}
+      """
+
+    let expected80 = """
+      for try await unsafe x in xs {}
+
+      """
+    assertPrettyPrintEqual(input: input, expected: expected80, linelength: 80)
+
+    let expected10 = """
+      for
+        try
+        await
+        unsafe x
+        in xs
+      {}
+
+      """
+    assertPrettyPrintEqual(input: input, expected: expected10, linelength: 10)
+  }
+
+  func testForUnsafeWrapPattern() {
+    let input = """
+      for unsafe (aVeryLongVariableNameThatWillForceAWrap, anotherVeryLongVariableName) in someCollection {}
+      """
+    let expected = """
+      for unsafe (
+        aVeryLongVariableNameThatWillForceAWrap,
+        anotherVeryLongVariableName
+      ) in someCollection {}
+
+      """
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+  }
+
+  func testForTryAwaitUnsafeWrapPattern() {
+    let input = """
+      for try await unsafe (aVeryLongVariableNameThatWillForceAWrap, anotherVeryLongVariableName) in someCollection {}
+      """
+    let expected = """
+      for try await unsafe
+        (
+          aVeryLongVariableNameThatWillForceAWrap,
+          anotherVeryLongVariableName
+        )
+        in someCollection
+      {}
+
+      """
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
+  }
 }
