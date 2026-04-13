@@ -657,8 +657,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
         after(first, tokens: .break)
       } else {
         before(first, tokens: .open)
-        for i in 0..<(modifiers.count - 1) {
-          after(modifiers[i], tokens: .break)
+        for modifier in modifiers.dropLast() {
+          after(modifier, tokens: .break)
         }
         after(last, tokens: .close, .break)
       }
