@@ -646,18 +646,21 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: ForStmtSyntax) -> SyntaxVisitorContinueKind {
-    // If we have a `(try) await` clause, allow breaking after the `for` so that the `(try) await`
-    // can fall onto the next line if needed, and if both `try await` are present, keep them
-    // together. Otherwise, keep `for` glued to the token after it so that we break somewhere later
-    // on the line.
-    if let awaitKeyword = node.awaitKeyword {
+    // If we have a `(try) await` or `unsafe` clause, allow breaking after the `for` so that the
+    // modifiers can fall onto the next line if needed, and if multiple modifiers are present, keep
+    // them together. Otherwise, keep `for` glued to the token after it so that we break somewhere
+    // later on the line.
+    let modifiers = [node.tryKeyword, node.awaitKeyword, node.unsafeKeyword].compactMap { $0 }
+    if let first = modifiers.first, let last = modifiers.last {
       after(node.forKeyword, tokens: .break)
-      if let tryKeyword = node.tryKeyword {
-        before(tryKeyword, tokens: .open)
-        after(tryKeyword, tokens: .break)
-        after(awaitKeyword, tokens: .close, .break)
+      if modifiers.count == 1 {
+        after(first, tokens: .break)
       } else {
-        after(awaitKeyword, tokens: .break)
+        before(first, tokens: .open)
+        for modifier in modifiers.dropLast() {
+          after(modifier, tokens: .break)
+        }
+        after(last, tokens: .close, .break)
       }
     } else {
       after(node.forKeyword, tokens: .space)
