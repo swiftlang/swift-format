@@ -2215,6 +2215,18 @@ private final class TokenStreamCreator: SyntaxVisitor {
       } else {
         before(binOp.firstToken(viewMode: .sourceAccurate), tokens: .space)
       }
+    } else if wrapsBeforeOperator {
+      // Range formation operators printed without surrounding spaces normally stay glued to their
+      // operands, but if wrapping is necessary we allow a break before the operator. If that break
+      // fires, we preserve the infix parse by inserting a space after the operator.
+      before(
+        binOp.firstToken(viewMode: .sourceAccurate),
+        tokens: .break(.continue, size: 0)
+      )
+      after(
+        binOp.lastToken(viewMode: .sourceAccurate),
+        tokens: .space(size: 1, behavior: .conditional(.previousPrintableTokenStartedLine))
+      )
     }
 
     return .visitChildren
@@ -3443,7 +3455,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
       return (
         true,
         [
-          .space(size: config.spacesBeforeEndOfLineComments, flexible: true),
+          .space(size: config.spacesBeforeEndOfLineComments, behavior: .flexible),
           .comment(Comment(kind: .line, leadingIndent: nil, text: text), wasEndOfLine: true),
           // There must be a break with a soft newline after the comment, but it's impossible to
           // know which kind of break must be used. Adding this newline is deferred until the
@@ -3455,7 +3467,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
       return (
         false,
         [
-          .space(size: 1, flexible: true),
+          .space(size: 1, behavior: .flexible),
           .comment(Comment(kind: .block, leadingIndent: nil, text: text), wasEndOfLine: false),
           // We place a size-0 break after the comment to allow a discretionary newline after
           // the comment if the user places one here but the comment is otherwise adjacent to a
@@ -3780,9 +3792,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
       // If we see a pair of spaces where one or both are flexible, combine them into a new token
       // with the maximum of their counts.
-      case (.space(let first, let firstFlexible), .space(let second, let secondFlexible))
-      where firstFlexible || secondFlexible:
-        tokens[tokens.count - 1] = .space(size: max(first, second), flexible: true)
+      case (.space(let first, let firstBehavior), .space(let second, let secondBehavior))
+      where firstBehavior == .flexible || secondBehavior == .flexible:
+        tokens[tokens.count - 1] = .space(size: max(first, second), behavior: .flexible)
         return
 
       default:
@@ -4161,11 +4173,6 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   /// Returns a value indicating whether whitespace should be required around the given operator,
   /// for the given configuration.
-  ///
-  /// If spaces are not required (for example, range operators), then the formatter will also forbid
-  /// breaks around the operator. This is to prevent situations where a break could occur before an
-  /// unspaced operator (e.g., turning `0...10` into `0<newline>...10`), which would be a breaking
-  /// change because it would treat it as a prefix operator `...10` instead of an infix operator.
   private func shouldRequireWhitespace(around operatorExpr: ExprSyntax) -> Bool {
     // Note that we look at the operator itself to make this determination, not the token kind.
     // The token kind (spaced or unspaced operator) represents how the *user* wrote it, and we want
