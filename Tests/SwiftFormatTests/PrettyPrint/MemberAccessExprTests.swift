@@ -169,6 +169,29 @@ final class MemberAccessExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
 
+  func testDiscretionaryNewlineBeforeCalleeMemberAccessIsRespected() {
+    let input =
+      """
+      var button = View
+        .A()
+
+      var button = View
+        .Button { Text("ABC") }
+      """
+
+    let expected =
+      """
+      var button = View
+        .A()
+
+      var button = View
+        .Button { Text("ABC") }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
+  }
+
   func testOperatorChainedMemberAccessExprs() {
     let input =
       """
