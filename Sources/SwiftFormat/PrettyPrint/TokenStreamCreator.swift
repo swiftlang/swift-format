@@ -1050,9 +1050,22 @@ private final class TokenStreamCreator: SyntaxVisitor {
         // When this function call is wrapped by a keyword-modified expression, the group applied
         // when visiting that wrapping expression is sufficient. Adding another group here in that
         // case can result in unnecessarily breaking after the modifier keyword.
-        if !(base.firstToken(viewMode: .sourceAccurate)?.previousToken(viewMode: .all)?.parent?.isProtocol(
-          KeywordModifiedExprSyntaxProtocol.self
-        ) ?? false) {
+        let wrappedByKeywordModifier =
+          base.firstToken(viewMode: .sourceAccurate)?.previousToken(viewMode: .all)?.parent?.isProtocol(
+            KeywordModifiedExprSyntaxProtocol.self
+          ) ?? false
+        // The group below keeps `Identifier.method` together when the call breaks. 
+        // Skip when the user wrote a newline before the period — the resulting soft break
+        // would inflate the group and force a preceding break (e.g. after `=`) to fire.
+        let hasDiscretionaryBreakBeforePeriod =
+          config.respectsExistingLineBreaks
+          && calledMemberAccessExpr.period.leadingTrivia.contains { piece in
+            switch piece {
+            case .newlines, .carriageReturns, .carriageReturnLineFeeds: return true
+            default: return false
+            }
+          }
+        if !wrappedByKeywordModifier && !hasDiscretionaryBreakBeforePeriod {
           before(base.firstToken(viewMode: .sourceAccurate), tokens: .open)
           after(calledMemberAccessExpr.declName.baseName.lastToken(viewMode: .sourceAccurate), tokens: .close)
         }
