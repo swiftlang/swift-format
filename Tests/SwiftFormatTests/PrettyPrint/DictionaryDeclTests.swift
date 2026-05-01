@@ -106,8 +106,12 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(
       input: """
         let a = [
-          1: "a"1️⃣,
+          1: "a",
         ]
+        let a = [
+          1: "a"
+        ]
+        let a = [1: "a"1️⃣,]
         let a = [1: "a", 2: "b", 3: "c"2️⃣,]
         let a: [Int: String] = [
           1: "a", 2: "b", 3: "c", 4: "d", 5: "e", 6: "f",
@@ -118,6 +122,10 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
         let a = [
           1: "a",
         ]
+        let a = [
+          1: "a"
+        ]
+        let a = [1: "a",]
         let a = [1: "a", 2: "b", 3: "c",]
         let a: [Int: String] = [
           1: "a", 2: "b", 3: "c", 4: "d", 5: "e", 6: "f",
@@ -250,6 +258,7 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
       let a = [key2: ("this ", "string", "is long")]
       let a = [key2: ("this ", "string", "is long"),]
       let a = [key2: ("this ", "string", "is long ")]
+      let a = [key2: ("this ", "string", "is long "),]
       let a = [key1: ("a", "z"), key2: ("b ", "y")]
       let a = [key1: ("ab", "z"), key2: ("b ", "y")]
       a = [k1: ("ab", "z"), k2: ("bc", "y")]
@@ -273,12 +282,17 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
         key2: ("this ", "string", "is long")
       ]
       let a = [
-        key2: ("this ", "string", "is long")
+        key2: ("this ", "string", "is long"),
       ]
       let a = [
         key2: (
           "this ", "string", "is long "
         )
+      ]
+      let a = [
+        key2: (
+          "this ", "string", "is long "
+        ),
       ]
       let a = [
         key1: ("a", "z"), key2: ("b ", "y"),
