@@ -293,8 +293,6 @@ public struct Configuration: Codable, Equatable {
     }
   }
 
-  package static let swiftFormatFilename = ".swift-format"
-
   public var reflowMultilineStringLiterals: MultilineStringReflowBehavior
 
   /// Determines whether to add indentation whitespace to blank lines or remove it entirely.
@@ -516,7 +514,7 @@ public struct Configuration: Codable, Equatable {
     }
     repeat {
       candidateDirectory.deleteLastPathComponent()
-      let candidateFile = candidateDirectory.appendingPathComponent(Self.swiftFormatFilename)
+      let candidateFile = candidateDirectory.appendingPathComponent(".swift-format")
       if FileManager.default.isReadableFile(atPath: candidateFile.path) {
         return candidateFile
       }
