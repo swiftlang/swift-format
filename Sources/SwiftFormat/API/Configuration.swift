@@ -293,7 +293,7 @@ public struct Configuration: Codable, Equatable {
     }
   }
 
-  package static let swiftFormatFilename = ".swift-format"
+  public static let swiftFormatFilename = ".swift-format"
 
   public var reflowMultilineStringLiterals: MultilineStringReflowBehavior
 
