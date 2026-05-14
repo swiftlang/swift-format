@@ -742,10 +742,19 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // old (pre-SE-0276) behavior (a fixed space after the `catch` keyword).
     if node.catchItems.count > 1 {
       for catchItem in node.catchItems {
-        before(catchItem.firstToken(viewMode: .sourceAccurate), tokens: .break(.open(kind: .continuation)))
+        // If the item has no pattern (it consists solely of a `where` clause),
+        // skip emitting a break before it. `WhereClauseSyntax` will emit its
+        // own break before the `where` keyword, and emitting one here too
+        // would produce duplicate whitespace.
+        if catchItem.pattern != nil {
+          before(catchItem.firstToken(viewMode: .sourceAccurate), tokens: .break(.open(kind: .continuation)))
+        }
         after(catchItem.lastToken(viewMode: .sourceAccurate), tokens: .break(.close(mustBreak: false), size: 0))
       }
-    } else {
+    } else if let onlyItem = node.catchItems.first, onlyItem.pattern != nil {
+      // Same rationale as above: When the single catch item has no pattern,
+      // the `where` clause's own preceding break already separates it from
+      // `catch`. Emitting a space here would produce duplicate whitespace.
       before(node.catchItems.firstToken(viewMode: .sourceAccurate), tokens: .space)
     }
 
