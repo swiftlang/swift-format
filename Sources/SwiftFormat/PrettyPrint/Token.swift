@@ -133,7 +133,19 @@ enum BreakKind: Equatable {
 /// allowed.
 enum NewlineBehavior {
   /// Breaking onto a newline is allowed if necessary, but is not required. `ignoresDiscretionary`
-  /// specifies whether a user-entered discretionary newline should be respected.
+  /// specifies whether the break is treated as a "last resort" break.
+  ///
+  /// When `false` (the default), a user-entered discretionary newline at this position is respected
+  /// (the trivia handler may upgrade the break to a soft break), and the break fires whenever the
+  /// content following it, up to the next break or the end of its enclosing group, does not fit on
+  /// the current line, including additional length contributed by any forced breaks within that content.
+  ///
+  /// When `true`, the break is a last-resort break: a user-entered discretionary newline is not respected,
+  /// and the break fires only when the literal content following it cannot fit on the current line.
+  /// Forced breaks (e.g. `.soft` or `.hard`) appearing later in the same span do not on their own cause
+  /// this break to fire, even though they cause earlier non-last-resort breaks to fire. The break is
+  /// therefore suitable for positions where a newline should be inserted only when the content immediately
+  /// following the break is itself too long, regardless of how that content is laid out internally.
   case elective(ignoresDiscretionary: Bool)
 
   /// Breaking onto a newline `count` times is required, unless it would create more blank lines

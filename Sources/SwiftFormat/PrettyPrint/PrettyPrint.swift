@@ -587,7 +587,37 @@ public class PrettyPrinter {
     // Keep track of the indices of the .open and .break token locations.
     var delimIndexStack = [Int]()
     // Keep a running total of the token lengths.
+    //
+    // `total` includes the `maxLineLength` injection contributed by forced breaks (soft and
+    // hard). It is used to compute the span length for ordinary breaks and `.open` groups,
+    // so that an enclosing context sees a length large enough to force wrapping when its
+    // span contains a forced break.
+    //
+    // `suffixTotal` excludes those injections, counting only the literal content emitted by
+    // the token stream. Last-resort elective breaks (`.elective(ignoresDiscretionary: true)`)
+    // compute their span length against `suffixTotal` instead of `total`, so that forced
+    // breaks occurring later in the same span do not force them to fire. The span itself
+    // (the range from the break to the next break or enclosing `.close`) is identical to
+    // that of any other break. Only the counter differs.
     var total = 0
+    var suffixTotal = 0
+
+    /// Returns `true` if the break at `tokenIndex` is a last-resort elective
+    /// (`.elective(ignoresDiscretionary: true)`).
+    func isLastResortElectiveBreak(at tokenIndex: Int) -> Bool {
+      if case .break(_, _, .elective(ignoresDiscretionary: true)) = tokens[tokenIndex] {
+        return true
+      }
+      return false
+    }
+
+    /// Returns the counter value to use when closing the length of the break or group at
+    /// `tokenIndex`. Last-resort elective breaks use `suffixTotal` so that `maxLineLength`
+    /// injections from forced breaks within their scope do not contribute to their length.
+    /// Everything else uses `total`.
+    func closingCounter(for tokenIndex: Int) -> Int {
+      return isLastResortElectiveBreak(at: tokenIndex) ? suffixTotal : total
+    }
 
     // Calculate token lengths
     for (i, token) in tokens.enumerated() {
@@ -599,7 +629,9 @@ public class PrettyPrinter {
         lengths.append(0)
 
       // Open tokens have lengths equal to the total of the contents of its group. The value is
-      // calculated when close tokens are encountered.
+      // calculated when close tokens are encountered. `.open` groups always track against the
+      // injecting `total`, so that a forced break inside the group makes the group's length
+      // exceed `maxLineLength` and the group's inconsistent breaks fire.
       case .open:
         lengths.append(-total)
         delimIndexStack.append(i)
@@ -614,7 +646,7 @@ public class PrettyPrinter {
           print("Bad index 1")
           return ""
         }
-        lengths[index] += total
+        lengths[index] += closingCounter(for: index)
 
         // TODO(dabelknap): Handle the unwrapping more gracefully
         if case .break = tokens[index] {
@@ -622,7 +654,7 @@ public class PrettyPrinter {
             print("Bad index 2")
             return ""
           }
-          lengths[index] += total
+          lengths[index] += closingCounter(for: index)
         }
 
       // Break lengths are equal to its size plus the token or group following it. Calculate the
@@ -656,43 +688,63 @@ public class PrettyPrinter {
           /// some text \
           /// this is exactly the right length
           /// """
+          let closing = closingCounter(for: index)
           if case .escaped = newline, case .escaped = lastNewline {
-            lengths[index] += total + 1
+            lengths[index] += closing + 1
           } else {
-            lengths[index] += total
+            lengths[index] += closing
           }
           delimIndexStack.removeLast()
         }
-        lengths.append(-total)
+
+        // Last-resort elective breaks track against `suffixTotal` so that `maxLineLength`
+        // injections from forced breaks within their scope do not contribute to their length.
+        // All other breaks track against `total`.
+        if case .elective(ignoresDiscretionary: true) = newline {
+          lengths.append(-suffixTotal)
+        } else {
+          lengths.append(-total)
+        }
         delimIndexStack.append(i)
 
         switch newline {
         case .elective, .escaped:
+          // Literal content. Advance both counters by `size`.
           total += size
+          suffixTotal += size
         default:
-          // `size` is never used in this case, because the break always fires. Use `maxLineLength`
-          // to ensure enclosing groups are large enough to force preceding breaks to fire.
+          // Forced break (`.soft` or `.hard`). `size` is never used in this case, because the
+          // break always fires. Advance `total` by `maxLineLength` so that ordinary
+          // preceding breaks and enclosing `.open` groups see a length large enough to force
+          // them to wrap. `suffixTotal` is advanced by `size` only. Last-resort elective
+          // breaks preceding this one will not be forced to fire by this injection.
           total += maxLineLength
+          suffixTotal += size
         }
 
       // Space tokens have a length equal to its size.
       case .space(let size, _):
         lengths.append(size)
         total += size
+        suffixTotal += size
 
       // Syntax tokens have a length equal to the number of columns needed to print its contents.
       case .syntax(let text):
         lengths.append(text.count)
         total += text.count
+        suffixTotal += text.count
 
       case .comment(let comment, let wasEndOfLine):
         lengths.append(comment.length)
-        total += wasEndOfLine ? 0 : comment.length
+        let contribution = wasEndOfLine ? 0 : comment.length
+        total += contribution
+        suffixTotal += contribution
 
       case .verbatim(let verbatim):
         let length = verbatim.prettyPrintingLength(maximum: maxLineLength)
         lengths.append(length)
         total += length
+        suffixTotal += length
 
       case .printerControl:
         // Control tokens have no length. They aren't printed.
@@ -710,6 +762,7 @@ public class PrettyPrinter {
         if shouldHandleCommaDelimitedRegion(isCollection: isCollection) == true {
           let length = isSingleElement ? 0 : 1
           total += length
+          suffixTotal += length
           lengths.append(length)
         } else {
           lengths.append(0)
@@ -721,13 +774,13 @@ public class PrettyPrinter {
       }
     }
 
-    // There may be an extra break token that needs to have its length calculated.
+    // There may be an extra (non-suffix-elective) break token that needs to have its length calculated.
     assert(delimIndexStack.count < 2, "Too many unresolved delimiter token lengths.")
     if let index = delimIndexStack.popLast() {
       if case .open = tokens[index] {
         assert(false, "Open tokens must be closed.")
       }
-      lengths[index] += total
+      lengths[index] += closingCounter(for: index)
     }
 
     // Print out the token stream, wrapping according to line-length limitations.

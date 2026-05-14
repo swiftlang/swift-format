@@ -770,14 +770,20 @@ private final class TokenStreamCreator: SyntaxVisitor {
         before(expression.firstToken(viewMode: .sourceAccurate), tokens: .break(.open))
         after(expression.lastToken(viewMode: .sourceAccurate), tokens: .break(.close(mustBreak: false)))
       } else {
-        before(expression.firstToken(viewMode: .sourceAccurate), tokens: .break)
+        before(
+          expression.firstToken(viewMode: .sourceAccurate),
+          tokens: .break(.continue, newlines: electiveNewlineForKeywordPrefix(before: expression))
+        )
       }
     }
     return .visitChildren
   }
 
   override func visit(_ node: ThrowStmtSyntax) -> SyntaxVisitorContinueKind {
-    before(node.expression.firstToken(viewMode: .sourceAccurate), tokens: .break)
+    before(
+      node.expression.firstToken(viewMode: .sourceAccurate),
+      tokens: .break(.continue, newlines: electiveNewlineForKeywordPrefix(before: node.expression))
+    )
     return .visitChildren
   }
 
@@ -2510,12 +2516,18 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: PackExpansionExprSyntax) -> SyntaxVisitorContinueKind {
-    after(node.repeatKeyword, tokens: .break)
+    after(
+      node.repeatKeyword,
+      tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true))
+    )
     return .visitChildren
   }
 
   override func visit(_ node: PackExpansionTypeSyntax) -> SyntaxVisitorContinueKind {
-    after(node.repeatKeyword, tokens: .break)
+    after(
+      node.repeatKeyword,
+      tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true))
+    )
     return .visitChildren
   }
 
@@ -3903,6 +3915,61 @@ private final class TokenStreamCreator: SyntaxVisitor {
       before(expr.firstToken(viewMode: .sourceAccurate), tokens: .open)
       after(expr.lastToken(viewMode: .sourceAccurate), tokens: .close)
     }
+  }
+
+  /// Returns the elective newline behavior to use for a break between a leading
+  /// keyword (e.g. `return`, `throw`) and its expression.
+  ///
+  /// Returns `.elective(ignoresDiscretionary: true)` only when both of the
+  /// following conditions are true:
+  ///
+  /// - The expression begins with a member-access chain (a `MemberAccessExpr`,
+  /// or a `FunctionCallExpr` whose callee is a `MemberAccessExpr`). In this
+  /// case, honoring a user's discretionary newline between the keyword and
+  /// the expression would strand the keyword at the top of a wrapped chain.
+  ///
+  /// - The first token of the expression has no preceding line or doc-line
+  /// comment. A comment on the discretionary line break is a strong signal
+  /// of user intent that should be preserved.
+  ///
+  /// In all other cases, returns plain `.elective` so that discretionary
+  /// newlines (e.g. `return\n200`) are respected.
+  private func electiveNewlineForKeywordPrefix(before expr: ExprSyntax) -> NewlineBehavior {
+    guard expressionBeginsWithMemberAccess(expr) else {
+      return .elective
+    }
+    guard let firstToken = expr.firstToken(viewMode: .sourceAccurate) else {
+      return .elective
+    }
+    for piece in firstToken.leadingTrivia {
+      switch piece {
+      case .lineComment, .docLineComment:
+        return .elective
+      default:
+        continue
+      }
+    }
+    return .elective(ignoresDiscretionary: true)
+  }
+
+  /// Returns `true` if the given expression begins with a member-access chain.
+  ///
+  /// An expression begins with a member-access chain when it is either:
+  /// - a `MemberAccessExprSyntax` (regardless of its base), or
+  /// - a `FunctionCallExprSyntax` or `SubscriptCallExprSyntax` whose called
+  /// expression itself begins with a member-access chain.
+  ///
+  /// For example, `foo.bar`, `foo.bar.baz`, `foo.bar(x)`, `foo.bar(x).baz`,
+  /// `foo().bar`, and `foo[0].bar` all begin with a member-access chain.
+  /// `foo`, `foo(x)`, and `foo[0]` do not.
+  private func expressionBeginsWithMemberAccess(_ expr: ExprSyntax) -> Bool {
+    if expr.is(MemberAccessExprSyntax.self) {
+      return true
+    }
+    if let callingExpr = expr.asProtocol(CallingExprSyntaxProtocol.self) {
+      return expressionBeginsWithMemberAccess(callingExpr.calledExpression)
+    }
+    return false
   }
 
   /// Returns whether the given expression consists of multiple subexpressions. Certain expressions
