@@ -288,6 +288,30 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
     )
   }
 
+  func testCommentBetweenImportGroupsIsPreserved() {
+    // A free-standing comment, separated from the surrounding imports by
+    // blank lines, was previously dropped entirely when the rule ran the
+    // import group through its line/trivia normalisation. See
+    // https://github.com/swiftlang/swift-format/issues/1080.
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import A
+
+        // Comment
+
+        import B
+        """,
+      expected: """
+        import A
+        import B
+
+        // Comment
+        """,
+      findings: []
+    )
+  }
+
   func testMultipleCodeBlocksPerLine() {
     assertFormatting(
       OrderedImports.self,
