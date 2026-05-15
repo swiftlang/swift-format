@@ -486,15 +486,7 @@ private func convertToCodeBlockItems(lines: [Line]) -> [CodeBlockItemSyntax] {
   while let last = pendingLeadingTrivia.last, case .newlines = last {
     pendingLeadingTrivia.removeLast()
   }
-  let hasComment = pendingLeadingTrivia.contains { piece in
-    switch piece {
-    case .lineComment, .blockComment, .docLineComment, .docBlockComment:
-      return true
-    default:
-      return false
-    }
-  }
-  if hasComment, !output.isEmpty {
+  if Trivia(pieces: pendingLeadingTrivia).hasAnyComments, !output.isEmpty {
     let lastIndex = output.index(before: output.endIndex)
     var lastItem = output[lastIndex]
     lastItem.trailingTrivia = Trivia(pieces: lastItem.trailingTrivia.pieces + pendingLeadingTrivia)
