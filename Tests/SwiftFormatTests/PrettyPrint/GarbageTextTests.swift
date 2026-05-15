@@ -10,6 +10,12 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftFormat
+import SwiftOperators
+import SwiftParser
+import SwiftSyntax
+import XCTest
+
 private let bom: Unicode.Scalar = "\u{feff}"
 private let unknownScalar: Unicode.Scalar = "\u{fffe}"
 
@@ -30,6 +36,78 @@ final class GarbageTextTests: PrettyPrintTestCase {
       """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 20)
+  }
+
+  func testHashBangFollowedByLineComment() {
+    let input =
+      """
+      #!/usr/bin/env swift
+      // (c) Acme Inc.
+
+      print("Hello world!")
+      """
+
+    let expected =
+      """
+      #!/usr/bin/env swift
+      // (c) Acme Inc.
+
+      print("Hello world!")
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
+
+    // Also exercise the full formatter pipeline, which is the path the CLI
+    // takes and the one the original bug report exercised.
+    assertFormatted(input: input, expected: expected, linelength: 80)
+  }
+
+  private func assertFormatted(
+    input: String,
+    expected: String,
+    linelength: Int,
+    file: StaticString = #file,
+    line: UInt = #line
+  ) {
+    var configuration = Configuration.forTesting
+    configuration.lineLength = linelength
+    let formatter = SwiftFormatter(configuration: configuration)
+    var output = ""
+    let tree = Parser.parse(source: input)
+    let folded = try! OperatorTable.standardOperators.foldAll(tree).as(SourceFileSyntax.self)!
+    try! formatter.format(
+      syntax: folded,
+      source: input,
+      operatorTable: .standardOperators,
+      assumingFileURL: nil,
+      selection: .infinite,
+      to: &output
+    )
+    XCTAssertEqual(output, expected, file: file, line: line)
+  }
+
+  func testHashBangFollowedByBlankLineAndComment() {
+    let input =
+      """
+      #!/usr/bin/env swift
+
+      // (c) Acme Inc.
+
+      print("Hello world!")
+      """
+
+    let expected =
+      """
+      #!/usr/bin/env swift
+
+      // (c) Acme Inc.
+
+      print("Hello world!")
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
   }
 
   func testBOM() {

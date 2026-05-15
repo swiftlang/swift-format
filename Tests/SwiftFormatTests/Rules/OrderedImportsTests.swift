@@ -259,6 +259,59 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
     )
   }
 
+  func testShebangWithFileHeaderAndImport() {
+    // The newline that ends a shebang line is leading trivia on the first
+    // statement; reordering must not pull the file header up onto the shebang.
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        #!/usr/bin/swift
+        //
+        // some file comment
+
+        import Foundation
+
+        someCode()
+        """,
+      expected: """
+        #!/usr/bin/swift
+        //
+        // some file comment
+
+        import Foundation
+
+        someCode()
+        """
+    )
+  }
+
+  func testShebangWithReorderedImports() {
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        #!/usr/bin/swift
+        // File header.
+
+        import Zebra
+        1️⃣import Apple
+
+        someCode()
+        """,
+      expected: """
+        #!/usr/bin/swift
+        // File header.
+
+        import Apple
+        import Zebra
+
+        someCode()
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
+      ]
+    )
+  }
+
   func testNonHeaderComment() {
     let input =
       """
