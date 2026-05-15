@@ -476,6 +476,23 @@ private func convertToCodeBlockItems(lines: [Line]) -> [CodeBlockItemSyntax] {
     }
   }
 
+  // If trivia accumulated past the last syntax node (e.g. a trailing comment
+  // that import reordering left behind), attach it to the last code block
+  // item's trailing trivia so it is preserved in the output instead of being
+  // silently dropped. The loop above accumulates an artificial newline after
+  // every iteration to separate the current line from the next one — those
+  // trailing newlines are meaningless when there is no following line and are
+  // stripped before the attachment.
+  while let last = pendingLeadingTrivia.last, case .newlines = last {
+    pendingLeadingTrivia.removeLast()
+  }
+  if Trivia(pieces: pendingLeadingTrivia).hasAnyComments, !output.isEmpty {
+    let lastIndex = output.index(before: output.endIndex)
+    var lastItem = output[lastIndex]
+    lastItem.trailingTrivia = Trivia(pieces: lastItem.trailingTrivia.pieces + pendingLeadingTrivia)
+    output[lastIndex] = lastItem
+  }
+
   return output
 }
 
