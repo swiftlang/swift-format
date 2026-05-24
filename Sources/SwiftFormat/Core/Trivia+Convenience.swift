@@ -37,6 +37,21 @@ extension Trivia {
     return Trivia(pieces: self.pieces.drop(while: \.isSpaceOrTab))
   }
 
+  /// Returns this trivia with any leading newlines and horizontal whitespace removed, stopping at
+  /// the first comment so that comments and anything following them are preserved.
+  func withoutLeadingVerticalWhitespace() -> Trivia {
+    return Trivia(
+      pieces: self.pieces.drop {
+        switch $0 {
+        case .newlines, .carriageReturns, .carriageReturnLineFeeds, .formfeeds, .spaces, .tabs:
+          return true
+        default:
+          return false
+        }
+      }
+    )
+  }
+
   func withoutTrailingSpaces() -> Trivia {
     guard let lastNonSpaceIndex = self.pieces.lastIndex(where: \.isSpaceOrTab) else {
       return self

@@ -69,6 +69,15 @@ public final class OneCasePerLine: SyntaxFormatRule {
     /// basis declaration, and updates the comment preserving state if needed.
     mutating func makeCaseDeclFromBasis(elements: [EnumCaseElementSyntax]) -> EnumCaseDeclSyntax {
       var caseDecl = basis
+
+      // The first element follows the `case` keyword, so any leading newline it inherited from the
+      // original (where it was on a continuation line, like `case a,\n  b`) would force it onto its
+      // own line. Drop that whitespace so the element stays on the same line as `case`, but preserve
+      // any comments that were attached to it.
+      var elements = elements
+      if let first = elements.first {
+        elements[0].leadingTrivia = first.leadingTrivia.withoutLeadingVerticalWhitespace()
+      }
       caseDecl.elements = EnumCaseElementListSyntax(elements)
 
       if shouldKeepLeadingTrivia {
