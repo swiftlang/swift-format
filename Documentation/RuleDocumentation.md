@@ -78,9 +78,12 @@ Format: All invalid use sites would be related with empty literal (with or witho
 All values should be written in lower camel-case (`lowerCamelCase`).
 Underscores (except at the beginning of an identifier) are disallowed.
 
-This rule does not apply to test code, defined as code which:
+Underscores are allowed in the names of test functions, where they are commonly used to
+separate phrases in long, descriptive names. The lower camel-case requirement still applies
+otherwise, so a test function name that begins with a capital letter is still diagnosed. Test
+code is defined as code which:
   * Contains the line `import XCTest`
-  * The function is marked with `@Test` attribute
+  * Has a function marked with the `@Test` attribute
 
 Lint: If an identifier contains underscores or begins with a capital letter, a lint error is
       raised.
