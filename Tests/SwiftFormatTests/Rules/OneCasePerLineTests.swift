@@ -137,7 +137,7 @@ final class OneCasePerLineTests: LintOrFormatRuleTestCase {
     )
   }
 
-  func testCommentBetweenElementsOnContinuationLinesIsPreserved() {
+  func testCommentBeforeElementOnContinuationLineMovesAheadOfCaseKeyword() {
     assertFormatting(
       OneCasePerLine.self,
       input: """
@@ -150,8 +150,54 @@ final class OneCasePerLineTests: LintOrFormatRuleTestCase {
       expected: """
         enum Foo: Int {
           case a = 1
-        case // This should stay with `b`.
-            b = 2
+        // This should stay with `b`.
+        case b = 2
+        }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "move 'a' to its own 'case' declaration"),
+        FindingSpec("2️⃣", message: "move 'b' to its own 'case' declaration"),
+      ]
+    )
+  }
+
+  func testEndOfLineCommentStaysWithItsElement() {
+    assertFormatting(
+      OneCasePerLine.self,
+      input: """
+        enum Foo: Int {
+          case 1️⃣a = 1,  // a comment about 'a'
+            2️⃣b = 2
+        }
+        """,
+      expected: """
+        enum Foo: Int {
+          case a = 1  // a comment about 'a'
+        case b = 2
+        }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "move 'a' to its own 'case' declaration"),
+        FindingSpec("2️⃣", message: "move 'b' to its own 'case' declaration"),
+      ]
+    )
+  }
+
+  func testEndOfLineAndLeadingCommentsBothStayWithTheirElements() {
+    assertFormatting(
+      OneCasePerLine.self,
+      input: """
+        enum Foo: Int {
+          case 1️⃣a = 1,  // an end-of-line comment about 'a'
+            // This should stay with `b`.
+            2️⃣b = 2
+        }
+        """,
+      expected: """
+        enum Foo: Int {
+          case a = 1  // an end-of-line comment about 'a'
+        // This should stay with `b`.
+        case b = 2
         }
         """,
       findings: [
