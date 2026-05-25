@@ -1523,10 +1523,21 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // Unlike other code blocks, where we may want a single statement to be laid out on the same
     // line as a parent construct, the content of an `#if` block must always be on its own line;
     // the newline token inserted at the end enforces this.
-    if let lastElemTok = node.elements?.lastToken(viewMode: .sourceAccurate) {
+    //
+    // The closing tokens are normally attached after the last token of the body. If that last token
+    // belongs to a formatter-ignored item, however, it is never visited (its node is emitted as a
+    // single verbatim token), so an `after` group on it would be dropped and the `.open` above would
+    // be left unclosed. In that case, attach the closing tokens before the following token (the next
+    // `#elseif`/`#else`/`#endif`) instead, which is always visited.
+    if let lastElemTok = node.elements?.lastToken(viewMode: .sourceAccurate),
+      !isFormatterIgnored(lastElemTok)
+    {
       after(lastElemTok, tokens: .break(breakKindClose, newlines: .soft), .close)
     } else {
-      before(tokenToOpenWith.nextToken(viewMode: .all), tokens: .break(breakKindClose, newlines: .soft), .close)
+      let tokenAfterBody =
+        node.elements?.lastToken(viewMode: .sourceAccurate)?.nextToken(viewMode: .all)
+        ?? tokenToOpenWith.nextToken(viewMode: .all)
+      before(tokenAfterBody, tokens: .break(breakKindClose, newlines: .soft), .close)
     }
 
     if !isNestedInPostfixIfConfig(node: Syntax(node)), let condition = node.condition {
@@ -4585,6 +4596,26 @@ private func shouldFormatterIgnore(node: Syntax) -> Bool {
 /// - Parameter file: The root syntax node for a source file.
 private func shouldFormatterIgnore(file: SourceFileSyntax) -> Bool {
   return isFormatterIgnorePresent(inTrivia: file.allPrecedingTrivia, isWholeFile: true)
+}
+
+/// Returns whether the given token is contained within a formatter-ignored item.
+///
+/// When an item is formatter-ignored, its entire subtree is emitted as a single verbatim token and
+/// none of its tokens are visited individually. Code that wants to attach tokens after such a token
+/// (via `after(_:tokens:)`) must account for the fact that those tokens would be silently dropped.
+///
+/// - Parameter token: The token to test.
+private func isFormatterIgnored(_ token: TokenSyntax) -> Bool {
+  // Only `CodeBlockItem` and `MemberBlockItem` nodes are emitted verbatim via the per-item ignore
+  // path, so those are the only ancestors that can prevent `token` from being visited.
+  var node = Syntax(token).parent
+  while let current = node {
+    if current.is(CodeBlockItemSyntax.self) || current.is(MemberBlockItemSyntax.self) {
+      return shouldFormatterIgnore(node: current)
+    }
+    node = current.parent
+  }
+  return false
 }
 
 extension NewlineBehavior {
