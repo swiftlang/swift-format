@@ -209,6 +209,136 @@ final class NoAccessLevelOnExtensionDeclarationTests: LintOrFormatRuleTestCase {
     )
   }
 
+  func testSPIAttributeIsMovedToMembers() {
+    // An `@_spi` attribute on an extension applies to the members the same way the access level
+    // does, so it has to move down to each member alongside the access level keyword.
+    assertFormatting(
+      NoAccessLevelOnExtensionDeclaration.self,
+      input: """
+        @_spi(Something) 1️⃣public extension Foo {
+          2️⃣var bar: String { "" }
+        }
+        """,
+      expected: """
+        extension Foo {
+          @_spi(Something) public var bar: String { "" }
+        }
+        """,
+      findings: [
+        FindingSpec(
+          "1️⃣",
+          message: "move this 'public' access modifier to precede each member inside this extension",
+          notes: [
+            NoteSpec("2️⃣", message: "add 'public' access modifier to this declaration")
+          ]
+        )
+      ]
+    )
+  }
+
+  func testMultipleSPIAttributesAreMovedToMembers() {
+    assertFormatting(
+      NoAccessLevelOnExtensionDeclaration.self,
+      input: """
+        @_spi(Foo) @_spi(Bar) 1️⃣public extension Baz {
+          2️⃣func f() {}
+          3️⃣func g() {}
+        }
+        """,
+      expected: """
+        extension Baz {
+          @_spi(Foo) @_spi(Bar) public func f() {}
+          @_spi(Foo) @_spi(Bar) public func g() {}
+        }
+        """,
+      findings: [
+        FindingSpec(
+          "1️⃣",
+          message: "move this 'public' access modifier to precede each member inside this extension",
+          notes: [
+            NoteSpec("2️⃣", message: "add 'public' access modifier to this declaration"),
+            NoteSpec("3️⃣", message: "add 'public' access modifier to this declaration"),
+          ]
+        )
+      ]
+    )
+  }
+
+  func testSPIAttributeMovesButOtherAttributesStayOnExtension() {
+    // `@objc` belongs on the extension and should be left in place, while `@_spi` moves down to the
+    // members.
+    assertFormatting(
+      NoAccessLevelOnExtensionDeclaration.self,
+      input: """
+        @objc @_spi(Something) 1️⃣public extension Foo {
+          2️⃣func f() {}
+        }
+        """,
+      expected: """
+        @objc extension Foo {
+          @_spi(Something) public func f() {}
+        }
+        """,
+      findings: [
+        FindingSpec(
+          "1️⃣",
+          message: "move this 'public' access modifier to precede each member inside this extension",
+          notes: [
+            NoteSpec("2️⃣", message: "add 'public' access modifier to this declaration")
+          ]
+        )
+      ]
+    )
+  }
+
+  func testSPIAttributeIsPlacedBeforeExistingMemberAttributes() {
+    assertFormatting(
+      NoAccessLevelOnExtensionDeclaration.self,
+      input: """
+        @_spi(Something) 1️⃣public extension Foo {
+          /// This member has a doc comment.
+          2️⃣@objc var bar: String { "" }
+        }
+        """,
+      expected: """
+        extension Foo {
+          /// This member has a doc comment.
+          @_spi(Something) @objc public var bar: String { "" }
+        }
+        """,
+      findings: [
+        FindingSpec(
+          "1️⃣",
+          message: "move this 'public' access modifier to precede each member inside this extension",
+          notes: [
+            NoteSpec("2️⃣", message: "add 'public' access modifier to this declaration")
+          ]
+        )
+      ]
+    )
+  }
+
+  func testSPIAttributePreservedOnExtensionWhenAccessLevelIsRedundant() {
+    // When the access level is `internal` it is simply removed and the members are left untouched,
+    // so a `@_spi` attribute has nothing to attach to and stays on the extension.
+    assertFormatting(
+      NoAccessLevelOnExtensionDeclaration.self,
+      input: """
+        @_spi(Something) 1️⃣internal extension Foo {
+          func f() {}
+        }
+        """,
+      expected: """
+        @_spi(Something) extension Foo {
+          func f() {}
+        }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove this redundant 'internal' access modifier from this extension")
+      ]
+    )
+  }
+
   func testPreservesInlineAnnotationsBeforeAddedAccessLevelModifiers() {
     assertFormatting(
       NoAccessLevelOnExtensionDeclaration.self,
