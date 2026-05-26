@@ -15,9 +15,12 @@ import SwiftSyntax
 /// All values should be written in lower camel-case (`lowerCamelCase`).
 /// Underscores (except at the beginning of an identifier) are disallowed.
 ///
-/// This rule does not apply to test code, defined as code which:
-///   * Contains the line `import XCTest`
-///   * The function is marked with `@Test` attribute
+/// Underscores are allowed in the names of test functions, where they are commonly used to
+/// separate phrases in long, descriptive names. The lower camel-case requirement still applies
+/// otherwise, so a test function name that begins with a capital letter is still diagnosed. Test
+/// functions are functions that either:
+///   * start with `test` in a file containing `import XCTest`, or
+///   * are marked with the `@Test` attribute.
 ///
 /// Lint: If an identifier contains underscores or begins with a capital letter, a lint error is
 ///       raised.
