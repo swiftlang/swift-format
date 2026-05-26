@@ -81,9 +81,9 @@ Underscores (except at the beginning of an identifier) are disallowed.
 Underscores are allowed in the names of test functions, where they are commonly used to
 separate phrases in long, descriptive names. The lower camel-case requirement still applies
 otherwise, so a test function name that begins with a capital letter is still diagnosed. Test
-code is defined as code which:
-  * Contains the line `import XCTest`
-  * Has a function marked with the `@Test` attribute
+functions are functions that either:
+  * start with `test` in a file containing `import XCTest`, or
+  * are marked with the `@Test` attribute.
 
 Lint: If an identifier contains underscores or begins with a capital letter, a lint error is
       raised.
