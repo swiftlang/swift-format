@@ -25,8 +25,9 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
     /// The rule is currently visiting top-level declarations.
     case topLevel
 
-    /// The rule is currently inside an extension that has the given access level keyword.
-    case insideExtension(accessKeyword: Keyword)
+    /// The rule is currently inside an extension that has the given access level keyword, along with
+    /// any `@_spi` attributes that should be moved down to each member alongside that keyword.
+    case insideExtension(accessKeyword: Keyword, spiAttributes: [AttributeListSyntax.Element])
   }
 
   /// Tracks the state of the rule to determine which action should be taken on visited
@@ -76,13 +77,21 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
       return DeclSyntax(node)
     }
 
+    // An `@_spi` attribute on an extension only has an effect when the extension also has an
+    // explicit access level, and it applies to the members the same way that access level does. So
+    // when we move the access level down to the members, we have to move the `@_spi` attributes
+    // along with it, otherwise the members would lose their SPI grouping. Other attributes, like
+    // `@objc` or `@available`, belong on the extension itself and are left untouched.
+    let spiAttributes =
+      keywordToAdd != nil ? node.attributes.filter { $0.isSPIAttribute } : []
+
     // We don't have to worry about maintaining a stack here; even though extensions can nest from
     // a valid parse point of view, we ignore nested extensions because they're obviously wrong
     // semantically (and would be an error later during compilation).
     var result: ExtensionDeclSyntax
     if let keywordToAdd {
       // Visit the children in the new state to add the keyword to the extension members.
-      self.state = .insideExtension(accessKeyword: keywordToAdd)
+      self.state = .insideExtension(accessKeyword: keywordToAdd, spiAttributes: spiAttributes)
       defer { self.state = .topLevel }
 
       result = super.visit(node).as(ExtensionDeclSyntax.self)!
@@ -91,11 +100,26 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
       result = node
     }
 
-    // Finally, emit the finding (which includes notes from any rewritten members) and remove the
-    // access level keyword from the extension itself.
+    // Finally, emit the finding (which includes notes from any rewritten members), remove the
+    // access level keyword from the extension itself, and remove any `@_spi` attributes that were
+    // moved down to the members.
     diagnose(message, on: accessKeyword, notes: self.notesFromRewrittenMembers)
+
+    // Capture the leading trivia of the whole declaration before mutating it, so that leading
+    // comments and newlines can be preserved if the token that currently carries them is removed.
+    let originalLeadingTrivia = result.leadingTrivia
     result.modifiers.remove(anyOf: [keyword])
-    result.extensionKeyword.leadingTrivia = accessKeyword.leadingTrivia
+    if !spiAttributes.isEmpty {
+      result.attributes = result.attributes.filter { !$0.isSPIAttribute }
+    }
+    if let firstAttribute = result.attributes.first {
+      // An attribute such as `@objc` remains on the extension and is now the first token, so make
+      // sure it carries the declaration's original leading trivia.
+      result.attributes[result.attributes.startIndex] =
+        firstAttribute.with(\.leadingTrivia, originalLeadingTrivia)
+    } else {
+      result.extensionKeyword.leadingTrivia = originalLeadingTrivia
+    }
     return DeclSyntax(result)
   }
 
@@ -143,7 +167,7 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
     // Only go further if we are applying an access level keyword and if the decl is one that
     // allows modifiers but doesn't already have an access level modifier.
     guard
-      case .insideExtension(let accessKeyword) = state,
+      case .insideExtension(let accessKeyword, let spiAttributes) = state,
       let modifiers = decl.asProtocol(WithModifiersSyntax.self)?.modifiers,
       modifiers.accessLevelModifier == nil
     else {
@@ -160,28 +184,71 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
       )
     )
 
+    let withModifier: DeclSyntax
     switch Syntax(decl).as(SyntaxEnum.self) {
     case .actorDecl(let actorDecl):
-      return applyingAccessModifierIfNone(accessKeyword, to: actorDecl, declKeywordKeyPath: \.actorKeyword)
+      withModifier = applyingAccessModifierIfNone(accessKeyword, to: actorDecl, declKeywordKeyPath: \.actorKeyword)
     case .classDecl(let classDecl):
-      return applyingAccessModifierIfNone(accessKeyword, to: classDecl, declKeywordKeyPath: \.classKeyword)
+      withModifier = applyingAccessModifierIfNone(accessKeyword, to: classDecl, declKeywordKeyPath: \.classKeyword)
     case .enumDecl(let enumDecl):
-      return applyingAccessModifierIfNone(accessKeyword, to: enumDecl, declKeywordKeyPath: \.enumKeyword)
+      withModifier = applyingAccessModifierIfNone(accessKeyword, to: enumDecl, declKeywordKeyPath: \.enumKeyword)
     case .initializerDecl(let initDecl):
-      return applyingAccessModifierIfNone(accessKeyword, to: initDecl, declKeywordKeyPath: \.initKeyword)
+      withModifier = applyingAccessModifierIfNone(accessKeyword, to: initDecl, declKeywordKeyPath: \.initKeyword)
     case .functionDecl(let funcDecl):
-      return applyingAccessModifierIfNone(accessKeyword, to: funcDecl, declKeywordKeyPath: \.funcKeyword)
+      withModifier = applyingAccessModifierIfNone(accessKeyword, to: funcDecl, declKeywordKeyPath: \.funcKeyword)
     case .structDecl(let structDecl):
-      return applyingAccessModifierIfNone(accessKeyword, to: structDecl, declKeywordKeyPath: \.structKeyword)
+      withModifier = applyingAccessModifierIfNone(accessKeyword, to: structDecl, declKeywordKeyPath: \.structKeyword)
     case .subscriptDecl(let subscriptDecl):
-      return applyingAccessModifierIfNone(accessKeyword, to: subscriptDecl, declKeywordKeyPath: \.subscriptKeyword)
+      withModifier = applyingAccessModifierIfNone(
+        accessKeyword,
+        to: subscriptDecl,
+        declKeywordKeyPath: \.subscriptKeyword
+      )
     case .typeAliasDecl(let typeAliasDecl):
-      return applyingAccessModifierIfNone(accessKeyword, to: typeAliasDecl, declKeywordKeyPath: \.typealiasKeyword)
+      withModifier = applyingAccessModifierIfNone(
+        accessKeyword,
+        to: typeAliasDecl,
+        declKeywordKeyPath: \.typealiasKeyword
+      )
     case .variableDecl(let varDecl):
-      return applyingAccessModifierIfNone(accessKeyword, to: varDecl, declKeywordKeyPath: \.bindingSpecifier)
+      withModifier = applyingAccessModifierIfNone(accessKeyword, to: varDecl, declKeywordKeyPath: \.bindingSpecifier)
     default:
       return DeclSyntax(decl)
     }
+
+    return prepending(spiAttributes, to: withModifier)
+  }
+
+  /// Prepends the given `@_spi` attributes to the front of `decl`'s attribute list, moving the
+  /// declaration's leading trivia onto the first attribute so that leading comments, newlines, and
+  /// indentation are preserved on the line that now begins with `@_spi`.
+  private func prepending(
+    _ spiAttributes: [AttributeListSyntax.Element],
+    to decl: DeclSyntax
+  ) -> DeclSyntax {
+    guard !spiAttributes.isEmpty else { return decl }
+
+    // The decl's leading trivia currently sits on whatever token comes first (an access modifier we
+    // just added, or a pre-existing attribute like `@objc`). Detach it so that it can be moved onto
+    // the first `@_spi` attribute, which will become the new first token.
+    let leadingTrivia = decl.leadingTrivia
+    guard var attributed = decl.with(\.leadingTrivia, []).asProtocol(WithAttributesSyntax.self) else {
+      return decl
+    }
+
+    // Give each `@_spi` attribute a single trailing space so it reads as `@_spi(...) <rest>`, and
+    // place the original leading trivia on the first one.
+    var attributesToInsert = spiAttributes.map {
+      $0.with(\.leadingTrivia, []).with(\.trailingTrivia, [.spaces(1)])
+    }
+    attributesToInsert[0] = attributesToInsert[0].with(\.leadingTrivia, leadingTrivia)
+
+    var newAttributes = attributed.attributes
+    for element in attributesToInsert.reversed() {
+      newAttributes.insert(element, at: newAttributes.startIndex)
+    }
+    attributed.attributes = newAttributes
+    return attributed.as(DeclSyntax.self) ?? decl
   }
 
   private func applyingAccessModifierIfNone<Decl: DeclSyntaxProtocol & WithModifiersSyntax>(
@@ -212,6 +279,15 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
     result.modifiers[result.modifiers.startIndex] = firstModifier
     result.modifiers.insert(modifier, at: result.modifiers.startIndex)
     return DeclSyntax(result)
+  }
+}
+
+extension AttributeListSyntax.Element {
+  /// Whether this element is an `@_spi` attribute (for example `@_spi(Foo)`).
+  fileprivate var isSPIAttribute: Bool {
+    self.as(AttributeSyntax.self)?
+      .attributeName.as(IdentifierTypeSyntax.self)?
+      .name.text == "_spi"
   }
 }
 
