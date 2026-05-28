@@ -112,6 +112,101 @@ final class OneCasePerLineTests: LintOrFormatRuleTestCase {
     )
   }
 
+  func testElementsOnContinuationLinesAreMovedOntoCaseKeyword() {
+    assertFormatting(
+      OneCasePerLine.self,
+      input: """
+        public enum TestEnum: Int {
+          case 1️⃣a = 0,
+            2️⃣b = 1,
+            3️⃣c = 2
+        }
+        """,
+      expected: """
+        public enum TestEnum: Int {
+          case a = 0
+        case b = 1
+        case c = 2
+        }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "move 'a' to its own 'case' declaration"),
+        FindingSpec("2️⃣", message: "move 'b' to its own 'case' declaration"),
+        FindingSpec("3️⃣", message: "move 'c' to its own 'case' declaration"),
+      ]
+    )
+  }
+
+  func testCommentBeforeElementOnContinuationLineMovesAheadOfCaseKeyword() {
+    assertFormatting(
+      OneCasePerLine.self,
+      input: """
+        enum Foo: Int {
+          case 1️⃣a = 1,
+            // This should stay with `b`.
+            2️⃣b = 2
+        }
+        """,
+      expected: """
+        enum Foo: Int {
+          case a = 1
+        // This should stay with `b`.
+        case b = 2
+        }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "move 'a' to its own 'case' declaration"),
+        FindingSpec("2️⃣", message: "move 'b' to its own 'case' declaration"),
+      ]
+    )
+  }
+
+  func testEndOfLineCommentStaysWithItsElement() {
+    assertFormatting(
+      OneCasePerLine.self,
+      input: """
+        enum Foo: Int {
+          case 1️⃣a = 1,  // a comment about 'a'
+            2️⃣b = 2
+        }
+        """,
+      expected: """
+        enum Foo: Int {
+          case a = 1  // a comment about 'a'
+        case b = 2
+        }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "move 'a' to its own 'case' declaration"),
+        FindingSpec("2️⃣", message: "move 'b' to its own 'case' declaration"),
+      ]
+    )
+  }
+
+  func testEndOfLineAndLeadingCommentsBothStayWithTheirElements() {
+    assertFormatting(
+      OneCasePerLine.self,
+      input: """
+        enum Foo: Int {
+          case 1️⃣a = 1,  // an end-of-line comment about 'a'
+            // This should stay with `b`.
+            2️⃣b = 2
+        }
+        """,
+      expected: """
+        enum Foo: Int {
+          case a = 1  // an end-of-line comment about 'a'
+        // This should stay with `b`.
+        case b = 2
+        }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "move 'a' to its own 'case' declaration"),
+        FindingSpec("2️⃣", message: "move 'b' to its own 'case' declaration"),
+      ]
+    )
+  }
+
   func testAttributesArePropagated() {
     assertFormatting(
       OneCasePerLine.self,
