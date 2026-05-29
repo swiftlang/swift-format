@@ -515,10 +515,19 @@ public struct Configuration: Codable, Equatable {
       candidateDirectory.appendPathComponent("placeholder")
     }
     repeat {
+      let previousDirectory = candidateDirectory
       candidateDirectory.deleteLastPathComponent()
       let candidateFile = candidateDirectory.appendingPathComponent(Self.swiftFormatFilename)
       if FileManager.default.isReadableFile(atPath: candidateFile.path) {
         return candidateFile
+      }
+
+      // Stop if removing the last path component made no progress. This can happen when the path
+      // contains redundant separators (e.g. `/path/to///main.swift`), which `standardized` does not
+      // collapse; without this guard the loop would never reach the root and would spin forever.
+      // See https://github.com/swiftlang/swift-format/issues/1035.
+      if candidateDirectory == previousDirectory {
+        break
       }
     } while !candidateDirectory.isRoot
 
