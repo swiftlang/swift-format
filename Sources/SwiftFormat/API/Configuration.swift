@@ -522,9 +522,13 @@ public struct Configuration: Codable, Equatable {
         return candidateFile
       }
 
-      // Stop if removing the last path component made no progress. This can happen when the path
-      // contains redundant separators (e.g. `/path/to///main.swift`), which `standardized` does not
-      // collapse; without this guard the loop would never reach the root and would spin forever.
+      // Stop if removing the last path component made no progress. `deleteLastPathComponent()` is a
+      // pure function of the path, so once it is a no-op it stays a no-op: there is no reachable
+      // parent above this point, and continuing would only spin until `isRoot` (which it never
+      // reaches). On the Foundation that originally exhibited #1035, a trailing redundant separator
+      // (e.g. `/path/to//main.swift`) stalled here; current Foundation collapses such separators as
+      // it ascends, so this guard is a defensive backstop rather than the load-bearing fix on that
+      // toolchain. Breaking here can never skip a directory the loop could otherwise have searched.
       // See https://github.com/swiftlang/swift-format/issues/1035.
       if candidateDirectory == previousDirectory {
         break
