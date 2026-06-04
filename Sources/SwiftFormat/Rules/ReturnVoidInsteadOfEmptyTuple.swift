@@ -29,14 +29,15 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
       return super.visit(node)
     }
 
-    diagnose(.returnVoid, on: returnType)
-
     // If the user has put non-whitespace trivia inside the empty tuple, like a comment, then we
     // still diagnose it as a lint error but we don't replace it because it's not obvious where the
     // comment should go.
-    if hasNonWhitespaceTrivia(returnType.leftParen, at: .trailing)
+    let hasUnmovableTrivia =
+      hasNonWhitespaceTrivia(returnType.leftParen, at: .trailing)
       || hasNonWhitespaceTrivia(returnType.rightParen, at: .leading)
-    {
+    diagnose(.returnVoid, on: returnType, isFixable: !hasUnmovableTrivia)
+
+    if hasUnmovableTrivia {
       return super.visit(node)
     }
 
@@ -59,14 +60,15 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
       return super.visit(node)
     }
 
-    diagnose(.returnVoid, on: returnType)
-
     // If the user has put non-whitespace trivia inside the empty tuple, like a comment, then we
     // still diagnose it as a lint error but we don't replace it because it's not obvious where the
     // comment should go.
-    if hasNonWhitespaceTrivia(returnType.leftParen, at: .trailing)
+    let hasUnmovableTrivia =
+      hasNonWhitespaceTrivia(returnType.leftParen, at: .trailing)
       || hasNonWhitespaceTrivia(returnType.rightParen, at: .leading)
-    {
+    diagnose(.returnVoid, on: returnType, isFixable: !hasUnmovableTrivia)
+
+    if hasUnmovableTrivia {
       return super.visit(node)
     }
 

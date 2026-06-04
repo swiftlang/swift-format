@@ -297,14 +297,17 @@ public final class OrderedImports: SyntaxFormatRule {
         let fullyQualifiedImport = line.fullyQualifiedImport
         // Check for duplicate imports and potentially remove them.
         if let previousMatchingImportIndex = visitedImports[fullyQualifiedImport] {
+          var duplicateLine = linesWithLeadingComments[previousMatchingImportIndex]
+          let canRemoveDuplicateAutomatically =
+            duplicateLine.import.trailingTrivia.isEmpty || line.trailingTrivia.isEmpty
+
           // Even if automatically removing this import is impossible, alert the user that this is a
           // duplicate so they can manually fix it.
-          diagnose(.removeDuplicateImport, on: line.firstToken)
-          var duplicateLine = linesWithLeadingComments[previousMatchingImportIndex]
+          diagnose(.removeDuplicateImport, on: line.firstToken, isFixable: canRemoveDuplicateAutomatically)
 
           // We can combine multiple leading comments, but it's unsafe to combine trailing comments.
           // Any extra comments must go on a new line, and would be grouped with the next import.
-          guard !duplicateLine.import.trailingTrivia.isEmpty && !line.trailingTrivia.isEmpty else {
+          guard !canRemoveDuplicateAutomatically else {
             duplicateLine.comments.append(contentsOf: commentBuffer)
             commentBuffer = []
             // Keep the Line that has the trailing comment, if there is one.

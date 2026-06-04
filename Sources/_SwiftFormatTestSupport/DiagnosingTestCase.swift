@@ -130,6 +130,20 @@ open class DiagnosingTestCase: XCTestCase {
       line: line
     )
 
+    if let isFixable = findingSpec.isFixable {
+      XCTAssertEqual(
+        matchedFinding.isFixable,
+        isFixable,
+        """
+        Finding emitted at marker '\(findingSpec.marker)' \
+        (line:col \(markerLocation.line):\(markerLocation.column), offset \(utf8Offset)) \
+        had the wrong fixability
+        """,
+        file: file,
+        line: line
+      )
+    }
+
     // Assert that a note exists for each of the expected nodes in the finding.
     var emittedNotes = matchedFinding.notes
     for noteSpec in findingSpec.notes {
