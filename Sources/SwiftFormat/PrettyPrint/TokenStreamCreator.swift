@@ -934,6 +934,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: LabeledExprListSyntax) -> SyntaxVisitorContinueKind {
+    if node.parent?.is(AttributeSyntax.self) == true && node.last?.trailingComma == nil {
+      return .visitChildren
+    }
     markCommaDelimitedRegion(node, isCollectionLiteral: false)
     return .visitChildren
   }
