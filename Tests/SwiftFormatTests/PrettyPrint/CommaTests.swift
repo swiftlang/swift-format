@@ -594,7 +594,7 @@ final class CommaTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: configuration)
   }
 
-  func testAlwaysTrailingCommasInAttribute() {
+  func testAlwaysTrailingCommasNotInsertedInAttribute() {
     let input =
       """
       @Foo(
@@ -611,7 +611,7 @@ final class CommaTests: PrettyPrintTestCase {
       @Foo(
         "input 1",
         "input 2",
-        "input 3",
+        "input 3"
       )
       struct S {}
 
@@ -620,6 +620,60 @@ final class CommaTests: PrettyPrintTestCase {
     var configuration = Configuration.forTesting
     configuration.multilineTrailingCommaBehavior = .alwaysUsed
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: configuration)
+  }
+
+  func testAlwaysTrailingCommasInMacroRoleAttribute() {
+    let input =
+      """
+      @attached(
+        member,
+        names: named(first),
+        named(second)
+      )
+      public macro M() = #externalMacro(module: "A", type: "B")
+
+      """
+
+    let expected =
+      """
+      @attached(
+        member,
+        names: named(first),
+        named(second)
+      )
+      public macro M() = #externalMacro(module: "A", type: "B")
+
+      """
+
+    var configuration = Configuration.forTesting
+    configuration.multilineTrailingCommaBehavior = .alwaysUsed
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 60, configuration: configuration)
+  }
+
+  func testAlwaysTrailingCommasKeepsExistingCommaInAttribute() {
+    let input =
+      """
+      @MyWrapper(
+        first: 1,
+        second: 2,
+      )
+      var x: Int = 0
+
+      """
+
+    let expected =
+      """
+      @MyWrapper(
+        first: 1,
+        second: 2,
+      )
+      var x: Int = 0
+
+      """
+
+    var configuration = Configuration.forTesting
+    configuration.multilineTrailingCommaBehavior = .alwaysUsed
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 20, configuration: configuration)
   }
 
   func testAlwaysTrailingCommasInMacro() {
