@@ -173,15 +173,31 @@ public class IgnoreManager {
       return ""
     }
 
-    // Check if target is under base
-    if targetPath.hasPrefix(basePath) {
-      let prefixLength = basePath.count
-      let remainingPath = String(targetPath.dropFirst(prefixLength))
+    // Determine the comparison strings based on the OS file system behavior
+    #if os(Windows)
+    let baseCompare = basePath.lowercased()
+    let targetCompare = targetPath.lowercased()
+    #else
+    let baseCompare = basePath
+    let targetCompare = targetPath
+    #endif
 
-      // Remove leading slash if present
-      if remainingPath.hasPrefix("/") {
-        return String(remainingPath.dropFirst())
-      } else {
+    // Check if target is under base
+    if targetCompare.hasPrefix(baseCompare) {
+      let prefixLength = basePath.count
+      var remainingPath = String(targetPath.dropFirst(prefixLength))
+
+      // Ensure the remaining path begins with a separator to confirm a true subdirectory match.
+      if remainingPath.hasPrefix("/") || remainingPath.hasPrefix("\\") {
+        
+        // Drop the leading separator
+        remainingPath = String(remainingPath.dropFirst())
+
+        // Normalize to POSIX slashes for GitIgnorePattern evaluation
+        #if os(Windows)
+        remainingPath = remainingPath.replacingOccurrences(of: "\\", with: "/")
+        #endif
+
         return remainingPath
       }
     }

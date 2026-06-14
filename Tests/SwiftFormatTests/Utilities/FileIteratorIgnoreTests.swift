@@ -130,9 +130,7 @@ struct FileIteratorIgnoreTests {
     }
   }
 
-  @Test(
-    .bug("https://github.com/swiftlang/swift-format/issues/1192")
-  )
+  @Test
   func fileIteratorWithMultipleNonEmptySwiftIgoreFiles() throws {
     try withTempDirectory { tempDir in
       let srcDir = tempDir.appendingPathComponent("src")
@@ -185,9 +183,7 @@ struct FileIteratorIgnoreTests {
         foundFiles.append(file)
       }
 
-      // https://github.com/swiftlang/swift-format/issues/1192, Marking as intermittent as the root cause may be not be in this project
-      withKnownIssue(isIntermittent: true) {
-        // Should find: root.swift, src/source1.swift, Fixture/MyFixture/myfix-keep.swift, Fixture/MyFixture/myfix-negate-in-subdir.swift,
+        // Should find: root.swift, src/source1.swift, Fixture/MyFixture/myfix-keep.swift, Fixture/MyFixture/myfix-negate-in-subdir.swift
         #expect(foundFiles.count == 4)
 
         let actualFilenames = foundFiles.map { url in
@@ -203,16 +199,9 @@ struct FileIteratorIgnoreTests {
         )
         let filenames = foundFiles.map { $0.lastPathComponent }.sorted()
         #expect(filenames == ["include1.swift", "myfix-keep.swift", "myfix-negate-in-subdir.swift", "root.swift"])
-      } when: {
-        #if os(Windows)
-        true
-        #else
-        false
-        #endif
-      }
-
     }
   }
+
   @Test func fileIteratorHandlesDirectoryOnlyPatterns() throws {
     try withTempDirectory { tempDir in
       // Create directory structure
