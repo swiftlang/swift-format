@@ -165,8 +165,14 @@ public class IgnoreManager {
 
   /// Compute relative path from base directory to target file
   private func getRelativePath(from base: URL, to target: URL) -> String? {
+    // Normalize path separators to forward slashes strictly for Windows
+    #if os(Windows)
+    let basePath = base.path.replacingOccurrences(of: "\\", with: "/")
+    let targetPath = target.path.replacingOccurrences(of: "\\", with: "/")
+    #else
     let basePath = base.path
     let targetPath = target.path
+    #endif
 
     // Handle exact match
     if targetPath == basePath {
@@ -184,22 +190,25 @@ public class IgnoreManager {
 
     // Check if target is under base
     if targetCompare.hasPrefix(baseCompare) {
-      let prefixLength = basePath.count
-      var remainingPath = String(targetPath.dropFirst(prefixLength))
+      var remainingPath = String(targetPath.dropFirst(basePath.count))
+
+      if remainingPath.isEmpty {
+        return ""
+      }
+
+      let baseEndsWithSeparator = basePath.hasSuffix("/")
+      let remainingStartsWithSeparator = remainingPath.hasPrefix("/")
 
       // Ensure the remaining path begins with a separator to confirm a true subdirectory match.
-      if remainingPath.hasPrefix("/") || remainingPath.hasPrefix("\\") {
-
-        // Drop the leading separator
-        remainingPath = String(remainingPath.dropFirst())
-
-        // Normalize to POSIX slashes for GitIgnorePattern evaluation
-        #if os(Windows)
-        remainingPath = remainingPath.replacingOccurrences(of: "\\", with: "/")
-        #endif
-
-        return remainingPath
+      if !baseEndsWithSeparator && !remainingStartsWithSeparator {
+        return nil
       }
+
+      // Drop the leading separator for the final relative path
+      if remainingStartsWithSeparator {
+        remainingPath = String(remainingPath.dropFirst())
+      }
+      return remainingPath
     }
 
     // Target is not under base, return nil
