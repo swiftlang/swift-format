@@ -320,6 +320,11 @@ This rule intentionally checks only the parameter variable names of a function d
 the parameter labels. It also only checks identifiers at the declaration site, not at usage
 sites.
 
+As an exception, a property whose name is a leading-underscore "backing" variable for another
+property declared in the same type is allowed. For example, `_count` is permitted when a sibling
+property named `count` exists, since the underscore is being used intentionally to name a backing
+store rather than to signal access level.
+
 Lint: Declaring an identifier with a leading underscore yields a lint error.
 
 `NoLeadingUnderscores` is a linter-only rule.
