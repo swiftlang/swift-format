@@ -93,7 +93,8 @@ public final class Context {
   /// Given a rule's name and the node it is examining, determine if the rule is disabled at this
   /// location or not. Also makes sure the entire node is contained inside any selection.
   func shouldFormat<R: Rule>(_ rule: R.Type, node: Syntax) -> Bool {
-    guard node.isInsideSelection(selection) else { return false }
+    let start = node.positionAfterSkippingLeadingTrivia
+    guard selection.contains(start) else { return false }
 
     let loc = node.startLocation(converter: self.sourceLocationConverter)
 

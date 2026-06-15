@@ -232,6 +232,31 @@ final class SwiftFormatterSelectionTests: XCTestCase {
     try assertFormatting(source, expected: expected, selection: Selection(lineRanges: [0...0]))
   }
 
+  func testRuleFormattingWithNonZeroOffsetRange() throws {
+    let source = "/// Some String....\n if (a = 0) {             NSLog(\"print: \\(a)\");}"
+    let expected = "/// Some String....\nif a = 0 { NSLog(\"print: \\(a)\") }\n"
+
+    var configuration = Configuration.forTesting
+    configuration.rules["NoParensAroundConditions"] = true
+    configuration.rules["DoNotUseSemicolons"] = true
+
+    let formatter = SwiftFormatter(configuration: configuration)
+    var output = ""
+    let tree = Parser.parse(source: source)
+    let foldedTree = try OperatorTable.standardOperators.foldAll(tree).as(SourceFileSyntax.self)!
+
+    try formatter.format(
+      syntax: foldedTree,
+      source: source,
+      operatorTable: .standardOperators,
+      assumingFileURL: nil,
+      selection: Selection(offsetRanges: [1..<source.utf8.count]),
+      to: &output
+    )
+
+    XCTAssertEqual(output, expected)
+  }
+
   private func assertFormatting(
     _ source: String,
     expected: String,
