@@ -189,7 +189,7 @@ public class IgnoreManager {
 
       // Ensure the remaining path begins with a separator to confirm a true subdirectory match.
       if remainingPath.hasPrefix("/") || remainingPath.hasPrefix("\\") {
-        
+
         // Drop the leading separator
         remainingPath = String(remainingPath.dropFirst())
 

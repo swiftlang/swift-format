@@ -183,22 +183,22 @@ struct FileIteratorIgnoreTests {
         foundFiles.append(file)
       }
 
-        // Should find: root.swift, src/source1.swift, Fixture/MyFixture/myfix-keep.swift, Fixture/MyFixture/myfix-negate-in-subdir.swift
-        #expect(foundFiles.count == 4)
+      // Should find: root.swift, src/source1.swift, Fixture/MyFixture/myfix-keep.swift, Fixture/MyFixture/myfix-negate-in-subdir.swift
+      #expect(foundFiles.count == 4)
 
-        let actualFilenames = foundFiles.map { url in
-          url.standardizedFileURL.path
-        }.filter { !$0.isEmpty }.sorted()
-        #expect(
-          actualFilenames == [
-            tempDir.standardizedFileURL.appendingPathComponent("Fixture/MyFix/myfix-keep.swift").path,
-            tempDir.standardizedFileURL.appendingPathComponent("Fixture/MyFix/myfix-negate-in-subdir.swift").path,
-            tempDir.standardizedFileURL.appendingPathComponent("root.swift").path,
-            tempDir.standardizedFileURL.appendingPathComponent("src/include1.swift").path,
-          ]
-        )
-        let filenames = foundFiles.map { $0.lastPathComponent }.sorted()
-        #expect(filenames == ["include1.swift", "myfix-keep.swift", "myfix-negate-in-subdir.swift", "root.swift"])
+      let actualFilenames = foundFiles.map { url in
+        url.standardizedFileURL.path
+      }.filter { !$0.isEmpty }.sorted()
+      #expect(
+        actualFilenames == [
+          tempDir.standardizedFileURL.appendingPathComponent("Fixture/MyFix/myfix-keep.swift").path,
+          tempDir.standardizedFileURL.appendingPathComponent("Fixture/MyFix/myfix-negate-in-subdir.swift").path,
+          tempDir.standardizedFileURL.appendingPathComponent("root.swift").path,
+          tempDir.standardizedFileURL.appendingPathComponent("src/include1.swift").path,
+        ]
+      )
+      let filenames = foundFiles.map { $0.lastPathComponent }.sorted()
+      #expect(filenames == ["include1.swift", "myfix-keep.swift", "myfix-negate-in-subdir.swift", "root.swift"])
     }
   }
 
