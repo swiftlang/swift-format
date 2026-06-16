@@ -78,10 +78,12 @@ class LintPipeline: SyntaxVisitor {
 
   override func visit(_ node: AttributeSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AvoidRetroactiveConformances.visit, for: node)
+    visitIfEnabled(SwiftTestingNamingConventions.visit, for: node)
     return .visitChildren
   }
   override func visitPost(_ node: AttributeSyntax) {
     onVisitPost(rule: AvoidRetroactiveConformances.self, for: node)
+    onVisitPost(rule: SwiftTestingNamingConventions.self, for: node)
   }
 
   override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
@@ -267,6 +269,7 @@ class LintPipeline: SyntaxVisitor {
     visitIfEnabled(NoAccessLevelOnExtensionDeclaration.visit, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)
     visitIfEnabled(OmitExplicitReturns.visit, for: node)
+    visitIfEnabled(SwiftTestingNamingConventions.visit, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
     visitIfEnabled(ValidateDocumentationComments.visit, for: node)
     return .visitChildren
@@ -278,6 +281,7 @@ class LintPipeline: SyntaxVisitor {
     onVisitPost(rule: NoAccessLevelOnExtensionDeclaration.self, for: node)
     onVisitPost(rule: NoLeadingUnderscores.self, for: node)
     onVisitPost(rule: OmitExplicitReturns.self, for: node)
+    onVisitPost(rule: SwiftTestingNamingConventions.self, for: node)
     onVisitPost(rule: UseTripleSlashForDocumentationComments.self, for: node)
     onVisitPost(rule: ValidateDocumentationComments.self, for: node)
   }

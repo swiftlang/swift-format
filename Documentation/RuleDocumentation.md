@@ -43,6 +43,7 @@ Here's the list of available rules:
 - [OrderedImports](#OrderedImports)
 - [ReplaceForEachWithForLoop](#ReplaceForEachWithForLoop)
 - [ReturnVoidInsteadOfEmptyTuple](#ReturnVoidInsteadOfEmptyTuple)
+- [SwiftTestingNamingConventions](#SwiftTestingNamingConventions)
 - [TypeNamesShouldBeCapitalized](#TypeNamesShouldBeCapitalized)
 - [UseEarlyExits](#UseEarlyExits)
 - [UseExplicitNilCheckInConditions](#UseExplicitNilCheckInConditions)
@@ -448,6 +449,32 @@ Lint: Returning `()` in a signature yields a lint error.
 Format: `-> ()` is replaced with `-> Void`
 
 `ReturnVoidInsteadOfEmptyTuple` rule can format your code automatically.
+
+### SwiftTestingNamingConventions
+
+Enforces naming conventions for code that uses Swift Testing.
+
+This rule has the following options in the `swiftTestingNamingConventions`
+section of the configuration.
+
+*   `forbidSuiteWithoutParameters`: If true, `@Suite` should not be used if
+    it doesn't specify any arguments; that is, marking a test type with
+    `@Suite` is unnecessary because any type with `@Test`s is automatically
+    a suite.
+*   `forbidSuiteDescription`: If true, `@Suite` should not specify a
+    separate string description.
+*   `requireRawIdentifierTestNames`: If true, `@Test` function names must be
+    raw identifiers.
+*   `forbidTestDescription`: If true, `@Test` should not specify a separate
+     string description.
+
+All options are `false` by default; because of this, the rule itself is not
+opt-in, because it is a no-op until at least one of these options is set to
+`true`.
+
+Lint: Violating these rules yields a lint error.
+
+`SwiftTestingNamingConventions` is a linter-only rule.
 
 ### TypeNamesShouldBeCapitalized
 

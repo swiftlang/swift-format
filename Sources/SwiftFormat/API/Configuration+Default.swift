@@ -44,5 +44,6 @@ extension Configuration {
     self.reflowMultilineStringLiterals = .never
     self.indentBlankLines = false
     self.orderedImports = OrderedImportsConfiguration()
+    self.swiftTestingNamingConventions = SwiftTestingNamingConventionsConfiguration()
   }
 }

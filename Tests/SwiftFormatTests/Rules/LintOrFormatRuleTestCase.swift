@@ -36,6 +36,7 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
     _ type: LintRule.Type,
     _ markedSource: String,
     findings: [FindingSpec] = [],
+    configuration: Configuration? = nil,
     experimentalFeatures: Parser.ExperimentalFeatures = [],
     file: StaticString = #file,
     line: UInt = #line
@@ -49,7 +50,7 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
     var emittedFindings = [Finding]()
 
     // Force the rule to be enabled while we test it.
-    let configuration = Configuration.forTesting(enabledRule: type.ruleName)
+    let configuration = configuration ?? Configuration.forTesting(enabledRule: type.ruleName)
     let context = makeContext(
       sourceFileSyntax: sourceFileSyntax,
       configuration: configuration,

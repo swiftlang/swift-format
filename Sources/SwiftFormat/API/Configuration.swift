@@ -49,6 +49,7 @@ public struct Configuration: Codable, Equatable {
     case reflowMultilineStringLiterals
     case indentBlankLines
     case orderedImports
+    case swiftTestingNamingConventions
   }
 
   /// A dictionary containing the default enabled/disabled states of rules, keyed by the rules'
@@ -307,6 +308,9 @@ public struct Configuration: Codable, Equatable {
   /// Configuration for the `OrderedImports` rule.
   public var orderedImports: OrderedImportsConfiguration
 
+  /// Configuration for the `SwiftTestingNamingConventions` rule.
+  public var swiftTestingNamingConventions: SwiftTestingNamingConventionsConfiguration
+
   /// Creates a new `Configuration` by loading it from a configuration file.
   public init(contentsOf url: URL) throws {
     let data = try Data(contentsOf: url)
@@ -456,6 +460,13 @@ public struct Configuration: Codable, Equatable {
       )
       ?? defaults.orderedImports
 
+    self.swiftTestingNamingConventions =
+      try container.decodeIfPresent(
+        SwiftTestingNamingConventionsConfiguration.self,
+        forKey: .swiftTestingNamingConventions
+      )
+      ?? defaults.swiftTestingNamingConventions
+
     // If the `rules` key is not present at all, default it to the built-in set
     // so that the behavior is the same as if the configuration had been
     // default-initialized. To get an empty rules dictionary, one can explicitly
@@ -497,6 +508,7 @@ public struct Configuration: Codable, Equatable {
     try container.encode(reflowMultilineStringLiterals, forKey: .reflowMultilineStringLiterals)
     try container.encode(indentBlankLines, forKey: .indentBlankLines)
     try container.encode(orderedImports, forKey: .orderedImports)
+    try container.encode(swiftTestingNamingConventions, forKey: .swiftTestingNamingConventions)
     try container.encode(rules, forKey: .rules)
   }
 
@@ -569,5 +581,24 @@ public struct OrderedImportsConfiguration: Codable, Equatable {
   public var includeConditionalImports = false
   /// Determines whether imports are separated into groups based on their type.
   public var shouldGroupImports = true
+  public init() {}
+}
+
+/// Configuration for the `SwiftTestingNamingConventions` rule.
+public struct SwiftTestingNamingConventionsConfiguration: Codable, Equatable {
+  /// If true, `@Suite` should not be used if it doesn't specify any arguments; that is, marking a
+  /// test type with `@Suite` is unnecessary because any type with `@Test`s is automatically a
+  /// suite.
+  public var forbidSuiteWithoutParameters = false
+
+  /// If true, `@Suite` should not specify a separate string description.
+  public var forbidSuiteDescription = false
+
+  /// If true, `@Test` should not specify a separate string description.
+  public var forbidTestDescription = false
+
+  /// If true, `@Test` function names must be raw identifiers (surrounded by backticks).
+  public var requireRawIdentifierTestNames = false
+
   public init() {}
 }
