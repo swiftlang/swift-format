@@ -34,6 +34,20 @@ public final class OrderedImports: SyntaxFormatRule {
   public override func visit(_ node: SourceFileSyntax) -> SourceFileSyntax {
     var newNode = node
     newNode.statements = orderImports(in: node.statements)
+
+    // A shebang line ends with a newline that is stored as leading trivia on
+    // the first statement. Reordering can treat that newline (and any blank
+    // lines right after it) as leading blank lines of the file header and drop
+    // them, which pulls the following comment or import up onto the shebang
+    // line. Put the leading newlines back so the shebang keeps its own line.
+    if node.shebang != nil, !newNode.statements.isEmpty {
+      let original = leadingNewlineCount(of: node.statements)
+      let updated = leadingNewlineCount(of: newNode.statements)
+      if updated < original {
+        newNode.statements.leadingTrivia =
+          .newlines(original - updated) + newNode.statements.leadingTrivia
+      }
+    }
     return newNode
   }
 
@@ -371,6 +385,15 @@ private func joinLines(_ inputLineLists: [Line]...) -> [Line] {
     output += list
   }
   return output
+}
+
+/// Returns the number of newlines at the very start of the statement list's
+/// leading trivia, or zero if it does not start with one.
+private func leadingNewlineCount(of statements: CodeBlockItemListSyntax) -> Int {
+  if case .newlines(let count)? = statements.leadingTrivia.pieces.first {
+    return count
+  }
+  return 0
 }
 
 /// This function transforms the statements in a CodeBlockItemListSyntax object into a list of Line
