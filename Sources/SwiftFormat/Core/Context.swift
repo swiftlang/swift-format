@@ -90,11 +90,45 @@ public final class Context {
     self.ruleNameCache = ruleNameCache
   }
 
+  /// Returns whether the selection touches any part of the given node.
+  func selectionOverlaps(_ node: Syntax) -> Bool {
+    return selection.overlapsOrTouches(node.position..<node.endPosition)
+  }
+
   /// Given a rule's name and the node it is examining, determine if the rule is disabled at this
   /// location or not. Also makes sure the entire node is contained inside any selection.
   func shouldFormat<R: Rule>(_ rule: R.Type, node: Syntax) -> Bool {
-    let start = node.positionAfterSkippingLeadingTrivia
-    guard selection.contains(start) else { return false }
+    let isSelected: Bool
+    switch R.targetScope {
+    case .content:
+      // Content rules require the selection to intersect the actual code tokens.
+      let contentRange = node.positionAfterSkippingLeadingTrivia..<node.endPositionBeforeTrailingTrivia
+      isSelected = selection.overlapsOrTouches(contentRange)
+
+    case .leadingTrivia:
+      // Trivia rules should run if the selection intersects any part of the leading trivia range.
+      let leadingTriviaRange = node.position..<node.positionAfterSkippingLeadingTrivia
+      isSelected = selection.overlapsOrTouches(leadingTriviaRange)
+
+    case .trailingTrivia:
+      // Trivia rules should run if the selection intersects any part of the trailing trivia range.
+      let trailingTriviaRange = node.endPositionBeforeTrailingTrivia..<node.endPosition
+      isSelected = selection.overlapsOrTouches(trailingTriviaRange)
+
+    case .trivia:
+      let leadingTriviaRange = node.position..<node.positionAfterSkippingLeadingTrivia
+      let trailingTriviaRange = node.endPositionBeforeTrailingTrivia..<node.endPosition
+      isSelected =
+        selection.overlapsOrTouches(leadingTriviaRange)
+        || selection.overlapsOrTouches(trailingTriviaRange)
+
+    case .all:
+      // Broad rules run if the selection touches any part of the node at all.
+      let totalRange = node.position..<node.endPosition
+      isSelected = selection.overlapsOrTouches(totalRange)
+    }
+
+    guard isSelected else { return false }
 
     let loc = node.startLocation(converter: self.sourceLocationConverter)
 

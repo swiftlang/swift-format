@@ -10,12 +10,13 @@
 //
 //===----------------------------------------------------------------------===//
 
-import SwiftFormat
 import SwiftOperators
 import SwiftParser
 import SwiftSyntax
 import XCTest
 import _SwiftFormatTestSupport
+
+@_spi(Rules) @testable import SwiftFormat
 
 final class SwiftFormatterSelectionTests: XCTestCase {
   func testSingleLineFormatting() throws {
@@ -257,6 +258,74 @@ final class SwiftFormatterSelectionTests: XCTestCase {
     XCTAssertEqual(output, expected)
   }
 
+  func testTriviaSelectionScopesWithRealRules() throws {
+    let source = """
+      /// leading comment
+      func foo() {} // trailing comment
+      """
+    let tree = Parser.parse(source: source)
+    let funcNode = Syntax(tree.statements.first!.item)
+
+    var config = Configuration.forTesting
+    config.rules["UseTripleSlashForDocumentationComments"] = true
+    config.rules["NoBlockComments"] = true
+
+    let ruleNameCache = [
+      ObjectIdentifier(UseTripleSlashForDocumentationComments.self): "UseTripleSlashForDocumentationComments",
+      ObjectIdentifier(NoBlockComments.self): "NoBlockComments",
+    ]
+
+    let leadingContext = Context(
+      configuration: config,
+      operatorTable: .standardOperators,
+      findingConsumer: nil,
+      fileURL: URL(fileURLWithPath: "/test.swift"),
+      selection: Selection(lineRanges: [1...1]),
+      sourceFileSyntax: tree,
+      ruleNameCache: ruleNameCache
+    )
+
+    XCTAssertTrue(leadingContext.shouldFormat(UseTripleSlashForDocumentationComments.self, node: funcNode))
+    XCTAssertTrue(leadingContext.shouldFormat(NoBlockComments.self, node: funcNode))
+
+    guard let commentRange = source.range(of: "// trailing comment") else {
+      XCTFail("Could not find comment in source")
+      return
+    }
+
+    let startOffset = source.distance(from: source.startIndex, to: commentRange.lowerBound)
+    let endOffset = source.distance(from: source.startIndex, to: commentRange.upperBound)
+
+    let trailingContext = Context(
+      configuration: config,
+      operatorTable: .standardOperators,
+      findingConsumer: nil,
+      fileURL: URL(fileURLWithPath: "/test.swift"),
+      selection: Selection(offsetRanges: [startOffset..<endOffset]),
+      sourceFileSyntax: tree,
+      ruleNameCache: ruleNameCache
+    )
+
+    XCTAssertTrue(trailingContext.shouldFormat(NoBlockComments.self, node: funcNode))
+    XCTAssertFalse(trailingContext.shouldFormat(UseTripleSlashForDocumentationComments.self, node: funcNode))
+  }
+
+  func testContentSelectionIgnoresTrivia() throws {
+    let source = """
+      /// documentation
+          func foo() {}
+
+      """
+
+    let expected = """
+      /// documentation
+      func foo() {}
+
+      """
+
+    try assertFormatting(source, expected: expected, selection: Selection(lineRanges: [2...2]))
+  }
+
   private func assertFormatting(
     _ source: String,
     expected: String,
@@ -270,7 +339,7 @@ final class SwiftFormatterSelectionTests: XCTestCase {
     let formatter = SwiftFormatter(configuration: configuration)
     var output = ""
     let tree = Parser.parse(source: source)
-    let foldedTree = try! OperatorTable.standardOperators.foldAll(tree).as(SourceFileSyntax.self)!
+    let foldedTree = try OperatorTable.standardOperators.foldAll(tree).as(SourceFileSyntax.self)!
     try formatter.format(
       syntax: foldedTree,
       source: source,

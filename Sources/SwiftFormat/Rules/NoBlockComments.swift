@@ -17,6 +17,8 @@ import SwiftSyntax
 /// Lint: If a block comment appears, a lint error is raised.
 @_spi(Rules)
 public final class NoBlockComments: SyntaxLintRule {
+  public override class var targetScope: RuleTargetScope { .trivia }
+
   public override func visit(_ token: TokenSyntax) -> SyntaxVisitorContinueKind {
     for triviaIndex in token.leadingTrivia.indices {
       let piece = token.leadingTrivia[triviaIndex]
