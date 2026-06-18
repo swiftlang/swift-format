@@ -22,7 +22,7 @@ public class SyntaxFormatRule: SyntaxRewriter, Rule {
   }
 
   /// The scope of the syntax node that this rule operates on.
-  public class var targetScope: RuleTargetScope {
+  public class var affectedContent: AffectedContent {
     return .content
   }
 
@@ -38,7 +38,7 @@ public class SyntaxFormatRule: SyntaxRewriter, Rule {
     // If the rule is not enabled, then return the node unmodified; otherwise, returning nil tells
     // SwiftSyntax to continue with the standard dispatch.
     guard context.shouldFormat(type(of: self), node: node) else {
-      if type(of: self).targetScope != .content && context.selectionOverlaps(node) {
+      if type(of: self).affectedContent != .content && context.selectionOverlaps(node) {
         return nil
       }
       return node

@@ -23,7 +23,7 @@ public class SyntaxLintRule: SyntaxVisitor, Rule {
   }
 
   /// The scope of the syntax node that this rule operates on.
-  public class var targetScope: RuleTargetScope {
+  public class var affectedContent: AffectedContent {
     return .content
   }
 

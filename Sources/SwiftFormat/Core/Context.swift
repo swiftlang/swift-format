@@ -99,7 +99,7 @@ public final class Context {
   /// location or not. Also makes sure the entire node is contained inside any selection.
   func shouldFormat<R: Rule>(_ rule: R.Type, node: Syntax) -> Bool {
     let isSelected: Bool
-    switch R.targetScope {
+    switch R.affectedContent {
     case .content:
       // Content rules require the selection to intersect the actual code tokens.
       let contentRange = node.positionAfterSkippingLeadingTrivia..<node.endPositionBeforeTrailingTrivia

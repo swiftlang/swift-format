@@ -26,8 +26,7 @@ public protocol Rule {
   static var isOptIn: Bool { get }
 
   /// The scope of the syntax node that this rule operates on.
-  static var targetScope: RuleTargetScope { get }
-
+  static var affectedContent: AffectedContent { get }
   /// Creates a new Rule in a given context.
   init(context: Context)
 }
@@ -50,7 +49,7 @@ public enum FindingAnchor {
 
 /// Describes the portion of a syntax node that a rule targets.
 @_spi(Rules)
-public enum RuleTargetScope {
+public enum AffectedContent {
   /// The rule operates on the non-trivia content of the node.
   case content
 
@@ -72,7 +71,7 @@ extension Rule {
   public static var ruleName: String { String("\(self)".split(separator: ".").last!) }
 
   /// By default, rules target the non-trivia content of a syntax node.
-  public static var targetScope: RuleTargetScope { .content }
+  public static var affectedContent: AffectedContent { .content }
 
   /// Emits the given finding.
   ///

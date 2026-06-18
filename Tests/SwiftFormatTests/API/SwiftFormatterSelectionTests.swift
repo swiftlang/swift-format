@@ -234,8 +234,17 @@ final class SwiftFormatterSelectionTests: XCTestCase {
   }
 
   func testRuleFormattingWithNonZeroOffsetRange() throws {
-    let source = "/// Some String....\n if (a = 0) {             NSLog(\"print: \\(a)\");}"
-    let expected = "/// Some String....\nif a = 0 { NSLog(\"print: \\(a)\") }\n"
+    let source = """
+      /// Some String....
+       if (a = 0) {             NSLog("print: \\(a)");}
+
+      """
+
+    let expected = """
+      /// Some String....
+      if a = 0 { NSLog("print: \\(a)") }
+
+      """
 
     var configuration = Configuration.forTesting
     configuration.rules["NoParensAroundConditions"] = true
@@ -312,13 +321,13 @@ final class SwiftFormatterSelectionTests: XCTestCase {
 
   func testContentSelectionIgnoresTrivia() throws {
     let source = """
-      /// documentation
+      /* documentation */
           func foo() {}
 
       """
 
     let expected = """
-      /// documentation
+      /* documentation */
       func foo() {}
 
       """

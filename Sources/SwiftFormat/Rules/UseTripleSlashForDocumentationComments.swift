@@ -24,7 +24,7 @@ import SwiftSyntax
 ///         multiple doc line comments.
 @_spi(Rules)
 public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
-  public override class var targetScope: RuleTargetScope { .leadingTrivia }
+  public override class var affectedContent: AffectedContent { .leadingTrivia }
 
   public override func visit(_ node: FunctionDeclSyntax) -> DeclSyntax {
     return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
