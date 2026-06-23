@@ -295,6 +295,52 @@ final class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
     )
   }
 
+  func testRangeFormationOperatorsAndExistingLineBreaks() {
+    let input =
+      """
+      let x = (aaa + bbb)
+        ..< (ccc + ddd)
+      let y = (aaa + bbb)
+        ... (ccc + ddd)
+      """
+
+    let expectedRespecting =
+      """
+      let x =
+        (aaa + bbb)
+        ..< (ccc + ddd)
+      let y =
+        (aaa + bbb)
+        ... (ccc + ddd)
+
+      """
+
+    var respectingConfiguration = configuration(respectingExistingLineBreaks: true)
+    respectingConfiguration.spacesAroundRangeFormationOperators = false
+    assertPrettyPrintEqual(
+      input: input,
+      expected: expectedRespecting,
+      linelength: 80,
+      configuration: respectingConfiguration
+    )
+
+    let expectedNotRespecting =
+      """
+      let x = (aaa + bbb)..<(ccc + ddd)
+      let y = (aaa + bbb)...(ccc + ddd)
+
+      """
+
+    var nonRespectingConfiguration = configuration(respectingExistingLineBreaks: false)
+    nonRespectingConfiguration.spacesAroundRangeFormationOperators = false
+    assertPrettyPrintEqual(
+      input: input,
+      expected: expectedNotRespecting,
+      linelength: 80,
+      configuration: nonRespectingConfiguration
+    )
+  }
+
   /// Creates a new configuration with the given value for `respectsExistingLineBreaks` and default
   /// values for everything else.
   private func configuration(respectingExistingLineBreaks: Bool) -> Configuration {

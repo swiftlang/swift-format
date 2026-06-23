@@ -51,6 +51,9 @@ struct PrettyPrintBuffer {
   /// The accumulated output of the pretty printer.
   private(set) var output: String = ""
 
+  /// Tracks whether the previous printable token started a new line.
+  private(set) var lastPrintableTokenStartedLine: Bool = false
+
   init(maximumBlankLines: Int, tabWidth: Int, column: Int = 0) {
     self.maximumBlankLines = maximumBlankLines
     self.tabWidth = tabWidth
@@ -108,6 +111,7 @@ struct PrettyPrintBuffer {
   /// Before printing the text, this function will print any line-leading indentation or interior
   /// leading spaces that are required before the text itself.
   mutating func write(_ text: String) {
+    let startedAtStartOfLine = isAtStartOfLine
     if isAtStartOfLine {
       writeRaw(currentIndentation.indentation())
       column = currentIndentation.length(tabWidth: tabWidth)
@@ -116,6 +120,9 @@ struct PrettyPrintBuffer {
       writeRaw(String(repeating: " ", count: pendingSpaces))
     }
     writeRaw(text)
+    if !text.isEmpty {
+      lastPrintableTokenStartedLine = startedAtStartOfLine
+    }
     consecutiveNewlineCount = 0
     pendingSpaces = 0
 
@@ -146,7 +153,18 @@ struct PrettyPrintBuffer {
     column += count
   }
 
+  /// Returns whether the current output state satisfies the given conditional-space requirement.
+  func satisfies(_ condition: SpaceCondition) -> Bool {
+    switch condition {
+    case .previousPrintableTokenStartedLine:
+      return lastPrintableTokenStartedLine
+    }
+  }
+
   mutating func writeVerbatim(_ verbatim: String, _ length: Int) {
+    if length > 0 {
+      lastPrintableTokenStartedLine = isAtStartOfLine
+    }
     writeRaw(verbatim)
     consecutiveNewlineCount = 0
     pendingSpaces = 0
