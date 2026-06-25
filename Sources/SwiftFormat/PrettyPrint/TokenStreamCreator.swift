@@ -4057,6 +4057,12 @@ private final class TokenStreamCreator: SyntaxVisitor {
     {
       parenthesizedExpr = nextExpr
     }
+    while let parent = parenthesizedExpr?.parent,
+      parent.is(OptionalChainingExprSyntax.self) || parent.is(ForceUnwrapExprSyntax.self),
+      parent.firstToken(viewMode: .sourceAccurate) == parenthesizedExpr?.firstToken(viewMode: .sourceAccurate)
+    {
+      parenthesizedExpr = parent
+    }
     return parenthesizedExpr
   }
 
