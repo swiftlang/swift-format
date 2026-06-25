@@ -3155,6 +3155,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
               )
             }
           }
+          after(element.lastToken(viewMode: .sourceAccurate), tokens: .break(.same, newlines: .hard))
         } else {
           after(element.lastToken(viewMode: .sourceAccurate), tokens: lineBreak)
         }
@@ -3166,7 +3167,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
       afterAttributeTokens.append(.close)
     }
     if !suppressFinalBreak {
-      afterAttributeTokens.append(lineBreak)
+      let endsWithIfConfig = attributes.last?.is(IfConfigDeclSyntax.self) ?? false
+      afterAttributeTokens.append(endsWithIfConfig ? .break(.same, newlines: .hard) : lineBreak)
     }
     if !afterAttributeTokens.isEmpty {
       after(attributes.lastToken(viewMode: .sourceAccurate), tokens: afterAttributeTokens)

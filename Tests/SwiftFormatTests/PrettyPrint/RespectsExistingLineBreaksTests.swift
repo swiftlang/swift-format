@@ -295,6 +295,33 @@ final class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
     )
   }
 
+  func testDeclarationAfterTrailingIfConfigAttributeKeepsRequiredLineBreak() {
+    let input =
+      """
+      #if FLAG
+      @frozen
+      #endif
+      struct S {}
+
+      """
+
+    let expected =
+      """
+      #if FLAG
+        @frozen
+      #endif
+      struct S {}
+
+      """
+
+    assertPrettyPrintEqual(
+      input: input,
+      expected: expected,
+      linelength: 100,
+      configuration: configuration(respectingExistingLineBreaks: false)
+    )
+  }
+
   /// Creates a new configuration with the given value for `respectsExistingLineBreaks` and default
   /// values for everything else.
   private func configuration(respectingExistingLineBreaks: Bool) -> Configuration {
