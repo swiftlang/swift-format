@@ -295,6 +295,63 @@ final class RespectsExistingLineBreaksTests: PrettyPrintTestCase {
     )
   }
 
+  func testIfConfigKeepsRequiredLineBreakAfterEndif() {
+    let input =
+      """
+      #if FLAG
+      @frozen
+      #endif
+      struct S {}
+
+      switch x {
+      #if A
+      case 1: f()
+      #endif
+      #if B
+      case 2: g()
+      #endif
+      }
+
+      let x =
+        base
+        #if FLAG
+        .foo()
+        #endif
+        .bar()
+
+      """
+
+    let expected =
+      """
+      #if FLAG
+        @frozen
+      #endif
+      struct S {}
+
+      switch x { #if A
+        case 1: f()
+      #endif
+      #if B
+        case 2: g()
+      #endif
+      }
+
+      let x = base
+        #if FLAG
+          .foo()
+        #endif
+        .bar()
+
+      """
+
+    assertPrettyPrintEqual(
+      input: input,
+      expected: expected,
+      linelength: 100,
+      configuration: configuration(respectingExistingLineBreaks: false)
+    )
+  }
+
   /// Creates a new configuration with the given value for `respectsExistingLineBreaks` and default
   /// values for everything else.
   private func configuration(respectingExistingLineBreaks: Bool) -> Configuration {

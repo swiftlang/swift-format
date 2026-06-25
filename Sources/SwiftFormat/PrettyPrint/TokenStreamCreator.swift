@@ -1496,7 +1496,15 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: IfConfigDeclSyntax) -> SyntaxVisitorContinueKind {
     // there has to be a break after an #endif
-    after(node.poundEndif, tokens: .break(.same, size: 0))
+    let newlines: NewlineBehavior
+    if node.parent?.is(AttributeListSyntax.self) == true {
+      newlines = .elective
+    } else if isNestedInPostfixIfConfig(node: Syntax(node)) {
+      newlines = config.respectsExistingLineBreaks ? .elective : .soft
+    } else {
+      newlines = .soft
+    }
+    after(node.poundEndif, tokens: .break(.same, size: 0, newlines: newlines))
     return .visitChildren
   }
 
@@ -3155,6 +3163,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
               )
             }
           }
+          after(element.lastToken(viewMode: .sourceAccurate), tokens: .break(.same, newlines: .hard))
         } else {
           after(element.lastToken(viewMode: .sourceAccurate), tokens: lineBreak)
         }
@@ -3166,7 +3175,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
       afterAttributeTokens.append(.close)
     }
     if !suppressFinalBreak {
-      afterAttributeTokens.append(lineBreak)
+      let endsWithIfConfig = attributes.last?.is(IfConfigDeclSyntax.self) ?? false
+      afterAttributeTokens.append(endsWithIfConfig ? .break(.same, newlines: .hard) : lineBreak)
     }
     if !afterAttributeTokens.isEmpty {
       after(attributes.lastToken(viewMode: .sourceAccurate), tokens: afterAttributeTokens)
@@ -4315,10 +4325,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
       after(postfixIfExpr.lastToken(viewMode: .sourceAccurate), tokens: .contextualBreakingEnd)
 
       for clause in postfixIfExpr.config.clauses {
-        before(clause.poundKeyword, tokens: .break(.contextual, size: 0))
+        before(clause.poundKeyword, tokens: .break(.contextual, size: 0, newlines: .soft))
       }
-      before(postfixIfExpr.config.poundEndif, tokens: .break(.contextual, size: 0))
-      after(postfixIfExpr.config.poundEndif, tokens: .break(.same, size: 0))
+      before(postfixIfExpr.config.poundEndif, tokens: .break(.contextual, size: 0, newlines: .soft))
 
       return insertContextualBreaks(base, isTopLevel: false)
     } else if let callingExpr = expr.asProtocol(CallingExprSyntaxProtocol.self) {
