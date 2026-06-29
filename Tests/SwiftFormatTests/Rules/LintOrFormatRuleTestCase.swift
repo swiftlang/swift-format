@@ -44,7 +44,7 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
     let unmarkedSource = markedText.textWithoutMarkers
     let tree = Parser.parse(source: unmarkedSource, experimentalFeatures: experimentalFeatures)
     let sourceFileSyntax =
-      try! OperatorTable.standardOperators.foldAll(tree).as(SourceFileSyntax.self)!
+      OperatorTable.standardOperators.foldAll(tree) { _ in }.as(SourceFileSyntax.self)!
 
     var emittedFindings = [Finding]()
 
@@ -110,7 +110,7 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
     let originalSource: String = markedInput.textWithoutMarkers
     let tree = Parser.parse(source: originalSource, experimentalFeatures: experimentalFeatures)
     let sourceFileSyntax =
-      try! OperatorTable.standardOperators.foldAll(tree).as(SourceFileSyntax.self)!
+      OperatorTable.standardOperators.foldAll(tree) { _ in }.as(SourceFileSyntax.self)!
 
     var emittedFindings = [Finding]()
 
