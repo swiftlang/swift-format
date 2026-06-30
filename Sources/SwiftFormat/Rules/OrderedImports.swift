@@ -332,7 +332,9 @@ public final class OrderedImports: SyntaxFormatRule {
           // them. Leave this duplicate import.
         }
         if let previousImport = previousImport,
-          line.importName.lexicographicallyPrecedes(previousImport.importName) && !diagnosed
+          let currentName = line.parsedImportPath,
+          let previousName = previousImport.parsedImportPath,
+          currentName < previousName && !diagnosed
             // Only warn to sort imports that shouldn't be removed.
             && visitedImports[fullyQualifiedImport] == nil
         {
@@ -351,7 +353,10 @@ public final class OrderedImports: SyntaxFormatRule {
       }
     }
 
-    linesWithLeadingComments.sort { $0.0.importName.lexicographicallyPrecedes($1.0.importName) }
+    linesWithLeadingComments.sort {
+      guard let lhs = $0.0.parsedImportPath, let rhs = $1.0.parsedImportPath else { return false }
+      return lhs < rhs
+    }
 
     // Unpack the tuples back into a list of Lines.
     var output: [Line] = []
@@ -629,14 +634,14 @@ private class Line {
   }
 
   /// Returns the path that is imported by this line's import statement if it's an import statement.
-  /// When this line isn't an import statement, returns an empty string.
-  var importName: String {
+  /// When this line isn't an import statement, returns nil.
+  var parsedImportPath: ParsedImportPath? {
     guard let syntaxNode = syntaxNode, case .importCodeBlock(let importCodeBlock, _) = syntaxNode,
       let importDecl = importCodeBlock.item.as(ImportDeclSyntax.self)
     else {
-      return ""
+      return nil
     }
-    return importDecl.path.description.trimmingCharacters(in: .whitespacesAndNewlines)
+    return ParsedImportPath(importDecl.path)
   }
 
   /// Returns the first `TokenSyntax` in the code block(s) from this Line, or nil when this Line
@@ -699,7 +704,9 @@ extension Line: CustomStringConvertible {
       case .nonImportCodeBlocks(let codeBlocks):
         description += "\(codeBlocks.count) code blocks "
       case .importCodeBlock(_, let sortable):
-        description += "\(sortable ? "sorted" : "unsorted") import \(importName) "
+        if let parsedImportPath {
+          description += "\(sortable ? "sorted" : "unsorted") import \(parsedImportPath) "
+        }
       case .ifConfigCodeBlock:
         description += "if config code block "
       }
@@ -713,6 +720,39 @@ extension Line: CustomStringConvertible {
     }
 
     return description.trimmingCharacters(in: .whitespaces)
+  }
+}
+
+/// A parsed representation of an import path that allows for sorting.
+///
+/// This type preserves the original spelling of the import but normalizes the
+/// components by removing backticks. This ensures that we don't treat
+/// `import Foo` differently from `` import `Foo` `` with regard to sort order.
+private struct ParsedImportPath: Comparable, CustomStringConvertible {
+  let originalText: String
+  let components: [Substring]
+
+  init(_ path: ImportPathComponentListSyntax) {
+    self.originalText = path.description.trimmingCharacters(in: .whitespacesAndNewlines)
+    self.components = path.map { component in
+      var text = component.name.text[...]
+      if text.hasPrefix("`") && text.hasSuffix("`") && text.count > 2 {
+        text = text.dropFirst().dropLast()
+      }
+      return text
+    }
+  }
+
+  static func < (lhs: ParsedImportPath, rhs: ParsedImportPath) -> Bool {
+    return lhs.components.lexicographicallyPrecedes(rhs.components)
+  }
+
+  static func == (lhs: ParsedImportPath, rhs: ParsedImportPath) -> Bool {
+    return lhs.components == rhs.components
+  }
+
+  var description: String {
+    return originalText
   }
 }
 
