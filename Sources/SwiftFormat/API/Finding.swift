@@ -79,6 +79,9 @@ public struct Finding {
   /// The optional location of the finding.
   public let location: Location?
 
+  /// Whether the finding can be corrected automatically by formatting the source.
+  public let isFixable: Bool
+
   /// Notes that provide additional detail about the finding.
   public let notes: [Note]
 
@@ -88,11 +91,13 @@ public struct Finding {
     category: FindingCategorizing,
     message: Message,
     location: Location? = nil,
+    isFixable: Bool = false,
     notes: [Note] = []
   ) {
     self.category = category
     self.message = message
     self.location = location
+    self.isFixable = isFixable
     self.notes = notes
   }
 }
