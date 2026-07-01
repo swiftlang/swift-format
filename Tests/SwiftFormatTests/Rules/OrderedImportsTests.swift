@@ -1202,4 +1202,93 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       configuration: configuration
     )
   }
+
+  func testRawIdentifierSorting() {
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import Zebra
+        1️⃣import `Beta`
+        import Alpha
+        """,
+      expected: """
+        import Alpha
+        import `Beta`
+        import Zebra
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
+      ]
+    )
+
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import Foo.Baz
+        1️⃣import `Foo`.`Bar`
+        """,
+      expected: """
+        import `Foo`.`Bar`
+        import Foo.Baz
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
+      ]
+    )
+
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import Alpha
+        import `Beta`
+        import Gamma
+        """,
+      expected: """
+        import Alpha
+        import `Beta`
+        import Gamma
+        """,
+      findings: []
+    )
+
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import class Foundation.Date
+        1️⃣import class `Foundation`.Data
+        2️⃣import Foundation
+        """,
+      expected: """
+        import Foundation
+
+        import class `Foundation`.Data
+        import class Foundation.Date
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("2️⃣", message: "place regular imports before declaration imports"),
+      ]
+    )
+
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import Zebra
+        1️⃣import `Beta`
+        @testable import Zebra
+        2️⃣@testable import `Alpha`
+        """,
+      expected: """
+        import `Beta`
+        import Zebra
+
+        @testable import `Alpha`
+        @testable import Zebra
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("2️⃣", message: "sort import statements lexicographically"),
+      ]
+    )
+  }
 }
