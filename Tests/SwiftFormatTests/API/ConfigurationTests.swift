@@ -9,6 +9,7 @@
 // See https://swift.org/CONTRIBUTORS.txt for the list of Swift project authors
 //
 //===----------------------------------------------------------------------===//
+import Foundation
 import SwiftFormat
 import XCTest
 
@@ -133,6 +134,44 @@ final class ConfigurationTests: XCTestCase {
     jsonDecoder.allowsJSON5 = true
     let config = try jsonDecoder.decode(Configuration.self, from: jsonData)
     XCTAssertEqual(config, expected)
+    #endif
+  }
+
+  func testMissingConfigurationFilePathWithRedundantSlashesTerminates() throws {
+    // A path that contains a run of redundant separators (here `///`) is not collapsed by `URL`'s
+    // standardization, so walking up its parent directories must not loop forever when no
+    // configuration file exists. See https://github.com/swiftlang/swift-format/issues/1035.
+    #if os(Windows)
+    let path = #"C:\test\path\no\configuration\\\exists\anywhere\main.swift"#
+    #else
+    let path = "/test/path/no/configuration///exists/anywhere/main.swift"
+    #endif
+    XCTAssertNil(Configuration.url(forConfigurationFileApplyingTo: URL(fileURLWithPath: path)))
+  }
+
+  func testFindsConfigurationFileWhenPathContainsRedundantSlashes() throws {
+    // The parent-directory walk must terminate *and* still locate the configuration file when the
+    // source file path contains redundant separators (e.g. `///`), which can happen when paths are
+    // composed by other tools. See https://github.com/swiftlang/swift-format/issues/1035.
+    #if os(Windows)
+    try XCTSkipIf(true, "Redundant POSIX-style `///` separators are not meaningful on Windows.")
+    #else
+    let projectDir = FileManager.default.temporaryDirectory
+      .appendingPathComponent("swift-format-1035-\(UUID().uuidString)", isDirectory: true)
+    let sourceDir = projectDir.appendingPathComponent("Sources").appendingPathComponent("MyModule")
+    try FileManager.default.createDirectory(at: sourceDir, withIntermediateDirectories: true)
+    defer { try? FileManager.default.removeItem(at: projectDir) }
+
+    let configURL = projectDir.appendingPathComponent(".swift-format")
+    try Data("{}".utf8).write(to: configURL)
+
+    // Build a source file path that contains redundant `///` separators below `projectDir`.
+    let redundantSlashPath = projectDir.path + "/Sources/MyModule///main.swift"
+    let sourceFile = URL(fileURLWithPath: redundantSlashPath)
+    XCTAssertTrue(sourceFile.path.contains("///"), "Test setup must preserve the redundant slashes.")
+
+    let foundConfigURL = Configuration.url(forConfigurationFileApplyingTo: sourceFile)
+    XCTAssertEqual(foundConfigURL?.standardizedFileURL, configURL.standardizedFileURL)
     #endif
   }
 }
