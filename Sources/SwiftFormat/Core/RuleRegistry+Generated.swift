@@ -47,6 +47,7 @@
     "OrderedImports": true,
     "ReplaceForEachWithForLoop": true,
     "ReturnVoidInsteadOfEmptyTuple": true,
+    "SwiftTestingNamingConventions": true,
     "TypeNamesShouldBeCapitalized": true,
     "UseEarlyExits": false,
     "UseExplicitNilCheckInConditions": true,
