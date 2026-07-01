@@ -98,6 +98,10 @@ public final class OneCasePerLine: SyntaxFormatRule {
           caseDecl.leadingTrivia =
             caseDecl.leadingTrivia + hoistedComments + Trivia.newlines(1)
         }
+        // Ensure there is a space between `case` and the first element.
+        if caseDecl.caseKeyword.trailingTrivia.isEmpty {
+          caseDecl.caseKeyword.trailingTrivia = .spaces(1)
+        }
       }
       caseDecl.elements = EnumCaseElementListSyntax(elements)
 
@@ -120,6 +124,16 @@ public final class OneCasePerLine: SyntaxFormatRule {
       // If it's not a case declaration, or it's a case declaration with only one element, leave it
       // alone.
       guard let caseDecl = member.decl.as(EnumCaseDeclSyntax.self), caseDecl.elements.count > 1 else {
+        newMembers.append(member)
+        continue
+      }
+
+      // If none of the elements of a particular `case` have associated values or raw values, we
+      // don't need to split them (and shouldn't modify their trivia, either).
+      let hasAssociatedOrRawValue = caseDecl.elements.contains {
+        $0.parameterClause != nil || $0.rawValue != nil
+      }
+      guard hasAssociatedOrRawValue else {
         newMembers.append(member)
         continue
       }

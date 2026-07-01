@@ -234,4 +234,39 @@ final class OneCasePerLineTests: LintOrFormatRuleTestCase {
       ]
     )
   }
+
+  func testNoAssociatedOrRawValuesAndContinuationLineIsUnchanged() {
+    assertFormatting(
+      OneCasePerLine.self,
+      input: """
+        public enum TestEnum {
+          case
+            // foo
+            1️⃣withPayload(Int),
+            // bar
+            2️⃣withPayload2(String)
+          case
+            a,
+            b,
+            c
+        }
+        """,
+      expected: """
+        public enum TestEnum {
+          // foo
+        case withPayload(Int)
+        // bar
+        case withPayload2(String)
+          case
+            a,
+            b,
+            c
+        }
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "move 'withPayload' to its own 'case' declaration"),
+        FindingSpec("2️⃣", message: "move 'withPayload2' to its own 'case' declaration"),
+      ]
+    )
+  }
 }
