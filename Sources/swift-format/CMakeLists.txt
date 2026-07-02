@@ -33,4 +33,7 @@ target_link_libraries(swift-format PRIVATE
   SwiftParser
   SwiftSyntax)
 
+set_target_properties(swift-format PROPERTIES
+  INSTALL_RPATH "$<$<PLATFORM_ID:Darwin>:@executable_path/../lib/swift/macosx;@executable_path/../lib/swift/host;@executable_path/../lib/swift/host/compiler>")
+
 _install_target(swift-format)
