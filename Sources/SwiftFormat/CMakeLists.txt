@@ -19,6 +19,7 @@ add_library(SwiftFormat
   API/SwiftFormatError.swift
   API/SwiftFormatter.swift
   API/SwiftLinter.swift
+  Core/Attributes+Convenience.swift
   Core/Context.swift
   Core/DocumentationComment.swift
   Core/DocumentationCommentText.swift
@@ -44,7 +45,6 @@ add_library(SwiftFormat
   Core/SyntaxProtocol+Convenience.swift
   Core/SyntaxTraits.swift
   Core/Trivia+Convenience.swift
-  Core/WithAttributesSyntax+Convenience.swift
   Core/WithSemicolonSyntax.swift
   PrettyPrint/Comment.swift
   PrettyPrint/Indent+Length.swift
@@ -89,6 +89,7 @@ add_library(SwiftFormat
   Rules/OrderedImports.swift
   Rules/ReplaceForEachWithForLoop.swift
   Rules/ReturnVoidInsteadOfEmptyTuple.swift
+  Rules/SwiftTestingNamingConventions.swift
   Rules/TypeNamesShouldBeCapitalized.swift
   Rules/UseEarlyExits.swift
   Rules/UseExplicitNilCheckInConditions.swift
