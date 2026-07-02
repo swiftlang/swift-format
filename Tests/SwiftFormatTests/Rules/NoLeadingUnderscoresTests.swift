@@ -174,4 +174,75 @@ final class NoLeadingUnderscoresTests: LintOrFormatRuleTestCase {
       findings: []
     )
   }
+
+  func testBackingPropertiesAreAllowed() {
+    assertLint(
+      NoLeadingUnderscores.self,
+      """
+      struct Counter {
+        private var _count: Int = 0
+        var count: Int { _count }
+      }
+      class Cache {
+        private var _storage: [String: Int] = [:]
+        var storage: [String: Int] { _storage }
+        private var 1️⃣_unbacked: Int = 0
+      }
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the leading '_' from the name '_unbacked'")
+      ]
+    )
+  }
+
+  func testBackingPropertyRequiresAPropertyCounterpart() {
+    // A method named `value` is not a property, so `_value` is still flagged.
+    assertLint(
+      NoLeadingUnderscores.self,
+      """
+      struct Foo {
+        private var 1️⃣_value: Int = 0
+        func value() -> Int { _value }
+      }
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the leading '_' from the name '_value'")
+      ]
+    )
+  }
+
+  func testBackingPropertyIsScopedToTheSameType() {
+    // The counterpart `count` is declared in `Outer`, not in `Inner`, so `_count` is still flagged.
+    assertLint(
+      NoLeadingUnderscores.self,
+      """
+      struct Outer {
+        var count: Int = 0
+        struct Inner {
+          private var 1️⃣_count: Int = 0
+        }
+      }
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the leading '_' from the name '_count'")
+      ]
+    )
+  }
+
+  func testLocalBackingNamesAreNotExempt() {
+    // The carve-out only applies to properties of a type, not to local variables.
+    assertLint(
+      NoLeadingUnderscores.self,
+      """
+      func f() {
+        let 1️⃣_value = 0
+        let value = 1
+        return value
+      }
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: "remove the leading '_' from the name '_value'")
+      ]
+    )
+  }
 }
