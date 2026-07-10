@@ -1,3 +1,7 @@
+6.4
+---
+API breakage: accessor Context.importsXCTest.Set() has been removed
+
 6.2
 ---
 

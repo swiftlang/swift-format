@@ -16,7 +16,7 @@ import SwiftSyntax
 /// Underscores (except at the beginning of an identifier) are disallowed.
 ///
 /// This rule does not apply to test code, defined as code which:
-///   * Contains the line `import XCTest`
+///   * Contains the line import a supported test library
 ///   * The function is marked with `@Test` attribute
 ///
 /// Lint: If an identifier contains underscores or begins with a capital letter, a lint error is
@@ -27,13 +27,14 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
   private var testCaseFuncs = Set<FunctionDeclSyntax>()
 
   public override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
-    // Tracks whether "XCTest" is imported in the source file before processing individual nodes.
-    setImportsXCTest(context: context, sourceFile: node)
+    // Tracks whether a supported test library is imported in the source file before processing
+    // individual nodes.
+    setImportsAnyTestLibrary(context: context, sourceFile: node)
     return .visitChildren
   }
 
   public override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
-    guard context.importsXCTest == .importsXCTest else { return .visitChildren }
+    guard context.importsAnyTestLibrary == .importsATestLirary else { return .visitChildren }
 
     collectTestMethods(from: node.memberBlock.members, into: &testCaseFuncs)
     return .visitChildren

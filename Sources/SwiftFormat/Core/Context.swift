@@ -22,19 +22,22 @@ import SwiftSyntax
 @_spi(Rules)
 public final class Context {
 
-  /// Tracks whether `XCTest` has been imported so that certain logic can be modified for files that
-  /// are known to be tests.
-  public enum XCTestImportState {
+  /// Tracks whether a supported test library has been imported so that certain logic can be
+  /// modified for files that are known to be tests.
+  public enum AnyTestImportState {
 
-    /// Whether `XCTest` is imported or not has not yet been determined.
+    /// Whether a supported test library is imported or not has not yet been determined.
     case notDetermined
 
-    /// The file is known to import `XCTest`.
-    case importsXCTest
+    /// The file is known to import a supported test library.
+    case importsATestLirary
 
-    /// The file is known to not import `XCTest`.
-    case doesNotImportXCTest
+    /// The file is known to not import any supported test library.
+    case doesNotImportATestLibrary
   }
+
+  @available(*, deprecated, message: "use `AnyTestImportState` instead")
+  public typealias XCTestImportState = AnyTestImportState
 
   /// The configuration for this run of the pipeline, provided by a configuration JSON file.
   let configuration: Configuration
@@ -51,9 +54,13 @@ public final class Context {
   /// The URL of the file being linted or formatted.
   let fileURL: URL
 
-  /// Indicates whether the file is known to import XCTest.
-  public var importsXCTest: XCTestImportState
+  /// Indicates whether the file is known to import a supported test library.
+  public var importsAnyTestLibrary: AnyTestImportState
 
+  @available(*, deprecated, message: "use property `importsAnyTestLibrary` instead")
+  public var importsXCTest: XCTestImportState {
+    self.importsAnyTestLibrary
+  }
   /// An object that converts `AbsolutePosition` values to `SourceLocation` values.
   public let sourceLocationConverter: SourceLocationConverter
 
@@ -78,7 +85,7 @@ public final class Context {
     self.operatorTable = operatorTable
     self.findingEmitter = FindingEmitter(consumer: findingConsumer)
     self.fileURL = fileURL
-    self.importsXCTest = .notDetermined
+    self.importsAnyTestLibrary = .notDetermined
     let tree = source.map { Parser.parse(source: $0) } ?? sourceFileSyntax
     self.sourceLocationConverter =
       SourceLocationConverter(fileName: fileURL.relativePath, tree: tree)

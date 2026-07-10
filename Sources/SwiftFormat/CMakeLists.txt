@@ -26,7 +26,7 @@ add_library(SwiftFormat
   Core/FindingEmitter.swift
   Core/FormatPipeline.swift
   Core/FunctionDeclSyntax+Convenience.swift
-  Core/ImportsXCTestVisitor.swift
+  Core/ImportsAnyTestingLibrary.swift
   Core/LazySplitSequence.swift
   Core/LintPipeline.swift
   Core/ModifierListSyntax+Convenience.swift

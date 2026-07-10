@@ -79,7 +79,7 @@ All values should be written in lower camel-case (`lowerCamelCase`).
 Underscores (except at the beginning of an identifier) are disallowed.
 
 This rule does not apply to test code, defined as code which:
-  * Contains the line `import XCTest`
+  * Contains the line import a supported test library
   * The function is marked with `@Test` attribute
 
 Lint: If an identifier contains underscores or begins with a capital letter, a lint error is
@@ -189,7 +189,7 @@ Lint: If an identifier contains non-ASCII characters, a lint error is raised.
 Force-unwraps are strongly discouraged and must be documented.
 
 This rule does not apply to test code, defined as code which:
-  * Contains the line `import XCTest`
+  * Imports a supported test library
   * The function is marked with `@Test` attribute
 
 Lint: If a force unwrap is used, a lint warning is raised.
@@ -201,7 +201,7 @@ Lint: If a force unwrap is used, a lint warning is raised.
 Force-try (`try!`) is forbidden.
 
 This rule does not apply to test code, defined as code which:
-  * Contains the line `import XCTest`
+  * Imports a supported test library
   * The function is marked with `@Test` attribute
 
 Lint: Using `try!` results in a lint error.
@@ -217,7 +217,7 @@ Implicitly unwrapped optionals (e.g. `var s: String!`) are forbidden.
 Certain properties (e.g. `@IBOutlet`) tied to the UI lifecycle are ignored.
 
 This rule does not apply to test code, defined as code which:
-  * Contains the line `import XCTest`
+  * Imports a supported test library
   * The function is marked with `@Test` attribute
 
 TODO: Create exceptions for other UI elements (ex: viewDidLoad)
