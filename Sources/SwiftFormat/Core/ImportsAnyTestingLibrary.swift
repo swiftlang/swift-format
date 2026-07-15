@@ -12,7 +12,7 @@
 
 import SwiftSyntax
 
-package let supportedTestLibraryModuleNames = [
+public let supportedTestLibraryModuleNames = [
   "XCTest",
   "Testing",
 ]
