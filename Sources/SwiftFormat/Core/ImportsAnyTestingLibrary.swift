@@ -12,7 +12,8 @@
 
 import SwiftSyntax
 
-package let supportedTestLibraryModuleNames = [
+@_spi(Testing)
+public let supportedTestLibraryModuleNames = [
   "XCTest",
   "Testing",
 ]
@@ -35,7 +36,8 @@ public func setImportsAnyTestLibrary(context: Context, sourceFile: SourceFileSyn
   }
 }
 
-private func statementsImportAnyTestLibrary(_ statements: CodeBlockItemListSyntax) -> Bool {
+@_spi(Testing)
+public func statementsImportAnyTestLibrary(_ statements: CodeBlockItemListSyntax) -> Bool {
   for codeBlockItem in statements {
     switch codeBlockItem.item {
     case .decl(let decl):

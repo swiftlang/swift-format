@@ -1,6 +1,7 @@
 6.4
 ---
 API breakage: accessor Context.importsXCTest.Set() has been removed
+API breakage: var supportedTestLibraryModuleNames is now with @_spi
 
 6.2
 ---
