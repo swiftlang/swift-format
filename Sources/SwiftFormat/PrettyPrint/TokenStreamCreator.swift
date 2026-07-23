@@ -2080,10 +2080,18 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // wrapping after that.
     before(node.questionMark, tokens: .break(.open(kind: .continuation)), .open)
     after(node.questionMark, tokens: .space)
+    // Ignore a discretionary newline here so that a break inserted before the colon does not
+    // inflate the preceding question-mark break's length on the next formatting pass. Continue
+    // honoring the newline when the colon's leading trivia contains a comment, so that the comment
+    // does not get attached to the previous token.
+    let colonBreakIgnoresDiscretionaryNewline = !node.colon.leadingTrivia.hasAnyComments
     before(
       node.colon,
       tokens: .break(.close(mustBreak: false), size: 0),
-      .break(.open(kind: .continuation)),
+      .break(
+        .open(kind: .continuation),
+        newlines: .elective(ignoresDiscretionary: colonBreakIgnoresDiscretionaryNewline)
+      ),
       .open
     )
     after(node.colon, tokens: .space)
