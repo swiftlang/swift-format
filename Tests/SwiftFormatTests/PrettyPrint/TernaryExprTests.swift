@@ -119,6 +119,17 @@ final class TernaryExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 100)
   }
 
+  func testDiscretionaryNewlineBeforeColonDoesNotForceQuestionMarkBreak() {
+    let input =
+      """
+      let result = condition ? trueValue
+        : falseValue
+      """
+    let expected = input + "\n"
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
+  }
+
   func testTernaryWithWrappingExpressions() {
     let input =
       """
