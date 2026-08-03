@@ -2200,7 +2200,10 @@ private final class TokenStreamCreator: SyntaxVisitor {
         // When the RHS is a simple expression, even if is requires multiple lines, we don't add a
         // group so that as much of the expression as possible can stay on the same line as the
         // operator token.
-        if isCompoundExpression(rhs) && leftmostMultilineStringLiteral(of: rhs) == nil {
+        if isCompoundExpression(rhs)
+          && leftmostMultilineStringLiteral(of: rhs) == nil
+          && !node.leftOperand.is(DiscardAssignmentExprSyntax.self)
+        {
           beforeTokens.append(.open)
           after(rhs.lastToken(viewMode: .sourceAccurate), tokens: .close)
         }

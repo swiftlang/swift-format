@@ -33,6 +33,26 @@ final class AssignmentExprTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
 
+  func testDiscardAssignmentWithMultilineTypeCast() {
+    let input =
+      """
+      func test() {
+        _ = try! ServiceId.parseFrom(
+          serviceIdString: Self.TEST_UUID_STRING) as! Aci
+      }
+      """
+    let expected =
+      """
+      func test() {
+        _ = try! ServiceId.parseFrom(
+          serviceIdString: Self.TEST_UUID_STRING) as! Aci
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
+  }
+
   func testAssignmentExprsWithGroupedOperators() {
     let input =
       """
