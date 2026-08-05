@@ -184,7 +184,12 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
   /// halfwidth forms, which are the ordinary full stops in CJK text. The linguistic APIs on Apple
   /// platforms already report all of these as sentence terminators, so recognizing them here keeps
   /// the two implementations in agreement.
-  private static let fullStops: Set<Character> = ["\u{002E}", "\u{3002}", "\u{FF0E}", "\u{FF61}"]
+  private static let fullStops: Set<Character> = [
+    "\u{002E}",  // FULL STOP
+    "\u{3002}",  // IDEOGRAPHIC FULL STOP
+    "\u{FF0E}",  // FULLWIDTH FULL STOP
+    "\u{FF61}",  // HALFWIDTH IDEOGRAPHIC FULL STOP
+  ]
 
   /// Returns the best approximation of sentences in the given text using string splitting around
   /// full stops.
