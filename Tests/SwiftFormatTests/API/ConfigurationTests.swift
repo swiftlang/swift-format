@@ -154,7 +154,7 @@ final class ConfigurationTests: XCTestCase {
     // source file path contains redundant separators (e.g. `///`), which can happen when paths are
     // composed by other tools. See https://github.com/swiftlang/swift-format/issues/1035.
     #if os(Windows)
-    try XCTSkipIf(true, "Redundant POSIX-style `///` separators are not meaningful on Windows.")
+    throw XCTSkip("Redundant POSIX-style `///` separators are not meaningful on Windows.")
     #else
     let projectDir = FileManager.default.temporaryDirectory
       .appendingPathComponent("swift-format-1035-\(UUID().uuidString)", isDirectory: true)
