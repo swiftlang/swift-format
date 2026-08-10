@@ -17,7 +17,7 @@ concurrency:
 jobs:
   tests:
     name: Test
-    uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@0.0.11
+    uses: swiftlang/github-workflows/.github/workflows/swift_package_test.yml@0.0.13
     with:
       enable_cross_pr_testing: true
       linux_exclude_swift_versions: "[{\"swift_version\": \"5.9\"}, {\"swift_version\": \"5.10\"}]"
@@ -39,7 +39,7 @@ jobs:
       windows_build_command: 'Invoke-Program .\.github\scripts\cmake-smoke-test.ps1 "-DCMAKE_C_COMPILER=$((Get-Command clang).Path)" "-DCMAKE_CXX_COMPILER=$((Get-Command clang).Path)" "-DCMAKE_Swift_COMPILER=$((Get-Command swiftc).Path)" "-DCMAKE_STATIC_LIBRARY_PREFIX_Swift=lib" "-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDLL"'
   soundness:
     name: Soundness
-    uses: swiftlang/github-workflows/.github/workflows/soundness.yml@0.0.11
+    uses: swiftlang/github-workflows/.github/workflows/soundness.yml@0.0.13
     with:
       license_header_check_project_name: "Swift.org"
       api_breakage_check_allowlist_path: "api-breakages.txt"
