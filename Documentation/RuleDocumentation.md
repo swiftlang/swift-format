@@ -239,6 +239,8 @@ Lint: Specifying an access level for an extension declaration yields a lint erro
 Format: The access level is removed from the extension declaration and is added to each
         declaration in the extension; declarations with redundant access levels (e.g.
         `internal`, as that is the default access level) have the explicit access level removed.
+        For a nested protocol, the access level is added to the protocol declaration itself and
+        not to its requirements, which implicitly have the protocol's access level.
 
 `NoAccessLevelOnExtensionDeclaration` rule can format your code automatically.
 

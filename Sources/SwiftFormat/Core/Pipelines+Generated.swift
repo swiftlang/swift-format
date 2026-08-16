@@ -461,6 +461,7 @@ class LintPipeline: SyntaxVisitor {
   override func visit(_ node: ProtocolDeclSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AllPublicDeclarationsHaveDocumentation.visit, for: node)
     visitIfEnabled(BeginDocumentationCommentWithOneLineSummary.visit, for: node)
+    visitIfEnabled(NoAccessLevelOnExtensionDeclaration.visit, for: node)
     visitIfEnabled(NoLeadingUnderscores.visit, for: node)
     visitIfEnabled(TypeNamesShouldBeCapitalized.visit, for: node)
     visitIfEnabled(UseTripleSlashForDocumentationComments.visit, for: node)
@@ -469,6 +470,7 @@ class LintPipeline: SyntaxVisitor {
   override func visitPost(_ node: ProtocolDeclSyntax) {
     onVisitPost(rule: AllPublicDeclarationsHaveDocumentation.self, for: node)
     onVisitPost(rule: BeginDocumentationCommentWithOneLineSummary.self, for: node)
+    onVisitPost(rule: NoAccessLevelOnExtensionDeclaration.self, for: node)
     onVisitPost(rule: NoLeadingUnderscores.self, for: node)
     onVisitPost(rule: TypeNamesShouldBeCapitalized.self, for: node)
     onVisitPost(rule: UseTripleSlashForDocumentationComments.self, for: node)

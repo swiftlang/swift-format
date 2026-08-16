@@ -560,4 +560,129 @@ final class NoAccessLevelOnExtensionDeclarationTests: LintOrFormatRuleTestCase {
       ]
     )
   }
+
+  func testNestedProtocolTakesAccessLevelInsteadOfItsRequirements() {
+    // A protocol's requirements implicitly have the protocol's access level and it is an error to
+    // state one explicitly, so the keyword has to land on the protocol itself.
+    assertFormatting(
+      NoAccessLevelOnExtensionDeclaration.self,
+      input: """
+        1️⃣public extension Namespace {
+          2️⃣protocol Boundary: Sendable {
+            associatedtype Value
+            var name: String { get }
+            func work()
+          }
+        }
+        """,
+      expected: """
+        extension Namespace {
+          public protocol Boundary: Sendable {
+            associatedtype Value
+            var name: String { get }
+            func work()
+          }
+        }
+        """,
+      findings: [
+        FindingSpec(
+          "1️⃣",
+          message: "move this 'public' access modifier to precede each member inside this extension",
+          notes: [
+            NoteSpec("2️⃣", message: "add 'public' access modifier to this declaration")
+          ]
+        )
+      ]
+    )
+  }
+
+  func testNestedProtocolWithExplicitAccessLevelIsLeftAlone() {
+    assertFormatting(
+      NoAccessLevelOnExtensionDeclaration.self,
+      input: """
+        1️⃣public extension Foo {
+          private protocol P {
+            func f()
+          }
+          2️⃣func g() {}
+        }
+        """,
+      expected: """
+        extension Foo {
+          private protocol P {
+            func f()
+          }
+          public func g() {}
+        }
+        """,
+      findings: [
+        FindingSpec(
+          "1️⃣",
+          message: "move this 'public' access modifier to precede each member inside this extension",
+          notes: [
+            NoteSpec("2️⃣", message: "add 'public' access modifier to this declaration")
+          ]
+        )
+      ]
+    )
+  }
+
+  func testNestedProtocolInPrivateExtensionBecomesFileprivate() {
+    assertFormatting(
+      NoAccessLevelOnExtensionDeclaration.self,
+      input: """
+        1️⃣private extension Foo {
+          2️⃣protocol P {
+            func f()
+          }
+        }
+        """,
+      expected: """
+        extension Foo {
+          fileprivate protocol P {
+            func f()
+          }
+        }
+        """,
+      findings: [
+        FindingSpec(
+          "1️⃣",
+          message:
+            "remove this 'private' access modifier and declare each member inside this extension as 'fileprivate'",
+          notes: [
+            NoteSpec("2️⃣", message: "add 'fileprivate' access modifier to this declaration")
+          ]
+        )
+      ]
+    )
+  }
+
+  func testSPIAttributeIsMovedToNestedProtocol() {
+    assertFormatting(
+      NoAccessLevelOnExtensionDeclaration.self,
+      input: """
+        @_spi(Something) 1️⃣public extension Foo {
+          2️⃣protocol P {
+            func f()
+          }
+        }
+        """,
+      expected: """
+        extension Foo {
+          @_spi(Something) public protocol P {
+            func f()
+          }
+        }
+        """,
+      findings: [
+        FindingSpec(
+          "1️⃣",
+          message: "move this 'public' access modifier to precede each member inside this extension",
+          notes: [
+            NoteSpec("2️⃣", message: "add 'public' access modifier to this declaration")
+          ]
+        )
+      ]
+    )
+  }
 }

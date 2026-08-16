@@ -19,6 +19,8 @@ import SwiftSyntax
 /// Format: The access level is removed from the extension declaration and is added to each
 ///         declaration in the extension; declarations with redundant access levels (e.g.
 ///         `internal`, as that is the default access level) have the explicit access level removed.
+///         For a nested protocol, the access level is added to the protocol declaration itself and
+///         not to its requirements, which implicitly have the protocol's access level.
 @_spi(Rules)
 public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
   private enum State {
@@ -143,6 +145,15 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
     return applyingAccessModifierIfNone(to: node)
   }
 
+  /// Visits a nested protocol declaration.
+  ///
+  /// This override deliberately does not visit the protocol's children. A protocol's requirements
+  /// implicitly have the protocol's own access level and it is an error to state one explicitly, so
+  /// the access level must land on the protocol itself and never descend into its body.
+  public override func visit(_ node: ProtocolDeclSyntax) -> DeclSyntax {
+    return applyingAccessModifierIfNone(to: node)
+  }
+
   public override func visit(_ node: StructDeclSyntax) -> DeclSyntax {
     return applyingAccessModifierIfNone(to: node)
   }
@@ -196,6 +207,12 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
       withModifier = applyingAccessModifierIfNone(accessKeyword, to: initDecl, declKeywordKeyPath: \.initKeyword)
     case .functionDecl(let funcDecl):
       withModifier = applyingAccessModifierIfNone(accessKeyword, to: funcDecl, declKeywordKeyPath: \.funcKeyword)
+    case .protocolDecl(let protocolDecl):
+      withModifier = applyingAccessModifierIfNone(
+        accessKeyword,
+        to: protocolDecl,
+        declKeywordKeyPath: \.protocolKeyword
+      )
     case .structDecl(let structDecl):
       withModifier = applyingAccessModifierIfNone(accessKeyword, to: structDecl, declKeywordKeyPath: \.structKeyword)
     case .subscriptDecl(let subscriptDecl):
