@@ -1291,4 +1291,80 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       ]
     )
   }
+
+  func testOnlyGroupTestableImportsKeepsAttributedImportsWithRegularImports() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.onlyGroupTestableImports = true
+
+    let code = """
+      import Foundation
+      import MLX
+      @_spi(Testing) @testable import MLXLMCommon
+      import MLXNN
+      import Testing
+
+      struct Test {}
+      """
+
+    assertFormatting(
+      OrderedImports.self,
+      input: code,
+      expected: code,
+      findings: [],
+      configuration: configuration
+    )
+  }
+
+  func testOnlyGroupTestableImportsSortsAttributedImportsWithRegularImports() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.onlyGroupTestableImports = true
+
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        @_implementationOnly import Zebras
+        1️⃣import Apples
+        @preconcurrency import Bananas
+
+        let a = 3
+        """,
+      expected: """
+        import Apples
+        @preconcurrency import Bananas
+        @_implementationOnly import Zebras
+
+        let a = 3
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
+      ],
+      configuration: configuration
+    )
+  }
+
+  func testOnlyGroupTestableImportsStillGroupsLeadingTestableImports() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.onlyGroupTestableImports = true
+
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        @testable import Zebras
+        1️⃣import Apples
+
+        let a = 3
+        """,
+      expected: """
+        import Apples
+
+        @testable import Zebras
+
+        let a = 3
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "place regular imports before testable imports")
+      ],
+      configuration: configuration
+    )
+  }
 }
