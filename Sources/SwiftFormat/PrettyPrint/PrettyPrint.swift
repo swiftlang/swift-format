@@ -426,8 +426,8 @@ public class PrettyPrinter {
 
       var overrideBreakingSuppressed = false
       switch newline {
-      case .elective, .escaped: break
-      case .soft(_, let discretionary):
+      case .elective, .electiveIgnoringGroupLength, .escaped: break
+      case .soft(_, let discretionary), .softIgnoringGroupLength(_, let discretionary):
         // A discretionary newline (i.e. from the source) should create a line break even if the
         // rules for breaking are disabled.
         overrideBreakingSuppressed =
@@ -667,7 +667,7 @@ public class PrettyPrinter {
         delimIndexStack.append(i)
 
         switch newline {
-        case .elective, .escaped:
+        case .elective, .electiveIgnoringGroupLength, .softIgnoringGroupLength, .escaped:
           total += size
         default:
           // `size` is never used in this case, because the break always fires. Use `maxLineLength`
