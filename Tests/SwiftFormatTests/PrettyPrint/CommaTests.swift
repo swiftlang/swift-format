@@ -1139,6 +1139,48 @@ final class CommaTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40, configuration: configuration)
   }
 
+  func testMultilineTrailingCommaBehaviorDoesNotAffectLineLength() {
+    let input =
+      """
+      f(0, 0)
+
+      """
+
+    let expected = input
+
+    var configuration = Configuration.forTesting
+    configuration.multilineTrailingCommaBehavior = .alwaysUsed
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 7, configuration: configuration)
+
+    configuration.multilineTrailingCommaBehavior = .neverUsed
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 7, configuration: configuration)
+
+    configuration.multilineTrailingCommaBehavior = .keptAsWritten
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 7, configuration: configuration)
+  }
+
+  func testInsertedTrailingCommaIsIncludedInBrokenLineLength() {
+    let input =
+      """
+      f(0, foo.bar)
+
+      """
+
+    let expected =
+      """
+      f(
+        0,
+        foo
+          .bar,
+      )
+
+      """
+
+    var configuration = Configuration.forTesting
+    configuration.multilineTrailingCommaBehavior = .alwaysUsed
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 9, configuration: configuration)
+  }
+
   func testAlwaysMultilineTrailingCommaBehaviorOverridesMultiElementCollectionTrailingCommas() {
     let input =
       """
