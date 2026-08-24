@@ -45,6 +45,7 @@
     "OneVariableDeclarationPerLine": true,
     "OnlyOneTrailingClosureArgument": true,
     "OrderedImports": true,
+    "ReflowComments": false,
     "ReplaceForEachWithForLoop": true,
     "ReturnVoidInsteadOfEmptyTuple": true,
     "SwiftTestingNamingConventions": true,

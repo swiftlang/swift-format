@@ -576,10 +576,12 @@ class LintPipeline: SyntaxVisitor {
 
   override func visit(_ node: TokenSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(NoBlockComments.visit, for: node)
+    visitIfEnabled(ReflowComments.visit, for: node)
     return .visitChildren
   }
   override func visitPost(_ node: TokenSyntax) {
     onVisitPost(rule: NoBlockComments.self, for: node)
+    onVisitPost(rule: ReflowComments.self, for: node)
   }
 
   override func visit(_ node: TryExprSyntax) -> SyntaxVisitorContinueKind {
@@ -658,6 +660,7 @@ extension FormatPipeline {
     node = OneCasePerLine(context: context).rewrite(node)
     node = OneVariableDeclarationPerLine(context: context).rewrite(node)
     node = OrderedImports(context: context).rewrite(node)
+    node = ReflowComments(context: context).rewrite(node)
     node = ReturnVoidInsteadOfEmptyTuple(context: context).rewrite(node)
     node = UseEarlyExits(context: context).rewrite(node)
     node = UseExplicitNilCheckInConditions(context: context).rewrite(node)

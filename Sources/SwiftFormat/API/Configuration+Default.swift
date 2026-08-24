@@ -45,5 +45,6 @@ extension Configuration {
     self.indentBlankLines = false
     self.orderedImports = OrderedImportsConfiguration()
     self.swiftTestingNamingConventions = SwiftTestingNamingConventionsConfiguration()
+    self.reflowComments = ReflowCommentsConfiguration()
   }
 }
