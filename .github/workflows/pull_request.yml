@@ -30,7 +30,7 @@ jobs:
       linux_pre_build_command: INSTALL_CMAKE=1 ./.github/scripts/prebuild.sh
       linux_build_command: './.github/scripts/cmake-smoke-test.sh -DCMAKE_C_COMPILER=`which clang` -DCMAKE_CXX_COMPILER=`which clang++` -DCMAKE_Swift_COMPILER=`which swiftc`'
       linux_swift_versions: '["nightly-main"]'
-      enable_macos_checks: true
+      enable_macos_checks: ${{ github.repository == 'swiftlang/swift-format' }}
       macos_xcode_versions: '["swift_6.3"]'
       macos_pre_build_command: INSTALL_CMAKE=1 ./.github/scripts/prebuild.sh
       macos_build_command: 'export PATH=$PATH:$RUNNER_TOOL_CACHE && ./.github/scripts/cmake-smoke-test.sh -DCMAKE_C_COMPILER=`which clang` -DCMAKE_CXX_COMPILER=`which clang++` -DCMAKE_Swift_COMPILER=`which swiftc`'
