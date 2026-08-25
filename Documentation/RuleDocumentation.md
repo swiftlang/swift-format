@@ -16,6 +16,7 @@ Here's the list of available rules:
 - [AmbiguousTrailingClosureOverload](#AmbiguousTrailingClosureOverload)
 - [AvoidRetroactiveConformances](#AvoidRetroactiveConformances)
 - [BeginDocumentationCommentWithOneLineSummary](#BeginDocumentationCommentWithOneLineSummary)
+- [BlankLinePolicy](#BlankLinePolicy)
 - [DoNotUseSemicolons](#DoNotUseSemicolons)
 - [DontRepeatTypeInStaticProperties](#DontRepeatTypeInStaticProperties)
 - [FileScopedDeclarationPrivacy](#FileScopedDeclarationPrivacy)
@@ -115,6 +116,36 @@ All documentation comments must begin with a one-line summary of the declaration
 Lint: If a comment does not begin with a single-line summary, a lint error is raised.
 
 `BeginDocumentationCommentWithOneLineSummary` is a linter-only rule.
+
+### BlankLinePolicy
+
+Enforces a configurable policy for blank lines at the significant syntactic boundaries of a
+source file.
+
+The policy is expressed through the `blankLinePolicy` configuration object. Each of its axes
+covers one kind of boundary and accepts the primitive values `none` (blank lines are
+forbidden), `exactlyOne` (exactly one blank line is required), and `optional` (the author may
+choose zero or one), along with a few named expansions of those primitives:
+
+  - `betweenDeclarations: "scopeSeparated"` and `members: "scopeSeparated"` apply
+    `exactlyOne` between scope-like declarations (functions, initializers, computed
+    properties, nested types) and at kind transitions, and `optional` between list-like
+    declarations of the same kind (stored properties, enum cases, typealiases, imports).
+  - `switchCases: "auto"` applies `exactlyOne` between adjacent cases when either case is
+    multiline and `none` between adjacent single-line cases.
+  - `guardPrologue: "separated"` keeps consecutive leading guard statements tight and applies
+    `exactlyOne` after the final leading guard statement.
+
+Blank lines inside multi-line string literals and comments are content and are never
+modified. The `scopeEdges` axis generalizes the `NoEmptyLinesOpeningClosingBraces` rule; it
+defaults to `optional` so that enabling both does not produce duplicate findings.
+
+Lint: Blank lines that violate the configured policy yield a lint error.
+
+Format: Blank lines that violate the configured policy are removed, and required blank lines
+are inserted.
+
+`BlankLinePolicy` rule can format your code automatically.
 
 ### DoNotUseSemicolons
 

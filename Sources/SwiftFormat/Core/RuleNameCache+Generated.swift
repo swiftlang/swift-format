@@ -21,6 +21,7 @@ public let ruleNameCache: [ObjectIdentifier: String] = [
   ObjectIdentifier(AmbiguousTrailingClosureOverload.self): "AmbiguousTrailingClosureOverload",
   ObjectIdentifier(AvoidRetroactiveConformances.self): "AvoidRetroactiveConformances",
   ObjectIdentifier(BeginDocumentationCommentWithOneLineSummary.self): "BeginDocumentationCommentWithOneLineSummary",
+  ObjectIdentifier(BlankLinePolicy.self): "BlankLinePolicy",
   ObjectIdentifier(DoNotUseSemicolons.self): "DoNotUseSemicolons",
   ObjectIdentifier(DontRepeatTypeInStaticProperties.self): "DontRepeatTypeInStaticProperties",
   ObjectIdentifier(FileScopedDeclarationPrivacy.self): "FileScopedDeclarationPrivacy",

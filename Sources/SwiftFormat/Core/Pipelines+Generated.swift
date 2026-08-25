@@ -487,6 +487,7 @@ class LintPipeline: SyntaxVisitor {
   override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
     visitIfEnabled(AlwaysUseLowerCamelCase.visit, for: node)
     visitIfEnabled(AmbiguousTrailingClosureOverload.visit, for: node)
+    visitIfEnabled(BlankLinePolicy.visit, for: node)
     visitIfEnabled(FileScopedDeclarationPrivacy.visit, for: node)
     visitIfEnabled(NeverForceUnwrap.visit, for: node)
     visitIfEnabled(NeverUseForceTry.visit, for: node)
@@ -497,6 +498,7 @@ class LintPipeline: SyntaxVisitor {
   override func visitPost(_ node: SourceFileSyntax) {
     onVisitPost(rule: AlwaysUseLowerCamelCase.self, for: node)
     onVisitPost(rule: AmbiguousTrailingClosureOverload.self, for: node)
+    onVisitPost(rule: BlankLinePolicy.self, for: node)
     onVisitPost(rule: FileScopedDeclarationPrivacy.self, for: node)
     onVisitPost(rule: NeverForceUnwrap.self, for: node)
     onVisitPost(rule: NeverUseForceTry.self, for: node)
@@ -642,6 +644,7 @@ extension FormatPipeline {
   func rewrite(_ node: Syntax) -> Syntax {
     var node = node
     node = AlwaysUseLiteralForEmptyCollectionInit(context: context).rewrite(node)
+    node = BlankLinePolicy(context: context).rewrite(node)
     node = DoNotUseSemicolons(context: context).rewrite(node)
     node = FileScopedDeclarationPrivacy(context: context).rewrite(node)
     node = FullyIndirectEnum(context: context).rewrite(node)

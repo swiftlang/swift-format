@@ -20,6 +20,7 @@
     "AmbiguousTrailingClosureOverload": true,
     "AvoidRetroactiveConformances": true,
     "BeginDocumentationCommentWithOneLineSummary": false,
+    "BlankLinePolicy": false,
     "DoNotUseSemicolons": true,
     "DontRepeatTypeInStaticProperties": true,
     "FileScopedDeclarationPrivacy": true,

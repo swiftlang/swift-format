@@ -50,6 +50,7 @@ public struct Configuration: Codable, Equatable {
     case indentBlankLines
     case orderedImports
     case swiftTestingNamingConventions
+    case blankLinePolicy
   }
 
   /// A dictionary containing the default enabled/disabled states of rules, keyed by the rules'
@@ -311,6 +312,10 @@ public struct Configuration: Codable, Equatable {
   /// Configuration for the `SwiftTestingNamingConventions` rule.
   public var swiftTestingNamingConventions: SwiftTestingNamingConventionsConfiguration
 
+  /// Configuration for the `BlankLinePolicy` rule, which governs where blank lines are required,
+  /// forbidden, or left to the author's discretion.
+  public var blankLinePolicy: BlankLinePolicyConfiguration
+
   /// Creates a new `Configuration` by loading it from a configuration file.
   public init(contentsOf url: URL) throws {
     let data = try Data(contentsOf: url)
@@ -467,6 +472,13 @@ public struct Configuration: Codable, Equatable {
       )
       ?? defaults.swiftTestingNamingConventions
 
+    self.blankLinePolicy =
+      try container.decodeIfPresent(
+        BlankLinePolicyConfiguration.self,
+        forKey: .blankLinePolicy
+      )
+      ?? defaults.blankLinePolicy
+
     // If the `rules` key is not present at all, default it to the built-in set
     // so that the behavior is the same as if the configuration had been
     // default-initialized. To get an empty rules dictionary, one can explicitly
@@ -509,6 +521,7 @@ public struct Configuration: Codable, Equatable {
     try container.encode(indentBlankLines, forKey: .indentBlankLines)
     try container.encode(orderedImports, forKey: .orderedImports)
     try container.encode(swiftTestingNamingConventions, forKey: .swiftTestingNamingConventions)
+    try container.encode(blankLinePolicy, forKey: .blankLinePolicy)
     try container.encode(rules, forKey: .rules)
   }
 
@@ -601,4 +614,217 @@ public struct SwiftTestingNamingConventionsConfiguration: Codable, Equatable {
   public var requireRawIdentifierTestNames = false
 
   public init() {}
+}
+
+/// The primitive policies that can be applied to blank lines at a syntactic boundary.
+///
+/// Every other policy in `BlankLinePolicyConfiguration` is one of these primitives or a named
+/// expansion that picks between them per boundary.
+public enum BlankLinePolicyValue: String, Codable, Equatable {
+  /// Blank lines are forbidden at this boundary; any that exist will be removed.
+  case none
+  /// Exactly one blank line is required at this boundary; it will be inserted if missing and any
+  /// extra blank lines will be removed.
+  case exactlyOne
+  /// The author may choose to have zero or one blank line at this boundary; the formatter will
+  /// neither insert nor remove one. The global `maximumBlankLines` limit still applies.
+  case optional
+}
+
+/// The policy for blank lines between the members of a type, extension, or protocol, and
+/// between top-level declarations.
+public enum DeclarationBlankLinePolicy: String, Codable, Equatable {
+  /// An expansion of the primitive values applied per-boundary: exactly one blank line is
+  /// required between scope-like declarations (functions, initializers, computed properties,
+  /// nested types) and at kind transitions, while list-like declarations of the same kind
+  /// (stored properties, enum cases, typealiases, imports) may be grouped with or without blank
+  /// lines.
+  case scopeSeparated
+  /// Blank lines between the declarations are forbidden.
+  case none
+  /// Exactly one blank line is required between all declarations.
+  case exactlyOne
+  /// The author chooses where blank lines go.
+  case optional
+}
+
+/// The policy for blank lines between the cases of a `switch` statement.
+public enum SwitchCaseBlankLinePolicy: String, Codable, Equatable {
+  /// An expansion of the primitive values applied per-boundary: exactly one blank line is
+  /// required between adjacent cases when either case is multiline, and blank lines are
+  /// forbidden between adjacent single-line cases.
+  case auto
+  /// Blank lines between cases are forbidden.
+  case none
+  /// Exactly one blank line is required between all cases.
+  case exactlyOne
+  /// The author chooses where blank lines go between cases.
+  case optional
+}
+
+/// The policy for blank lines around leading `guard` statements in the body of a function,
+  /// closure, or other braced statement.
+public enum GuardPrologueBlankLinePolicy: String, Codable, Equatable {
+  /// An expansion of the primitive values: consecutive leading guard statements are kept tight
+  /// (no blank lines between them) and exactly one blank line separates the final leading guard
+  /// from the rest of the body.
+  case separated
+  /// The author chooses where blank lines go around guard statements.
+  case optional
+}
+
+/// The policy for blank lines around `// MARK:` comments. A MARK comment takes precedence over
+/// the policy of the boundary it appears at.
+public struct MarkBlankLinePolicy: Codable, Equatable {
+  public enum CodingKeys: CodingKey {
+    case before
+    case after
+  }
+
+  /// The policy for blank lines before a `// MARK:` comment.
+  public var before: BlankLinePolicyValue = .exactlyOne
+
+  /// The policy for blank lines between a `// MARK:` comment and the declaration or member that
+  /// follows it.
+  public var after: BlankLinePolicyValue = .none
+
+  public init() {}
+
+  public init(before: BlankLinePolicyValue, after: BlankLinePolicyValue) {
+    self.before = before
+    self.after = after
+  }
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    let defaults = MarkBlankLinePolicy()
+    self.before =
+      try container.decodeIfPresent(BlankLinePolicyValue.self, forKey: .before) ?? defaults.before
+    self.after =
+      try container.decodeIfPresent(BlankLinePolicyValue.self, forKey: .after) ?? defaults.after
+  }
+}
+
+/// Configuration for the `BlankLinePolicy` rule.
+///
+/// Each axis governs blank lines at one kind of syntactic boundary; most accept the primitive
+/// values `none`, `exactlyOne`, and `optional` (see `BlankLinePolicyValue`). Axes that describe
+/// gaps rather than separations (`scopeEdges`, `afterCaseLabel`, `attributes`, `expressions`,
+/// `conditionalCompilationEdges`, and `beforeElse`) only accept `none` and `optional`.
+///
+/// Blank lines inside multi-line string literals and comments are content and are never
+/// modified.
+public struct BlankLinePolicyConfiguration: Codable, Equatable {
+  public enum CodingKeys: CodingKey {
+    case betweenDeclarations
+    case scopeEdges
+    case members
+    case marks
+    case switchCases
+    case afterCaseLabel
+    case attributes
+    case expressions
+    case conditionalCompilationEdges
+    case guardPrologue
+    case beforeElse
+  }
+
+  /// The policy for blank lines between top-level declarations (and between the declarations
+  /// inside a top-level conditional compilation block).
+  public var betweenDeclarations: DeclarationBlankLinePolicy = .scopeSeparated
+
+  /// The policy for blank lines directly after an opening brace and directly before a closing
+  /// brace. Defaults to `optional` so that enabling the overlapping
+  /// `NoEmptyLinesOpeningClosingBraces` rule as well does not produce duplicate findings.
+  public var scopeEdges: BlankLinePolicyValue = .optional
+
+  /// The policy for blank lines between members of a type, extension, or protocol, including
+  /// within `#if` regions.
+  public var members: DeclarationBlankLinePolicy = .scopeSeparated
+
+  /// The policy for blank lines around `// MARK:` comments.
+  public var marks: MarkBlankLinePolicy = MarkBlankLinePolicy()
+
+  /// The policy for blank lines between the cases of a `switch` statement.
+  public var switchCases: SwitchCaseBlankLinePolicy = .auto
+
+  /// The policy for blank lines between a `case` label and its first statement.
+  public var afterCaseLabel: BlankLinePolicyValue = .none
+
+  /// The policy for blank lines between adjacent attributes and between an attribute list and
+  /// the declaration it annotates.
+  public var attributes: BlankLinePolicyValue = .none
+
+  /// The policy for blank lines between the elements of multiline argument lists (including
+  /// tuples) and collection literals.
+  public var expressions: BlankLinePolicyValue = .none
+
+  /// The policy for blank lines directly after a `#if`/`#elseif`/`#else` directive and directly
+  /// before `#endif`.
+  public var conditionalCompilationEdges: BlankLinePolicyValue = .none
+
+  /// The policy for blank lines around leading `guard` statements in the body of a function,
+  /// closure, or other braced statement.
+  public var guardPrologue: GuardPrologueBlankLinePolicy = .separated
+
+  /// The policy for blank lines between `}` and a following `else` or `catch` keyword.
+  public var beforeElse: BlankLinePolicyValue = .none
+
+  public init() {}
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    let defaults = BlankLinePolicyConfiguration()
+    self.betweenDeclarations =
+      try container.decodeIfPresent(DeclarationBlankLinePolicy.self, forKey: .betweenDeclarations)
+      ?? defaults.betweenDeclarations
+    self.scopeEdges =
+      try container.decodeIfPresent(BlankLinePolicyValue.self, forKey: .scopeEdges)
+      ?? defaults.scopeEdges
+    self.members =
+      try container.decodeIfPresent(DeclarationBlankLinePolicy.self, forKey: .members)
+      ?? defaults.members
+    self.marks =
+      try container.decodeIfPresent(MarkBlankLinePolicy.self, forKey: .marks) ?? defaults.marks
+    self.switchCases =
+      try container.decodeIfPresent(SwitchCaseBlankLinePolicy.self, forKey: .switchCases)
+      ?? defaults.switchCases
+    self.afterCaseLabel =
+      try container.decodeIfPresent(BlankLinePolicyValue.self, forKey: .afterCaseLabel)
+      ?? defaults.afterCaseLabel
+    self.attributes =
+      try container.decodeIfPresent(BlankLinePolicyValue.self, forKey: .attributes)
+      ?? defaults.attributes
+    self.expressions =
+      try container.decodeIfPresent(BlankLinePolicyValue.self, forKey: .expressions)
+      ?? defaults.expressions
+    self.conditionalCompilationEdges =
+      try container.decodeIfPresent(BlankLinePolicyValue.self, forKey: .conditionalCompilationEdges)
+      ?? defaults.conditionalCompilationEdges
+    self.guardPrologue =
+      try container.decodeIfPresent(GuardPrologueBlankLinePolicy.self, forKey: .guardPrologue)
+      ?? defaults.guardPrologue
+    self.beforeElse =
+      try container.decodeIfPresent(BlankLinePolicyValue.self, forKey: .beforeElse)
+      ?? defaults.beforeElse
+
+    // Axes that describe gaps rather than separations cannot meaningfully require a blank line.
+    let gapAxes: [(key: CodingKeys, value: BlankLinePolicyValue)] = [
+      (.scopeEdges, scopeEdges),
+      (.afterCaseLabel, afterCaseLabel),
+      (.attributes, attributes),
+      (.expressions, expressions),
+      (.conditionalCompilationEdges, conditionalCompilationEdges),
+      (.beforeElse, beforeElse),
+    ]
+    for (key, value) in gapAxes where value == .exactlyOne {
+      throw DecodingError.dataCorrupted(
+        .init(
+          codingPath: container.codingPath + [key],
+          debugDescription:
+            "'\(key.stringValue)' cannot be 'exactlyOne'; it accepts 'none' or 'optional'."
+        )
+      )
+    }
+  }
 }

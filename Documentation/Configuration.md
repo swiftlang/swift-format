@@ -310,6 +310,42 @@ too long.
 
 ---
 
+### `blankLinePolicy`
+**type:** object
+
+**description:** Configuration for the `BlankLinePolicy` rule, which governs where blank lines are required, forbidden, or left to the author's discretion. Each axis accepts the primitive values `"none"` (blank lines are forbidden and will be removed), `"exactlyOne"` (exactly one blank line is required; it will be inserted if missing and extras removed), and `"optional"` (the author may choose zero or one; the formatter does nothing), unless its bullet below lists a different set; the axes that describe gaps rather than separations (`scopeEdges`, `afterCaseLabel`, `attributes`, `expressions`, `conditionalCompilationEdges`, and `beforeElse`) only accept `"none"` and `"optional"`. Blank lines inside multi-line string literals and comments are content and are never modified.
+
+- `betweenDeclarations` _(string)_: Between top-level declarations (and between the declarations inside a top-level conditional compilation block). In addition to the primitive values, accepts `"scopeSeparated"`: exactly one blank line between scope-like declarations and at kind transitions, and `"optional"` between list-like declarations of the same kind (for example consecutive imports).
+- `scopeEdges` _(string)_: Directly after an opening brace and directly before a closing brace. Set `"none"` to enforce brace edges here instead of via the overlapping `NoEmptyLinesOpeningClosingBraces` rule.
+- `members` _(string)_: Between members of a type, extension, or protocol, including within `#if` regions. In addition to the primitive values, accepts `"scopeSeparated"`: exactly one blank line between scope-like members (functions, initializers, computed properties, nested types) and at kind transitions, and `optional` between list-like members (stored properties, enum cases, typealiases).
+- `marks` _(object)_: Blank lines around `// MARK:` comments, with `before` and `after` sub-values. A MARK comment takes precedence over the policy of the boundary it appears at.
+- `switchCases` _(string)_: Between the cases of a `switch` statement. In addition to the primitive values, accepts `"auto"`: exactly one blank line between adjacent cases when either case is multiline, and `"none"` between adjacent single-line cases.
+- `afterCaseLabel` _(string)_: Between a `case` label and its first statement.
+- `attributes` _(string)_: Between adjacent attributes and between an attribute list and the declaration it annotates.
+- `expressions` _(string)_: Between the elements of multiline argument lists (including tuples) and collection literals.
+- `conditionalCompilationEdges` _(string)_: Directly after a `#if`/`#elseif`/`#else` directive and directly before `#endif`.
+- `guardPrologue` _(string)_: Around leading `guard` statements in the body of a function, closure, or other braced statement. Accepts `"separated"` (consecutive leading guards are kept tight and exactly one blank line follows the final leading guard) or `"optional"`.
+- `beforeElse` _(string)_: Between `}` and a following `else` or `catch` keyword.
+
+**default:**
+```javascript
+{
+    "betweenDeclarations": "scopeSeparated",
+    "scopeEdges": "optional",
+    "members": "scopeSeparated",
+    "marks": { "before": "exactlyOne", "after": "none" },
+    "switchCases": "auto",
+    "afterCaseLabel": "none",
+    "attributes": "none",
+    "expressions": "none",
+    "conditionalCompilationEdges": "none",
+    "guardPrologue": "separated",
+    "beforeElse": "none"
+}
+```
+
+---
+
 > TODO: Add support for enabling/disabling specific syntax transformations in
 > the pipeline.
 
