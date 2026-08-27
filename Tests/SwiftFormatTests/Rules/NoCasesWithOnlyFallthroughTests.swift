@@ -157,6 +157,53 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
     )
   }
 
+  func testCaseWithTrailingCommentOnLabelIsNotCombined() {
+    // A comment trailing the `case` label on the same line, with `fallthrough`
+    // on the following line, must prevent the merge so the comment isn't
+    // silently dropped. Regression test for the case where the comment lives in
+    // the fallthrough statement's leading trivia before the first newline.
+    assertFormatting(
+      NoCasesWithOnlyFallthrough.self,
+      input: """
+        switch x {
+        case 1:  // trail on 1
+          fallthrough
+        case 2:
+          print("hi")
+        default:
+          break
+        }
+        switch y {
+        case 1:  /* block trail */
+          fallthrough
+        case 2:
+          print("hi")
+        default:
+          break
+        }
+        """,
+      expected: """
+        switch x {
+        case 1:  // trail on 1
+          fallthrough
+        case 2:
+          print("hi")
+        default:
+          break
+        }
+        switch y {
+        case 1:  /* block trail */
+          fallthrough
+        case 2:
+          print("hi")
+        default:
+          break
+        }
+        """,
+      findings: []
+    )
+  }
+
   func testNestedSwitches() {
     assertFormatting(
       NoCasesWithOnlyFallthrough.self,
