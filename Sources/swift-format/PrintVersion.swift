@@ -12,5 +12,5 @@
 
 func printVersionInformation() {
   // TODO: Automate updates to this somehow.
-  print("6.3.3")
+  print("6.3.4")
 }
