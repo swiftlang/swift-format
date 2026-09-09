@@ -12,7 +12,7 @@
 
 import Foundation
 import SwiftDiagnostics
-import SwiftFormat
+@_spi(Internal) import SwiftFormat
 import SwiftSyntax
 
 /// The frontend for formatting operations.
@@ -63,7 +63,7 @@ class FormatFrontend: Frontend {
 
         if buffer != source {
           let bufferData = buffer.data(using: .utf8)!  // Conversion to UTF-8 cannot fail
-          try bufferData.write(to: url, options: .atomic)
+          try bufferData.writeAtomicallyPreservingPermissions(to: url)
         }
       } else {
         try formatter.format(

@@ -100,6 +100,7 @@ add_library(SwiftFormat
   Rules/UseTripleSlashForDocumentationComments.swift
   Rules/UseWhereClausesInForLoops.swift
   Rules/ValidateDocumentationComments.swift
+  Utilities/Data+writeAtomicallyPreservingPermissions.swift
   Utilities/FileIterator.swift
   Utilities/GitIgnorePattern.swift
   Utilities/IgnoreManager.swift
