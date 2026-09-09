@@ -12,7 +12,7 @@
 
 import Foundation
 import SwiftDiagnostics
-import SwiftFormat
+@_spi(Internal) import SwiftFormat
 import SwiftSyntax
 
 /// The frontend for formatting operations.
@@ -63,16 +63,7 @@ class FormatFrontend: Frontend {
 
         if buffer != source {
           let bufferData = buffer.data(using: .utf8)!  // Conversion to UTF-8 cannot fail
-          // The atomic write replaces the file, so its mode has to be carried over.
-          let originalPermissions =
-            (try? FileManager.default.attributesOfItem(atPath: url.path))?[.posixPermissions]
-          try bufferData.write(to: url, options: .atomic)
-          if let originalPermissions {
-            try? FileManager.default.setAttributes(
-              [.posixPermissions: originalPermissions],
-              ofItemAtPath: url.path
-            )
-          }
+          try bufferData.writeAtomicallyPreservingPermissions(to: url)
         }
       } else {
         try formatter.format(
