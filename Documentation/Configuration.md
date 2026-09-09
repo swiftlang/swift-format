@@ -8,6 +8,10 @@ used as a command line tool or as an API.
 A `swift-format` configuration file is a JSON file with the following
 top-level keys and values:
 
+Every numeric setting below is a count, a length, or a width, so none of them
+accepts a negative value. A configuration carrying one is rejected with an error
+naming the offending key rather than applied.
+
 ### `version`  
 **type:** number  
 
