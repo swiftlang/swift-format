@@ -153,6 +153,9 @@ as well as the linting-only options below:
     do not prevent a successful exit; only fatal errors (for example, trying to
     lint a file that does not exist) cause the tool to exit unsuccessfully.
 
+*   `--non-fixable-only`: If this option is specified, lint will only emit
+    findings that cannot be fixed automatically by formatting.
+
 ### Options Supported by Formatting and Linting
 
 The following options are supported by both the `format` and `lint`
