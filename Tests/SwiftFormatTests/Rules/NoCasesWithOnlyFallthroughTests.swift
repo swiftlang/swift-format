@@ -367,4 +367,44 @@ final class NoCasesWithOnlyFallthroughTests: LintOrFormatRuleTestCase {
       ]
     )
   }
+
+  func testFallthroughCasesWithTrailingCaseLabelCommentsAreNotCombined() {
+    assertFormatting(
+      NoCasesWithOnlyFallthrough.self,
+      input: """
+        func f(x: Int) {
+          switch x {
+          case 1:  // trail on 1
+            fallthrough
+          case 2:
+            print("hi")
+          case 3:  /* block trail on 3 */
+            fallthrough
+          case 4:
+            print("hello")
+          default:
+            break
+          }
+        }
+        """,
+      expected: """
+        func f(x: Int) {
+          switch x {
+          case 1:  // trail on 1
+            fallthrough
+          case 2:
+            print("hi")
+          case 3:  /* block trail on 3 */
+            fallthrough
+          case 4:
+            print("hello")
+          default:
+            break
+          }
+        }
+        """,
+      findings: []
+    )
+  }
 }
+
