@@ -3485,17 +3485,20 @@ private final class TokenStreamCreator: SyntaxVisitor {
       )
 
     case .blockComment(let text):
-      return (
-        false,
-        [
-          .space(size: 1, flexible: true),
-          .comment(Comment(kind: .block, leadingIndent: nil, text: text), wasEndOfLine: false),
-          // We place a size-0 break after the comment to allow a discretionary newline after
-          // the comment if the user places one here but the comment is otherwise adjacent to a
-          // text token.
-          .break(.same, size: 0),
-        ]
-      )
+      var tokens: [Token] = [
+        .space(size: 1, flexible: true),
+        .comment(Comment(kind: .block, leadingIndent: nil, text: text), wasEndOfLine: false),
+      ]
+      // We place a size-0 break after the comment to allow a discretionary newline after the
+      // comment if the user places one here but the comment is otherwise adjacent to a text
+      // token. It's only added when the user actually wrote that newline: otherwise it is an
+      // elective break in a spot the pretty printer never chose to break, and firing it to
+      // satisfy the line length can separate tokens that have to stay glued together, like a
+      // callee from its argument list.
+      if trivia.dropFirst().contains(where: { $0.isNewline }) {
+        tokens.append(.break(.same, size: 0))
+      }
+      return (false, tokens)
 
     default:
       return (false, [])
@@ -3603,7 +3606,6 @@ private final class TokenStreamCreator: SyntaxVisitor {
           generateEnableFormattingIfNecessary(position..<position + piece.sourceLength)
           appendToken(.comment(Comment(kind: .block, leadingIndent: leadingIndent, text: text), wasEndOfLine: false))
           generateDisableFormattingIfNecessary(position + piece.sourceLength)
-          // There is always a break after the comment to allow a discretionary newline after it.
           var breakSize = 0
           if index + 1 < trivia.endIndex {
             let nextPiece = trivia[index + 1]
@@ -3611,7 +3613,15 @@ private final class TokenStreamCreator: SyntaxVisitor {
             // case the comment is followed by another token instead of a newline.
             if case .spaces = nextPiece { breakSize = 1 }
           }
-          appendToken(.break(.same, size: breakSize))
+          // There is a break after the comment to allow a discretionary newline after it, but only
+          // when the user actually wrote that newline. Otherwise a plain space is used for the same
+          // reason as in `afterTokensForTrailingComment`: an elective break here can separate
+          // tokens that have to stay glued together.
+          if trivia.dropFirst(index + 1).contains(where: { $0.isNewline }) {
+            appendToken(.break(.same, size: breakSize))
+          } else {
+            appendToken(.space(size: breakSize, flexible: true))
+          }
           isStartOfFile = false
           requiresNextNewline = isStandaloneLeadingComment
         } else {
