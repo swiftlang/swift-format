@@ -91,7 +91,7 @@ jobs:
 
           BASE_COMMIT=$(git rev-parse HEAD)
 
-          sed -E -i "s#branch: \"(main|release/[0-9]+\.[0-9]+)\"#from: \"${SWIFT_SYNTAX_TAG}\"#" Package.swift
+          sed -E -i "s#branch: \"(main|release/[0-9]+\.[0-9]+(\.[0-9x]+)?)\"#from: \"${SWIFT_SYNTAX_TAG}\"#" Package.swift
           git add Package.swift
           git commit -m "Change swift-syntax dependency to ${SWIFT_SYNTAX_TAG}"
 
