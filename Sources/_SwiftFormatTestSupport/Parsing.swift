@@ -30,7 +30,7 @@ extension Parser {
     return source.withUTF8 { sourceBytes in
       parse(
         source: sourceBytes,
-        experimentalFeatures: experimentalFeatures
+        languageFeatures: experimentalFeatures
       )
     }
   }
