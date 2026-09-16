@@ -577,11 +577,38 @@ public struct NoAssignmentInExpressionsConfiguration: Codable, Equatable {
 
 /// Configuration for the `OrderedImports` rule.
 public struct OrderedImportsConfiguration: Codable, Equatable {
+  private enum CodingKeys: String, CodingKey {
+    case includeConditionalImports
+    case shouldGroupImports
+    case onlyGroupTestableImports
+  }
+
   /// Determines whether imports within conditional compilation blocks should be ordered.
   public var includeConditionalImports = false
   /// Determines whether imports are separated into groups based on their type.
   public var shouldGroupImports = true
+  /// Determines whether `@testable` imports are the only imports assigned to a group based on
+  /// their attributes.
+  ///
+  /// When false (the default), any import with a `@testable` attribute is placed in the
+  /// `@testable` group and imports with the `@_implementationOnly` attribute are placed in their
+  /// own group. When true, an import is placed in the `@testable` group only if `@testable` is its
+  /// first attribute, no separate group is created for `@_implementationOnly` imports, and imports
+  /// with any other attributes are grouped and sorted together with regular imports. This matches
+  /// the behavior of swift-format 602.0.0 and earlier.
+  public var onlyGroupTestableImports = false
+
   public init() {}
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    self.includeConditionalImports =
+      try container.decodeIfPresent(Bool.self, forKey: .includeConditionalImports) ?? false
+    self.shouldGroupImports =
+      try container.decodeIfPresent(Bool.self, forKey: .shouldGroupImports) ?? true
+    self.onlyGroupTestableImports =
+      try container.decodeIfPresent(Bool.self, forKey: .onlyGroupTestableImports) ?? false
+  }
 }
 
 /// Configuration for the `SwiftTestingNamingConventions` rule.
