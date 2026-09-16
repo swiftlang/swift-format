@@ -92,19 +92,19 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
 
   /// Diagnose documentation comments that don't start with one sentence summary.
   private func diagnoseDocComments(in decl: DeclSyntax) {
-    // Extract the summary from a documentation comment, if it exists, and strip
-    // out any inline code segments (which shouldn't be considered when looking
-    // for the end of a sentence).
-    var inlineCodeRemover = InlineCodeRemover()
+    // Extract the summary from a documentation comment, if it exists, and neutralize any inline
+    // code segments, whose punctuation shouldn't be considered when looking for the end of a
+    // sentence.
+    var inlineCodeSanitizer = InlineCodeSanitizer()
     guard
       let docComment = DocumentationComment(extractedFrom: decl),
       let briefSummary = docComment.briefSummary,
-      let noInlineCodeSummary = inlineCodeRemover.visit(briefSummary) as? Paragraph
+      let sanitizedSummary = inlineCodeSanitizer.visit(briefSummary) as? Paragraph
     else { return }
 
     // For the purposes of checking the sentence structure of the comment, we can operate on the
     // plain text; we don't need any of the styling.
-    let trimmedText = noInlineCodeSummary.plainText
+    let trimmedText = sanitizedSummary.plainText
       .trimmingCharacters(in: .whitespacesAndNewlines)
     let (commentSentences, trailingText) = sentences(in: trimmedText)
     if commentSentences.count == 0 {
@@ -184,7 +184,7 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
   /// halfwidth forms, which are the ordinary full stops in CJK text. The linguistic APIs on Apple
   /// platforms already report all of these as sentence terminators, so recognizing them here keeps
   /// the two implementations in agreement.
-  private static let fullStops: Set<Character> = [
+  fileprivate static let fullStops: Set<Character> = [
     "\u{002E}",  // FULL STOP
     "\u{3002}",  // IDEOGRAPHIC FULL STOP
     "\u{FF0E}",  // FULLWIDTH FULL STOP
@@ -244,8 +244,32 @@ extension Finding.Message {
   }
 }
 
-struct InlineCodeRemover: MarkupRewriter {
+/// Replaces each inline code segment with its text, minus the characters that would otherwise
+/// steer sentence segmentation.
+///
+/// A code segment is written as code, not as prose, so punctuation like the period in
+/// `x.kind` must not terminate a sentence. Dropping the segment altogether would do that too, but
+/// it also joins the words around it, which hides a real sentence boundary from the segmenter when
+/// a sentence begins with a code segment.
+struct InlineCodeSanitizer: MarkupRewriter {
+  /// The characters that are removed from an inline code segment.
+  ///
+  /// Besides the sentence terminators themselves, this contains the quotation marks that the
+  /// linguistic tagger pairs up: an unbalanced quotation mark inside a code segment would make it
+  /// treat the rest of the summary as quoted text and swallow the terminators in it.
+  private static let charactersToRemove: Set<Character> =
+    BeginDocumentationCommentWithOneLineSummary.fullStops.union([
+      "!",
+      "?",
+      "\"",
+      "'",
+      "\u{2018}",  // LEFT SINGLE QUOTATION MARK
+      "\u{2019}",  // RIGHT SINGLE QUOTATION MARK
+      "\u{201C}",  // LEFT DOUBLE QUOTATION MARK
+      "\u{201D}",  // RIGHT DOUBLE QUOTATION MARK
+    ])
+
   mutating func visitInlineCode(_ inlineCode: InlineCode) -> Markup? {
-    nil
+    Text(inlineCode.code.filter { !Self.charactersToRemove.contains($0) })
   }
 }
