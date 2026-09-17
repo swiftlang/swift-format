@@ -41,8 +41,6 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
         continue
       }
 
-      diagnose(.onlyOneVariableDeclaration(specifier: varDecl.bindingSpecifier.text), on: varDecl)
-
       // Visit the decl recursively to make sure nested code block items in the
       // bindings (for example, an initializer expression that contains a
       // closure expression) are transformed first before we rewrite the decl
@@ -54,7 +52,14 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
           semicolon: nil
         )
       }
-      newItems.append(contentsOf: splitter.nodes(bySplitting: visitedDecl))
+      let splitNodes = splitter.nodes(bySplitting: visitedDecl)
+      let canSplitDeclaration = !splitNodes.contains(where: codeBlockItemHasMultipleVariableBindings)
+      diagnose(
+        .onlyOneVariableDeclaration(specifier: varDecl.bindingSpecifier.text),
+        on: varDecl,
+        isFixable: canSplitDeclaration
+      )
+      newItems.append(contentsOf: splitNodes)
     }
 
     return CodeBlockItemListSyntax(newItems)

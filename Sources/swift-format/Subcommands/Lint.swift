@@ -32,6 +32,11 @@ extension SwiftFormatCommand {
     )
     var strict: Bool = false
 
+    @Flag(
+      help: "Only emit findings that cannot be fixed automatically by formatting."
+    )
+    var nonFixableOnly: Bool = false
+
     @OptionGroup(visibility: .hidden)
     var performanceMeasurementOptions: PerformanceMeasurementsOptions
 
@@ -40,6 +45,7 @@ extension SwiftFormatCommand {
         let frontend = LintFrontend(
           configurationOptions: configurationOptions,
           lintFormatOptions: lintOptions,
+          nonFixableOnly: nonFixableOnly,
           treatWarningsAsErrors: strict
         )
         frontend.run()

@@ -65,6 +65,37 @@ extension Rule {
     anchor: FindingAnchor = .start,
     notes: [Finding.Note] = []
   ) {
+    emitFinding(message, on: node, anchor: anchor, isFixable: nil, notes: notes)
+  }
+
+  /// Emits the given finding.
+  ///
+  /// - Parameters:
+  ///   - message: The finding message to emit.
+  ///   - node: The syntax node to which the finding should be attached. The finding's location will
+  ///     be set to the start of the node (excluding leading trivia, unless `leadingTriviaIndex` is
+  ///     provided).
+  ///   - anchor: The part of the node where the finding should be anchored. Defaults to the start
+  ///     of the node's content (after any leading trivia).
+  ///   - isFixable: Whether the finding can be corrected automatically by formatting the source.
+  ///   - notes: An array of notes that provide additional detail about the finding.
+  public func diagnose<SyntaxType: SyntaxProtocol>(
+    _ message: Finding.Message,
+    on node: SyntaxType?,
+    anchor: FindingAnchor = .start,
+    isFixable: Bool,
+    notes: [Finding.Note] = []
+  ) {
+    emitFinding(message, on: node, anchor: anchor, isFixable: isFixable, notes: notes)
+  }
+
+  private func emitFinding<SyntaxType: SyntaxProtocol>(
+    _ message: Finding.Message,
+    on node: SyntaxType?,
+    anchor: FindingAnchor,
+    isFixable: Bool?,
+    notes: [Finding.Note]
+  ) {
     let syntaxLocation: SourceLocation?
     if let node = node {
       switch anchor {
@@ -90,6 +121,7 @@ extension Rule {
       message,
       category: category,
       location: syntaxLocation.flatMap(Finding.Location.init),
+      isFixable: isFixable ?? (self is SyntaxFormatRule),
       notes: notes
     )
   }

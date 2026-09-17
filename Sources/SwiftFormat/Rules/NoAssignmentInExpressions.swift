@@ -31,7 +31,11 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
       && !isStandaloneAssignmentStatement(node)
       && !isInAllowedFunction(node)
     {
-      diagnose(.moveAssignmentToOwnStatement, on: node)
+      diagnose(
+        .moveAssignmentToOwnStatement,
+        on: node,
+        isFixable: canMoveAssignmentToOwnStatement(node)
+      )
     }
     return ExprSyntax(node)
   }
@@ -95,6 +99,15 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
       return nil
     }
     return isAssignmentExpression(infixOperatorExpr) ? infixOperatorExpr : nil
+  }
+
+  /// Returns a value indicating whether the formatter can move the given assignment into its own
+  /// statement.
+  private func canMoveAssignmentToOwnStatement(_ node: InfixOperatorExprSyntax) -> Bool {
+    guard let returnStmt = Syntax(node).parent?.as(ReturnStmtSyntax.self) else {
+      return false
+    }
+    return assignmentExpression(from: returnStmt)?.id == node.id
   }
 
   /// Returns a value indicating whether the given infix operator expression is an assignment

@@ -38,12 +38,14 @@ final class FindingEmitter {
   ///   - category: A value that groups the finding into a category.
   ///   - location: The source location where the finding was encountered. In rare cases where the
   ///     finding does not apply to a particular location in the source code, this may be nil.
+  ///   - isFixable: Whether the finding can be corrected automatically by formatting the source.
   ///   - notes: Notes that provide additional detail about the finding, possibly referring to other
   ///     related locations in the source file.
   public func emit(
     _ message: Finding.Message,
     category: FindingCategorizing,
     location: Finding.Location? = nil,
+    isFixable: Bool = false,
     notes: [Finding.Note] = []
   ) {
     guard let consumer = self.consumer else { return }
@@ -53,6 +55,7 @@ final class FindingEmitter {
         category: category,
         message: message,
         location: location,
+        isFixable: isFixable,
         notes: notes
       )
     )
