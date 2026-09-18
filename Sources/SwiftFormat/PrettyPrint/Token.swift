@@ -136,11 +136,21 @@ enum NewlineBehavior {
   /// specifies whether a user-entered discretionary newline should be respected.
   case elective(ignoresDiscretionary: Bool)
 
+  /// An elective newline whose discretionary form should fire without forcing any enclosing
+  /// groups to break. This is useful when a user may split a construct at a point that should not
+  /// change the layout decisions made before that point.
+  case electiveIgnoringGroupLength
+
   /// Breaking onto a newline `count` times is required, unless it would create more blank lines
   /// than are allowed by the current configuration. Any blank lines over the configured limit are
   /// discarded. `discretionary` tracks whether these newlines were created based on user-entered
   /// discretionary newlines, from the source, or were inserted by the formatter.
   case soft(count: Int, discretionary: Bool)
+
+  /// A required newline that does not contribute the maximum line length to enclosing groups.
+  /// This is produced when a discretionary newline is preserved for
+  /// ``electiveIgnoringGroupLength``.
+  case softIgnoringGroupLength(count: Int, discretionary: Bool)
 
   /// Breaking onto a newline `count` times is required and any limits on blank lines are
   /// **ignored**. Exactly `count` newlines are always printed, regardless of existing consecutive

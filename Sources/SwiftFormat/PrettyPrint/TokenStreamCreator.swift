@@ -2083,7 +2083,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
     before(
       node.colon,
       tokens: .break(.close(mustBreak: false), size: 0),
-      .break(.open(kind: .continuation)),
+      // A user may place a discretionary newline before the colon, but preserving it should not
+      // force the question-mark break on an otherwise fitting ternary expression.
+      .break(.open(kind: .continuation), newlines: .electiveIgnoringGroupLength),
       .open
     )
     after(node.colon, tokens: .space)
@@ -3648,7 +3650,15 @@ private final class TokenStreamCreator: SyntaxVisitor {
         guard !isStartOfFile else { break }
 
         if requiresNextNewline || (config.respectsExistingLineBreaks && isDiscretionaryNewlineAllowed(before: token)) {
-          appendNewlines(.soft(count: count, discretionary: true))
+          let newlines: NewlineBehavior
+          if !token.leadingTrivia.hasAnyComments,
+            shouldPreserveNewlineWithoutForcingEarlierBreaks(before: token)
+          {
+            newlines = .softIgnoringGroupLength(count: count, discretionary: true)
+          } else {
+            newlines = .soft(count: count, discretionary: true)
+          }
+          appendNewlines(newlines)
         } else {
           // Even if discretionary line breaks are not being respected, we still respect multiple
           // line breaks in order to keep blank separator lines that the user might want.
@@ -3731,6 +3741,17 @@ private final class TokenStreamCreator: SyntaxVisitor {
       return foundBreakFirst
     }
     return isBreakMoreRecentThanNonbreakingContent(tokens) ?? true
+  }
+
+  /// Returns whether a discretionary newline before `token` should be retained without affecting
+  /// the enclosing groups' layout decisions.
+  private func shouldPreserveNewlineWithoutForcingEarlierBreaks(before token: TokenSyntax) -> Bool {
+    return beforeMap[token]?.contains {
+      if case .break(_, _, .electiveIgnoringGroupLength) = $0 {
+        return true
+      }
+      return false
+    } ?? false
   }
 
   /// Appends the newlines to the token stream.
@@ -4646,6 +4667,15 @@ extension NewlineBehavior {
       // `lhs` is either also elective or a required newline, which overwrites elective.
       return lhs
 
+    case (.electiveIgnoringGroupLength, .soft(let count, let discretionary)):
+      return .softIgnoringGroupLength(count: count, discretionary: discretionary)
+    case (.electiveIgnoringGroupLength, .electiveIgnoringGroupLength):
+      return .electiveIgnoringGroupLength
+    case (.electiveIgnoringGroupLength, _):
+      return rhs
+    case (_, .electiveIgnoringGroupLength):
+      return lhs
+
     case (.escaped, _):
       return rhs
     case (_, .escaped):
@@ -4663,8 +4693,27 @@ extension NewlineBehavior {
       }
       return .soft(count: mergedCount, discretionary: lhsDiscretionary || rhsDiscretionary)
 
+    case (.softIgnoringGroupLength(let count, let discretionary), .soft(let rhsCount, let rhsDiscretionary)),
+      (.soft(let rhsCount, let rhsDiscretionary), .softIgnoringGroupLength(let count, let discretionary)):
+      return .softIgnoringGroupLength(
+        count: max(count, rhsCount),
+        discretionary: discretionary || rhsDiscretionary
+      )
+    case (
+      .softIgnoringGroupLength(let lhsCount, let lhsDiscretionary),
+      .softIgnoringGroupLength(let rhsCount, let rhsDiscretionary)
+    ):
+      return .softIgnoringGroupLength(
+        count: max(lhsCount, rhsCount),
+        discretionary: lhsDiscretionary || rhsDiscretionary
+      )
+
     case (.soft(let softCount, _), .hard(let hardCount)),
       (.hard(let hardCount), .soft(let softCount, _)):
+      return .hard(count: max(softCount, hardCount))
+
+    case (.softIgnoringGroupLength(let softCount, _), .hard(let hardCount)),
+      (.hard(let hardCount), .softIgnoringGroupLength(let softCount, _)):
       return .hard(count: max(softCount, hardCount))
 
     case (.hard(let lhsCount), .hard(let rhsCount)):
