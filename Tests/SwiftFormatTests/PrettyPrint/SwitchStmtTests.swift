@@ -90,6 +90,48 @@ final class SwitchStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 35)
   }
 
+  func testCommentBeforeFirstCaseItemIsIdempotent() {
+    let input =
+      """
+      func f(_ x: Int) -> Bool {
+        switch x {
+        case
+          // line
+          0: true
+        case
+          /* block */
+          // line
+          1: false
+        default: false
+        }
+      }
+      """
+
+    let expected =
+      """
+      func f(_ x: Int) -> Bool {
+        switch x {
+        case   // line
+        0: true
+        case /* block */
+        // line
+        1: false
+        default: false
+        }
+      }
+
+      """
+
+    var config = Configuration.forTesting
+    config.spacesBeforeEndOfLineComments = 3
+    assertPrettyPrintEqual(
+      input: input,
+      expected: expected,
+      linelength: 100,
+      configuration: config
+    )
+  }
+
   func testSwitchEmptyCases() {
     let input =
       """
