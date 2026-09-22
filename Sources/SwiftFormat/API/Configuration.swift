@@ -50,6 +50,7 @@ public struct Configuration: Codable, Equatable {
     case indentBlankLines
     case orderedImports
     case swiftTestingNamingConventions
+    case reflowComments
   }
 
   /// A dictionary containing the default enabled/disabled states of rules, keyed by the rules'
@@ -311,6 +312,9 @@ public struct Configuration: Codable, Equatable {
   /// Configuration for the `SwiftTestingNamingConventions` rule.
   public var swiftTestingNamingConventions: SwiftTestingNamingConventionsConfiguration
 
+  /// Configuration for the `ReflowComments` rule.
+  public var reflowComments: ReflowCommentsConfiguration
+
   /// Creates a new `Configuration` by loading it from a configuration file.
   public init(contentsOf url: URL) throws {
     let data = try Data(contentsOf: url)
@@ -467,6 +471,13 @@ public struct Configuration: Codable, Equatable {
       )
       ?? defaults.swiftTestingNamingConventions
 
+    self.reflowComments =
+    try container.decodeIfPresent(
+      ReflowCommentsConfiguration.self,
+      forKey: .reflowComments
+    )
+    ?? defaults.reflowComments
+
     // If the `rules` key is not present at all, default it to the built-in set
     // so that the behavior is the same as if the configuration had been
     // default-initialized. To get an empty rules dictionary, one can explicitly
@@ -509,6 +520,7 @@ public struct Configuration: Codable, Equatable {
     try container.encode(indentBlankLines, forKey: .indentBlankLines)
     try container.encode(orderedImports, forKey: .orderedImports)
     try container.encode(swiftTestingNamingConventions, forKey: .swiftTestingNamingConventions)
+    try container.encode(reflowComments, forKey: .reflowComments)
     try container.encode(rules, forKey: .rules)
   }
 
@@ -573,6 +585,57 @@ public struct NoAssignmentInExpressionsConfiguration: Codable, Equatable {
   ]
 
   public init() {}
+}
+
+/// Configuration for the `ReflowComments` rule.
+public struct ReflowCommentsConfiguration: Codable, Equatable {
+  /// The kinds of comments that the rule is allowed to reflow.
+  public enum CommentKind: String, Codable, CaseIterable, Sendable {
+    /// Regular line comments introduced by `//`.
+    case line
+    /// Documentation line comments introduced by `///`.
+    case docLine
+  }
+
+  /// The kinds of comments that should be reflowed.
+  ///
+  /// Defaults to every kind. Remove a kind to leave those comments untouched; for example, drop
+  /// `.docLine` to reflow only regular `//` line comments.
+  public var reflowedCommentKinds: Set<CommentKind> = Set(CommentKind.allCases)
+
+  /// Line content prefixes that are never merged with an adjacent comment line.
+  ///
+  /// Defaults cover common license header terms and Xcode source annotations.
+  public var preservedLinePrefixes: [String] = [
+    "MARK:", "TODO:", "FIXME:",
+    "Copyright", "Licensed",
+  ]
+
+  private enum CodingKeys: String, CodingKey {
+    case reflowedCommentKinds
+    case preservedLinePrefixes
+  }
+
+  public init() {}
+
+  public init(from decoder: any Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    let defaults = ReflowCommentsConfiguration()
+    self.reflowedCommentKinds =
+      try container.decodeIfPresent(Set<CommentKind>.self, forKey: .reflowedCommentKinds)
+      ?? defaults.reflowedCommentKinds
+    self.preservedLinePrefixes =
+      try container.decodeIfPresent([String].self, forKey: .preservedLinePrefixes)
+      ?? defaults.preservedLinePrefixes
+  }
+
+  public func encode(to encoder: any Encoder) throws {
+    var container = encoder.container(keyedBy: CodingKeys.self)
+    // Encode the set in a stable declaration order so that dumped configurations are deterministic.
+    let orderedKinds = CommentKind.allCases.filter(reflowedCommentKinds.contains)
+    try container.encode(orderedKinds, forKey: .reflowedCommentKinds)
+    try container.encode(preservedLinePrefixes, forKey: .preservedLinePrefixes)
+  }
 }
 
 /// Configuration for the `OrderedImports` rule.

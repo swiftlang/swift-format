@@ -46,6 +46,7 @@ public let ruleNameCache: [ObjectIdentifier: String] = [
   ObjectIdentifier(OneVariableDeclarationPerLine.self): "OneVariableDeclarationPerLine",
   ObjectIdentifier(OnlyOneTrailingClosureArgument.self): "OnlyOneTrailingClosureArgument",
   ObjectIdentifier(OrderedImports.self): "OrderedImports",
+  ObjectIdentifier(ReflowComments.self): "ReflowComments",
   ObjectIdentifier(ReplaceForEachWithForLoop.self): "ReplaceForEachWithForLoop",
   ObjectIdentifier(ReturnVoidInsteadOfEmptyTuple.self): "ReturnVoidInsteadOfEmptyTuple",
   ObjectIdentifier(SwiftTestingNamingConventions.self): "SwiftTestingNamingConventions",

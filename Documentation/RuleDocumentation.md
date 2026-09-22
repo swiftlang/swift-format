@@ -41,6 +41,7 @@ Here's the list of available rules:
 - [OneVariableDeclarationPerLine](#OneVariableDeclarationPerLine)
 - [OnlyOneTrailingClosureArgument](#OnlyOneTrailingClosureArgument)
 - [OrderedImports](#OrderedImports)
+- [ReflowComments](#ReflowComments)
 - [ReplaceForEachWithForLoop](#ReplaceForEachWithForLoop)
 - [ReturnVoidInsteadOfEmptyTuple](#ReturnVoidInsteadOfEmptyTuple)
 - [SwiftTestingNamingConventions](#SwiftTestingNamingConventions)
@@ -430,6 +431,29 @@ Lint: If an import appears anywhere other than the beginning of the file it resi
 Format: Imports will be reordered and (optionally) grouped at the top of the file.
 
 `OrderedImports` rule can format your code automatically.
+
+### ReflowComments
+
+Joins comments that were hard-wrapped across multiple lines back into one line when the combined
+text still fits within the configured line length.
+
+The rule reflows only line comments (`//`) and documentation line comments (`///`); it leaves
+block comments (`/* ... */` and `/** ... */`) untouched. It parses the body of each comment as
+Markdown and joins only lines that belong to the same paragraph. The Markdown parser recognizes
+lists, headings, indented and fenced code blocks, block quotes, and thematic breaks, and the
+rule leaves all of them untouched, along with blank lines between paragraphs. The rule also
+never merges "divider" lines that contain no words (for example `//===----===//`) or lines
+matching `reflowComments.preservedLinePrefixes`. If a comment block contains a `//===...===//`
+file header, the rule leaves the whole block alone. `reflowComments.reflowedCommentKinds`
+controls which kinds of comments the rule reflows.
+
+Lint: If two adjacent comment lines in the same paragraph can be joined without exceeding
+      `lineLength`, a lint error is raised.
+
+Format: Adjacent comment lines in the same paragraph that can be joined without exceeding
+        `lineLength` are merged.
+
+`ReflowComments` rule can format your code automatically.
 
 ### ReplaceForEachWithForLoop
 
