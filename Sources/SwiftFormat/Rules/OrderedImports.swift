@@ -23,6 +23,11 @@ import SwiftSyntax
 /// By default, imports within conditional compilation blocks (`#if`, `#elseif`, `#else`) are not ordered.
 /// This behavior can be controlled via the `orderedImports.includeConditionalImports` configuration option.
 ///
+/// The `orderedImports.onlyGroupTestableImports` configuration option restores the grouping behavior of
+/// swift-format 602.0.0 and earlier: only imports whose first attribute is `@testable` are placed in a
+/// separate group, and imports with any other attributes are grouped and sorted together with regular
+/// imports.
+///
 /// Lint: If an import appears anywhere other than the beginning of the file it resides in,
 ///       not lexicographically ordered, or (optionally) not in the appropriate import group, a lint error is
 ///       raised.
@@ -437,6 +442,8 @@ private func generateLines(
       let sortable = context.shouldFormat(OrderedImports.self, node: Syntax(block))
       var blockWithoutTrailingTrivia = block
       blockWithoutTrailingTrivia.trailingTrivia = []
+      currentLine.onlyGroupTestableImports =
+        context.configuration.orderedImports.onlyGroupTestableImports
       currentLine.syntaxNode = .importCodeBlock(blockWithoutTrailingTrivia, sortable: sortable)
     } else if block.item.is(IfConfigDeclSyntax.self) {
       if currentLine.syntaxNode != nil {
@@ -571,6 +578,11 @@ private class Line {
     case ifConfigCodeBlock(CodeBlockItemSyntax)
   }
 
+  /// Determines whether only imports whose first attribute is `@testable` are treated specially
+  /// when computing this line's import type. Mirrors the value of the
+  /// `orderedImports.onlyGroupTestableImports` configuration option.
+  var onlyGroupTestableImports = false
+
   /// Stores line comments. `syntaxNode` need not be defined, since a comment can exist by itself on
   /// a line.
   var leadingTrivia: [TriviaPiece] = []
@@ -660,6 +672,21 @@ private class Line {
 
   /// Returns a `LineType` the represents the type of import from the given import decl.
   private func importType(of importDecl: ImportDeclSyntax) -> LineType {
+    if onlyGroupTestableImports {
+      // Match the behavior of swift-format 602.0.0 and earlier: only an import whose first
+      // attribute is `@testable` is treated specially, and there is no separate group for
+      // `@_implementationOnly` imports.
+      if let attr = importDecl.attributes.firstToken(viewMode: .sourceAccurate),
+        attr.tokenKind == .atSign,
+        attr.nextToken(viewMode: .sourceAccurate)?.text == "testable"
+      {
+        return .testableImport
+      }
+      if importDecl.importKindSpecifier != nil {
+        return .declImport
+      }
+      return .regularImport
+    }
 
     let importIdentifierTypes = importDecl.attributes.compactMap { $0.as(AttributeSyntax.self)?.attributeName }
     let importAttributeNames = importIdentifierTypes.compactMap { $0.as(IdentifierTypeSyntax.self)?.name.text }
