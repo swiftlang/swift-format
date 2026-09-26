@@ -588,6 +588,8 @@ public class PrettyPrinter {
     var delimIndexStack = [Int]()
     // Keep a running total of the token lengths.
     var total = 0
+    // Keep track of the indices of the .commaDelimitedRegionStart tokens of the enclosing regions.
+    var commaDelimitedRegionStartStack = [Int]()
 
     // Calculate token lengths
     for (i, token) in tokens.enumerated() {
@@ -700,16 +702,21 @@ public class PrettyPrinter {
 
       case .commaDelimitedRegionStart:
         lengths.append(0)
+        commaDelimitedRegionStartStack.append(i)
 
       case .commaDelimitedRegionEnd(let isCollection, _, let isSingleElement):
-        // The token's length is only necessary when a comma will be printed, but it's impossible to
-        // know at this point whether the region-start token will be on the same line as this token.
-        // Without adding this length to the total, it would be possible for this comma to be
-        // printed in column `maxLineLength`. Unfortunately, this can cause breaks to fire
-        // unnecessarily when the enclosed tokens comma would fit within `maxLineLength`.
+        let regionStart = commaDelimitedRegionStartStack.popLast() ?? -1
+        // The token's length is only necessary when a comma will be printed, which only happens when
+        // the region is split across lines. In that case the comma ends up on the same line as the
+        // last element, so its length is added to the unresolved breaks and groups that started
+        // inside the region (including the break before the last element). It isn't added to
+        // `total`, because that would also count it toward the breaks and groups enclosing the
+        // region, forcing them to break when the region would fit on one line without the comma.
         if shouldHandleCommaDelimitedRegion(isCollection: isCollection) == true {
           let length = isSingleElement ? 0 : 1
-          total += length
+          for index in delimIndexStack where index > regionStart {
+            lengths[index] += length
+          }
           lengths.append(length)
         } else {
           lengths.append(0)
