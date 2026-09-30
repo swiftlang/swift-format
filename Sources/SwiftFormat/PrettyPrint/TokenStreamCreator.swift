@@ -845,8 +845,17 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // same effect. If instead the opening and closing tokens were omitted completely in the absence
     // of statements, comments within the empty case would be incorrectly indented to the same level
     // as the case label.
-    if node.label.lastToken(viewMode: .sourceAccurate) != node.lastToken(viewMode: .sourceAccurate) {
-      after(node.lastToken(viewMode: .sourceAccurate), tokens: afterLastTokenTokens)
+    //
+    // The closing tokens cannot be attached after the last token of the case if that token belongs
+    // to a formatter-ignored item: the item is emitted as a single verbatim token and its tokens
+    // are never visited, so an `after` group on them would be dropped and the open tokens above
+    // would be left unclosed. In that case, attach the closing tokens before the following token
+    // instead, which is always visited.
+    let lastToken = node.lastToken(viewMode: .sourceAccurate)
+    if node.label.lastToken(viewMode: .sourceAccurate) != lastToken,
+      let lastToken, !isFormatterIgnored(lastToken)
+    {
+      after(lastToken, tokens: afterLastTokenTokens)
     } else {
       before(node.nextToken(viewMode: .sourceAccurate), tokens: afterLastTokenTokens)
     }
