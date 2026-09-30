@@ -13,6 +13,34 @@
 import SwiftFormat
 
 final class AssignmentExprTests: PrettyPrintTestCase {
+  func testShortMultilineMemberAccessAssignment() {
+    let input =
+      """
+      func f(_ target: Builder) {
+        let result = target
+          .configured()
+        _ = result
+      }
+      """
+    let expected =
+      """
+      func f(_ target: Builder) {
+        let result = target.configured()
+        _ = result
+      }
+
+      """
+
+    var configuration = Configuration.forTesting
+    configuration.respectsExistingLineBreaks = true
+    assertPrettyPrintEqual(
+      input: input,
+      expected: expected,
+      linelength: 80,
+      configuration: configuration
+    )
+  }
+
   func testBasicAssignmentExprs() {
     let input =
       """
