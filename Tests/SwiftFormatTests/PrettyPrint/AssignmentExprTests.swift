@@ -41,6 +41,29 @@ final class AssignmentExprTests: PrettyPrintTestCase {
     )
   }
 
+  func testLongMultilineMemberAccessAssignmentStillWraps() {
+    let input =
+      """
+      func f(_ target: Builder) {
+        let result = target
+          .reallyLongConfiguredMethodNameThatDoesNotFit()
+        _ = result
+      }
+      """
+    let expected =
+      """
+      func f(_ target: Builder) {
+        let result =
+          target
+          .reallyLongConfiguredMethodNameThatDoesNotFit()
+        _ = result
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
+  }
+
   func testBasicAssignmentExprs() {
     let input =
       """
