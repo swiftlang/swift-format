@@ -4308,7 +4308,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
       // inserted when visiting the parent node instead so that the break is inserted before any
       // scoping tokens (e.g. `contextualBreakingStart`, `open`).
       if memberAccessExpr.base != nil && expr.parent?.isProtocol(CallingExprSyntaxProtocol.self) != true {
-        before(memberAccessExpr.period, tokens: .break(.contextual, size: 0))
+        before(memberAccessExpr.period, tokens: contextualBreakBefore(memberAccessExpr))
       }
       var hasCompoundExpression = false
       if let base = memberAccessExpr.base {
@@ -4354,7 +4354,10 @@ private final class TokenStreamCreator: SyntaxVisitor {
           if isNestedInPostfixIfConfig(node: Syntax(calledMemberAccessExpr)) {
             before(calledMemberAccessExpr.period, tokens: [.break(.same, size: 0)])
           } else {
-            before(calledMemberAccessExpr.period, tokens: [.break(.contextual, size: 0)])
+            before(
+              calledMemberAccessExpr.period,
+              tokens: contextualBreakBefore(calledMemberAccessExpr)
+            )
           }
         }
         before(calledMemberAccessExpr.period, tokens: beforeTokens)
@@ -4377,6 +4380,54 @@ private final class TokenStreamCreator: SyntaxVisitor {
     after(expr.lastToken(viewMode: .sourceAccurate), tokens: .contextualBreakingEnd)
     let hasCompoundExpression = !expr.is(DeclReferenceExprSyntax.self)
     return (hasCompoundExpression, false)
+  }
+
+  private func contextualBreakBefore(_ memberAccess: MemberAccessExprSyntax) -> [Token] {
+    guard shouldDiscardExistingLineBreak(before: memberAccess) else {
+      return [.break(.contextual, size: 0)]
+    }
+    // A source break should not keep an otherwise short assignment split across lines. The
+    // contextual break remains available when line wrapping is required.
+    return [
+      .break(.contextual, size: 0, newlines: .elective(ignoresDiscretionary: true))
+    ]
+  }
+
+  /// Returns whether `memberAccess` has a source line break before its period and is part of a
+  /// pattern binding's initializer.
+  private func shouldDiscardExistingLineBreak(before memberAccess: MemberAccessExprSyntax) -> Bool {
+    guard memberAccess.period.leadingTrivia.containsNewlines else { return false }
+
+    var child = Syntax(memberAccess)
+    var parent = child.parent
+    while let node = parent {
+      if let initializer = node.as(InitializerClauseSyntax.self) {
+        return initializer.parent?.is(PatternBindingSyntax.self) == true
+          && Syntax(initializer.value).id == child.id
+      } else if let functionCall = node.as(FunctionCallExprSyntax.self),
+        Syntax(functionCall.calledExpression).id == child.id
+      {
+        child = node
+      } else if let parentMemberAccess = node.as(MemberAccessExprSyntax.self),
+        let base = parentMemberAccess.base,
+        Syntax(base).id == child.id
+      {
+        child = node
+      } else if let modifiedExpr = node.asProtocol(KeywordModifiedExprSyntaxProtocol.self),
+        Syntax(modifiedExpr.expression).id == child.id
+      {
+        child = node
+      } else if let postfixIfConfig = node.as(PostfixIfConfigExprSyntax.self),
+        let base = postfixIfConfig.base,
+        Syntax(base).id == child.id
+      {
+        child = node
+      } else {
+        return false
+      }
+      parent = node.parent
+    }
+    return false
   }
 
   /// Marks a comma-delimited region for the given list, inserting start/end tokens
