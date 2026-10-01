@@ -21,6 +21,11 @@ import SwiftSyntax
 /// the parameter labels. It also only checks identifiers at the declaration site, not at usage
 /// sites.
 ///
+/// As an exception, a property whose name is a leading-underscore "backing" variable for another
+/// property declared in the same type is allowed. For example, `_count` is permitted when a sibling
+/// property named `count` exists, since the underscore is being used intentionally to name a backing
+/// store rather than to signal access level.
+///
 /// Lint: Declaring an identifier with a leading underscore yields a lint error.
 @_spi(Rules)
 public final class NoLeadingUnderscores: SyntaxLintRule {
@@ -88,7 +93,11 @@ public final class NoLeadingUnderscores: SyntaxLintRule {
   }
 
   public override func visit(_ node: IdentifierPatternSyntax) -> SyntaxVisitorContinueKind {
-    diagnoseIfNameStartsWithUnderscore(node.identifier)
+    // A property whose name backs another property declared in the same type (e.g. `_count` backing
+    // a computed `count`) is a common, intentional pattern, so it's exempt from this rule.
+    if !isBackingProperty(node) {
+      diagnoseIfNameStartsWithUnderscore(node.identifier)
+    }
     return .visitChildren
   }
 
@@ -121,6 +130,67 @@ public final class NoLeadingUnderscores: SyntaxLintRule {
     if text.count > 1 && text.first == "_" {
       diagnose(.doNotStartWithUnderscore(identifier: text), on: token)
     }
+  }
+
+  /// Returns whether `pattern` names a property with a leading underscore that "backs" another
+  /// property declared in the same type.
+  ///
+  /// For example, in
+  /// ```swift
+  /// struct S {
+  ///   private var _count: Int = 0
+  ///   var count: Int { _count }
+  /// }
+  /// ```
+  /// the name `_count` is permitted because a sibling property named `count` (the same name without
+  /// the leading underscore) is declared in the same type. Using a leading underscore to name a
+  /// backing store is a common and accepted pattern, so the rule doesn't flag it.
+  ///
+  /// Only properties that are direct members of a type (or extension) are considered; local
+  /// variables and top-level bindings never qualify. The counterpart lookup is limited to the same
+  /// member block, so a property declared in a separate extension is not matched.
+  private func isBackingProperty(_ pattern: IdentifierPatternSyntax) -> Bool {
+    let name = pattern.identifier.text
+    guard name.count > 1, name.first == "_" else { return false }
+
+    // The pattern must be the name of a property that is a direct member of a type:
+    // IdentifierPattern <- PatternBinding <- PatternBindingList <- VariableDecl <- MemberBlockItem
+    guard let binding = pattern.parent?.as(PatternBindingSyntax.self),
+      let bindingList = binding.parent?.as(PatternBindingListSyntax.self),
+      let variableDecl = bindingList.parent?.as(VariableDeclSyntax.self),
+      let enclosingBlock = enclosingMemberBlock(of: variableDecl)
+    else {
+      return false
+    }
+
+    return propertyExists(named: String(name.dropFirst()), in: enclosingBlock)
+  }
+
+  /// Returns the member block of the type that directly contains `decl`, or `nil` if `decl` is not a
+  /// direct member of a type (for example, if it's a local variable or a top-level binding).
+  private func enclosingMemberBlock(of decl: VariableDeclSyntax) -> MemberBlockSyntax? {
+    guard let item = decl.parent?.as(MemberBlockItemSyntax.self),
+      let itemList = item.parent?.as(MemberBlockItemListSyntax.self),
+      let memberBlock = itemList.parent?.as(MemberBlockSyntax.self)
+    else {
+      return nil
+    }
+    return memberBlock
+  }
+
+  /// Returns whether any property declared directly in `memberBlock` has the given `name`.
+  private func propertyExists(named name: String, in memberBlock: MemberBlockSyntax) -> Bool {
+    for member in memberBlock.members {
+      guard let variableDecl = member.decl.as(VariableDeclSyntax.self) else { continue }
+      for binding in variableDecl.bindings {
+        if let identifierPattern = binding.pattern.as(IdentifierPatternSyntax.self),
+          identifierPattern.identifier.text == name
+        {
+          return true
+        }
+      }
+    }
+    return false
   }
 }
 
