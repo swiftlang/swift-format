@@ -1095,6 +1095,35 @@ final class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: input, linelength: 80)
   }
 
+  func testBlockCommentDoesNotBreakGluedTokensApart() {
+    let input =
+      """
+      func test() throws {
+        throw MyError/*a comment long enough to wrap the line*/()
+        let x = values/*a comment long enough to wrap the line*/[0]
+        let y = a /*a comment long enough to wrap the line*/
+          + b
+      }
+      """
+
+    let expected =
+      """
+      func test() throws {
+        throw
+          MyError /*a comment long enough to wrap the line*/()
+        let x =
+          values /*a comment long enough to wrap the line*/[
+            0]
+        let y =
+          a /*a comment long enough to wrap the line*/
+          + b
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+  }
+
   func testUnexpectedUnicodeCharacters() {
     let input =
       """
