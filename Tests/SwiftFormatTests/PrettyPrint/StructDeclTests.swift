@@ -13,6 +13,27 @@
 import SwiftFormat
 
 final class StructDeclTests: PrettyPrintTestCase {
+  func testModifierOnSeparateLineDoesNotIndentDeclaration() {
+    let input =
+      """
+      nonisolated
+      struct Car {
+        let make: String
+      }
+      """
+
+    let expected =
+      """
+      nonisolated
+      struct Car {
+        let make: String
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
+  }
+
   func testBasicStructDeclarations() {
     let input =
       """
