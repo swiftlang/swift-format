@@ -111,6 +111,58 @@ final class IgnoreNodeTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
+  func testIgnoreStatementInSwitchCase() {
+    let input =
+      """
+      switch foo {
+      case .bar:
+        // swift-format-ignore
+        baz()
+      case .quux:
+        baz()
+      }
+      """
+
+    let expected =
+      """
+      switch foo {
+      case .bar:
+        // swift-format-ignore
+        baz()
+      case .quux:
+        baz()
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+  }
+
+  func testIgnoreLastStatementInSwitchCase() {
+    let input =
+      """
+      switch foo {
+      case .bar:
+        baz()
+        // swift-format-ignore
+        quux()
+      }
+      """
+
+    let expected =
+      """
+      switch foo {
+      case .bar:
+        baz()
+        // swift-format-ignore
+        quux()
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+  }
+
   func testIgnoreMemberDeclListItems() {
     let input =
       """
