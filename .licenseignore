@@ -9,3 +9,4 @@
 **/*.modulemap
 CODEOWNERS
 Package.swift
+Scripts/git-swift-format
