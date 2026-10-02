@@ -586,6 +586,9 @@ public class PrettyPrinter {
   public func prettyPrint() -> String {
     // Keep track of the indices of the .open and .break token locations.
     var delimIndexStack = [Int]()
+    // Keep track of the delimiter stack at the start of each comma-delimited region. Delimiters
+    // that remain active through the end of a region decide whether that region becomes multiline.
+    var commaDelimitedRegionDelimiterStack = [[Int]]()
     // Keep a running total of the token lengths.
     var total = 0
 
@@ -700,17 +703,24 @@ public class PrettyPrinter {
 
       case .commaDelimitedRegionStart:
         lengths.append(0)
+        commaDelimitedRegionDelimiterStack.append(delimIndexStack)
 
       case .commaDelimitedRegionEnd(let isCollection, _, let isSingleElement):
-        // The token's length is only necessary when a comma will be printed, but it's impossible to
-        // know at this point whether the region-start token will be on the same line as this token.
-        // Without adding this length to the total, it would be possible for this comma to be
-        // printed in column `maxLineLength`. Unfortunately, this can cause breaks to fire
-        // unnecessarily when the enclosed tokens comma would fit within `maxLineLength`.
-        if shouldHandleCommaDelimitedRegion(isCollection: isCollection) == true {
-          let length = isSingleElement ? 0 : 1
-          total += length
-          lengths.append(length)
+        guard let delimiterIndicesAtStart = commaDelimitedRegionDelimiterStack.popLast() else {
+          fatalError("Found trailing comma end with no corresponding start.")
+        }
+
+        // A trailing comma is only inserted if the region breaks across multiple lines. Exclude its
+        // width from delimiters that enclose the entire region so it cannot cause that first break,
+        // while retaining the width in nested break lengths that must reserve space once the region
+        // is multiline.
+        if shouldHandleCommaDelimitedRegion(isCollection: isCollection) == true && !isSingleElement {
+          for (startIndex, endIndex) in zip(delimiterIndicesAtStart, delimIndexStack) {
+            guard startIndex == endIndex else { break }
+            lengths[startIndex] -= 1
+          }
+          total += 1
+          lengths.append(1)
         } else {
           lengths.append(0)
         }
