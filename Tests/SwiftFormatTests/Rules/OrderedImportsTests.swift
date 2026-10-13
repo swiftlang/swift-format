@@ -312,6 +312,95 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
     )
   }
 
+  func testSwiftToolsVersionCommentStaysOnFirstLine() {
+    // SwiftPM requires the tools version comment to be the first line of the manifest, so it must
+    // not move along with the import directly below it.
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        // swift-tools-version:5.7
+        import PackageDescription
+        1️⃣import Foundation
+
+        let package = Package(name: "Example")
+        """,
+      expected: """
+        // swift-tools-version:5.7
+        import Foundation
+        import PackageDescription
+
+        let package = Package(name: "Example")
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
+      ]
+    )
+  }
+
+  func testSwiftToolsVersionCommentWithHoistedImport() {
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        // swift-tools-version:5.9
+        #if canImport(Foundation)
+        import Foundation
+        #endif
+        1️⃣import PackageDescription
+        """,
+      expected: """
+        // swift-tools-version:5.9
+        import PackageDescription
+
+        #if canImport(Foundation)
+        import Foundation
+        #endif
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "place imports at the top of the file")
+      ]
+    )
+  }
+
+  func testSwiftToolsVersionCommentFollowedByImportComment() {
+    // Only the tools version comment stays at the top; the comment directly above an import still
+    // moves with that import.
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        // swift-tools-version: 6.0
+        // The manifest API.
+        import PackageDescription
+        1️⃣import Foundation
+        """,
+      expected: """
+        // swift-tools-version: 6.0
+        import Foundation
+        // The manifest API.
+        import PackageDescription
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
+      ]
+    )
+  }
+
+  func testSwiftToolsVersionCommentWithSortedImports() {
+    // No blank line is inserted after the tools version comment.
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        // swift-tools-version:5.7
+        import Foundation
+        import PackageDescription
+        """,
+      expected: """
+        // swift-tools-version:5.7
+        import Foundation
+        import PackageDescription
+        """
+    )
+  }
+
   func testNonHeaderComment() {
     let input =
       """
