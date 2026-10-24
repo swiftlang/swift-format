@@ -17,11 +17,22 @@ extension Data {
   ///
   /// An atomic write replaces the file rather than rewriting it, so the result is a new file created at the process
   /// umask and any mode the original carried is lost.
+  #if os(WASI)
+  @available(
+    *,
+    unavailable,
+    message: "WASI does not support atomic file-writing (temporary directories) and POSIX permissions."
+  )
+  #endif
   @_spi(Internal) public func writeAtomicallyPreservingPermissions(to url: URL) throws {
+    #if os(WASI)
+    fatalError("WASI does not support atomic file-writing (temporary directories) and POSIX permissions.")
+    #else
     let permissions = (try? FileManager.default.attributesOfItem(atPath: url.path))?[.posixPermissions]
     try write(to: url, options: .atomic)
     if let permissions {
       try? FileManager.default.setAttributes([.posixPermissions: permissions], ofItemAtPath: url.path)
     }
+    #endif
   }
 }
