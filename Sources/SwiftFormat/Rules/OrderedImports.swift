@@ -744,7 +744,10 @@ private struct ParsedImportPath: Comparable, CustomStringConvertible {
   }
 
   static func < (lhs: ParsedImportPath, rhs: ParsedImportPath) -> Bool {
-    return lhs.components.lexicographicallyPrecedes(rhs.components)
+    return lhs.components.lexicographicallyPrecedes(rhs.components) {
+      let ll = $0.lowercased(), rl = $1.lowercased()
+      return ll != rl ? ll < rl : $0 < $1
+    }
   }
 
   static func == (lhs: ParsedImportPath, rhs: ParsedImportPath) -> Bool {

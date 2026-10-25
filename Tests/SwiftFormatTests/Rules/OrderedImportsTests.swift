@@ -220,6 +220,23 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
     )
   }
 
+  func testCaseInsensitiveSorting() {
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import RDARFramework
+        1️⃣import RadarFoundation
+        """,
+      expected: """
+        import RadarFoundation
+        import RDARFramework
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+      ]
+    )
+  }
+
   func testSeparatedFileHeader() {
     assertFormatting(
       OrderedImports.self,
@@ -578,7 +595,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         1️⃣import CoreLocation  // The 2nd CL import has a comment here too.
         // Comment about ZeeFramework.
         import ZeeFramework
-        import foo
+        3️⃣import foo
         // Second comment about ZeeFramework.
         2️⃣import ZeeFramework  // This one has a trailing comment too.
         foo()
@@ -589,12 +606,12 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         import CoreLocation  // This import must stay.
         // This is the second CoreLocation import.
         import CoreLocation  // The 2nd CL import has a comment here too.
+        import foo
         // UIKit does UI Stuff?
         import UIKit
         // Comment about ZeeFramework.
         // Second comment about ZeeFramework.
         import ZeeFramework  // This one has a trailing comment too.
-        import foo
 
         foo()
         """,
@@ -603,6 +620,7 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         // is removed so there should only be a warning to remove it.
         FindingSpec("1️⃣", message: "remove this duplicate import"),
         FindingSpec("2️⃣", message: "remove this duplicate import"),
+        FindingSpec("3️⃣", message: "sort import statements lexicographically"),
       ]
     )
   }
