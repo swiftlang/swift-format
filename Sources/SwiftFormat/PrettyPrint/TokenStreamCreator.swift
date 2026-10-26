@@ -4222,6 +4222,16 @@ private final class TokenStreamCreator: SyntaxVisitor {
         // operator characters as a single operator.
         if case .postfixOperator? = token.previousToken(viewMode: .all)?.tokenKind { return true }
 
+        // A block comment between the left operand and the operator counts as whitespace for
+        // operator-fixity classification. If we remove the space between the comment and the
+        // operator, the parser sees whitespace on only the left side and treats the operator as
+        // a prefix operator, producing non-compilable output.
+        let prevTrailing = token.previousToken(viewMode: .sourceAccurate)?.trailingTrivia ?? []
+        for piece in prevTrailing + token.leadingTrivia {
+          if case .blockComment = piece { return true }
+          if case .docBlockComment = piece { return true }
+        }
+
         switch token.nextToken(viewMode: .all)?.tokenKind {
         case .prefixOperator?, .period?: return true
         default: return false
