@@ -10,6 +10,8 @@
 //
 //===----------------------------------------------------------------------===//
 
+import SwiftFormat
+
 final class TernaryExprTests: PrettyPrintTestCase {
   func testTernaryExprs() {
     let input =
@@ -64,6 +66,66 @@ final class TernaryExprTests: PrettyPrintTestCase {
           details: "Another comment")
 
       """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
+  }
+
+  func testLongTypedVariableDeclarationIsIdempotent() {
+    let input =
+      """
+      struct Outer {
+          func test() {
+              let ffiStructKeepAlive: (FixedByteArrayConverter<FixedByteArrayHelper15>.KeepAlive?, IdentityConverter<Int32>.KeepAlive?, )? = (media_id_keepalive != nil || cdn_keepalive != nil || false) ? (media_id_keepalive, cdn_keepalive,) : nil
+          }
+      }
+      """
+    let expected =
+      """
+      struct Outer {
+          func test() {
+              let ffiStructKeepAlive:
+                  (FixedByteArrayConverter<FixedByteArrayHelper15>.KeepAlive?, IdentityConverter<Int32>.KeepAlive?, )? =
+                      (media_id_keepalive != nil || cdn_keepalive != nil || false) ? (media_id_keepalive, cdn_keepalive,)
+                      : nil
+          }
+      }
+
+      """
+    var configuration = Configuration.forTesting
+    configuration.indentation = .spaces(4)
+    configuration.indentConditionalCompilationBlocks = false
+    configuration.lineBreakBeforeEachArgument = true
+    configuration.lineBreakBetweenDeclarationAttributes = true
+    configuration.prioritizeKeepingFunctionOutputTogether = true
+
+    assertPrettyPrintEqual(
+      input: input,
+      expected: expected,
+      linelength: 120,
+      configuration: configuration
+    )
+  }
+
+  func testCommentBeforeColonStaysOnItsOwnLine() {
+    let input =
+      """
+      let value =
+        condition
+        ? trueValue
+        // Explain the false branch.
+        : falseValue
+      """
+
+    assertPrettyPrintEqual(input: input, expected: input + "\n", linelength: 100)
+  }
+
+  func testDiscretionaryNewlineBeforeColonDoesNotForceQuestionMarkBreak() {
+    let input =
+      """
+      let result = condition ? trueValue
+        : falseValue
+      """
+    let expected = input + "\n"
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
   }
