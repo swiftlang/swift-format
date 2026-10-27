@@ -420,7 +420,7 @@ private func generateLines(
     for piece in block.leadingTrivia {
       switch piece {
       // Create new Line objects when we encounter newlines.
-      case .newlines(let N):
+      case .newlines(let N), .carriageReturns(let N), .carriageReturnLineFeeds(let N):
         for _ in 0..<N {
           appendNewLine()
         }
