@@ -25,6 +25,8 @@ public protocol Rule {
   /// Whether this rule is opt-in, meaning it is disabled by default.
   static var isOptIn: Bool { get }
 
+  /// The scope of the syntax node that this rule operates on.
+  static var affectedContent: AffectedContent { get }
   /// Creates a new Rule in a given context.
   init(context: Context)
 }
@@ -45,9 +47,31 @@ public enum FindingAnchor {
   case trailingTrivia(Trivia.Index)
 }
 
+/// Describes the portion of a syntax node that a rule targets.
+@_spi(Rules)
+public enum AffectedContent {
+  /// The rule operates on the non-trivia content of the node.
+  case content
+
+  /// The rule operates on the leading trivia of the node.
+  case leadingTrivia
+
+  /// The rule operates on the trailing trivia of the node (such as end-of-line comments).
+  case trailingTrivia
+
+  /// The rule operates on either leading or trailing trivia of the node.
+  case trivia
+
+  /// The rule operates on the entire node, including all trivia and content.
+  case all
+}
+
 extension Rule {
   /// By default, the `ruleName` is just the name of the implementing rule class.
   public static var ruleName: String { String("\(self)".split(separator: ".").last!) }
+
+  /// By default, rules target the non-trivia content of a syntax node.
+  public static var affectedContent: AffectedContent { .content }
 
   /// Emits the given finding.
   ///
