@@ -170,8 +170,12 @@ final class ArrayDeclTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(
       input: """
         let a = [
-          "String"1️⃣,
+          "String",
         ]
+        let a = [
+          "String"
+        ]
+        let a = [11️⃣,]
         let a = [1, 2, 32️⃣,]
         let a: [String] = [
           "One", "Two", "Three", "Four", "Five",
@@ -182,6 +186,10 @@ final class ArrayDeclTests: PrettyPrintTestCase {
         let a = [
           "String",
         ]
+        let a = [
+          "String"
+        ]
+        let a = [1,]
         let a = [1, 2, 3,]
         let a: [String] = [
           "One", "Two", "Three", "Four", "Five",
@@ -275,7 +283,7 @@ final class ArrayDeclTests: PrettyPrintTestCase {
         ),
       ]
       let a = [
-        ("this ", "string", "is long")
+        ("this ", "string", "is long"),
       ]
       let a = [
         ("this ", "string", "is long")

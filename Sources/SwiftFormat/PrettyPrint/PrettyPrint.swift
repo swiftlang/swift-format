@@ -517,22 +517,24 @@ public class PrettyPrinter {
         fatalError("Found trailing comma end with no corresponding start.")
       }
 
-      // We need to specifically disable trailing commas on elements of single item collections.
+      // We need to specifically disable trailing comma insertion on elements of single item
+      // collections.
       // The syntax library can't distinguish a collection's initializer (where the elements are
       // types) from a literal (where the elements are the contents of a collection instance).
-      // We never want to add a trailing comma in an initializer so we disable trailing commas on
-      // single element collections.
+      // We never want to add a trailing comma in an initializer, but we also don't want to force
+      // the removal of a trailing comma from a single item collection literal, so we neither add
+      // nor remove already-present trailing commas on multi-line single element collections.
       if let shouldHandleCommaDelimitedRegion = shouldHandleCommaDelimitedRegion(isCollection: isCollection) {
         let shouldHaveTrailingComma =
-          startLineNumber != openCloseBreakCompensatingLineNumber && !isSingleElement
+          startLineNumber != openCloseBreakCompensatingLineNumber
           && shouldHandleCommaDelimitedRegion
-        if shouldHaveTrailingComma && !hasTrailingComma {
+        if shouldHaveTrailingComma && !hasTrailingComma && !isSingleElement {
           diagnose(.addTrailingComma, category: .trailingComma)
         } else if !shouldHaveTrailingComma && hasTrailingComma {
           diagnose(.removeTrailingComma, category: .trailingComma)
         }
 
-        let shouldWriteComma = whitespaceOnly ? hasTrailingComma : shouldHaveTrailingComma
+        let shouldWriteComma = whitespaceOnly || isSingleElement ? hasTrailingComma : shouldHaveTrailingComma
         if shouldWriteComma {
           outputBuffer.write(",")
         }
