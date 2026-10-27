@@ -18,13 +18,17 @@ public struct FindingSpec {
   /// The message text associated with the finding.
   public var message: String
 
+  /// Whether the finding should be marked as automatically fixable.
+  public var isFixable: Bool?
+
   /// A description of a `Note` that should be associated with this finding.
   public var notes: [NoteSpec]
 
   /// Creates a new `FindingSpec` with the given values.
-  public init(_ marker: String = "1️⃣", message: String, notes: [NoteSpec] = []) {
+  public init(_ marker: String = "1️⃣", message: String, isFixable: Bool? = nil, notes: [NoteSpec] = []) {
     self.marker = marker
     self.message = message
+    self.isFixable = isFixable
     self.notes = notes
   }
 }

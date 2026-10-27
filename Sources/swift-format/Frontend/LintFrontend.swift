@@ -17,10 +17,27 @@ import SwiftSyntax
 
 /// The frontend for linting operations.
 class LintFrontend: Frontend {
+  /// Whether findings that can be fixed automatically by formatting should be suppressed.
+  private let nonFixableOnly: Bool
+
+  init(
+    configurationOptions: ConfigurationOptions,
+    lintFormatOptions: LintFormatOptions,
+    nonFixableOnly: Bool = false,
+    treatWarningsAsErrors: Bool = false
+  ) {
+    self.nonFixableOnly = nonFixableOnly
+    super.init(
+      configurationOptions: configurationOptions,
+      lintFormatOptions: lintFormatOptions,
+      treatWarningsAsErrors: treatWarningsAsErrors
+    )
+  }
+
   override func processFile(_ fileToProcess: FileToProcess) {
     let linter = SwiftLinter(
       configuration: fileToProcess.configuration,
-      findingConsumer: diagnosticsEngine.consumeFinding
+      findingConsumer: consumeFinding
     )
     linter.debugOptions = debugOptions
 
@@ -54,5 +71,10 @@ class LintFrontend: Frontend {
     } catch {
       diagnosticsEngine.emitError("Unable to lint \(url.relativePath): \(error.localizedDescription).")
     }
+  }
+
+  private func consumeFinding(_ finding: Finding) {
+    guard !nonFixableOnly || !finding.isFixable else { return }
+    diagnosticsEngine.consumeFinding(finding)
   }
 }
