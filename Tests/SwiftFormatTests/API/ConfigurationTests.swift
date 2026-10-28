@@ -135,4 +135,147 @@ final class ConfigurationTests: XCTestCase {
     XCTAssertEqual(config, expected)
     #endif
   }
+
+  func testDecodingFileScopedDeclarationPrivacyConfiguration() throws {
+    let testCases: [String: FileScopedDeclarationPrivacyConfiguration.AccessLevel] = [
+      "{ }": .private,
+      "{ \"accessLevel\": \"private\" }": .private,
+      "{ \"accessLevel\": \"fileprivate\" }": .fileprivate,
+    ]
+
+    for (jsonString, expectedAccessLevel) in testCases {
+      let jsonData = """
+        {
+          "fileScopedDeclarationPrivacy": \(jsonString)
+        }
+        """.data(using: .utf8)!
+
+      let jsonDecoder = JSONDecoder()
+      #if canImport(Darwin) || compiler(>=6)
+      jsonDecoder.allowsJSON5 = true
+      #endif
+      let config = try jsonDecoder.decode(Configuration.self, from: jsonData)
+      XCTAssertEqual(config.fileScopedDeclarationPrivacy.accessLevel, expectedAccessLevel)
+    }
+  }
+
+  func testDecodingNoAssignmentInExpressionsConfiguration() throws {
+    let testCases: [String: [String]] = [
+      "{ }": ["XCTAssertNoThrow"],
+      "{ \"allowedFunctions\": [] }": [],
+      "{ \"allowedFunctions\": [\"XCTAssertNoThrow\"] }": ["XCTAssertNoThrow"],
+      "{ \"allowedFunctions\": [\"XCTAssertNoThrow\", \"Gday\"] }": ["XCTAssertNoThrow", "Gday"],
+    ]
+
+    for (jsonString, expectedAllowedFunctions) in testCases {
+      let jsonData = """
+        {
+          "noAssignmentInExpressions": \(jsonString)
+        }
+        """.data(using: .utf8)!
+
+      let jsonDecoder = JSONDecoder()
+      #if canImport(Darwin) || compiler(>=6)
+      jsonDecoder.allowsJSON5 = true
+      #endif
+      let config = try jsonDecoder.decode(Configuration.self, from: jsonData)
+      XCTAssertEqual(config.noAssignmentInExpressions.allowedFunctions, expectedAllowedFunctions)
+    }
+  }
+
+  func testDecodingOrderedImportsConfiguration() throws {
+    typealias ExpectedValues = (includeConditionalImports: Bool, shouldGroupImports: Bool)
+    let testCases: [String: ExpectedValues] = [
+      "{ }": (false, true),
+      "{ \"includeConditionalImports\": false }": (false, true),
+      "{ \"includeConditionalImports\": true }": (true, true),
+      "{ \"shouldGroupImports\": false }": (false, false),
+      "{ \"shouldGroupImports\": true }": (false, true),
+      "{ \"includeConditionalImports\": false, \"shouldGroupImports\": false }": (false, false),
+      "{ \"includeConditionalImports\": true, \"shouldGroupImports\": true }": (true, true),
+    ]
+
+    for (jsonString, expectedValues) in testCases {
+      let jsonData = """
+        {
+          "orderedImports": \(jsonString)
+        }
+        """.data(using: .utf8)!
+
+      let jsonDecoder = JSONDecoder()
+      #if canImport(Darwin) || compiler(>=6)
+      jsonDecoder.allowsJSON5 = true
+      #endif
+      let config = try jsonDecoder.decode(Configuration.self, from: jsonData)
+      XCTAssertEqual(config.orderedImports.includeConditionalImports, expectedValues.includeConditionalImports)
+      XCTAssertEqual(config.orderedImports.shouldGroupImports, expectedValues.shouldGroupImports)
+    }
+  }
+
+  func testDecodingSwiftTestingNamingConventionsConfiguration() throws {
+    typealias ExpectedValues = (
+      forbidSuiteWithoutParameters: Bool,
+      forbidSuiteDescription: Bool,
+      forbidTestDescription: Bool,
+      requireRawIdentifierTestNames: Bool
+    )
+
+    let testCases: [String: ExpectedValues] = [
+      "{ }": (false, false, false, false),
+      "{ \"forbidSuiteWithoutParameters\": false }": (false, false, false, false),
+      "{ \"forbidSuiteWithoutParameters\": true }": (true, false, false, false),
+      "{ \"forbidSuiteDescription\": false }": (false, false, false, false),
+      "{ \"forbidSuiteDescription\": true }": (false, true, false, false),
+      "{ \"forbidTestDescription\": false }": (false, false, false, false),
+      "{ \"forbidTestDescription\": true }": (false, false, true, false),
+      "{ \"requireRawIdentifierTestNames\": false }": (false, false, false, false),
+      "{ \"requireRawIdentifierTestNames\": true }": (false, false, false, true),
+      """
+      {
+        \"forbidSuiteWithoutParameters\": false,
+        \"forbidSuiteDescription\": false,
+        \"forbidTestDescription\": false,
+        \"requireRawIdentifierTestNames\": false
+      }
+      """: (false, false, false, false),
+      """
+      {
+        \"forbidSuiteWithoutParameters\": true,
+        \"forbidSuiteDescription\": true,
+        \"forbidTestDescription\": true,
+        \"requireRawIdentifierTestNames\": true
+      }
+      """: (true, true, true, true),
+    ]
+
+    for (jsonString, expectedValues) in testCases {
+      let jsonData = """
+        {
+          "swiftTestingNamingConventions": \(jsonString)
+        }
+        """.data(using: .utf8)!
+
+      let jsonDecoder = JSONDecoder()
+      #if canImport(Darwin) || compiler(>=6)
+      jsonDecoder.allowsJSON5 = true
+      #endif
+      let config = try jsonDecoder.decode(Configuration.self, from: jsonData)
+      XCTAssertEqual(
+        config.swiftTestingNamingConventions.forbidSuiteWithoutParameters,
+        expectedValues.forbidSuiteWithoutParameters
+      )
+      XCTAssertEqual(
+        config.swiftTestingNamingConventions.forbidSuiteDescription,
+        expectedValues.forbidSuiteDescription
+      )
+      XCTAssertEqual(
+        config.swiftTestingNamingConventions.forbidTestDescription,
+        expectedValues.forbidTestDescription
+      )
+      XCTAssertEqual(
+        config.swiftTestingNamingConventions.requireRawIdentifierTestNames,
+        expectedValues.requireRawIdentifierTestNames
+      )
+    }
+  }
 }

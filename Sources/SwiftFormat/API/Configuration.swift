@@ -540,6 +540,10 @@ public struct Configuration: Codable, Equatable {
 
 /// Configuration for the `FileScopedDeclarationPrivacy` rule.
 public struct FileScopedDeclarationPrivacyConfiguration: Codable, Equatable {
+  private enum CodingKeys: CodingKey {
+    case accessLevel
+  }
+
   public enum AccessLevel: String, Codable {
     /// Private file-scoped declarations should be declared `private`.
     ///
@@ -559,10 +563,23 @@ public struct FileScopedDeclarationPrivacyConfiguration: Codable, Equatable {
   public var accessLevel: AccessLevel = .private
 
   public init() {}
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    let defaults = FileScopedDeclarationPrivacyConfiguration()
+
+    self.accessLevel =
+      try container.decodeIfPresent(AccessLevel.self, forKey: .accessLevel)
+      ?? defaults.accessLevel
+  }
 }
 
 /// Configuration for the `NoAssignmentInExpressions` rule.
 public struct NoAssignmentInExpressionsConfiguration: Codable, Equatable {
+  private enum CodingKeys: CodingKey {
+    case allowedFunctions
+  }
+
   /// A list of function names where assignments are allowed to be embedded in expressions that are
   /// passed as parameters to that function.
   public var allowedFunctions: [String] = [
@@ -573,19 +590,55 @@ public struct NoAssignmentInExpressionsConfiguration: Codable, Equatable {
   ]
 
   public init() {}
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    let defaults = NoAssignmentInExpressionsConfiguration()
+
+    self.allowedFunctions =
+      try container.decodeIfPresent([String].self, forKey: .allowedFunctions)
+      ?? defaults.allowedFunctions
+  }
 }
 
 /// Configuration for the `OrderedImports` rule.
 public struct OrderedImportsConfiguration: Codable, Equatable {
+  private enum CodingKeys: CodingKey {
+    case includeConditionalImports
+    case shouldGroupImports
+  }
+
   /// Determines whether imports within conditional compilation blocks should be ordered.
   public var includeConditionalImports = false
+
   /// Determines whether imports are separated into groups based on their type.
   public var shouldGroupImports = true
+
   public init() {}
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    let defaults = OrderedImportsConfiguration()
+
+    self.includeConditionalImports =
+      try container.decodeIfPresent(Bool.self, forKey: .includeConditionalImports)
+      ?? defaults.includeConditionalImports
+
+    self.shouldGroupImports =
+      try container.decodeIfPresent(Bool.self, forKey: .shouldGroupImports)
+      ?? defaults.shouldGroupImports
+  }
 }
 
 /// Configuration for the `SwiftTestingNamingConventions` rule.
 public struct SwiftTestingNamingConventionsConfiguration: Codable, Equatable {
+  private enum CodingKeys: CodingKey {
+    case forbidSuiteWithoutParameters
+    case forbidSuiteDescription
+    case forbidTestDescription
+    case requireRawIdentifierTestNames
+  }
+
   /// If true, `@Suite` should not be used if it doesn't specify any arguments; that is, marking a
   /// test type with `@Suite` is unnecessary because any type with `@Test`s is automatically a
   /// suite.
@@ -601,4 +654,24 @@ public struct SwiftTestingNamingConventionsConfiguration: Codable, Equatable {
   public var requireRawIdentifierTestNames = false
 
   public init() {}
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    let defaults = SwiftTestingNamingConventionsConfiguration()
+    self.forbidSuiteWithoutParameters =
+      try container.decodeIfPresent(Bool.self, forKey: .forbidSuiteWithoutParameters)
+      ?? defaults.forbidSuiteWithoutParameters
+
+    self.forbidSuiteDescription =
+      try container.decodeIfPresent(Bool.self, forKey: .forbidSuiteDescription)
+      ?? defaults.forbidSuiteDescription
+
+    self.forbidTestDescription =
+      try container.decodeIfPresent(Bool.self, forKey: .forbidTestDescription)
+      ?? defaults.forbidTestDescription
+
+    self.requireRawIdentifierTestNames =
+      try container.decodeIfPresent(Bool.self, forKey: .requireRawIdentifierTestNames)
+      ?? defaults.requireRawIdentifierTestNames
+  }
 }
