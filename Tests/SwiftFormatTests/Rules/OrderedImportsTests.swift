@@ -259,6 +259,59 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
     )
   }
 
+  func testShebangWithFileHeaderAndImport() {
+    // The newline that ends a shebang line is leading trivia on the first
+    // statement; reordering must not pull the file header up onto the shebang.
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        #!/usr/bin/swift
+        //
+        // some file comment
+
+        import Foundation
+
+        someCode()
+        """,
+      expected: """
+        #!/usr/bin/swift
+        //
+        // some file comment
+
+        import Foundation
+
+        someCode()
+        """
+    )
+  }
+
+  func testShebangWithReorderedImports() {
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        #!/usr/bin/swift
+        // File header.
+
+        import Zebra
+        1️⃣import Apple
+
+        someCode()
+        """,
+      expected: """
+        #!/usr/bin/swift
+        // File header.
+
+        import Apple
+        import Zebra
+
+        someCode()
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
+      ]
+    )
+  }
+
   func testNonHeaderComment() {
     let input =
       """
@@ -285,6 +338,30 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       findings: [
         FindingSpec("1️⃣", message: "sort import statements lexicographically")
       ]
+    )
+  }
+
+  func testCommentBetweenImportGroupsIsPreserved() {
+    // A free-standing comment, separated from the surrounding imports by
+    // blank lines, was previously dropped entirely when the rule ran the
+    // import group through its line/trivia normalisation. See
+    // https://github.com/swiftlang/swift-format/issues/1080.
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import A
+
+        // Comment
+
+        import B
+        """,
+      expected: """
+        import A
+        import B
+
+        // Comment
+        """,
+      findings: []
     )
   }
 
@@ -609,16 +686,70 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
     )
   }
 
-  func testConditionalImports() {
+  func testConditionalImportsWhenEnabled() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.includeConditionalImports = true
+
     assertFormatting(
       OrderedImports.self,
       input: """
         import Zebras
         1️⃣import Apples
         #if canImport(Darwin)
+          import Foundation
+          2️⃣import Darwin
+        #elseif canImport(Glibc)
+          import Glibc
+          3️⃣import Foundation
+        #endif
+        4️⃣import Aardvarks
+
+        foo()
+        bar()
+        baz()
+        """,
+      expected: """
+        import Aardvarks
+        import Apples
+        import Zebras
+
+        #if canImport(Darwin)
+          import Darwin
+          import Foundation
+        #elseif canImport(Glibc)
+          import Foundation
+          import Glibc
+        #endif
+
+        foo()
+        bar()
+        baz()
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("2️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("3️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("4️⃣", message: "place imports at the top of the file"),
+      ],
+      configuration: configuration
+    )
+  }
+
+  func testConditionalImportsWhenDisabled() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.includeConditionalImports = false
+
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import Zebras
+        1️⃣import Apples
+        #if canImport(Darwin)
+          import Foundation
           import Darwin
         #elseif canImport(Glibc)
           import Glibc
+          import Foundation
         #endif
         2️⃣import Aardvarks
 
@@ -632,9 +763,11 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         import Zebras
 
         #if canImport(Darwin)
+          import Foundation
           import Darwin
         #elseif canImport(Glibc)
           import Glibc
+          import Foundation
         #endif
 
         foo()
@@ -644,7 +777,57 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
       findings: [
         FindingSpec("1️⃣", message: "sort import statements lexicographically"),
         FindingSpec("2️⃣", message: "place imports at the top of the file"),
-      ]
+      ],
+      configuration: configuration
+    )
+  }
+
+  func testNestedConditionalImports() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.includeConditionalImports = true
+
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import A
+        #if FOO
+          import D
+          #if BAR
+            import F
+            1️⃣import E
+          #else
+            import H
+            2️⃣import G
+          #endif
+          3️⃣5️⃣import C
+        #endif
+        4️⃣import B
+        """,
+      expected: """
+        import A
+        import B
+
+        #if FOO
+          import C
+          import D
+
+          #if BAR
+            import E
+            import F
+          #else
+            import G
+            import H
+          #endif
+        #endif
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("2️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("3️⃣", message: "place imports at the top of the file"),
+        FindingSpec("4️⃣", message: "place imports at the top of the file"),
+        FindingSpec("5️⃣", message: "sort import statements lexicographically"),
+      ],
+      configuration: configuration
     )
   }
 
@@ -840,6 +1023,271 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
         """,
       findings: [
         FindingSpec("1️⃣", message: "sort import statements lexicographically")
+      ]
+    )
+  }
+
+  func testPreservesEmptyConditionalCompilationBlock() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.includeConditionalImports = true
+
+    let code = """
+      import Apples
+      import Zebras
+
+      #if FOO
+      #endif
+
+      foo()
+      """
+
+    assertFormatting(
+      OrderedImports.self,
+      input: code,
+      expected: code,
+      configuration: configuration
+    )
+  }
+
+  func testPreservesHeaderCommentInConditionalCompilationBlock() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.includeConditionalImports = true
+
+    let code = """
+      import Apples
+
+      #if FOO
+        // Performing FOO-specific logic
+
+        import Foundation
+      #endif
+
+      foo()
+      """
+
+    assertFormatting(
+      OrderedImports.self,
+      input: code,
+      expected: code,
+      configuration: configuration
+    )
+  }
+
+  func testPreservesCommentsOnlyInConditionalCompilationBlock() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.includeConditionalImports = true
+
+    let code = """
+      import Apples
+
+      #if FOO
+        // Just a comment
+        // Another comment
+      #endif
+
+      foo()
+      """
+
+    assertFormatting(
+      OrderedImports.self,
+      input: code,
+      expected: code,
+      configuration: configuration
+    )
+  }
+
+  func testOrderingWithGroupingDisabled() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.shouldGroupImports = false
+
+    let code = """
+      import Core
+      @testable import func Darwin.C.isatty
+      import enum Darwin.D.isatty
+      import Foundation
+      @_implementationOnly import InternalModule
+      import MyModuleUnderTest
+      @testable import SwiftFormat
+      import SwiftSyntax
+      import UIKit
+
+      let a = 3
+      """
+
+    assertFormatting(
+      OrderedImports.self,
+      input: code,
+      expected: code,
+      findings: [],
+      configuration: configuration
+    )
+  }
+
+  func testMixedContentOrderingWithGroupingDisabled() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.shouldGroupImports = false
+
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        // Header comment
+
+        import Core
+        let a = 3
+        1️⃣@testable import func Darwin.C.isatty
+        // Third comment
+        2️⃣import Foundation
+        let b = 4
+        // Second comment
+        3️⃣4️⃣import enum Darwin.D.isatty
+        """,
+      expected: """
+        // Header comment
+
+        import Core
+        @testable import func Darwin.C.isatty
+        // Second comment
+        import enum Darwin.D.isatty
+        // Third comment
+        import Foundation
+
+        let a = 3
+        let b = 4
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "place imports at the top of the file"),
+        FindingSpec("2️⃣", message: "place imports at the top of the file"),
+        FindingSpec("3️⃣", message: "place imports at the top of the file"),
+        FindingSpec("4️⃣", message: "sort import statements lexicographically"),
+      ],
+      configuration: configuration
+    )
+  }
+
+  func testInvalidOrderingWithGroupingDisabled() {
+    var configuration = Configuration.forTesting
+    configuration.orderedImports.shouldGroupImports = false
+
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import Core
+        import func Darwin.C.isatty
+        @testable import SwiftFormat
+        1️⃣import enum Darwin.D.isatty
+        @_implementationOnly import InternalModule
+        @testable import MyModuleUnderTest
+        import SwiftSyntax
+        import Foundation
+        import UIKit
+
+        let a = 3
+        """,
+      expected: """
+        import Core
+        import func Darwin.C.isatty
+        import enum Darwin.D.isatty
+        import Foundation
+        @_implementationOnly import InternalModule
+        @testable import MyModuleUnderTest
+        @testable import SwiftFormat
+        import SwiftSyntax
+        import UIKit
+
+        let a = 3
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
+      ],
+      configuration: configuration
+    )
+  }
+
+  func testRawIdentifierSorting() {
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import Zebra
+        1️⃣import `Beta`
+        import Alpha
+        """,
+      expected: """
+        import Alpha
+        import `Beta`
+        import Zebra
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
+      ]
+    )
+
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import Foo.Baz
+        1️⃣import `Foo`.`Bar`
+        """,
+      expected: """
+        import `Foo`.`Bar`
+        import Foo.Baz
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
+      ]
+    )
+
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import Alpha
+        import `Beta`
+        import Gamma
+        """,
+      expected: """
+        import Alpha
+        import `Beta`
+        import Gamma
+        """,
+      findings: []
+    )
+
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import class Foundation.Date
+        1️⃣import class `Foundation`.Data
+        2️⃣import Foundation
+        """,
+      expected: """
+        import Foundation
+
+        import class `Foundation`.Data
+        import class Foundation.Date
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("2️⃣", message: "place regular imports before declaration imports"),
+      ]
+    )
+
+    assertFormatting(
+      OrderedImports.self,
+      input: """
+        import Zebra
+        1️⃣import `Beta`
+        @testable import Zebra
+        2️⃣@testable import `Alpha`
+        """,
+      expected: """
+        import `Beta`
+        import Zebra
+
+        @testable import `Alpha`
+        @testable import Zebra
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically"),
+        FindingSpec("2️⃣", message: "sort import statements lexicographically"),
       ]
     )
   }

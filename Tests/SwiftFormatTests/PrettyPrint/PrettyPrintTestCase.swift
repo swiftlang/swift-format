@@ -43,7 +43,7 @@ class PrettyPrintTestCase: DiagnosingTestCase {
     configuration: Configuration = Configuration.forTesting,
     whitespaceOnly: Bool = false,
     findings: [FindingSpec] = [],
-    experimentalFeatures: Parser.ExperimentalFeatures = [],
+    experimentalFeatures: Parser.LanguageFeatures = [],
     file: StaticString = #file,
     line: UInt = #line
   ) {
@@ -121,13 +121,13 @@ class PrettyPrintTestCase: DiagnosingTestCase {
     configuration: Configuration,
     selection: Selection,
     whitespaceOnly: Bool,
-    experimentalFeatures: Parser.ExperimentalFeatures = [],
+    experimentalFeatures: Parser.LanguageFeatures = [],
     findingConsumer: @escaping (Finding) -> Void
   ) -> (String, Context) {
     // Ignore folding errors for unrecognized operators so that we fallback to a reasonable default.
     let sourceFileSyntax =
       OperatorTable.standardOperators.foldAll(
-        Parser.parse(source: source, experimentalFeatures: experimentalFeatures)
+        Parser.parse(source: source, languageFeatures: experimentalFeatures)
       ) { _ in }
       .as(SourceFileSyntax.self)!
     let context = makeContext(

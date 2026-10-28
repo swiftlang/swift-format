@@ -15,7 +15,7 @@ import SwiftSyntax
 /// Force-try (`try!`) is forbidden.
 ///
 /// This rule does not apply to test code, defined as code which:
-///   * Contains the line `import XCTest`
+///   * Imports a supported test library
 ///   * The function is marked with `@Test` attribute
 ///
 /// Lint: Using `try!` results in a lint error.
@@ -30,12 +30,12 @@ public final class NeverUseForceTry: SyntaxLintRule {
   public override class var isOptIn: Bool { return true }
 
   public override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
-    setImportsXCTest(context: context, sourceFile: node)
+    setImportsAnyTestLibrary(context: context, sourceFile: node)
     return .visitChildren
   }
 
   public override func visit(_ node: TryExprSyntax) -> SyntaxVisitorContinueKind {
-    guard context.importsXCTest == .doesNotImportXCTest else { return .skipChildren }
+    guard context.importsAnyTestLibrary == .doesNotImportATestLibrary else { return .skipChildren }
     guard let mark = node.questionOrExclamationMark else { return .visitChildren }
     // Allow force try if it is in a function marked with @Test attribute.
     if node.hasTestAncestor { return .skipChildren }

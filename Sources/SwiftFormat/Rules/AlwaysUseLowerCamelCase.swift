@@ -15,9 +15,12 @@ import SwiftSyntax
 /// All values should be written in lower camel-case (`lowerCamelCase`).
 /// Underscores (except at the beginning of an identifier) are disallowed.
 ///
-/// This rule does not apply to test code, defined as code which:
-///   * Contains the line `import XCTest`
-///   * The function is marked with `@Test` attribute
+/// Underscores are allowed in the names of test functions, where they are commonly used to
+/// separate phrases in long, descriptive names. The lower camel-case requirement still applies
+/// otherwise, so a test function name that begins with a capital letter is still diagnosed. Test
+/// functions are functions that either:
+///   * start with `test` in a file that imports a supported test library, or
+///   * are marked with the `@Test` attribute.
 ///
 /// Lint: If an identifier contains underscores or begins with a capital letter, a lint error is
 ///       raised.
@@ -27,13 +30,14 @@ public final class AlwaysUseLowerCamelCase: SyntaxLintRule {
   private var testCaseFuncs = Set<FunctionDeclSyntax>()
 
   public override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
-    // Tracks whether "XCTest" is imported in the source file before processing individual nodes.
-    setImportsXCTest(context: context, sourceFile: node)
+    // Tracks whether a supported test library is imported in the source file before processing
+    // individual nodes.
+    setImportsAnyTestLibrary(context: context, sourceFile: node)
     return .visitChildren
   }
 
   public override func visit(_ node: ClassDeclSyntax) -> SyntaxVisitorContinueKind {
-    guard context.importsXCTest == .importsXCTest else { return .visitChildren }
+    guard context.importsAnyTestLibrary == .importsATestLirary else { return .visitChildren }
 
     collectTestMethods(from: node.memberBlock.members, into: &testCaseFuncs)
     return .visitChildren

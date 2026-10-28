@@ -253,4 +253,30 @@ final class UseSingleLinePropertyGetterTests: LintOrFormatRuleTestCase {
       ]
     )
   }
+
+  func testGetterWithAttributedAccessorShouldBePreserved() {
+    assertFormatting(
+      UseSingleLinePropertyGetter.self,
+      input: """
+        struct Foo {
+          var value: Int {
+            @_lifetime(borrow self)
+            get {
+              return 1
+            }
+          }
+        }
+        """,
+      expected: """
+        struct Foo {
+          var value: Int {
+            @_lifetime(borrow self)
+            get {
+              return 1
+            }
+          }
+        }
+        """
+    )
+  }
 }

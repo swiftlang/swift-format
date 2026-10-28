@@ -238,4 +238,35 @@ final class NoAssignmentInExpressionsTests: LintOrFormatRuleTestCase {
       ]
     )
   }
+
+  func testStandaloneAssignmentWithCustomOperatorIsNotDiagnosed() {
+    // A custom operator is folded with default precedence, which can nest an assignment that is
+    // actually its own statement (e.g., `x = try f() ?! error` folds as `(x = try f()) ?! error`).
+    // We don't trust that nesting, so the assignment is not diagnosed.
+    // See https://github.com/swiftlang/swift-format/issues/1228.
+    assertFormatting(
+      NoAssignmentInExpressions.self,
+      input: """
+        infix operator ?! : NilCoalescingPrecedence
+
+        struct S {
+          var a: Bool
+          init() throws {
+            self.a = try f() ?! MyError.reason1
+          }
+        }
+        """,
+      expected: """
+        infix operator ?! : NilCoalescingPrecedence
+
+        struct S {
+          var a: Bool
+          init() throws {
+            self.a = try f() ?! MyError.reason1
+          }
+        }
+        """,
+      findings: []
+    )
+  }
 }

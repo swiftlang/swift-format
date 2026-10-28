@@ -4,7 +4,7 @@
 
 Use the rules below in the `rules` block of your `.swift-format`
 configuration file, as described in
-[Configuration](Documentation/Configuration.md). All of these rules can be
+[Configuration](Configuration.md). All of these rules can be
 applied in the linter, but only some of them can format your source code
 automatically.
 
@@ -43,6 +43,7 @@ Here's the list of available rules:
 - [OrderedImports](#OrderedImports)
 - [ReplaceForEachWithForLoop](#ReplaceForEachWithForLoop)
 - [ReturnVoidInsteadOfEmptyTuple](#ReturnVoidInsteadOfEmptyTuple)
+- [SwiftTestingNamingConventions](#SwiftTestingNamingConventions)
 - [TypeNamesShouldBeCapitalized](#TypeNamesShouldBeCapitalized)
 - [UseEarlyExits](#UseEarlyExits)
 - [UseExplicitNilCheckInConditions](#UseExplicitNilCheckInConditions)
@@ -78,9 +79,12 @@ Format: All invalid use sites would be related with empty literal (with or witho
 All values should be written in lower camel-case (`lowerCamelCase`).
 Underscores (except at the beginning of an identifier) are disallowed.
 
-This rule does not apply to test code, defined as code which:
-  * Contains the line `import XCTest`
-  * The function is marked with `@Test` attribute
+Underscores are allowed in the names of test functions, where they are commonly used to
+separate phrases in long, descriptive names. The lower camel-case requirement still applies
+otherwise, so a test function name that begins with a capital letter is still diagnosed. Test
+functions are functions that either:
+  * start with `test` in a file that imports a supported test library, or
+  * are marked with the `@Test` attribute.
 
 Lint: If an identifier contains underscores or begins with a capital letter, a lint error is
       raised.
@@ -189,7 +193,7 @@ Lint: If an identifier contains non-ASCII characters, a lint error is raised.
 Force-unwraps are strongly discouraged and must be documented.
 
 This rule does not apply to test code, defined as code which:
-  * Contains the line `import XCTest`
+  * Imports a supported test library
   * The function is marked with `@Test` attribute
 
 Lint: If a force unwrap is used, a lint warning is raised.
@@ -201,7 +205,7 @@ Lint: If a force unwrap is used, a lint warning is raised.
 Force-try (`try!`) is forbidden.
 
 This rule does not apply to test code, defined as code which:
-  * Contains the line `import XCTest`
+  * Imports a supported test library
   * The function is marked with `@Test` attribute
 
 Lint: Using `try!` results in a lint error.
@@ -217,7 +221,7 @@ Implicitly unwrapped optionals (e.g. `var s: String!`) are forbidden.
 Certain properties (e.g. `@IBOutlet`) tied to the UI lifecycle are ignored.
 
 This rule does not apply to test code, defined as code which:
-  * Contains the line `import XCTest`
+  * Imports a supported test library
   * The function is marked with `@Test` attribute
 
 TODO: Create exceptions for other UI elements (ex: viewDidLoad)
@@ -235,6 +239,8 @@ Lint: Specifying an access level for an extension declaration yields a lint erro
 Format: The access level is removed from the extension declaration and is added to each
         declaration in the extension; declarations with redundant access levels (e.g.
         `internal`, as that is the default access level) have the explicit access level removed.
+        For a nested protocol, the access level is added to the protocol declaration itself and
+        not to its requirements, which implicitly have the protocol's access level.
 
 `NoAccessLevelOnExtensionDeclaration` rule can format your code automatically.
 
@@ -406,16 +412,22 @@ Lint: If a function call with a trailing closure also contains a non-trailing cl
 
 ### OrderedImports
 
-Imports must be lexicographically ordered and logically grouped at the top of each source file.
-The order of the import groups is 1) regular imports, 2) declaration imports, 3) @_implementationOnly
+Imports must be lexicographically ordered and (optionally) logically grouped at the top of each source file.
+The order of the import groups is 1) regular imports, 2) declaration imports, 3) @\_implementationOnly
 imports, and 4) @testable imports. These groups are separated by a single blank line. Blank lines in
 between the import declarations are removed.
 
+Logical grouping is enabled by default but can be disabled via the `orderedImports.shouldGroupImports`
+configuration option to limit this rule to lexicographic ordering.
+
+By default, imports within conditional compilation blocks (`#if`, `#elseif`, `#else`) are not ordered.
+This behavior can be controlled via the `orderedImports.includeConditionalImports` configuration option.
+
 Lint: If an import appears anywhere other than the beginning of the file it resides in,
-      not lexicographically ordered, or  not in the appropriate import group, a lint error is
+      not lexicographically ordered, or (optionally) not in the appropriate import group, a lint error is
       raised.
 
-Format: Imports will be reordered and grouped at the top of the file.
+Format: Imports will be reordered and (optionally) grouped at the top of the file.
 
 `OrderedImports` rule can format your code automatically.
 
@@ -439,6 +451,32 @@ Lint: Returning `()` in a signature yields a lint error.
 Format: `-> ()` is replaced with `-> Void`
 
 `ReturnVoidInsteadOfEmptyTuple` rule can format your code automatically.
+
+### SwiftTestingNamingConventions
+
+Enforces naming conventions for code that uses Swift Testing.
+
+This rule has the following options in the `swiftTestingNamingConventions`
+section of the configuration.
+
+*   `forbidSuiteWithoutParameters`: If true, `@Suite` should not be used if
+    it doesn't specify any arguments; that is, marking a test type with
+    `@Suite` is unnecessary because any type with `@Test`s is automatically
+    a suite.
+*   `forbidSuiteDescription`: If true, `@Suite` should not specify a
+    separate string description.
+*   `requireRawIdentifierTestNames`: If true, `@Test` function names must be
+    raw identifiers.
+*   `forbidTestDescription`: If true, `@Test` should not specify a separate
+     string description.
+
+All options are `false` by default; because of this, the rule itself is not
+opt-in, because it is a no-op until at least one of these options is set to
+`true`.
+
+Lint: Violating these rules yields a lint error.
+
+`SwiftTestingNamingConventions` is a linter-only rule.
 
 ### TypeNamesShouldBeCapitalized
 

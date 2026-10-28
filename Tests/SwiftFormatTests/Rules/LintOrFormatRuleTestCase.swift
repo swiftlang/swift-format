@@ -36,20 +36,21 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
     _ type: LintRule.Type,
     _ markedSource: String,
     findings: [FindingSpec] = [],
-    experimentalFeatures: Parser.ExperimentalFeatures = [],
+    configuration: Configuration? = nil,
+    experimentalFeatures: Parser.LanguageFeatures = [],
     file: StaticString = #file,
     line: UInt = #line
   ) {
     let markedText = MarkedText(textWithMarkers: markedSource)
     let unmarkedSource = markedText.textWithoutMarkers
-    let tree = Parser.parse(source: unmarkedSource, experimentalFeatures: experimentalFeatures)
+    let tree = Parser.parse(source: unmarkedSource, languageFeatures: experimentalFeatures)
     let sourceFileSyntax =
-      try! OperatorTable.standardOperators.foldAll(tree).as(SourceFileSyntax.self)!
+      OperatorTable.standardOperators.foldAll(tree) { _ in }.as(SourceFileSyntax.self)!
 
     var emittedFindings = [Finding]()
 
     // Force the rule to be enabled while we test it.
-    let configuration = Configuration.forTesting(enabledRule: type.ruleName)
+    let configuration = configuration ?? Configuration.forTesting(enabledRule: type.ruleName)
     let context = makeContext(
       sourceFileSyntax: sourceFileSyntax,
       configuration: configuration,
@@ -102,15 +103,15 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
     expected: String,
     findings: [FindingSpec] = [],
     configuration: Configuration? = nil,
-    experimentalFeatures: Parser.ExperimentalFeatures = [],
+    experimentalFeatures: Parser.LanguageFeatures = [],
     file: StaticString = #file,
     line: UInt = #line
   ) {
     let markedInput = MarkedText(textWithMarkers: input)
     let originalSource: String = markedInput.textWithoutMarkers
-    let tree = Parser.parse(source: originalSource, experimentalFeatures: experimentalFeatures)
+    let tree = Parser.parse(source: originalSource, languageFeatures: experimentalFeatures)
     let sourceFileSyntax =
-      try! OperatorTable.standardOperators.foldAll(tree).as(SourceFileSyntax.self)!
+      OperatorTable.standardOperators.foldAll(tree) { _ in }.as(SourceFileSyntax.self)!
 
     var emittedFindings = [Finding]()
 
@@ -149,7 +150,7 @@ class LintOrFormatRuleTestCase: DiagnosingTestCase {
       printTokenStream: false,
       whitespaceOnly: false
     ).prettyPrint()
-    let prettyPrintedTree = Parser.parse(source: prettyPrintedSource, experimentalFeatures: experimentalFeatures)
+    let prettyPrintedTree = Parser.parse(source: prettyPrintedSource, languageFeatures: experimentalFeatures)
     XCTAssertEqual(
       whitespaceInsensitiveText(of: actual),
       whitespaceInsensitiveText(of: prettyPrintedTree),

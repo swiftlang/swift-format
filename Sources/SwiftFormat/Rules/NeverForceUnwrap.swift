@@ -15,7 +15,7 @@ import SwiftSyntax
 /// Force-unwraps are strongly discouraged and must be documented.
 ///
 /// This rule does not apply to test code, defined as code which:
-///   * Contains the line `import XCTest`
+///   * Imports a supported test library
 ///   * The function is marked with `@Test` attribute
 ///
 /// Lint: If a force unwrap is used, a lint warning is raised.
@@ -28,13 +28,14 @@ public final class NeverForceUnwrap: SyntaxLintRule {
   public override class var isOptIn: Bool { return true }
 
   public override func visit(_ node: SourceFileSyntax) -> SyntaxVisitorContinueKind {
-    // Tracks whether "XCTest" is imported in the source file before processing individual nodes.
-    setImportsXCTest(context: context, sourceFile: node)
+    // Tracks whether a supported test library is imported in the source file before processing
+    // individual nodes.
+    setImportsAnyTestLibrary(context: context, sourceFile: node)
     return .visitChildren
   }
 
   public override func visit(_ node: ForceUnwrapExprSyntax) -> SyntaxVisitorContinueKind {
-    guard context.importsXCTest == .doesNotImportXCTest else { return .skipChildren }
+    guard context.importsAnyTestLibrary == .doesNotImportATestLibrary else { return .skipChildren }
     // Allow force unwrapping if it is in a function marked with @Test attribute.
     if node.hasTestAncestor { return .skipChildren }
     diagnose(.doNotForceUnwrap(name: node.expression.trimmedDescription), on: node)
@@ -44,7 +45,7 @@ public final class NeverForceUnwrap: SyntaxLintRule {
   public override func visit(_ node: AsExprSyntax) -> SyntaxVisitorContinueKind {
     // Only fire if we're not in a test file and if there is an exclamation mark following the `as`
     // keyword.
-    guard context.importsXCTest == .doesNotImportXCTest else { return .skipChildren }
+    guard context.importsAnyTestLibrary == .doesNotImportATestLibrary else { return .skipChildren }
     guard let questionOrExclamation = node.questionOrExclamationMark else { return .skipChildren }
     guard questionOrExclamation.tokenKind == .exclamationMark else { return .skipChildren }
     // Allow force cast if it is in a function marked with @Test attribute.

@@ -31,6 +31,39 @@ class Frontend {
       self.diagnosticsEngine = diagnosticsEngine
     }
 
+    /// Returns a detailed description for a configuration error.
+    ///
+    /// Tries hard to provide actionable errors for invalid JSON.
+    private func descriptionForConfigurationError(_ error: Error) -> String {
+      guard let decodingError = error as? DecodingError else {
+        return error.localizedDescription
+      }
+
+      switch decodingError {
+      case .dataCorrupted(let context):
+        return descriptionWithCodingPath(context)
+      case .typeMismatch(_, let context):
+        return descriptionWithCodingPath(context)
+      case .keyNotFound(let key, let context):
+        let path = (context.codingPath + [key]).map(\.stringValue).joined(separator: ".")
+        return "missing key `\(path)`"
+      case .valueNotFound(_, let context):
+        return descriptionWithCodingPath(context)
+      @unknown default:
+        return error.localizedDescription
+      }
+    }
+
+    /// Formats a `DecodingError.Context` into a human-readable string, including the coding path
+    /// if available.
+    private func descriptionWithCodingPath(_ context: DecodingError.Context) -> String {
+      let path = context.codingPath.map(\.stringValue).joined(separator: ".")
+      if path.isEmpty {
+        return context.debugDescription
+      }
+      return "at `\(path)`: \(context.debugDescription)"
+    }
+
     /// Checks if all the rules in the given configuration are supported by the registry.
     ///
     /// If there are any rules that are not supported, they are emitted as a warning.
@@ -83,7 +116,7 @@ class Frontend {
 
           // Fail if the configuration flag was neither a valid file path nor valid configuration
           // data.
-          diagnosticsEngine.emitError("Unable to read configuration: \(error.localizedDescription)")
+          diagnosticsEngine.emitError("Unable to read configuration: \(descriptionForConfigurationError(error))")
           return nil
         }
       }
@@ -99,7 +132,7 @@ class Frontend {
           // Fall through to the default return at the end of the function.
         } catch {
           diagnosticsEngine.emitError(
-            "Unable to read configuration for \(swiftFileURL.relativePath): \(error.localizedDescription)"
+            "Unable to read configuration for \(swiftFileURL.relativePath): \(descriptionForConfigurationError(error))"
           )
           return nil
         }
@@ -116,7 +149,7 @@ class Frontend {
           }
         } catch {
           diagnosticsEngine.emitError(
-            "Unable to read configuration for \(cwd.relativePath): \(error.localizedDescription)"
+            "Unable to read configuration for \(cwd.relativePath): \(descriptionForConfigurationError(error))"
           )
           return nil
         }
@@ -270,11 +303,18 @@ class Frontend {
       return
     }
 
+    let selection: Selection
+    if !lintFormatOptions.lines.isEmpty {
+      selection = Selection(lineRanges: lintFormatOptions.lines)
+    } else {
+      selection = Selection(offsetRanges: lintFormatOptions.offsets)
+    }
+
     let fileToProcess = FileToProcess(
       fileHandle: FileHandle.standardInput,
       url: assumedUrl ?? URL(fileURLWithPath: "<stdin>"),
       configuration: configuration,
-      selection: Selection(offsetRanges: lintFormatOptions.offsets)
+      selection: selection
     )
     processFile(fileToProcess)
   }
@@ -287,17 +327,27 @@ class Frontend {
     )
 
     if parallel {
+      #if !os(WASI)
       let filesToProcess =
-        FileIterator(urls: urls, followSymlinks: lintFormatOptions.followSymlinks)
+        FileIterator(
+          urls: urls,
+          followSymlinks: lintFormatOptions.followSymlinks
+        )
         .compactMap(openAndPrepareFile)
       DispatchQueue.concurrentPerform(iterations: filesToProcess.count) { index in
         processFile(filesToProcess[index])
       }
+      #else
+      fatalError("`--parallel` is not yet implemented on WASI.")
+      #endif
     } else {
-      FileIterator(urls: urls, followSymlinks: lintFormatOptions.followSymlinks)
-        .lazy
-        .compactMap(openAndPrepareFile)
-        .forEach(processFile)
+      FileIterator(
+        urls: urls,
+        followSymlinks: lintFormatOptions.followSymlinks
+      )
+      .lazy
+      .compactMap(openAndPrepareFile)
+      .forEach(processFile)
     }
   }
 
@@ -321,11 +371,18 @@ class Frontend {
       return nil
     }
 
+    let selection: Selection
+    if !lintFormatOptions.lines.isEmpty {
+      selection = Selection(lineRanges: lintFormatOptions.lines)
+    } else {
+      selection = Selection(offsetRanges: lintFormatOptions.offsets)
+    }
+
     return FileToProcess(
       fileHandle: sourceFile,
       url: url,
       configuration: configuration,
-      selection: Selection(offsetRanges: lintFormatOptions.offsets)
+      selection: selection
     )
   }
 

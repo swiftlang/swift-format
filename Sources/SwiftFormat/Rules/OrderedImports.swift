@@ -12,21 +12,47 @@
 
 import SwiftSyntax
 
-/// Imports must be lexicographically ordered and logically grouped at the top of each source file.
-/// The order of the import groups is 1) regular imports, 2) declaration imports, 3) @_implementationOnly
+/// Imports must be lexicographically ordered and (optionally) logically grouped at the top of each source file.
+/// The order of the import groups is 1) regular imports, 2) declaration imports, 3) @\_implementationOnly
 /// imports, and 4) @testable imports. These groups are separated by a single blank line. Blank lines in
 /// between the import declarations are removed.
 ///
+/// Logical grouping is enabled by default but can be disabled via the `orderedImports.shouldGroupImports`
+/// configuration option to limit this rule to lexicographic ordering.
+///
+/// By default, imports within conditional compilation blocks (`#if`, `#elseif`, `#else`) are not ordered.
+/// This behavior can be controlled via the `orderedImports.includeConditionalImports` configuration option.
+///
 /// Lint: If an import appears anywhere other than the beginning of the file it resides in,
-///       not lexicographically ordered, or  not in the appropriate import group, a lint error is
+///       not lexicographically ordered, or (optionally) not in the appropriate import group, a lint error is
 ///       raised.
 ///
-/// Format: Imports will be reordered and grouped at the top of the file.
+/// Format: Imports will be reordered and (optionally) grouped at the top of the file.
 @_spi(Rules)
 public final class OrderedImports: SyntaxFormatRule {
 
   public override func visit(_ node: SourceFileSyntax) -> SourceFileSyntax {
-    let lines = generateLines(codeBlockItemList: node.statements, context: context)
+    var newNode = node
+    newNode.statements = orderImports(in: node.statements)
+
+    // A shebang line ends with a newline that is stored as leading trivia on
+    // the first statement. Reordering can treat that newline (and any blank
+    // lines right after it) as leading blank lines of the file header and drop
+    // them, which pulls the following comment or import up onto the shebang
+    // line. Put the leading newlines back so the shebang keeps its own line.
+    if node.shebang != nil, !newNode.statements.isEmpty {
+      let original = leadingNewlineCount(of: node.statements)
+      let updated = leadingNewlineCount(of: newNode.statements)
+      if updated < original {
+        newNode.statements.leadingTrivia =
+          .newlines(original - updated) + newNode.statements.leadingTrivia
+      }
+    }
+    return newNode
+  }
+
+  private func orderImports(in codeBlockItemList: CodeBlockItemListSyntax) -> CodeBlockItemListSyntax {
+    let lines = generateLines(codeBlockItemList: codeBlockItemList, context: context)
 
     // Stores the formatted and sorted lines that will be used to reconstruct the list of code block
     // items later.
@@ -36,6 +62,7 @@ public final class OrderedImports: SyntaxFormatRule {
     var declImports: [Line] = []
     var implementationOnlyImports: [Line] = []
     var testableImports: [Line] = []
+
     var codeBlocks: [Line] = []
     var fileHeader: [Line] = []
     var atStartOfFile = true
@@ -46,6 +73,10 @@ public final class OrderedImports: SyntaxFormatRule {
 
       // Perform linting on the grouping of the imports.
       checkGrouping(linesSection)
+
+      if let firstLine = fileHeader.first, firstLine.type == .blankLine {
+        fileHeader.removeFirst()
+      }
 
       if let lastLine = fileHeader.last, lastLine.type == .blankLine {
         fileHeader.removeLast()
@@ -118,35 +149,72 @@ public final class OrderedImports: SyntaxFormatRule {
         }
       }
 
-      // Separate lines into different categories along with any associated comments.
-      switch line.type {
-      case .regularImport:
-        regularImports.append(contentsOf: commentBuffer)
-        regularImports.append(line)
-        commentBuffer = []
+      if context.configuration.orderedImports.includeConditionalImports,
+        let syntaxNode = line.syntaxNode,
+        case .ifConfigCodeBlock(let ifConfigCodeBlock) = syntaxNode
+      {
+        var ifConfigDecl = ifConfigCodeBlock.item.cast(IfConfigDeclSyntax.self)
 
-      case .implementationOnlyImport:
-        implementationOnlyImports.append(contentsOf: commentBuffer)
-        implementationOnlyImports.append(line)
-        commentBuffer = []
+        let newClauses = ifConfigDecl.clauses.map { clause in
+          guard case .statements(let codeBlockItemList) = clause.elements else {
+            return clause
+          }
+          var newClause = clause
+          var newCodeBlockItemList = orderImports(in: codeBlockItemList)
+          newCodeBlockItemList.leadingTrivia = .newline + newCodeBlockItemList.leadingTrivia
+          newClause.elements = .statements(newCodeBlockItemList)
+          return newClause
+        }
 
-      case .testableImport:
-        testableImports.append(contentsOf: commentBuffer)
-        testableImports.append(line)
-        commentBuffer = []
+        ifConfigDecl.clauses = IfConfigClauseListSyntax(newClauses)
+        line.syntaxNode = .ifConfigCodeBlock(CodeBlockItemSyntax(item: .decl(DeclSyntax(ifConfigDecl))))
+      }
 
-      case .declImport:
-        declImports.append(contentsOf: commentBuffer)
-        declImports.append(line)
-        commentBuffer = []
+      if context.configuration.orderedImports.shouldGroupImports {
+        // Separate lines into different categories along with any associated comments.
+        switch line.type {
+        case .regularImport:
+          regularImports.append(contentsOf: commentBuffer)
+          regularImports.append(line)
+          commentBuffer = []
 
-      case .codeBlock, .blankLine:
-        codeBlocks.append(contentsOf: commentBuffer)
-        codeBlocks.append(line)
-        commentBuffer = []
+        case .implementationOnlyImport:
+          implementationOnlyImports.append(contentsOf: commentBuffer)
+          implementationOnlyImports.append(line)
+          commentBuffer = []
 
-      case .comment:
-        commentBuffer.append(line)
+        case .testableImport:
+          testableImports.append(contentsOf: commentBuffer)
+          testableImports.append(line)
+          commentBuffer = []
+
+        case .declImport:
+          declImports.append(contentsOf: commentBuffer)
+          declImports.append(line)
+          commentBuffer = []
+
+        case .codeBlock, .blankLine:
+          codeBlocks.append(contentsOf: commentBuffer)
+          codeBlocks.append(line)
+          commentBuffer = []
+
+        case .comment:
+          commentBuffer.append(line)
+        }
+      } else {
+        switch line.type {
+        case .regularImport, .implementationOnlyImport, .testableImport, .declImport:
+          regularImports.append(contentsOf: commentBuffer)
+          regularImports.append(line)
+          commentBuffer = []
+        case .codeBlock, .blankLine:
+          codeBlocks.append(contentsOf: commentBuffer)
+          codeBlocks.append(line)
+          commentBuffer = []
+
+        case .comment:
+          commentBuffer.append(line)
+        }
       }
     }
 
@@ -154,9 +222,7 @@ public final class OrderedImports: SyntaxFormatRule {
       formatAndAppend(linesSection: lines[lastSliceStartIndex..<lines.endIndex])
     }
 
-    var newNode = node
-    newNode.statements = CodeBlockItemListSyntax(convertToCodeBlockItems(lines: formattedLines))
-    return newNode
+    return CodeBlockItemListSyntax(convertToCodeBlockItems(lines: formattedLines))
   }
 
   /// Raise lint errors if the different import types appear in the wrong order, and if import
@@ -188,6 +254,10 @@ public final class OrderedImports: SyntaxFormatRule {
           diagnose(.placeAtTopOfFile, on: line.firstToken)
         default: ()
         }
+      }
+
+      guard context.configuration.orderedImports.shouldGroupImports else {
+        continue
       }
 
       if testableGroup {
@@ -262,7 +332,9 @@ public final class OrderedImports: SyntaxFormatRule {
           // them. Leave this duplicate import.
         }
         if let previousImport = previousImport,
-          line.importName.lexicographicallyPrecedes(previousImport.importName) && !diagnosed
+          let currentName = line.parsedImportPath,
+          let previousName = previousImport.parsedImportPath,
+          currentName < previousName && !diagnosed
             // Only warn to sort imports that shouldn't be removed.
             && visitedImports[fullyQualifiedImport] == nil
         {
@@ -281,7 +353,10 @@ public final class OrderedImports: SyntaxFormatRule {
       }
     }
 
-    linesWithLeadingComments.sort { $0.0.importName.lexicographicallyPrecedes($1.0.importName) }
+    linesWithLeadingComments.sort {
+      guard let lhs = $0.0.parsedImportPath, let rhs = $1.0.parsedImportPath else { return false }
+      return lhs < rhs
+    }
 
     // Unpack the tuples back into a list of Lines.
     var output: [Line] = []
@@ -315,6 +390,15 @@ private func joinLines(_ inputLineLists: [Line]...) -> [Line] {
     output += list
   }
   return output
+}
+
+/// Returns the number of newlines at the very start of the statement list's
+/// leading trivia, or zero if it does not start with one.
+private func leadingNewlineCount(of statements: CodeBlockItemListSyntax) -> Int {
+  if case .newlines(let count)? = statements.leadingTrivia.pieces.first {
+    return count
+  }
+  return 0
 }
 
 /// This function transforms the statements in a CodeBlockItemListSyntax object into a list of Line
@@ -354,11 +438,16 @@ private func generateLines(
       var blockWithoutTrailingTrivia = block
       blockWithoutTrailingTrivia.trailingTrivia = []
       currentLine.syntaxNode = .importCodeBlock(blockWithoutTrailingTrivia, sortable: sortable)
+    } else if block.item.is(IfConfigDeclSyntax.self) {
+      if currentLine.syntaxNode != nil {
+        appendNewLine()
+      }
+      currentLine.syntaxNode = .ifConfigCodeBlock(block)
     } else {
       if let syntaxNode = currentLine.syntaxNode {
         // Multiple code blocks can be merged, as long as there isn't an import statement.
         switch syntaxNode {
-        case .importCodeBlock:
+        case .importCodeBlock, .ifConfigCodeBlock:
           appendNewLine()
           currentLine.syntaxNode = .nonImportCodeBlocks([block])
         case .nonImportCodeBlocks(let existingCodeBlocks):
@@ -400,6 +489,8 @@ private func convertToCodeBlockItems(lines: [Line]) -> [CodeBlockItemSyntax] {
       switch syntaxNode {
       case .importCodeBlock(let codeBlock, _):
         append(codeBlockItem: codeBlock)
+      case .ifConfigCodeBlock(let ifConfigCodeBlock):
+        append(codeBlockItem: ifConfigCodeBlock)
       case .nonImportCodeBlocks(let codeBlocks):
         codeBlocks.forEach(append(codeBlockItem:))
       }
@@ -411,6 +502,23 @@ private func convertToCodeBlockItems(lines: [Line]) -> [CodeBlockItemSyntax] {
     } else {
       pendingLeadingTrivia.append(.newlines(1))
     }
+  }
+
+  // If trivia accumulated past the last syntax node (e.g. a trailing comment
+  // that import reordering left behind), attach it to the last code block
+  // item's trailing trivia so it is preserved in the output instead of being
+  // silently dropped. The loop above accumulates an artificial newline after
+  // every iteration to separate the current line from the next one — those
+  // trailing newlines are meaningless when there is no following line and are
+  // stripped before the attachment.
+  while let last = pendingLeadingTrivia.last, case .newlines = last {
+    pendingLeadingTrivia.removeLast()
+  }
+  if Trivia(pieces: pendingLeadingTrivia).hasAnyComments, !output.isEmpty {
+    let lastIndex = output.index(before: output.endIndex)
+    var lastItem = output[lastIndex]
+    lastItem.trailingTrivia = Trivia(pieces: lastItem.trailingTrivia.pieces + pendingLeadingTrivia)
+    output[lastIndex] = lastItem
   }
 
   return output
@@ -458,6 +566,9 @@ private class Line {
     case nonImportCodeBlocks([CodeBlockItemSyntax])
     /// A single code block item whose content must be an import decl.
     case importCodeBlock(CodeBlockItemSyntax, sortable: Bool)
+    /// A single code block item whose content must be an if config decl.
+    /// This is used to sort conditional imports.
+    case ifConfigCodeBlock(CodeBlockItemSyntax)
   }
 
   /// Stores line comments. `syntaxNode` need not be defined, since a comment can exist by itself on
@@ -478,7 +589,7 @@ private class Line {
   var type: LineType {
     if let syntaxNode = syntaxNode {
       switch syntaxNode {
-      case .nonImportCodeBlocks:
+      case .nonImportCodeBlocks, .ifConfigCodeBlock:
         return .codeBlock
       case .importCodeBlock(let importCodeBlock, _):
         guard let importDecl = importCodeBlock.item.as(ImportDeclSyntax.self) else {
@@ -523,14 +634,14 @@ private class Line {
   }
 
   /// Returns the path that is imported by this line's import statement if it's an import statement.
-  /// When this line isn't an import statement, returns an empty string.
-  var importName: String {
+  /// When this line isn't an import statement, returns nil.
+  var parsedImportPath: ParsedImportPath? {
     guard let syntaxNode = syntaxNode, case .importCodeBlock(let importCodeBlock, _) = syntaxNode,
       let importDecl = importCodeBlock.item.as(ImportDeclSyntax.self)
     else {
-      return ""
+      return nil
     }
-    return importDecl.path.description.trimmingCharacters(in: .whitespacesAndNewlines)
+    return ParsedImportPath(importDecl.path)
   }
 
   /// Returns the first `TokenSyntax` in the code block(s) from this Line, or nil when this Line
@@ -542,6 +653,8 @@ private class Line {
       return codeBlock.firstToken(viewMode: .sourceAccurate)
     case .nonImportCodeBlocks(let codeBlocks):
       return codeBlocks.first?.firstToken(viewMode: .sourceAccurate)
+    case .ifConfigCodeBlock(let codeBlock):
+      return codeBlock.firstToken(viewMode: .sourceAccurate)
     }
   }
 
@@ -591,7 +704,11 @@ extension Line: CustomStringConvertible {
       case .nonImportCodeBlocks(let codeBlocks):
         description += "\(codeBlocks.count) code blocks "
       case .importCodeBlock(_, let sortable):
-        description += "\(sortable ? "sorted" : "unsorted") import \(importName) "
+        if let parsedImportPath {
+          description += "\(sortable ? "sorted" : "unsorted") import \(parsedImportPath) "
+        }
+      case .ifConfigCodeBlock:
+        description += "if config code block "
       }
     }
 
@@ -603,6 +720,39 @@ extension Line: CustomStringConvertible {
     }
 
     return description.trimmingCharacters(in: .whitespaces)
+  }
+}
+
+/// A parsed representation of an import path that allows for sorting.
+///
+/// This type preserves the original spelling of the import but normalizes the
+/// components by removing backticks. This ensures that we don't treat
+/// `import Foo` differently from `` import `Foo` `` with regard to sort order.
+private struct ParsedImportPath: Comparable, CustomStringConvertible {
+  let originalText: String
+  let components: [Substring]
+
+  init(_ path: ImportPathComponentListSyntax) {
+    self.originalText = path.description.trimmingCharacters(in: .whitespacesAndNewlines)
+    self.components = path.map { component in
+      var text = component.name.text[...]
+      if text.hasPrefix("`") && text.hasSuffix("`") && text.count > 2 {
+        text = text.dropFirst().dropLast()
+      }
+      return text
+    }
+  }
+
+  static func < (lhs: ParsedImportPath, rhs: ParsedImportPath) -> Bool {
+    return lhs.components.lexicographicallyPrecedes(rhs.components)
+  }
+
+  static func == (lhs: ParsedImportPath, rhs: ParsedImportPath) -> Bool {
+    return lhs.components == rhs.components
+  }
+
+  var description: String {
+    return originalText
   }
 }
 

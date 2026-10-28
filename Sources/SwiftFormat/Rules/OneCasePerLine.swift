@@ -50,6 +50,17 @@ public final class OneCasePerLine: SyntaxFormatRule {
       elements.append(element)
     }
 
+    /// Removes the trailing comma from the given element, keeping any end-of-line comment that was
+    /// attached to that comma (like `case a = 1,  // comment`) on the element so it stays on the
+    /// element's own line instead of being discarded along with the comma.
+    static func removeTrailingComma(from element: inout EnumCaseElementSyntax) {
+      let commaTrailingTrivia = element.trailingComma?.trailingTrivia ?? []
+      element.trailingComma = nil
+      if commaTrailingTrivia.hasAnyComments {
+        element.trailingTrivia = element.trailingTrivia + commaTrailingTrivia
+      }
+    }
+
     /// Creates a new case declaration with the elements collected so far, then resets the internal
     /// state to start a new empty declaration again.
     ///
@@ -58,8 +69,9 @@ public final class OneCasePerLine: SyntaxFormatRule {
     mutating func makeCaseDeclAndReset() -> EnumCaseDeclSyntax? {
       guard !elements.isEmpty else { return nil }
 
-      // Remove the trailing comma on the final element, if there was one.
-      elements[elements.count - 1].trailingComma = nil
+      // Remove the trailing comma on the final element, if there was one, keeping any end-of-line
+      // comment that the comma carried on the element's line.
+      CaseElementCollector.removeTrailingComma(from: &elements[elements.count - 1])
 
       defer { elements.removeAll() }
       return makeCaseDeclFromBasis(elements: elements)
@@ -69,6 +81,28 @@ public final class OneCasePerLine: SyntaxFormatRule {
     /// basis declaration, and updates the comment preserving state if needed.
     mutating func makeCaseDeclFromBasis(elements: [EnumCaseElementSyntax]) -> EnumCaseDeclSyntax {
       var caseDecl = basis
+
+      // The first element follows the `case` keyword. When the original wrote it on a continuation
+      // line (like `case a,\n  b`), it inherited leading whitespace, and any comment documenting it
+      // (like `case a,\n  // about b\n  b`) ended up in that leading trivia too. Drop the whitespace
+      // so the element sits on the same line as `case`, and hoist any documentation comment so that
+      // it precedes the newly inserted `case` keyword instead of being stranded after it.
+      var elements = elements
+      if let first = elements.first {
+        let (hoistedComments, remainder) = first.leadingTrivia.splittingLeadingComments()
+        elements[0].leadingTrivia = remainder
+        if !hoistedComments.isEmpty {
+          // Place the hoisted comments between the existing leading trivia (which ends the previous
+          // line) and the `case` keyword, with a trailing newline so `case` starts its own line. The
+          // pretty printer fixes up indentation.
+          caseDecl.leadingTrivia =
+            caseDecl.leadingTrivia + hoistedComments + Trivia.newlines(1)
+        }
+        // Ensure there is a space between `case` and the first element.
+        if caseDecl.caseKeyword.trailingTrivia.isEmpty {
+          caseDecl.caseKeyword.trailingTrivia = .spaces(1)
+        }
+      }
       caseDecl.elements = EnumCaseElementListSyntax(elements)
 
       if shouldKeepLeadingTrivia {
@@ -94,6 +128,16 @@ public final class OneCasePerLine: SyntaxFormatRule {
         continue
       }
 
+      // If none of the elements of a particular `case` have associated values or raw values, we
+      // don't need to split them (and shouldn't modify their trivia, either).
+      let hasAssociatedOrRawValue = caseDecl.elements.contains {
+        $0.parameterClause != nil || $0.rawValue != nil
+      }
+      guard hasAssociatedOrRawValue else {
+        newMembers.append(member)
+        continue
+      }
+
       var collector = CaseElementCollector(basedOn: caseDecl)
 
       // Collect the elements of the case declaration until we see one that has either an associated
@@ -111,7 +155,7 @@ public final class OneCasePerLine: SyntaxFormatRule {
           }
 
           var basisElement = element
-          basisElement.trailingComma = nil
+          CaseElementCollector.removeTrailingComma(from: &basisElement)
           let separatedCaseDecl = collector.makeCaseDeclFromBasis(elements: [basisElement])
 
           var newMember = member

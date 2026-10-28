@@ -91,7 +91,7 @@ public final class SwiftFormatter {
   ///   - selection: The ranges to format
   ///   - experimentalFeatures: The set of experimental features that should be enabled in the
   ///     parser. These names must be from the set of parser-recognized experimental language
-  ///     features in `SwiftParser`'s `Parser.ExperimentalFeatures` enum, which match the spelling
+  ///     features in `SwiftParser`'s `Parser.LanguageFeatures` enum, which match the spelling
   ///     defined in the compiler's `Features.def` file.
   ///   - outputStream: A value conforming to `TextOutputStream` to which the formatted output will
   ///     be written.

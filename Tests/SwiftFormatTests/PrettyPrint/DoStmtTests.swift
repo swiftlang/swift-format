@@ -164,6 +164,39 @@ final class DoStmtTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
 
+  func testCatchWhereOnly_noBreakBeforeCatch() {
+    let input =
+      """
+      do { f() } catch where c { g() }
+      """
+
+    let expected =
+      """
+      do { f() } catch where c { g() }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
+  }
+
+  func testCatchWhereOnly_breakBeforeCatch() {
+    let input =
+      """
+      do { f() } catch where c { g() }
+      """
+
+    let expected =
+      """
+      do { f() }
+      catch where c { g() }
+
+      """
+
+    var config = Configuration.forTesting
+    config.lineBreakBeforeControlFlowKeywords = true
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80, configuration: config)
+  }
+
   func testDoCatch_breakBeforeCatch() {
     let input =
       """

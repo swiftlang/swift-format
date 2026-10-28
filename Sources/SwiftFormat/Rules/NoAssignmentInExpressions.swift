@@ -118,10 +118,17 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
   /// purposes, even though a `TryExpr` will wrap the `InfixOperatorExpr` and thus would not be
   /// considered a standalone assignment if we only checked the infix expression for a
   /// `CodeBlockItem` parent.
+  ///
+  /// It also walks up through enclosing infix operator expressions whose operator is unknown to the
+  /// operator table. Such operators are folded using a default precedence/associativity, which can
+  /// nest an assignment that would otherwise stand alone. For example, `x = try f() ?! error` is
+  /// folded as `(x = try f()) ?! error` when `?!` is a custom operator, even though the assignment
+  /// is its own statement. See https://github.com/swiftlang/swift-format/issues/1228.
   private func isStandaloneAssignmentStatement(_ node: InfixOperatorExprSyntax) -> Bool {
     var node = Syntax(node)
     while let parent = node.parent,
       parent.is(TryExprSyntax.self) || parent.is(AwaitExprSyntax.self) || parent.is(UnsafeExprSyntax.self)
+        || isInfixOperatorWithUnknownPrecedence(parent)
     {
       node = parent
     }
@@ -132,6 +139,20 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
       return true
     }
     return parent.is(CodeBlockItemSyntax.self)
+  }
+
+  /// Returns a value indicating whether the given node is an infix operator expression whose
+  /// operator is not present in the operator table.
+  ///
+  /// Such operators are folded using a default precedence/associativity, so the resulting nesting
+  /// can't be trusted to reflect how the expression would actually be parsed.
+  private func isInfixOperatorWithUnknownPrecedence(_ node: Syntax) -> Bool {
+    guard let infixExpr = node.as(InfixOperatorExprSyntax.self),
+      let binaryOperator = infixExpr.operator.as(BinaryOperatorExprSyntax.self)
+    else {
+      return false
+    }
+    return context.operatorTable.infixOperator(named: binaryOperator.operator.text) == nil
   }
 
   /// Returns true if the infix operator expression is in the (non-closure) parameters of an allowed

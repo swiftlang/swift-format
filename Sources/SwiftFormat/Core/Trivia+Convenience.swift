@@ -37,6 +37,37 @@ extension Trivia {
     return Trivia(pieces: self.pieces.drop(while: \.isSpaceOrTab))
   }
 
+  /// Returns whether the given trivia piece is vertical or horizontal whitespace (a newline, form
+  /// feed, space, or tab).
+  private static func isWhitespace(_ piece: TriviaPiece) -> Bool {
+    switch piece {
+    case .newlines, .carriageReturns, .carriageReturnLineFeeds, .formfeeds, .spaces, .tabs:
+      return true
+    default:
+      return false
+    }
+  }
+
+  /// Splits this trivia into the leading comments that should be hoisted ahead of a token and the
+  /// remaining trivia that should stay with the token itself.
+  ///
+  /// All leading whitespace is discarded. If a comment is present, the returned `hoisted` trivia
+  /// contains every comment up to and including the last one (along with any whitespace between
+  /// them), with surrounding whitespace trimmed. The `remainder` is whatever followed the last
+  /// comment, with its own leading whitespace removed. If there is no comment, `hoisted` is empty
+  /// and `remainder` is the trivia with leading whitespace removed.
+  func splittingLeadingComments() -> (hoisted: Trivia, remainder: Trivia) {
+    let pieces = Array(self.pieces)
+    guard let lastCommentIndex = pieces.lastIndex(where: { $0.isComment }) else {
+      return (Trivia(pieces: []), Trivia(pieces: pieces.drop(while: Trivia.isWhitespace)))
+    }
+
+    let throughLastComment = pieces[...lastCommentIndex]
+    let hoisted = throughLastComment.drop(while: Trivia.isWhitespace)
+    let remainder = pieces[(lastCommentIndex + 1)...].drop(while: Trivia.isWhitespace)
+    return (Trivia(pieces: Array(hoisted)), Trivia(pieces: Array(remainder)))
+  }
+
   func withoutTrailingSpaces() -> Trivia {
     guard let lastNonSpaceIndex = self.pieces.lastIndex(where: \.isSpaceOrTab) else {
       return self

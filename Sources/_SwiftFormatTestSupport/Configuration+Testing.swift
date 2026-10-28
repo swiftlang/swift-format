@@ -42,6 +42,7 @@ extension Configuration {
     config.noAssignmentInExpressions = NoAssignmentInExpressionsConfiguration()
     config.multiElementCollectionTrailingCommas = true
     config.indentBlankLines = false
+    config.swiftTestingNamingConventions = SwiftTestingNamingConventionsConfiguration()
     return config
   }
 

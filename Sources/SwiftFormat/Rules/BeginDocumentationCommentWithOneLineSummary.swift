@@ -178,8 +178,21 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
     #endif
   }
 
+  /// The characters that the fallback implementation treats as full stops.
+  ///
+  /// Besides the ASCII period, this contains the ideographic full stop and its fullwidth and
+  /// halfwidth forms, which are the ordinary full stops in CJK text. The linguistic APIs on Apple
+  /// platforms already report all of these as sentence terminators, so recognizing them here keeps
+  /// the two implementations in agreement.
+  private static let fullStops: Set<Character> = [
+    "\u{002E}",  // FULL STOP
+    "\u{3002}",  // IDEOGRAPHIC FULL STOP
+    "\u{FF0E}",  // FULLWIDTH FULL STOP
+    "\u{FF61}",  // HALFWIDTH IDEOGRAPHIC FULL STOP
+  ]
+
   /// Returns the best approximation of sentences in the given text using string splitting around
-  /// periods that are followed by spaces.
+  /// full stops.
   ///
   /// This method is a fallback for platforms (like Linux, currently) that does not
   /// support `NaturalLanguage` and its related APIs. It will fail to catch certain kinds of
@@ -190,38 +203,30 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
   ) -> (
     sentences: [String], trailingText: Substring
   ) {
-    // If we find a period followed by a space, then there is definitely one (approximate) sentence;
-    // there may be more.
-    let possiblyHasMultipleSentences = text.range(of: ". ") != nil
+    var sentences = [String]()
+    var sentenceStart = text.startIndex
+    var index = text.startIndex
 
-    // If the string does not end in a period, then the text preceding it (up until the last
-    // sentence terminator, or the beginning of the string, whichever comes first), is trailing
-    // text.
-    let hasTrailingText = !text.hasSuffix(".")
+    while index < text.endIndex {
+      let next = text.index(after: index)
+      defer { index = next }
 
-    if !possiblyHasMultipleSentences {
-      // If we didn't find a ". " sequence, then we either have trailing text (if there is no period
-      // at the end of the string) or we have a single sentence (if there is a final period).
-      if hasTrailingText {
-        return (sentences: [], trailingText: text[...])
-      } else {
-        return (sentences: [text], trailingText: "")
+      guard Self.fullStops.contains(text[index]) else { continue }
+
+      // An ASCII period only ends a sentence when it is followed by a space or by the end of the
+      // text, so that decimal points and abbreviations stay inside the sentence they belong to.
+      // The CJK full stops are not written with a following space, so they always end a sentence.
+      if text[index] == "." && next != text.endIndex && text[next] != " " {
+        continue
       }
+
+      sentences.append(String(text[sentenceStart..<next]).trimmingCharacters(in: .whitespaces))
+      sentenceStart = next
     }
 
-    // Otherwise, split the string around ". " sequences. All of these but the last one are
-    // definitely (approximate) sentences. The last one is either trailing text or another sentence,
-    // depending on whether the entire string ended with a period.
-    let splitText = text.components(separatedBy: ". ")
-    let definiteApproximateSentences = splitText.dropLast().map { "\($0)." }
-    let trailingText = splitText.last ?? ""
-    if hasTrailingText {
-      return (sentences: Array(definiteApproximateSentences), trailingText: trailingText[...])
-    } else {
-      var sentences = Array(definiteApproximateSentences)
-      sentences.append(trailingText)
-      return (sentences: sentences, trailingText: "")
-    }
+    // Anything after the last full stop was not terminated, so it is trailing text.
+    let trailingText = text[sentenceStart...].drop { $0 == " " }
+    return (sentences: sentences, trailingText: trailingText)
   }
 }
 

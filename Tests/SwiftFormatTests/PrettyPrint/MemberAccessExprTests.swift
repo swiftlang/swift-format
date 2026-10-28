@@ -544,4 +544,23 @@ final class MemberAccessExprTests: PrettyPrintTestCase {
       configuration: configuration
     )
   }
+
+  func testOptionalChainAfterParenthesizedBaseKeepsQuestionMarkAttached() {
+    let input =
+      """
+      if (a ? b : c)?.f {}
+      """
+
+    let expected =
+      """
+      if (a
+        ? b
+        : c)?.f
+      {
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 10)
+  }
 }

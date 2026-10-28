@@ -205,6 +205,112 @@ final class IgnoreNodeTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
 
+  func testIgnoreInConditionalCompilationBlock() {
+    let input =
+      """
+      #if FOO
+      // swift-format-ignore
+      let  x  =  1
+      #endif
+      """
+
+    let expected =
+      """
+      #if FOO
+        // swift-format-ignore
+        let  x  =  1
+      #endif
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+  }
+
+  func testIgnoreInEachConditionalCompilationClause() {
+    let input =
+      """
+      #if FOO
+      // swift-format-ignore
+      let  x  =  1
+      #elseif BAR
+      let y = 2
+      // swift-format-ignore
+      let  z  =  3
+      #else
+      // swift-format-ignore
+      let  w  =  4
+      #endif
+      """
+
+    let expected =
+      """
+      #if FOO
+        // swift-format-ignore
+        let  x  =  1
+      #elseif BAR
+        let y = 2
+        // swift-format-ignore
+        let  z  =  3
+      #else
+        // swift-format-ignore
+        let  w  =  4
+      #endif
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+  }
+
+  func testIgnoreInNestedConditionalCompilationBlock() {
+    let input =
+      """
+      #if FOO
+      #if BAR
+      // swift-format-ignore
+      let  a  =  1
+      #endif
+      #endif
+      """
+
+    let expected =
+      """
+      #if FOO
+        #if BAR
+          // swift-format-ignore
+          let  a  =  1
+        #endif
+      #endif
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+  }
+
+  func testIgnoreMemberInConditionalCompilationBlock() {
+    let input =
+      """
+      struct S {
+        #if FOO
+        // swift-format-ignore
+        let  x  =  1
+        #endif
+      }
+      """
+
+    let expected =
+      """
+      struct S {
+        #if FOO
+          // swift-format-ignore
+          let  x  =  1
+        #endif
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+  }
+
   func testInvalidComment() {
     let input =
       """

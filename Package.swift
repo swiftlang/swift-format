@@ -1,4 +1,4 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 6.0
 //===----------------------------------------------------------------------===//
 //
 // This source file is part of the Swift.org open source project
@@ -146,9 +146,11 @@ let package = Package(
   ],
   products: products,
   dependencies: dependencies,
-  targets: targets
+  targets: targets,
+  swiftLanguageModes: [.v5]
 )
 
+@MainActor
 func swiftSyntaxDependencies(_ names: [String]) -> [Target.Dependency] {
   if buildDynamicSwiftSyntaxLibrary {
     return [.product(name: "_SwiftSyntaxDynamic", package: "swift-syntax")]

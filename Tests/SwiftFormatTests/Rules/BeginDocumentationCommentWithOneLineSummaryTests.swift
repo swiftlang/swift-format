@@ -180,6 +180,60 @@ final class BeginDocumentationCommentWithOneLineSummaryTests: LintOrFormatRuleTe
     #endif
   }
 
+  func testCJKFullStopsTerminateSentences() {
+    assertLint(
+      BeginDocumentationCommentWithOneLineSummary.self,
+      """
+      /// 何かする関数。
+      func doSomething() {}
+
+      /// 何かする関数．
+      func doSomething2() {}
+
+      /// 何かする関数｡
+      func doSomething3() {}
+
+      /// 一つ目の文。二つ目の文。
+      1️⃣func doSomething4() {}
+
+      /// 何かする関数
+      2️⃣func doSomething5() {}
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: #"add a blank comment line after this sentence: "一つ目の文。""#),
+        FindingSpec("2️⃣", message: #"terminate this sentence with a period: "何かする関数""#),
+      ]
+    )
+  }
+
+  func testCJKFullStopsTerminateSentencesInFallbackMode() {
+    BeginDocumentationCommentWithOneLineSummary._forcesFallbackModeForTesting = true
+
+    assertLint(
+      BeginDocumentationCommentWithOneLineSummary.self,
+      """
+      /// 何かする関数。
+      func doSomething() {}
+
+      /// 何かする関数．
+      func doSomething2() {}
+
+      /// 何かする関数｡
+      func doSomething3() {}
+
+      /// 一つ目の文。二つ目の文。
+      1️⃣func doSomething4() {}
+
+      /// 何かする関数
+      2️⃣func doSomething5() {}
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: #"add a blank comment line after this sentence: "一つ目の文。""#),
+        FindingSpec("2️⃣", message: #"terminate this sentence with a period: "何かする関数""#),
+      ]
+    )
+  }
+
   func testSentenceTerminationInsideQuotes() {
     assertLint(
       BeginDocumentationCommentWithOneLineSummary.self,

@@ -31,7 +31,7 @@ import SwiftSyntax
 ///     dummy value will be used.
 ///   - experimentalFeatures: The set of experimental features that should be enabled in the parser.
 ///     These names must be from the set of parser-recognized experimental language features in
-///     `SwiftParser`'s `Parser.ExperimentalFeatures` enum, which match the spelling defined in the
+///     `SwiftParser`'s `Parser.LanguageFeatures` enum, which match the spelling defined in the
 ///     compiler's `Features.def` file.
 ///   - parsingDiagnosticHandler: An optional callback that will be notified if there are any
 ///     errors when parsing the source code.
@@ -43,16 +43,16 @@ func parseAndEmitDiagnostics(
   experimentalFeatures: Set<String>,
   parsingDiagnosticHandler: ((Diagnostic, SourceLocation) -> Void)? = nil
 ) throws -> SourceFileSyntax {
-  var experimentalFeaturesSet: Parser.ExperimentalFeatures = []
+  var experimentalFeaturesSet: Parser.LanguageFeatures = []
   for featureName in experimentalFeatures {
-    guard let featureValue = Parser.ExperimentalFeatures(name: featureName) else {
+    guard let featureValue = Parser.LanguageFeatures(name: featureName) else {
       throw SwiftFormatError.unrecognizedExperimentalFeature(featureName)
     }
     experimentalFeaturesSet.formUnion(featureValue)
   }
   var source = source
   let sourceFile = source.withUTF8 { sourceBytes in
-    operatorTable.foldAll(Parser.parse(source: sourceBytes, experimentalFeatures: experimentalFeaturesSet)) { _ in }
+    operatorTable.foldAll(Parser.parse(source: sourceBytes, languageFeatures: experimentalFeaturesSet)) { _ in }
       .as(SourceFileSyntax.self)!
   }
   let diagnostics = ParseDiagnosticsGenerator.diagnostics(for: sourceFile)

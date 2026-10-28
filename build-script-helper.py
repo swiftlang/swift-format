@@ -91,6 +91,7 @@ def get_swiftpm_options(
     configuration: str,
     cross_compile_host: Optional[str],
     cross_compile_config: Optional[Path],
+    extra_swiftpm_flags: List[str],
     verbose: bool,
 ) -> List[Union[str, Path]]:
     args: List[Union[str, Path]] = [
@@ -109,7 +110,12 @@ def get_swiftpm_options(
         swift_exec, cross_compile_config=cross_compile_config
     )
     build_os = build_target.split("-")[2]
-    if not build_os.startswith("macosx"):
+    if build_os.startswith('openbsd'):
+        args += [
+            '-Xlinker', '-rpath', '-Xlinker', '$ORIGIN/../lib/swift/openbsd',
+            '-Xlinker', '-z', '-Xlinker', 'origin',
+        ]
+    elif not build_os.startswith("macosx"):
         # Library rpath for swift, dispatch, Foundation, etc. when installing
         args += [
             "-Xlinker",
@@ -124,6 +130,8 @@ def get_swiftpm_options(
             args += ["--arch", "x86_64", "--arch", "arm64"]
         else:
             fatal_error("cannot cross-compile for %s" % cross_compile_host)
+
+    args += extra_swiftpm_flags
 
     return args
 
@@ -146,6 +154,7 @@ def invoke_swiftpm(
     configuration: str,
     cross_compile_host: Optional[str],
     cross_compile_config: Optional[Path],
+    extra_swiftpm_flags: List[str],
     env,
     verbose: bool,
 ):
@@ -161,6 +170,7 @@ def invoke_swiftpm(
         configuration=configuration,
         cross_compile_host=cross_compile_host,
         cross_compile_config=cross_compile_config,
+        extra_swiftpm_flags=extra_swiftpm_flags,
         verbose=verbose,
     )
     if action == "test":
@@ -188,6 +198,7 @@ def build(args: argparse.Namespace) -> None:
         configuration=args.configuration,
         cross_compile_host=args.cross_compile_host,
         cross_compile_config=args.cross_compile_config,
+        extra_swiftpm_flags=args.extra_swiftpm_flags,
         env=env,
         verbose=args.verbose,
     )
@@ -206,13 +217,15 @@ def test(args: argparse.Namespace) -> None:
         configuration=args.configuration,
         cross_compile_host=args.cross_compile_host,
         cross_compile_config=args.cross_compile_config,
+        extra_swiftpm_flags=args.extra_swiftpm_flags,
         env=env,
         verbose=args.verbose,
     )
 
 
 def install(args: argparse.Namespace) -> None:
-    build(args)
+    if not args.install_only:
+        build(args)
 
     print("** Installing swift-format **")
 
@@ -225,6 +238,7 @@ def install(args: argparse.Namespace) -> None:
         configuration=args.configuration,
         cross_compile_host=args.cross_compile_host,
         cross_compile_config=args.cross_compile_config,
+        extra_swiftpm_flags=args.extra_swiftpm_flags,
         verbose=args.verbose,
     )
     cmd = [args.swift_exec, "build", "--show-bin-path"] + swiftpm_args
@@ -271,6 +285,13 @@ def add_common_args(parser: argparse.ArgumentParser) -> None:
         "--cross-compile-config",
         help="an SPM JSON destination file containing Swift cross-compilation flags",
     )
+    parser.add_argument(
+        "--extra-swiftpm-flag",
+        action="append",
+        default=[],
+        dest="extra_swiftpm_flags",
+        help="additional flag to pass to SwiftPM invocations",
+    )
 
 
 def parse_args() -> argparse.Namespace:
@@ -296,6 +317,10 @@ def parse_args() -> argparse.Namespace:
         metavar="PATHS",
         help="install path",
     )
+    install_parser.add_argument(
+        "--install-only",
+        action="store_true",
+        default=False)
 
     parsed = parser.parse_args(sys.argv[1:])
 

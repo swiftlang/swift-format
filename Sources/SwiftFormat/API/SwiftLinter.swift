@@ -83,7 +83,7 @@ public final class SwiftLinter {
   ///   - url: A file URL denoting the filename/path that should be assumed for this source code.
   ///   - experimentalFeatures: The set of experimental features that should be enabled in the
   ///     parser. These names must be from the set of parser-recognized experimental language
-  ///     features in `SwiftParser`'s `Parser.ExperimentalFeatures` enum, which match the spelling
+  ///     features in `SwiftParser`'s `Parser.LanguageFeatures` enum, which match the spelling
   ///     defined in the compiler's `Features.def` file.
   ///   - parsingDiagnosticHandler: An optional callback that will be notified if there are any
   ///     errors when parsing the source code.

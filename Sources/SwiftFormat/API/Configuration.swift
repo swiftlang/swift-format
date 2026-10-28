@@ -48,6 +48,8 @@ public struct Configuration: Codable, Equatable {
     case multiElementCollectionTrailingCommas
     case reflowMultilineStringLiterals
     case indentBlankLines
+    case orderedImports
+    case swiftTestingNamingConventions
   }
 
   /// A dictionary containing the default enabled/disabled states of rules, keyed by the rules'
@@ -292,6 +294,8 @@ public struct Configuration: Codable, Equatable {
     }
   }
 
+  @_spi(Internal) public static let swiftFormatFilename = ".swift-format"
+
   public var reflowMultilineStringLiterals: MultilineStringReflowBehavior
 
   /// Determines whether to add indentation whitespace to blank lines or remove it entirely.
@@ -300,6 +304,12 @@ public struct Configuration: Codable, Equatable {
   /// if they contain whitespace, the existing whitespace will be adjusted, and if they are empty, spaces will be added to match the indentation.
   /// If false (the default), the whitespace in blank lines will be removed entirely.
   public var indentBlankLines: Bool
+
+  /// Configuration for the `OrderedImports` rule.
+  public var orderedImports: OrderedImportsConfiguration
+
+  /// Configuration for the `SwiftTestingNamingConventions` rule.
+  public var swiftTestingNamingConventions: SwiftTestingNamingConventionsConfiguration
 
   /// Creates a new `Configuration` by loading it from a configuration file.
   public init(contentsOf url: URL) throws {
@@ -443,6 +453,20 @@ public struct Configuration: Codable, Equatable {
       )
       ?? defaults.indentBlankLines
 
+    self.orderedImports =
+      try container.decodeIfPresent(
+        OrderedImportsConfiguration.self,
+        forKey: .orderedImports
+      )
+      ?? defaults.orderedImports
+
+    self.swiftTestingNamingConventions =
+      try container.decodeIfPresent(
+        SwiftTestingNamingConventionsConfiguration.self,
+        forKey: .swiftTestingNamingConventions
+      )
+      ?? defaults.swiftTestingNamingConventions
+
     // If the `rules` key is not present at all, default it to the built-in set
     // so that the behavior is the same as if the configuration had been
     // default-initialized. To get an empty rules dictionary, one can explicitly
@@ -480,7 +504,11 @@ public struct Configuration: Codable, Equatable {
     try container.encode(indentSwitchCaseLabels, forKey: .indentSwitchCaseLabels)
     try container.encode(noAssignmentInExpressions, forKey: .noAssignmentInExpressions)
     try container.encode(multiElementCollectionTrailingCommas, forKey: .multiElementCollectionTrailingCommas)
+    try container.encode(multilineTrailingCommaBehavior, forKey: .multilineTrailingCommaBehavior)
     try container.encode(reflowMultilineStringLiterals, forKey: .reflowMultilineStringLiterals)
+    try container.encode(indentBlankLines, forKey: .indentBlankLines)
+    try container.encode(orderedImports, forKey: .orderedImports)
+    try container.encode(swiftTestingNamingConventions, forKey: .swiftTestingNamingConventions)
     try container.encode(rules, forKey: .rules)
   }
 
@@ -500,7 +528,7 @@ public struct Configuration: Codable, Equatable {
     }
     repeat {
       candidateDirectory.deleteLastPathComponent()
-      let candidateFile = candidateDirectory.appendingPathComponent(".swift-format")
+      let candidateFile = candidateDirectory.appendingPathComponent(Self.swiftFormatFilename)
       if FileManager.default.isReadableFile(atPath: candidateFile.path) {
         return candidateFile
       }
@@ -543,6 +571,34 @@ public struct NoAssignmentInExpressionsConfiguration: Codable, Equatable {
     // in the test.
     "XCTAssertNoThrow"
   ]
+
+  public init() {}
+}
+
+/// Configuration for the `OrderedImports` rule.
+public struct OrderedImportsConfiguration: Codable, Equatable {
+  /// Determines whether imports within conditional compilation blocks should be ordered.
+  public var includeConditionalImports = false
+  /// Determines whether imports are separated into groups based on their type.
+  public var shouldGroupImports = true
+  public init() {}
+}
+
+/// Configuration for the `SwiftTestingNamingConventions` rule.
+public struct SwiftTestingNamingConventionsConfiguration: Codable, Equatable {
+  /// If true, `@Suite` should not be used if it doesn't specify any arguments; that is, marking a
+  /// test type with `@Suite` is unnecessary because any type with `@Test`s is automatically a
+  /// suite.
+  public var forbidSuiteWithoutParameters = false
+
+  /// If true, `@Suite` should not specify a separate string description.
+  public var forbidSuiteDescription = false
+
+  /// If true, `@Test` should not specify a separate string description.
+  public var forbidTestDescription = false
+
+  /// If true, `@Test` function names must be raw identifiers (surrounded by backticks).
+  public var requireRawIdentifierTestNames = false
 
   public init() {}
 }

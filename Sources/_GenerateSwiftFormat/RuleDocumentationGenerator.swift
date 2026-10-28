@@ -33,7 +33,7 @@ import SwiftFormat
 
       Use the rules below in the `rules` block of your `.swift-format`
       configuration file, as described in
-      [Configuration](Documentation/Configuration.md). All of these rules can be
+      [Configuration](Configuration.md). All of these rules can be
       applied in the linter, but only some of them can format your source code
       automatically.
 

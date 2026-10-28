@@ -646,18 +646,21 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: ForStmtSyntax) -> SyntaxVisitorContinueKind {
-    // If we have a `(try) await` clause, allow breaking after the `for` so that the `(try) await`
-    // can fall onto the next line if needed, and if both `try await` are present, keep them
-    // together. Otherwise, keep `for` glued to the token after it so that we break somewhere later
-    // on the line.
-    if let awaitKeyword = node.awaitKeyword {
+    // If we have a `(try) await` or `unsafe` clause, allow breaking after the `for` so that the
+    // modifiers can fall onto the next line if needed, and if multiple modifiers are present, keep
+    // them together. Otherwise, keep `for` glued to the token after it so that we break somewhere
+    // later on the line.
+    let modifiers = [node.tryKeyword, node.awaitKeyword, node.unsafeKeyword].compactMap { $0 }
+    if let first = modifiers.first, let last = modifiers.last {
       after(node.forKeyword, tokens: .break)
-      if let tryKeyword = node.tryKeyword {
-        before(tryKeyword, tokens: .open)
-        after(tryKeyword, tokens: .break)
-        after(awaitKeyword, tokens: .close, .break)
+      if modifiers.count == 1 {
+        after(first, tokens: .break)
       } else {
-        after(awaitKeyword, tokens: .break)
+        before(first, tokens: .open)
+        for modifier in modifiers.dropLast() {
+          after(modifier, tokens: .break)
+        }
+        after(last, tokens: .close, .break)
       }
     } else {
       after(node.forKeyword, tokens: .space)
@@ -739,10 +742,19 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // old (pre-SE-0276) behavior (a fixed space after the `catch` keyword).
     if node.catchItems.count > 1 {
       for catchItem in node.catchItems {
-        before(catchItem.firstToken(viewMode: .sourceAccurate), tokens: .break(.open(kind: .continuation)))
+        // If the item has no pattern (it consists solely of a `where` clause),
+        // skip emitting a break before it. `WhereClauseSyntax` will emit its
+        // own break before the `where` keyword, and emitting one here too
+        // would produce duplicate whitespace.
+        if catchItem.pattern != nil {
+          before(catchItem.firstToken(viewMode: .sourceAccurate), tokens: .break(.open(kind: .continuation)))
+        }
         after(catchItem.lastToken(viewMode: .sourceAccurate), tokens: .break(.close(mustBreak: false), size: 0))
       }
-    } else {
+    } else if let onlyItem = node.catchItems.first, onlyItem.pattern != nil {
+      // Same rationale as above: When the single catch item has no pattern,
+      // the `where` clause's own preceding break already separates it from
+      // `catch`. Emitting a space here would produce duplicate whitespace.
       before(node.catchItems.firstToken(viewMode: .sourceAccurate), tokens: .space)
     }
 
@@ -922,6 +934,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: LabeledExprListSyntax) -> SyntaxVisitorContinueKind {
+    if node.parent?.is(AttributeSyntax.self) == true && node.last?.trailingComma == nil {
+      return .visitChildren
+    }
     markCommaDelimitedRegion(node, isCollectionLiteral: false)
     return .visitChildren
   }
@@ -1481,7 +1496,15 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: IfConfigDeclSyntax) -> SyntaxVisitorContinueKind {
     // there has to be a break after an #endif
-    after(node.poundEndif, tokens: .break(.same, size: 0))
+    let newlines: NewlineBehavior
+    if node.parent?.is(AttributeListSyntax.self) == true {
+      newlines = .elective
+    } else if isNestedInPostfixIfConfig(node: Syntax(node)) {
+      newlines = config.respectsExistingLineBreaks ? .elective : .soft
+    } else {
+      newlines = .soft
+    }
+    after(node.poundEndif, tokens: .break(.same, size: 0, newlines: newlines))
     return .visitChildren
   }
 
@@ -1511,10 +1534,21 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // Unlike other code blocks, where we may want a single statement to be laid out on the same
     // line as a parent construct, the content of an `#if` block must always be on its own line;
     // the newline token inserted at the end enforces this.
-    if let lastElemTok = node.elements?.lastToken(viewMode: .sourceAccurate) {
+    //
+    // The closing tokens are normally attached after the last token of the body. If that last token
+    // belongs to a formatter-ignored item, however, it is never visited (its node is emitted as a
+    // single verbatim token), so an `after` group on it would be dropped and the `.open` above would
+    // be left unclosed. In that case, attach the closing tokens before the following token (the next
+    // `#elseif`/`#else`/`#endif`) instead, which is always visited.
+    if let lastElemTok = node.elements?.lastToken(viewMode: .sourceAccurate),
+      !isFormatterIgnored(lastElemTok)
+    {
       after(lastElemTok, tokens: .break(breakKindClose, newlines: .soft), .close)
     } else {
-      before(tokenToOpenWith.nextToken(viewMode: .all), tokens: .break(breakKindClose, newlines: .soft), .close)
+      let tokenAfterBody =
+        node.elements?.lastToken(viewMode: .sourceAccurate)?.nextToken(viewMode: .all)
+        ?? tokenToOpenWith.nextToken(viewMode: .all)
+      before(tokenAfterBody, tokens: .break(breakKindClose, newlines: .soft), .close)
     }
 
     if !isNestedInPostfixIfConfig(node: Syntax(node)), let condition = node.condition {
@@ -2395,13 +2429,22 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: AttributedTypeSyntax) -> SyntaxVisitorContinueKind {
     before(node.firstToken(viewMode: .sourceAccurate), tokens: .open)
-    arrangeAttributeList(node.attributes)
+
+    let breakToken: Token = .break(.continue, newlines: .elective(ignoresDiscretionary: true))
     for specifier in node.specifiers {
       after(
-        specifier.firstToken(viewMode: .sourceAccurate),
-        tokens: .break(.continue, newlines: .elective(ignoresDiscretionary: true))
+        specifier.lastToken(viewMode: .sourceAccurate),
+        tokens: breakToken
       )
     }
+    arrangeAttributeList(node.attributes, suppressFinalBreak: false, lineBreak: breakToken, shouldGroup: false)
+    for specifier in node.lateSpecifiers {
+      after(
+        specifier.lastToken(viewMode: .sourceAccurate),
+        tokens: breakToken
+      )
+    }
+
     after(node.lastToken(viewMode: .sourceAccurate), tokens: .close)
     return .visitChildren
   }
@@ -3067,40 +3110,75 @@ private final class TokenStreamCreator: SyntaxVisitor {
   private func arrangeAttributeList(
     _ attributes: AttributeListSyntax?,
     suppressFinalBreak: Bool = false,
-    separateByLineBreaks: Bool = false
+    separateByLineBreaks: Bool = false,
+    shouldGroup: Bool = true
   ) {
-    if let attributes = attributes {
-      let behavior: NewlineBehavior = separateByLineBreaks ? .hard : .elective
+    let behavior: NewlineBehavior = separateByLineBreaks ? .hard : .elective
+    arrangeAttributeList(
+      attributes,
+      suppressFinalBreak: suppressFinalBreak,
+      lineBreak: .break(.same, newlines: behavior),
+      shouldGroup: shouldGroup
+    )
+  }
+
+  /// Applies formatting tokens around and between the attributes in an attribute list.
+  private func arrangeAttributeList(
+    _ attributes: AttributeListSyntax?,
+    suppressFinalBreak: Bool,
+    lineBreak: Token,
+    shouldGroup: Bool
+  ) {
+    guard let attributes, !attributes.isEmpty else {
+      return
+    }
+
+    if shouldGroup {
       before(attributes.firstToken(viewMode: .sourceAccurate), tokens: .open)
-      if attributes.dropLast().isEmpty,
-        let ifConfig = attributes.first?.as(IfConfigDeclSyntax.self)
-      {
-        for clause in ifConfig.clauses {
-          if let nestedAttributes = AttributeListSyntax(clause.elements) {
-            arrangeAttributeList(nestedAttributes, suppressFinalBreak: true, separateByLineBreaks: separateByLineBreaks)
-          }
+    }
+
+    if attributes.dropLast().isEmpty,
+      let ifConfig = attributes.first?.as(IfConfigDeclSyntax.self)
+    {
+      for clause in ifConfig.clauses {
+        if let nestedAttributes = AttributeListSyntax(clause.elements) {
+          arrangeAttributeList(
+            nestedAttributes,
+            suppressFinalBreak: true,
+            lineBreak: lineBreak,
+            shouldGroup: shouldGroup
+          )
         }
-      } else {
-        for element in attributes.dropLast() {
-          if let ifConfig = element.as(IfConfigDeclSyntax.self) {
-            for clause in ifConfig.clauses {
-              if let nestedAttributes = AttributeListSyntax(clause.elements) {
-                arrangeAttributeList(
-                  nestedAttributes,
-                  suppressFinalBreak: true,
-                  separateByLineBreaks: separateByLineBreaks
-                )
-              }
+      }
+    } else {
+      for element in attributes.dropLast() {
+        if let ifConfig = element.as(IfConfigDeclSyntax.self) {
+          for clause in ifConfig.clauses {
+            if let nestedAttributes = AttributeListSyntax(clause.elements) {
+              arrangeAttributeList(
+                nestedAttributes,
+                suppressFinalBreak: true,
+                lineBreak: lineBreak,
+                shouldGroup: shouldGroup
+              )
             }
-          } else {
-            after(element.lastToken(viewMode: .sourceAccurate), tokens: .break(.same, newlines: behavior))
           }
+          after(element.lastToken(viewMode: .sourceAccurate), tokens: .break(.same, newlines: .hard))
+        } else {
+          after(element.lastToken(viewMode: .sourceAccurate), tokens: lineBreak)
         }
       }
-      var afterAttributeTokens = [Token.close]
-      if !suppressFinalBreak {
-        afterAttributeTokens.append(.break(.same, newlines: behavior))
-      }
+    }
+
+    var afterAttributeTokens = [Token]()
+    if shouldGroup {
+      afterAttributeTokens.append(.close)
+    }
+    if !suppressFinalBreak {
+      let endsWithIfConfig = attributes.last?.is(IfConfigDeclSyntax.self) ?? false
+      afterAttributeTokens.append(endsWithIfConfig ? .break(.same, newlines: .hard) : lineBreak)
+    }
+    if !afterAttributeTokens.isEmpty {
       after(attributes.lastToken(viewMode: .sourceAccurate), tokens: afterAttributeTokens)
     }
   }
@@ -3521,6 +3599,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
       case .blockComment(let text):
         if index > 0 || isStartOfFile {
+          let isStandaloneLeadingComment = leadingIndent != nil || isStartOfFile
           generateEnableFormattingIfNecessary(position..<position + piece.sourceLength)
           appendToken(.comment(Comment(kind: .block, leadingIndent: leadingIndent, text: text), wasEndOfLine: false))
           generateDisableFormattingIfNecessary(position + piece.sourceLength)
@@ -3534,8 +3613,10 @@ private final class TokenStreamCreator: SyntaxVisitor {
           }
           appendToken(.break(.same, size: breakSize))
           isStartOfFile = false
+          requiresNextNewline = isStandaloneLeadingComment
+        } else {
+          requiresNextNewline = false
         }
-        requiresNextNewline = false
         leadingIndent = nil
 
       case .docLineComment(let text):
@@ -3986,6 +4067,12 @@ private final class TokenStreamCreator: SyntaxVisitor {
     {
       parenthesizedExpr = nextExpr
     }
+    while let parent = parenthesizedExpr?.parent,
+      parent.is(OptionalChainingExprSyntax.self) || parent.is(ForceUnwrapExprSyntax.self),
+      parent.firstToken(viewMode: .sourceAccurate) == parenthesizedExpr?.firstToken(viewMode: .sourceAccurate)
+    {
+      parenthesizedExpr = parent
+    }
     return parenthesizedExpr
   }
 
@@ -4244,10 +4331,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
       after(postfixIfExpr.lastToken(viewMode: .sourceAccurate), tokens: .contextualBreakingEnd)
 
       for clause in postfixIfExpr.config.clauses {
-        before(clause.poundKeyword, tokens: .break(.contextual, size: 0))
+        before(clause.poundKeyword, tokens: .break(.contextual, size: 0, newlines: .soft))
       }
-      before(postfixIfExpr.config.poundEndif, tokens: .break(.contextual, size: 0))
-      after(postfixIfExpr.config.poundEndif, tokens: .break(.same, size: 0))
+      before(postfixIfExpr.config.poundEndif, tokens: .break(.contextual, size: 0, newlines: .soft))
 
       return insertContextualBreaks(base, isTopLevel: false)
     } else if let callingExpr = expr.asProtocol(CallingExprSyntaxProtocol.self) {
@@ -4528,6 +4614,26 @@ private func shouldFormatterIgnore(node: Syntax) -> Bool {
 /// - Parameter file: The root syntax node for a source file.
 private func shouldFormatterIgnore(file: SourceFileSyntax) -> Bool {
   return isFormatterIgnorePresent(inTrivia: file.allPrecedingTrivia, isWholeFile: true)
+}
+
+/// Returns whether the given token is contained within a formatter-ignored item.
+///
+/// When an item is formatter-ignored, its entire subtree is emitted as a single verbatim token and
+/// none of its tokens are visited individually. Code that wants to attach tokens after such a token
+/// (via `after(_:tokens:)`) must account for the fact that those tokens would be silently dropped.
+///
+/// - Parameter token: The token to test.
+private func isFormatterIgnored(_ token: TokenSyntax) -> Bool {
+  // Only `CodeBlockItem` and `MemberBlockItem` nodes are emitted verbatim via the per-item ignore
+  // path, so those are the only ancestors that can prevent `token` from being visited.
+  var node = Syntax(token).parent
+  while let current = node {
+    if current.is(CodeBlockItemSyntax.self) || current.is(MemberBlockItemSyntax.self) {
+      return shouldFormatterIgnore(node: current)
+    }
+    node = current.parent
+  }
+  return false
 }
 
 extension NewlineBehavior {

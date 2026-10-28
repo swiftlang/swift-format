@@ -19,6 +19,7 @@ add_library(SwiftFormat
   API/SwiftFormatError.swift
   API/SwiftFormatter.swift
   API/SwiftLinter.swift
+  Core/Attributes+Convenience.swift
   Core/Context.swift
   Core/DocumentationComment.swift
   Core/DocumentationCommentText.swift
@@ -26,7 +27,7 @@ add_library(SwiftFormat
   Core/FindingEmitter.swift
   Core/FormatPipeline.swift
   Core/FunctionDeclSyntax+Convenience.swift
-  Core/ImportsXCTestVisitor.swift
+  Core/ImportsAnyTestingLibrary.swift
   Core/LazySplitSequence.swift
   Core/LintPipeline.swift
   Core/ModifierListSyntax+Convenience.swift
@@ -44,7 +45,6 @@ add_library(SwiftFormat
   Core/SyntaxProtocol+Convenience.swift
   Core/SyntaxTraits.swift
   Core/Trivia+Convenience.swift
-  Core/WithAttributesSyntax+Convenience.swift
   Core/WithSemicolonSyntax.swift
   PrettyPrint/Comment.swift
   PrettyPrint/Indent+Length.swift
@@ -89,6 +89,7 @@ add_library(SwiftFormat
   Rules/OrderedImports.swift
   Rules/ReplaceForEachWithForLoop.swift
   Rules/ReturnVoidInsteadOfEmptyTuple.swift
+  Rules/SwiftTestingNamingConventions.swift
   Rules/TypeNamesShouldBeCapitalized.swift
   Rules/UseEarlyExits.swift
   Rules/UseExplicitNilCheckInConditions.swift
@@ -99,7 +100,10 @@ add_library(SwiftFormat
   Rules/UseTripleSlashForDocumentationComments.swift
   Rules/UseWhereClausesInForLoops.swift
   Rules/ValidateDocumentationComments.swift
+  Utilities/Data+writeAtomicallyPreservingPermissions.swift
   Utilities/FileIterator.swift
+  Utilities/GitIgnorePattern.swift
+  Utilities/IgnoreManager.swift
   Utilities/URL+isRoot.swift)
 target_link_libraries(SwiftFormat PUBLIC
   SwiftMarkdown::Markdown
