@@ -771,4 +771,101 @@ final class UseShorthandTypeNamesTests: LintOrFormatRuleTestCase {
       ]
     )
   }
+
+  func testCommentsInsideOptionalAreMovedAfterQuestionMark() {
+    // The "?" must immediately follow the wrapped type, so trivia between the wrapped type and the
+    // `>` has to move after it; otherwise, the result would not compile (or, for a line comment,
+    // the "?" and the rest of the line would be commented out).
+    assertFormatting(
+      UseShorthandTypeNames.self,
+      input: """
+        var a: 1️⃣Optional<Foo /* comment */> = nil
+        var b: 2️⃣Optional</* comment */ Foo> = nil
+        var c: 3️⃣Optional<[Foo] /* comment */> = nil
+        var d: 4️⃣Optional<5️⃣Optional<Foo /* comment */>> = nil
+        var e: 6️⃣Optional<(Foo) -> Bar /* comment */> = nil
+        func f(_ x: 7️⃣Optional<Foo /* comment */>) {}
+        var g: 8️⃣Optional<Foo  // comment
+        > = nil
+        var h = 9️⃣Optional<Foo /* comment */>(from: decoder)
+        """,
+      expected: """
+        var a: Foo? /* comment */ = nil
+        var b: /* comment */ Foo? = nil
+        var c: [Foo]? /* comment */ = nil
+        var d: Foo?? /* comment */ = nil
+        var e: ((Foo) -> Bar /* comment */)? = nil
+        func f(_ x: Foo? /* comment */) {}
+        var g: Foo?  // comment
+         = nil
+        var h = Foo? /* comment */(from: decoder)
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "use shorthand syntax for this 'Optional' type"),
+        FindingSpec("2️⃣", message: "use shorthand syntax for this 'Optional' type"),
+        FindingSpec("3️⃣", message: "use shorthand syntax for this 'Optional' type"),
+        FindingSpec("4️⃣", message: "use shorthand syntax for this 'Optional' type"),
+        FindingSpec("5️⃣", message: "use shorthand syntax for this 'Optional' type"),
+        FindingSpec("6️⃣", message: "use shorthand syntax for this 'Optional' type"),
+        FindingSpec("7️⃣", message: "use shorthand syntax for this 'Optional' type"),
+        FindingSpec("8️⃣", message: "use shorthand syntax for this 'Optional' type"),
+        FindingSpec("9️⃣", message: "use shorthand syntax for this 'Optional' type"),
+      ]
+    )
+  }
+
+  func testOptionalWithLineBreakBeforeCallIsNotShortenedInExpressionContexts() {
+    // Moving the line comment after the "?" would separate it from the call's arguments, changing
+    // the meaning of the code.
+    assertFormatting(
+      UseShorthandTypeNames.self,
+      input: """
+        var a = Optional<
+          Foo  // comment
+        >(from: decoder)
+        """,
+      expected: """
+        var a = Optional<
+          Foo  // comment
+        >(from: decoder)
+        """,
+      findings: []
+    )
+  }
+
+  func testCommentsInsideAngleBracketsArePreservedInArraysAndDictionaries() {
+    assertFormatting(
+      UseShorthandTypeNames.self,
+      input: """
+        var a: 1️⃣Array</* comment */ Foo> = []
+        var b: 2️⃣Array<
+          Foo  // comment
+        > = []
+        var c: 3️⃣Dictionary<
+          Foo, Bar  // comment
+        > = [:]
+        var d = 4️⃣Array<
+          Foo  // comment
+        >()
+        """,
+      expected: """
+        var a: [/* comment */ Foo] = []
+        var b: [
+          Foo  // comment
+        ] = []
+        var c: [
+          Foo: Bar  // comment
+        ] = [:]
+        var d = [
+          Foo  // comment
+        ]()
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "use shorthand syntax for this 'Array' type"),
+        FindingSpec("2️⃣", message: "use shorthand syntax for this 'Array' type"),
+        FindingSpec("3️⃣", message: "use shorthand syntax for this 'Dictionary' type"),
+        FindingSpec("4️⃣", message: "use shorthand syntax for this 'Array' type"),
+      ]
+    )
+  }
 }
