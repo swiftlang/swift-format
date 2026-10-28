@@ -348,18 +348,27 @@ public struct Configuration: Codable, Equatable {
     // default-initialized instance.
     let defaults = Configuration()
 
-    self.maximumBlankLines =
-      try container.decodeIfPresent(Int.self, forKey: .maximumBlankLines)
-      ?? defaults.maximumBlankLines
-    self.lineLength =
-      try container.decodeIfPresent(Int.self, forKey: .lineLength)
-      ?? defaults.lineLength
-    self.spacesBeforeEndOfLineComments =
-      try container.decodeIfPresent(Int.self, forKey: .spacesBeforeEndOfLineComments)
-      ?? defaults.spacesBeforeEndOfLineComments
-    self.tabWidth =
-      try container.decodeIfPresent(Int.self, forKey: .tabWidth)
-      ?? defaults.tabWidth
+    func decodeNonNegative(_ key: CodingKeys, default defaultValue: Int) throws -> Int {
+      guard let value = try container.decodeIfPresent(Int.self, forKey: key) else {
+        return defaultValue
+      }
+      guard value >= 0 else {
+        throw DecodingError.dataCorruptedError(
+          forKey: key,
+          in: container,
+          debugDescription: "expected a non-negative value, but found \(value)"
+        )
+      }
+      return value
+    }
+
+    self.maximumBlankLines = try decodeNonNegative(.maximumBlankLines, default: defaults.maximumBlankLines)
+    self.lineLength = try decodeNonNegative(.lineLength, default: defaults.lineLength)
+    self.spacesBeforeEndOfLineComments = try decodeNonNegative(
+      .spacesBeforeEndOfLineComments,
+      default: defaults.spacesBeforeEndOfLineComments
+    )
+    self.tabWidth = try decodeNonNegative(.tabWidth, default: defaults.tabWidth)
     self.indentation =
       try container.decodeIfPresent(Indent.self, forKey: .indentation)
       ?? defaults.indentation

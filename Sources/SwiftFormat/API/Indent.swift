@@ -40,12 +40,24 @@ public enum Indent: Hashable, Codable {
         )
       )
     }
+    func validated(_ count: Int, _ key: CodingKeys) throws -> Int {
+      guard count >= 0 else {
+        throw DecodingError.dataCorrupted(
+          DecodingError.Context(
+            codingPath: decoder.codingPath + [key],
+            debugDescription: "expected a non-negative value, but found \(count)"
+          )
+        )
+      }
+      return count
+    }
+
     if let spacesCount = spacesCount {
-      self = .spaces(spacesCount)
+      self = .spaces(try validated(spacesCount, .spaces))
       return
     }
     if let tabsCount = tabsCount {
-      self = .tabs(tabsCount)
+      self = .tabs(try validated(tabsCount, .tabs))
       return
     }
 
