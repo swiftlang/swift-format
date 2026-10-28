@@ -305,8 +305,9 @@ too long.
 
 - `includeConditionalImports` _(boolean)_: Determines whether imports within conditional compilation blocks (`#if`, `#elseif`, `#else`) should be ordered. When `true`, imports inside conditional blocks will be sorted and organized according to the same rules as top-level imports. When `false`, imports within conditional blocks are left in their original order.
 - `shouldGroupImports` _(boolean)_: Determines whether different import types should be grouped together. When `true`, imports are grouped into the following order, with a blank line between each section: 1) regular imports, 2) declaration imports, 3) @\_implementationOnly imports, and 4) @testable imports. When `false`, imports are lexicographically ordered by name, regardless of type.
+- `onlyGroupTestableImports` _(boolean)_: Determines whether `@testable` imports are the only imports assigned to a group based on their attributes. When `false`, any import with a `@testable` attribute is placed in the `@testable` group and imports with the `@_implementationOnly` attribute are placed in their own group. When `true`, an import is placed in the `@testable` group only if `@testable` is its first attribute, no separate group is created for `@_implementationOnly` imports, and imports with any other attributes are grouped and sorted together with regular imports. This matches the behavior of swift-format 602.0.0 and earlier.
 
-**default:** `{ "includeConditionalImports" : false, "shouldGroupImports": true }`
+**default:** `{ "includeConditionalImports" : false, "shouldGroupImports": true, "onlyGroupTestableImports": false }`
 
 ---
 

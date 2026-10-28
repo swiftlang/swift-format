@@ -423,6 +423,11 @@ configuration option to limit this rule to lexicographic ordering.
 By default, imports within conditional compilation blocks (`#if`, `#elseif`, `#else`) are not ordered.
 This behavior can be controlled via the `orderedImports.includeConditionalImports` configuration option.
 
+The `orderedImports.onlyGroupTestableImports` configuration option restores the grouping behavior of
+swift-format 602.0.0 and earlier: only imports whose first attribute is `@testable` are placed in a
+separate group, and imports with any other attributes are grouped and sorted together with regular
+imports.
+
 Lint: If an import appears anywhere other than the beginning of the file it resides in,
       not lexicographically ordered, or (optionally) not in the appropriate import group, a lint error is
       raised.

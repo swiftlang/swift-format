@@ -115,6 +115,28 @@ final class ConfigurationTests: XCTestCase {
     }
   }
 
+  func testDecodingPartialOrderedImportsConfiguration() throws {
+    // Configuration files that predate the addition of newer options to `orderedImports` (or that
+    // simply omit some of them) must still decode successfully, with the missing options taking
+    // their default values.
+    let jsonData = """
+      {
+          "orderedImports": {
+              "includeConditionalImports": true
+          }
+      }
+      """.data(using: .utf8)!
+
+    let jsonDecoder = JSONDecoder()
+    #if canImport(Darwin) || compiler(>=6)
+    jsonDecoder.allowsJSON5 = true
+    #endif
+    let config = try jsonDecoder.decode(Configuration.self, from: jsonData)
+    XCTAssertTrue(config.orderedImports.includeConditionalImports)
+    XCTAssertTrue(config.orderedImports.shouldGroupImports)
+    XCTAssertFalse(config.orderedImports.onlyGroupTestableImports)
+  }
+
   func testConfigurationWithComments() throws {
     #if !canImport(Darwin) && compiler(<6)
     try XCTSkipIf(true, "JSONDecoder does not support JSON5")
