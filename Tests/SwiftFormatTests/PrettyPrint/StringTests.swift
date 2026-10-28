@@ -776,4 +776,43 @@ final class StringTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 30)
   }
+
+  func testMultilineInterpolationIsReindentedWithTheLiteral() {
+    let input =
+      #"""
+      func test() {
+        foo(
+          """
+      \(bar(
+          baz))
+      """)
+        foo(
+          """
+      \(items.map {
+        $0
+      }.joined())
+      """)
+      }
+      """#
+
+    let expected =
+      #"""
+      func test() {
+        foo(
+          """
+          \(bar(
+              baz))
+          """)
+        foo(
+          """
+          \(items.map {
+            $0
+          }.joined())
+          """)
+      }
+
+      """#
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 100)
+  }
 }
