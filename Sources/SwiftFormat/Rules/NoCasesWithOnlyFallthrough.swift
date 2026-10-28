@@ -151,6 +151,17 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
       return false
     }
 
+    // Check for a comment that trails the `case` label on the same line, before
+    // the `fallthrough` on the following line, e.g. `case 1:  // trailing`.
+    // Such a comment lives in the statement's preceding trivia ahead of the
+    // first newline; the check above deliberately skips that same-line prefix,
+    // so without this the comment would be silently dropped when merging.
+    if onlyStatement.allPrecedingTrivia
+      .prefix(while: { !$0.isNewline }).contains(where: { $0.isComment })
+    {
+      return false
+    }
+
     // Check for any comments that are inline on the fallthrough statement.
     if onlyStatement.allFollowingTrivia
       .prefix(while: { !$0.isNewline }).contains(where: { $0.isComment })
