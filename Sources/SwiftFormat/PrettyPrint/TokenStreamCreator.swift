@@ -4220,9 +4220,21 @@ private final class TokenStreamCreator: SyntaxVisitor {
         // followed by a dot (for example, in an implicit member reference)---removing the spaces in
         // those situations would cause the parser to greedily treat the combined sequence of
         // operator characters as a single operator.
-        if case .postfixOperator? = token.previousToken(viewMode: .all)?.tokenKind { return true }
+        // A comment counts as whitespace for operator fixity. If a comment is adjacent to the range
+        // operator, compacting the opposite side would make the operator unary instead of binary.
+        let previousToken = token.previousToken(viewMode: .all)
+        let nextToken = token.nextToken(viewMode: .all)
+        if token.leadingTrivia.hasAnyComments
+          || token.trailingTrivia.hasAnyComments
+          || previousToken?.trailingTrivia.hasAnyComments == true
+          || nextToken?.leadingTrivia.hasAnyComments == true
+        {
+          return true
+        }
 
-        switch token.nextToken(viewMode: .all)?.tokenKind {
+        if case .postfixOperator? = previousToken?.tokenKind { return true }
+
+        switch nextToken?.tokenKind {
         case .prefixOperator?, .period?: return true
         default: return false
         }
