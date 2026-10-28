@@ -52,11 +52,18 @@ public final class OrderedImports: SyntaxFormatRule {
   }
 
   private func orderImports(in codeBlockItemList: CodeBlockItemListSyntax) -> CodeBlockItemListSyntax {
-    let lines = generateLines(codeBlockItemList: codeBlockItemList, context: context)
+    var lines = generateLines(codeBlockItemList: codeBlockItemList, context: context)
 
     // Stores the formatted and sorted lines that will be used to reconstruct the list of code block
     // items later.
     var formattedLines: [Line] = []
+
+    // A package manifest must begin with its `// swift-tools-version:` comment. If a blank line
+    // follows it, the file header handling below keeps it at the top. Otherwise it would be attached
+    // to the next line and could move with it when imports are reordered, so emit it first.
+    if lines.count > 1, lines[0].isSwiftToolsVersionComment, lines[1].type != .blankLine {
+      formattedLines.append(lines.removeFirst())
+    }
 
     var regularImports: [Line] = []
     var declImports: [Line] = []
@@ -584,6 +591,18 @@ private class Line {
   /// A Line object can represent a blank line if all of its fields are empty.
   var isBlankLine: Bool {
     return leadingTrivia.isEmpty && trailingTrivia.isEmpty && syntaxNode == nil
+  }
+
+  /// Whether this line is a `// swift-tools-version:` comment, which SwiftPM requires at the start
+  /// of a package manifest. Like SwiftPM, this allows any spacing after the `//` and matches the
+  /// label case-insensitively.
+  var isSwiftToolsVersionComment: Bool {
+    guard syntaxNode == nil,
+      case .lineComment(let text)? = leadingTrivia.first(where: { !$0.isWhitespace })
+    else {
+      return false
+    }
+    return text.dropFirst(2).drop(while: \.isWhitespace).lowercased().hasPrefix("swift-tools-version:")
   }
 
   var type: LineType {
