@@ -77,7 +77,7 @@ jobs:
           echo "Using swift-format version: ${SWIFT_FORMAT_VERSION}"
           echo "swift_format_version=${SWIFT_FORMAT_VERSION}" >> "$GITHUB_OUTPUT"
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Create release commits
         id: create_release_commits
         env:
@@ -137,7 +137,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Apply release commits
         env:
           RELEASE_COMMIT_PATCH: ${{ needs.create_release_commits.outputs.release_commit_patch }}
@@ -162,7 +162,7 @@ jobs:
       contents: write
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Create release
         env:
           GH_TOKEN: ${{ github.token }}
