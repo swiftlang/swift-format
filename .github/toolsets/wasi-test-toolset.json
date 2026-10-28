@@ -1,0 +1,12 @@
+{
+    "schemaVersion": "1.0",
+    "testRunner": {
+        "path": "/usr/bin/env",
+        "extraCLIOptions": [
+            "wasmkit",
+            "run",
+            "--dir", ".build",
+            "--dir", "/"
+        ]
+    }
+}
