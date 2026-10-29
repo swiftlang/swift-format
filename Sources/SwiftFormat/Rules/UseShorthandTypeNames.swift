@@ -38,17 +38,25 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       return super.visit(node)
     }
 
+    // Rewriting the type removes the angle brackets and moves the arguments into new tokens, so
+    // comments that aren't inside the arguments themselves (e.g., `Optional<Foo /* comment */>`)
+    // would be lost or end up in invalid positions. Treat those as intentional and leave the type
+    // alone, but still visit the children so that they can be rewritten.
+    guard !hasCommentsOutsideArguments(name: node.name, genericArgumentClause: genericArgumentClause)
+    else {
+      return super.visit(node)
+    }
+
     // Ensure that all arguments in the clause are shortened and in the expected format by visiting
     // the argument list, first.
     let genericArgumentList = visit(genericArgumentClause.arguments)
-    let shortenedArgumentList = movingAngleBracketTrivia(of: genericArgumentClause, into: genericArgumentList)
 
     let (leadingTrivia, trailingTrivia) = boundaryTrivia(around: Syntax(node))
     let newNode: TypeSyntax?
 
     switch node.name.text {
     case "Array":
-      guard case .type(let typeArgument) = shortenedArgumentList.firstAndOnly?.argument else {
+      guard case .type(let typeArgument) = genericArgumentList.firstAndOnly?.argument else {
         newNode = nil
         break
       }
@@ -59,7 +67,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       )
 
     case "Dictionary":
-      guard let arguments = exactlyTwoChildren(of: shortenedArgumentList),
+      guard let arguments = exactlyTwoChildren(of: genericArgumentList),
         case (.type(let type0Argument), .type(let type1Argument)) = (arguments.0.argument, arguments.1.argument)
       else {
         newNode = nil
@@ -77,7 +85,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
         newNode = nil
         break
       }
-      guard case .type(let typeArgument) = shortenedArgumentList.firstAndOnly?.argument else {
+      guard case .type(let typeArgument) = genericArgumentList.firstAndOnly?.argument else {
         newNode = nil
         break
       }
@@ -131,20 +139,23 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       return super.visit(node)
     }
 
+    // See the comment in `visit(_: IdentifierTypeSyntax)`.
+    guard
+      !hasCommentsOutsideArguments(name: expression.baseName, genericArgumentClause: node.genericArgumentClause)
+    else {
+      return super.visit(node)
+    }
+
     // Ensure that all arguments in the clause are shortened and in the expected format by visiting
     // the argument list, first.
     let genericArgumentList = visit(node.genericArgumentClause.arguments)
-    let shortenedArgumentList = movingAngleBracketTrivia(
-      of: node.genericArgumentClause,
-      into: genericArgumentList
-    )
 
     let (leadingTrivia, trailingTrivia) = boundaryTrivia(around: Syntax(node))
     let newNode: ExprSyntax?
 
     switch expression.baseName.text {
     case "Array":
-      guard case .type(let typeArgument) = shortenedArgumentList.firstAndOnly?.argument else {
+      guard case .type(let typeArgument) = genericArgumentList.firstAndOnly?.argument else {
         newNode = nil
         break
       }
@@ -156,7 +167,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       newNode = ExprSyntax(arrayTypeExpr)
 
     case "Dictionary":
-      guard let arguments = exactlyTwoChildren(of: shortenedArgumentList),
+      guard let arguments = exactlyTwoChildren(of: genericArgumentList),
         case (.type(let type0Argument), .type(let type1Argument)) = (arguments.0.argument, arguments.1.argument)
       else {
         newNode = nil
@@ -172,12 +183,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       newNode = ExprSyntax(dictTypeExpr)
 
     case "Optional":
-      // The trivia after the wrapped type is moved after the "?", so if it contains a line break
-      // (e.g., from a line comment before the `>`), the "?" would be separated from a following
-      // call like `(...)`. Leave those in long form.
-      guard case .type(let typeArgument) = shortenedArgumentList.firstAndOnly?.argument,
-        !typeArgument.trailingTrivia.containsNewlines
-      else {
+      guard case .type(let typeArgument) = genericArgumentList.firstAndOnly?.argument else {
         newNode = nil
         break
       }
@@ -203,6 +209,28 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     var result = node
     result.genericArgumentClause.arguments = genericArgumentList
     return ExprSyntax(result)
+  }
+
+  /// Returns true if there are any comments between the given type name and the end of its generic
+  /// argument clause, other than those inside the arguments themselves.
+  ///
+  /// For example, this returns true for `Optional</* comment */ Foo>` but false for
+  /// `Optional<(Foo, /* comment */ Bar)>`. Comments before the name or after the `>` are not
+  /// checked, since they are preserved when the type is shortened.
+  private func hasCommentsOutsideArguments(
+    name: TokenSyntax,
+    genericArgumentClause: GenericArgumentClauseSyntax
+  ) -> Bool {
+    var trivia = name.trailingTrivia + genericArgumentClause.leftAngle.leadingTrivia
+    trivia += genericArgumentClause.leftAngle.trailingTrivia
+    for argument in genericArgumentClause.arguments {
+      trivia += argument.argument.leadingTrivia + argument.argument.trailingTrivia
+      if let trailingComma = argument.trailingComma {
+        trivia += trailingComma.leadingTrivia + trailingComma.trailingTrivia
+      }
+    }
+    trivia += genericArgumentClause.rightAngle.leadingTrivia
+    return trivia.hasAnyComments
   }
 
   /// Returns the two arguments in the given argument list, if there are exactly two elements;
@@ -259,7 +287,6 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     trailingTrivia: Trivia
   ) -> TypeSyntax {
     var wrappedType = wrappedType
-    var trailingTrivia = trailingTrivia
 
     // Certain types must be wrapped in parentheses before using shorthand optional syntax to avoid
     // the "?" from binding incorrectly when re-parsed. Attach the leading trivia to the left-paren
@@ -278,12 +305,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       // we need to transfer the leading trivia from the original `Optional` token over to it.
       // By doing so, something like `/* comment */ Optional<Foo>` will become `/* comment */ Foo?`
       // instead of discarding the comment.
-      wrappedType.leadingTrivia = leadingTrivia + wrappedType.leadingTrivia
-
-      // The "?" must immediately follow the wrapped type, so any trivia after it (for example, a
-      // comment before the `>` in `Optional<Foo /* comment */>`) has to move after the "?".
-      trailingTrivia = wrappedType.trailingTrivia + trailingTrivia
-      wrappedType.trailingTrivia = []
+      wrappedType.leadingTrivia = leadingTrivia
     }
 
     let optionalType = OptionalTypeSyntax(
@@ -353,7 +375,6 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     questionMark: TokenSyntax
   ) -> OptionalChainingExprSyntax? {
     guard var wrappedTypeExpr = expressionRepresentation(of: wrappedType) else { return nil }
-    var questionMark = questionMark
 
     // Certain types must be wrapped in parentheses before using shorthand optional syntax to avoid
     // the "?" from binding incorrectly when re-parsed. Attach the leading trivia to the left-paren
@@ -367,12 +388,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       // converting a long-form to short-form), we need to transfer it over. By doing so, something
       // like `/* comment */ Optional<Foo>` will become `/* comment */ Foo?` instead of discarding
       // the comment.
-      wrappedTypeExpr.leadingTrivia = leadingTrivia + wrappedTypeExpr.leadingTrivia
-
-      // The "?" must immediately follow the wrapped type, so any trivia after it (for example, a
-      // comment before the `>` in `Optional<Foo /* comment */>`) has to move after the "?".
-      questionMark.trailingTrivia = wrappedTypeExpr.trailingTrivia + questionMark.trailingTrivia
-      wrappedTypeExpr.trailingTrivia = []
+      wrappedTypeExpr.leadingTrivia = leadingTrivia
     }
 
     return OptionalChainingExprSyntax(
@@ -465,6 +481,7 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     case .optionalType(let optionalType):
       let result = makeOptionalTypeExpression(
         wrapping: optionalType.wrappedType,
+        leadingTrivia: optionalType.firstToken(viewMode: .sourceAccurate)?.leadingTrivia ?? [],
         questionMark: optionalType.questionMark
       )
       return ExprSyntax(result)
@@ -557,21 +574,6 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       operator: arrowExpr,
       rightOperand: returnTypeExpr
     )
-  }
-
-  /// Returns the given generic argument list with the trivia from the inside of the clause's angle
-  /// brackets moved onto its first and last arguments.
-  ///
-  /// The angle brackets are removed when a type is shortened, so without this, any comments or line
-  /// breaks after the `<` or before the `>` would be lost.
-  private func movingAngleBracketTrivia(
-    of genericArgumentClause: GenericArgumentClauseSyntax,
-    into argumentList: GenericArgumentListSyntax
-  ) -> GenericArgumentListSyntax {
-    var result = argumentList
-    result.leadingTrivia = genericArgumentClause.leftAngle.trailingTrivia + result.leadingTrivia
-    result.trailingTrivia = result.trailingTrivia + genericArgumentClause.rightAngle.leadingTrivia
-    return result
   }
 
   /// Returns the leading and trailing trivia from the front and end of the entire given node.
