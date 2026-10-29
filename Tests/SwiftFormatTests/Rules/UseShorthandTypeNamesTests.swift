@@ -771,4 +771,70 @@ final class UseShorthandTypeNamesTests: LintOrFormatRuleTestCase {
       ]
     )
   }
+
+  func testTypesWithCommentsInsideAngleBracketsAreNotShortened() {
+    assertFormatting(
+      UseShorthandTypeNames.self,
+      input: """
+        var a: Optional<Foo /* comment */> = nil
+        var b: Optional</* comment */ Foo> = nil
+        var c: Optional<Foo  // comment
+        > = nil
+        var d: Array<
+          Foo  // comment
+        > = []
+        var e: Dictionary<Foo /* comment */, Bar> = [:]
+        var f: Dictionary<Foo, /* comment */ Bar> = [:]
+        func f(_ x: Optional<Foo /* comment */>) {}
+        var g = Optional<Foo /* comment */>(from: decoder)
+        var h = Array</* comment */ Foo>()
+        var i: Optional<1️⃣Array<Foo> /* comment */> = nil
+        """,
+      expected: """
+        var a: Optional<Foo /* comment */> = nil
+        var b: Optional</* comment */ Foo> = nil
+        var c: Optional<Foo  // comment
+        > = nil
+        var d: Array<
+          Foo  // comment
+        > = []
+        var e: Dictionary<Foo /* comment */, Bar> = [:]
+        var f: Dictionary<Foo, /* comment */ Bar> = [:]
+        func f(_ x: Optional<Foo /* comment */>) {}
+        var g = Optional<Foo /* comment */>(from: decoder)
+        var h = Array</* comment */ Foo>()
+        var i: Optional<[Foo] /* comment */> = nil
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "use shorthand syntax for this 'Array' type")
+      ]
+    )
+  }
+
+  func testTypesWithCommentsOutsideAngleBracketsOrInsideArgumentsAreShortened() {
+    assertFormatting(
+      UseShorthandTypeNames.self,
+      input: """
+        var a: /* comment */ 1️⃣Optional<Foo> = nil
+        var b: 2️⃣Optional<Foo> /* comment */ = nil
+        var c: 3️⃣Optional<(Foo, /* comment */ Bar)> = nil
+        var d: 4️⃣Array<[Foo /* comment */]> = []
+        var e = 5️⃣Array<(Foo, /* comment */ Bar)>()
+        """,
+      expected: """
+        var a: /* comment */ Foo? = nil
+        var b: Foo? /* comment */ = nil
+        var c: (Foo, /* comment */ Bar)? = nil
+        var d: [[Foo /* comment */]] = []
+        var e = [(Foo, /* comment */ Bar)]()
+        """,
+      findings: [
+        FindingSpec("1️⃣", message: "use shorthand syntax for this 'Optional' type"),
+        FindingSpec("2️⃣", message: "use shorthand syntax for this 'Optional' type"),
+        FindingSpec("3️⃣", message: "use shorthand syntax for this 'Optional' type"),
+        FindingSpec("4️⃣", message: "use shorthand syntax for this 'Array' type"),
+        FindingSpec("5️⃣", message: "use shorthand syntax for this 'Array' type"),
+      ]
+    )
+  }
 }
