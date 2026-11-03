@@ -766,6 +766,34 @@ private struct MarkdownReflower {
     return baseWidth - prefixLength
   }
 
+  /// Returns `true` if `prevBlock` and `block` were separated by at least one blank line in the
+  /// original Markdown source.
+  private func hasBlankSeparatorLine(before block: Markup, after prevBlock: Markup) -> Bool {
+    // Standard blocks report a line gap between `prevBlock.range.upperBound` and
+    // `block.range.lowerBound` when a blank line separates them.
+    if let prevEnd = prevBlock.range?.upperBound.line,
+      let currStart = block.range?.lowerBound.line,
+      currStart > prevEnd + 1
+    {
+      return true
+    }
+    // `cmark-gfm` includes trailing blank lines in the `SourceRange` of `UnorderedList`,
+    // `OrderedList`, and `ListItem` nodes, so also check whether the source line immediately
+    // preceding `block` is blank (or an empty blockquote line).
+    if let currStart = block.range?.lowerBound.line,
+      currStart >= 2,
+      currStart - 1 <= markdownLines.count
+    {
+      let lineBeforeCurr = markdownLines[currStart - 2]
+      if lineBeforeCurr.utf8.allSatisfy({
+        $0 == UInt8(ascii: " ") || $0 == UInt8(ascii: "\t") || $0 == UInt8(ascii: ">")
+      }) {
+        return true
+      }
+    }
+    return false
+  }
+
   /// Visits a sequence of sibling block nodes, emitting blank separator lines between blocks when
   /// present in the original source.
   private mutating func visitBlockChildren(
@@ -777,10 +805,7 @@ private struct MarkdownReflower {
     for (index, child) in children.enumerated() {
       if index > 0 {
         let prevChild = children[index - 1]
-        if let prevEnd = prevChild.range?.upperBound.line,
-          let currStart = child.range?.lowerBound.line,
-          currStart > prevEnd + 1
-        {
+        if hasBlankSeparatorLine(before: child, after: prevChild) {
           emitLine("", prefix: continuationPrefix)
         }
       }
@@ -812,6 +837,32 @@ private struct MarkdownReflower {
         isLastBlockInDocument: isLastBlockInDocument
       )
 
+    case let blockQuote as BlockQuote:
+      visitBlockChildren(
+        Array(blockQuote.blockChildren),
+        firstLinePrefix: firstLinePrefix + "> ",
+        continuationPrefix: continuationPrefix + "> ",
+        isLastBlockInDocument: isLastBlockInDocument
+      )
+
+    case let unorderedList as UnorderedList:
+      visitListItems(
+        Array(unorderedList.listItems),
+        isOrdered: false,
+        firstLinePrefix: firstLinePrefix,
+        continuationPrefix: continuationPrefix,
+        isLastBlockInDocument: isLastBlockInDocument
+      )
+
+    case let orderedList as OrderedList:
+      visitListItems(
+        Array(orderedList.listItems),
+        isOrdered: true,
+        firstLinePrefix: firstLinePrefix,
+        continuationPrefix: continuationPrefix,
+        isLastBlockInDocument: isLastBlockInDocument
+      )
+
     case let codeBlock as CodeBlock:
       visitCodeBlock(
         codeBlock,
@@ -826,6 +877,109 @@ private struct MarkdownReflower {
         continuationPrefix: continuationPrefix
       )
     }
+  }
+
+  /// Visits the items of an ordered or unordered list, preserving loose-list blank lines and
+  /// indenting continuation lines to align with each item's content.
+  private mutating func visitListItems(
+    _ items: [ListItem],
+    isOrdered: Bool,
+    firstLinePrefix: String,
+    continuationPrefix: String,
+    isLastBlockInDocument: Bool
+  ) {
+    for (index, item) in items.enumerated() {
+      if index > 0 {
+        let prevItem = items[index - 1]
+        if hasBlankSeparatorLine(before: item, after: prevItem) {
+          emitLine("", prefix: continuationPrefix)
+        }
+      }
+      let itemFirstLinePrefix = index == 0 ? firstLinePrefix : continuationPrefix
+      let (markerWithSpace, continuationSpaces) = extractListMarker(for: item, isOrdered: isOrdered)
+      if item.childCount == 0 {
+        emitLine(markerWithSpace[...], prefix: itemFirstLinePrefix)
+      } else {
+        let itemIsLast = isLastBlockInDocument && (index == items.count - 1)
+        visitBlockChildren(
+          Array(item.blockChildren),
+          firstLinePrefix: itemFirstLinePrefix + markerWithSpace,
+          continuationPrefix: continuationPrefix + continuationSpaces,
+          isLastBlockInDocument: itemIsLast
+        )
+      }
+    }
+  }
+
+  /// Extracts the list marker (including any task-list checkbox and post-marker spacing) from the
+  /// source line of `item`, along with the matching continuation indentation spaces.
+  private func extractListMarker(
+    for item: ListItem,
+    isOrdered: Bool
+  ) -> (markerWithSpace: String, continuationSpaces: String) {
+    guard let range = item.range,
+      range.lowerBound.line >= 1,
+      range.lowerBound.line <= markdownLines.count
+    else {
+      return (isOrdered ? "1. " : "- ", isOrdered ? "   " : "  ")
+    }
+    let line = markdownLines[range.lowerBound.line - 1]
+    let startIdx = utf8Index(in: line, column: range.lowerBound.column)
+    let slice = line[startIdx...]
+
+    // Extract the raw bullet or ordered list marker token (e.g. `-`, `*`, `+`, `1.`, `1)`).
+    let markerToken = slice.prefix { !$0.isWhitespace }
+    guard !markerToken.isEmpty else {
+      return (isOrdered ? "1. " : "- ", isOrdered ? "   " : "  ")
+    }
+
+    // Preserve the original spacing after the marker, unless the marker is followed by an indented
+    // code block (> 4 spaces) or end-of-line.
+    let afterMarker = slice[markerToken.endIndex...]
+    let rawSpacesAfterMarker = afterMarker.prefix { $0 == " " || $0 == "\t" }
+    let afterMarkerSpaces = afterMarker[rawSpacesAfterMarker.endIndex...]
+    let rawSpacesCount = rawSpacesAfterMarker.utf8.count
+    let spacesAfterMarkerCount: Int
+    if rawSpacesAfterMarker.isEmpty || afterMarkerSpaces.isEmpty
+      || (rawSpacesCount > 4 && item.child(at: 0) is CodeBlock)
+    {
+      spacesAfterMarkerCount = 1
+    } else {
+      spacesAfterMarkerCount = rawSpacesCount
+    }
+
+    let baseMarkerWithSpace =
+      String(markerToken) + String(repeating: " ", count: spacesAfterMarkerCount)
+
+    // For task list items, include the `[ ]` / `[x]` checkbox and any spacing after it so
+    // continuation lines align with the item text after the checkbox.
+    if let checkbox = item.checkbox {
+      let checkboxToken: Substring
+      let spacesAfterCheckboxCount: Int
+      if afterMarkerSpaces.hasPrefix("[x]") || afterMarkerSpaces.hasPrefix("[X]")
+        || afterMarkerSpaces.hasPrefix("[ ]")
+      {
+        checkboxToken = afterMarkerSpaces.prefix(3)
+        let afterCheckbox = afterMarkerSpaces[checkboxToken.endIndex...]
+        let rawSpacesAfterCheckbox = afterCheckbox.prefix { $0 == " " || $0 == "\t" }
+        let afterCheckboxSpaces = afterCheckbox[rawSpacesAfterCheckbox.endIndex...]
+        if rawSpacesAfterCheckbox.isEmpty || afterCheckboxSpaces.isEmpty {
+          spacesAfterCheckboxCount = 1
+        } else {
+          spacesAfterCheckboxCount = rawSpacesAfterCheckbox.utf8.count
+        }
+      } else {
+        checkboxToken = checkbox == .checked ? "[x]" : "[ ]"
+        spacesAfterCheckboxCount = 1
+      }
+      let fullMarker =
+        baseMarkerWithSpace + checkboxToken + String(repeating: " ", count: spacesAfterCheckboxCount)
+      let continuationSpaces = String(repeating: " ", count: fullMarker.utf8.count)
+      return (fullMarker, continuationSpaces)
+    }
+
+    let continuationSpaces = String(repeating: " ", count: baseMarkerWithSpace.utf8.count)
+    return (baseMarkerWithSpace, continuationSpaces)
   }
 
   /// Emits a fenced or indented code block without wrapping its contents.
