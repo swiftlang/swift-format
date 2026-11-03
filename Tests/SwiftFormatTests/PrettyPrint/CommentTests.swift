@@ -1227,6 +1227,22 @@ final class CommentTests: PrettyPrintTestCase {
       ///
       /// # Heading 1
       ///
+      /// > A blockquote paragraph that is fairly long and should be wrapped while keeping the
+      /// > leading blockquote marker on each line.
+      /// >
+      /// > Second paragraph in the blockquote.
+      ///
+      /// - Parameters:
+      ///   - param1: A very long parameter description that wraps onto the next line with proper
+      ///     4-space list continuation indentation.
+      ///   - param2: Short description.
+      /// - Returns: A very long return value description that also wraps onto the next line with
+      ///   2-space list continuation indentation.
+      ///
+      /// 1. First ordered list item that is long enough to wrap onto a second line with 3-space
+      ///    continuation indentation.
+      /// 2. Second ordered list item.
+      ///
       /// ```swift
       /// let veryLongCodeLineInFencedBlock = "This line exceeds 50 columns but must NOT be wrapped!"
       /// ```
@@ -1255,6 +1271,27 @@ final class CommentTests: PrettyPrintTestCase {
       /// are preserved on their own line.
       ///
       /// # Heading 1
+      ///
+      /// > A blockquote paragraph that is fairly long
+      /// > and should be wrapped while keeping the
+      /// > leading blockquote marker on each line.
+      /// >
+      /// > Second paragraph in the blockquote.
+      ///
+      /// - Parameters:
+      ///   - param1: A very long parameter description
+      ///     that wraps onto the next line with proper
+      ///     4-space list continuation indentation.
+      ///   - param2: Short description.
+      /// - Returns: A very long return value
+      ///   description that also wraps onto the next
+      ///   line with 2-space list continuation
+      ///   indentation.
+      ///
+      /// 1. First ordered list item that is long enough
+      ///    to wrap onto a second line with 3-space
+      ///    continuation indentation.
+      /// 2. Second ordered list item.
       ///
       /// ```swift
       /// let veryLongCodeLineInFencedBlock = "This line exceeds 50 columns but must NOT be wrapped!"
@@ -1383,6 +1420,10 @@ final class CommentTests: PrettyPrintTestCase {
 
       /** This is a documentation comment
        * that has text on the first line
+       *
+       * - Parameters:
+       *   - param1: A long parameter description that needs to wrap onto the next line.
+       * - Returns: The output
       **/
       func myfun(param1: Int) -> String {
         return ""
@@ -1399,6 +1440,11 @@ final class CommentTests: PrettyPrintTestCase {
 
       /** This is a documentation comment that has
        * text on the first line
+       *
+       * - Parameters:
+       *   - param1: A long parameter description
+       *     that needs to wrap onto the next line.
+       * - Returns: The output
       **/
       func myfun(param1: Int) -> String {
         return ""
@@ -1598,5 +1644,58 @@ final class CommentTests: PrettyPrintTestCase {
       linelength: 25,
       configuration: config
     )
+  }
+
+  func testReflowTaskListsAndLooseLists() {
+    let input =
+      """
+      /// - [ ] An unchecked task list item that is long enough to wrap onto the next line.
+      /// - [x] A checked task list item that is also long enough to wrap onto the next line.
+      /// -   [ ] A task list item with extra spaces after the bullet and before the checkbox.
+      /// - [x]   A task list item with extra spaces after the checkbox that also wraps.
+      ///
+      /// * First loose list item that is long enough to wrap onto a second line.
+      ///
+      /// *   Second loose list item with three spaces after the bullet that wraps.
+      ///
+      /// *  Third loose list item with two spaces after the bullet that wraps.
+      ///
+      /// 1.   First ordered list item with three spaces after the marker that wraps.
+      /// 2.  Second ordered list item with two spaces after the marker that wraps.
+      let x = 1
+      """
+
+    let expected =
+      """
+      /// - [ ] An unchecked task list item that is long
+      ///       enough to wrap onto the next line.
+      /// - [x] A checked task list item that is also
+      ///       long enough to wrap onto the next line.
+      /// -   [ ] A task list item with extra spaces
+      ///         after the bullet and before the
+      ///         checkbox.
+      /// - [x]   A task list item with extra spaces
+      ///         after the checkbox that also wraps.
+      ///
+      /// * First loose list item that is long enough to
+      ///   wrap onto a second line.
+      ///
+      /// *   Second loose list item with three spaces
+      ///     after the bullet that wraps.
+      ///
+      /// *  Third loose list item with two spaces after
+      ///    the bullet that wraps.
+      ///
+      /// 1.   First ordered list item with three spaces
+      ///      after the marker that wraps.
+      /// 2.  Second ordered list item with two spaces
+      ///     after the marker that wraps.
+      let x = 1
+
+      """
+
+    var config = Configuration.forTesting
+    config.reflowComments.docComments = .always
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 }
