@@ -609,6 +609,7 @@ public struct ReflowCommentsConfiguration: Codable, Equatable {
   private enum CodingKeys: CodingKey {
     case regularComments
     case docComments
+    case commentPragmas
   }
 
   /// The reflow behavior for regular (`//` and `/* ... */`) comments.
@@ -616,6 +617,14 @@ public struct ReflowCommentsConfiguration: Codable, Equatable {
 
   /// The reflow behavior for documentation (`///` and `/** ... */`) comments.
   public var docComments: Behavior = .never
+
+  /// Regular expressions matching comment pragmas or directives that should not be reflowed.
+  ///
+  /// Each regular expression is matched against the multi-line comment body (with `^` and `$`
+  /// matching line boundaries), and any comment line overlapping a match is left untouched.
+  /// Note that `swift-format-ignore` and `swift-format-ignore-file` directives are always
+  /// excluded from reflowing regardless of this setting.
+  public var commentPragmas: [String] = []
 
   public init() {}
 
@@ -628,6 +637,9 @@ public struct ReflowCommentsConfiguration: Codable, Equatable {
     self.docComments =
       try container.decodeIfPresent(Behavior.self, forKey: .docComments)
       ?? defaults.docComments
+    self.commentPragmas =
+      try container.decodeIfPresent([String].self, forKey: .commentPragmas)
+      ?? defaults.commentPragmas
   }
 }
 

@@ -102,6 +102,9 @@ public class PrettyPrinter {
   /// trailing commas) are performed in addition to whitespace.
   private let whitespaceOnly: Bool
 
+  /// Compiled regular expressions for comment pragmas that should not be reflowed.
+  private let commentPragmaRegexes: [Regex<AnyRegexOutput>]
+
   /// Keeps track of the line numbers and indentation states of the open (and unclosed) breaks seen
   /// so far.
   private var activeOpenBreaks: [ActiveOpenBreak] = [] {
@@ -197,6 +200,9 @@ public class PrettyPrinter {
     self.maxLineLength = configuration.lineLength
     self.printTokenStream = printTokenStream
     self.whitespaceOnly = whitespaceOnly
+    self.commentPragmaRegexes = Comment.compilePragmaRegexes(
+      from: configuration.reflowComments.commentPragmas
+    )
     self.outputBuffer = PrettyPrintBuffer(
       maximumBlankLines: configuration.maximumBlankLines,
       tabWidth: configuration.tabWidth
@@ -502,6 +508,7 @@ public class PrettyPrinter {
           tabWidth: configuration.tabWidth,
           behavior: reflowBehavior,
           shouldIndentBlankLines: configuration.indentBlankLines,
+          pragmaRegexes: commentPragmaRegexes,
           unreflowed: unreflowed
         )
         if reflowed != unreflowed {
