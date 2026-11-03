@@ -1698,4 +1698,88 @@ final class CommentTests: PrettyPrintTestCase {
     config.reflowComments.docComments = .always
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
+
+  func testReflowCommentPragmas() {
+    let input =
+      """
+      // swift-format-ignore-file: AlwaysUseLowerCamelCase, NeverUseImplicitlyUnwrappedOptionals
+
+      // This comment explains why we ignore the rule below
+      // and should be reflowed without merging the directive.
+      // swift-format-ignore: AlwaysUseLowerCamelCase, NeverUseForceTry
+      let Bad_Name = 1
+
+      // Short line before pragma
+      // that gets merged with this line.
+      // @CustomPragma(my_section_label_that_is_very_long)
+      let a = 1
+      // @CustomPragma(
+      //   Sources/ModuleA/FirstFile.swift:label_one,
+      //   Sources/ModuleB/SecondFile.swift:label_two
+      // )
+      // Short line after pragma
+      // that also gets merged.
+      let b = 2
+
+      // @CustomPragma(Sources/Single/Line/Very/Long/Path/One.swift, Sources/Single/Line/Very/Long/Path/Two.swift)
+      let c = 3
+
+      /*
+       * Introductory line in a block comment
+       * that gets reflowed.
+       * @CustomPragma(
+       *   Sources/Block/FirstFile.swift,
+       *   Sources/Block/SecondFile.swift
+       * )
+       * Trailing line in a block comment
+       * that also gets reflowed.
+       */
+      let d = 4
+      """
+
+    let expected =
+      """
+      // swift-format-ignore-file: AlwaysUseLowerCamelCase, NeverUseImplicitlyUnwrappedOptionals
+
+      // This comment explains why we ignore the rule
+      // below and should be reflowed without merging
+      // the directive.
+      // swift-format-ignore: AlwaysUseLowerCamelCase, NeverUseForceTry
+      let Bad_Name = 1
+
+      // Short line before pragma that gets merged with
+      // this line.
+      // @CustomPragma(my_section_label_that_is_very_long)
+      let a = 1
+      // @CustomPragma(
+      //   Sources/ModuleA/FirstFile.swift:label_one,
+      //   Sources/ModuleB/SecondFile.swift:label_two
+      // )
+      // Short line after pragma that also gets merged.
+      let b = 2
+
+      // @CustomPragma(Sources/Single/Line/Very/Long/Path/One.swift, Sources/Single/Line/Very/Long/Path/Two.swift)
+      let c = 3
+
+      /*
+       * Introductory line in a block comment that gets
+       * reflowed.
+       * @CustomPragma(
+       *   Sources/Block/FirstFile.swift,
+       *   Sources/Block/SecondFile.swift
+       * )
+       * Trailing line in a block comment that also gets
+       * reflowed.
+       */
+      let d = 4
+
+      """
+
+    var config = Configuration.forTesting
+    config.reflowComments.regularComments = .always
+    config.reflowComments.commentPragmas = [
+      #"^\s*@CustomPragma(\([^)]*\))?"#
+    ]
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
+  }
 }

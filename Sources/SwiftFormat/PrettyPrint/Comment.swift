@@ -177,6 +177,78 @@ struct Comment {
     }
   }
 
+  /// Returns `true` if `line` (after stripping the comment introducer) is a built-in
+  /// `swift-format-ignore` or `swift-format-ignore-file` directive.
+  private static func isBuiltInIgnorePragma(_ line: Substring) -> Bool {
+    let trimmed = line.drop { $0 == " " || $0 == "\t" }
+    guard trimmed.utf8.starts(with: "swift-format-ignore".utf8) else { return false }
+    var rest = trimmed.dropFirst("swift-format-ignore".count)
+    if rest.utf8.starts(with: "-file".utf8) {
+      rest = rest.dropFirst("-file".count)
+    }
+    rest = rest.drop { $0 == " " || $0 == "\t" }
+    return rest.isEmpty || rest.utf8.first == UInt8(ascii: ":")
+  }
+
+  /// Compiles any user-configured `commentPragmas` regex patterns.
+  static func compilePragmaRegexes(from patterns: [String]) -> [Regex<AnyRegexOutput>] {
+    var result: [Regex<AnyRegexOutput>] = []
+    result.reserveCapacity(patterns.count)
+    for pattern in patterns {
+      if let regex = try? Regex(pattern).anchorsMatchLineEndings() {
+        result.append(regex)
+      }
+    }
+    return result
+  }
+
+  /// Returns the set of 0-based line indices in `lines` that overlap any match of `pragmaRegexes`
+  /// against the joined multi-line comment text.
+  private static func pragmaLineIndices(
+    in lines: [Substring],
+    pragmaRegexes: [Regex<AnyRegexOutput>]
+  ) -> Set<Int> {
+    guard !lines.isEmpty, !pragmaRegexes.isEmpty else { return [] }
+
+    // Join all lines with newlines and record the character range of each line in the joined string
+    // so multi-line regex patterns can match across line breaks.
+    let joined = lines.joined(separator: "\n")
+    let joinedUTF8 = joined.utf8
+    var lineRanges: [Range<String.Index>] = []
+    lineRanges.reserveCapacity(lines.count)
+    var currentStart = joinedUTF8.startIndex
+    for (idx, line) in lines.enumerated() {
+      let currentEnd = joinedUTF8.index(currentStart, offsetBy: line.utf8.count)
+      lineRanges.append(currentStart..<currentEnd)
+      if idx < lines.count - 1 {
+        currentStart = joinedUTF8.index(after: currentEnd)
+      }
+    }
+
+    // Mark every line whose character range overlaps any non-empty regex match.
+    var matchedLines = Set<Int>()
+    for regex in pragmaRegexes {
+      for match in joined.matches(of: regex) {
+        let matchRange = match.range
+        guard !matchRange.isEmpty else { continue }
+        for (lineIdx, lineRange) in lineRanges.enumerated() {
+          let overlaps: Bool
+          if lineRange.isEmpty {
+            overlaps =
+              matchRange.lowerBound <= lineRange.lowerBound
+              && lineRange.lowerBound < matchRange.upperBound
+          } else {
+            overlaps = lineRange.overlaps(matchRange)
+          }
+          if overlaps {
+            matchedLines.insert(lineIdx)
+          }
+        }
+      }
+    }
+    return matchedLines
+  }
+
   /// Prints the comment with its Markdown content reflowed to fit within `maxLineLength`.
   func printReflowed(
     indent: [Indent],
@@ -184,6 +256,7 @@ struct Comment {
     tabWidth: Int,
     behavior: ReflowCommentsConfiguration.Behavior,
     shouldIndentBlankLines: Bool = true,
+    pragmaRegexes: [Regex<AnyRegexOutput>] = [],
     unreflowed: String? = nil
   ) -> String {
     func fallbackUnreflowed() -> String {
@@ -216,6 +289,7 @@ struct Comment {
         indentLength: indentLength,
         maxLineLength: maxLineLength,
         preserveLineBreaks: preserveLineBreaks,
+        pragmaRegexes: pragmaRegexes,
         fallbackUnreflowed: fallbackUnreflowed
       )
     case .block, .docBlock:
@@ -226,6 +300,7 @@ struct Comment {
         maxLineLength: maxLineLength,
         preserveLineBreaks: preserveLineBreaks,
         shouldIndentBlankLines: shouldIndentBlankLines,
+        pragmaRegexes: pragmaRegexes,
         fallbackUnreflowed: fallbackUnreflowed
       )
     }
@@ -287,15 +362,28 @@ struct Comment {
     }
   }
 
-  /// Reflows a sequence of `//` or `///` line comments while preserving banner lines verbatim.
+  /// Reflows a sequence of `//` or `///` line comments while preserving banner and pragma lines
+  /// verbatim.
   private func printReflowedLineComment(
     indent: [Indent],
     indentLength: Int,
     maxLineLength: Int,
     preserveLineBreaks: Bool,
+    pragmaRegexes: [Regex<AnyRegexOutput>],
     fallbackUnreflowed: () -> String
   ) -> String {
+    // Strip trailing whitespace and identify any lines matched by pragma regexes (after removing
+    // the single space that follows the `//` or `///` prefix).
     let trimmedLines = self.text.map { $0.trimmingTrailingWhitespace() }
+    let pragmaLines: Set<Int>
+    if pragmaRegexes.isEmpty {
+      pragmaLines = []
+    } else {
+      let contentLines = trimmedLines.map { line -> Substring in
+        line.hasPrefix(" ") ? line.dropFirst() : line
+      }
+      pragmaLines = Self.pragmaLineIndices(in: contentLines, pragmaRegexes: pragmaRegexes)
+    }
     let availableWidth = maxLineLength - indentLength - kind.prefixLength - 1
     var outputLines: [String] = []
     outputLines.reserveCapacity(trimmedLines.count)
@@ -344,9 +432,13 @@ struct Comment {
       }
     }
 
-    // Partition the comment around banner lines, which are emitted verbatim.
-    for rawLine in trimmedLines {
-      if Self.isBannerLine(rawLine) {
+    // Partition the comment around banner and pragma lines, which are emitted verbatim.
+    for (idx, rawLine) in trimmedLines.enumerated() {
+      let contentSlice = rawLine.hasPrefix(" ") ? rawLine.dropFirst() : rawLine
+      if Self.isBannerLine(rawLine)
+        || Self.isBuiltInIgnorePragma(contentSlice)
+        || pragmaLines.contains(idx)
+      {
         flushSegment()
         outputLines.append(kind.prefix + rawLine)
       } else {
@@ -369,6 +461,7 @@ struct Comment {
     maxLineLength: Int,
     preserveLineBreaks: Bool,
     shouldIndentBlankLines: Bool,
+    pragmaRegexes: [Regex<AnyRegexOutput>],
     fallbackUnreflowed: () -> String
   ) -> String {
     // Ensure all lines after the first share the comment's original `leadingIndent`; if not, leave
@@ -556,7 +649,8 @@ struct Comment {
       firstLineWidth: firstLineWidth,
       continuationWidth: continuationWidth,
       lastLineReservedSuffixLength: reservedSuffixLength,
-      preserveLineBreaks: preserveLineBreaks
+      preserveLineBreaks: preserveLineBreaks,
+      pragmaRegexes: pragmaRegexes
     )
     guard !reflowedLines.isEmpty else { return fallbackUnreflowed() }
 
@@ -603,15 +697,17 @@ struct Comment {
     return prefix
   }
 
-  /// Partitions the body lines of a block comment around banner lines and reflows each contiguous
-  /// Markdown segment.
+  /// Partitions the body lines of a block comment around banner and pragma lines and reflows each
+  /// contiguous Markdown segment.
   private static func reflowBlockBodyLines(
     _ lines: [Substring],
     firstLineWidth: Int,
     continuationWidth: Int,
     lastLineReservedSuffixLength: Int,
-    preserveLineBreaks: Bool
+    preserveLineBreaks: Bool,
+    pragmaRegexes: [Regex<AnyRegexOutput>]
   ) -> [String] {
+    let pragmaLines = pragmaLineIndices(in: lines, pragmaRegexes: pragmaRegexes)
     var output: [String] = []
     output.reserveCapacity(lines.count)
     var currentSegment: [Substring] = []
@@ -652,7 +748,7 @@ struct Comment {
     }
 
     for (idx, line) in lines.enumerated() {
-      if isBannerLine(line) {
+      if isBannerLine(line) || isBuiltInIgnorePragma(line) || pragmaLines.contains(idx) {
         flushSegment(isFinalSegment: false)
         output.append(String(line))
       } else {

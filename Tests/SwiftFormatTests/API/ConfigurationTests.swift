@@ -160,7 +160,7 @@ final class ConfigurationTests: XCTestCase {
       }
     }
 
-    // Partial configuration should fall back to defaults (.never) for omitted keys.
+    // Partial configuration should fall back to defaults (.never and []) for omitted keys.
     let partialJsonData = """
       {
           "reflowComments": {
@@ -171,5 +171,19 @@ final class ConfigurationTests: XCTestCase {
     let partialConfig = try Configuration(data: partialJsonData)
     XCTAssertEqual(partialConfig.reflowComments.regularComments, .never)
     XCTAssertEqual(partialConfig.reflowComments.docComments, .always)
+    XCTAssertEqual(partialConfig.reflowComments.commentPragmas, [])
+
+    let pragmasJsonData = """
+      {
+          "reflowComments": {
+              "regularComments": "always",
+              "commentPragmas": ["^\\\\s*@CustomPragma", "^MARK:"]
+          }
+      }
+      """.data(using: .utf8)!
+    let pragmasConfig = try Configuration(data: pragmasJsonData)
+    XCTAssertEqual(pragmasConfig.reflowComments.regularComments, .always)
+    XCTAssertEqual(pragmasConfig.reflowComments.docComments, .never)
+    XCTAssertEqual(pragmasConfig.reflowComments.commentPragmas, [#"^\s*@CustomPragma"#, "^MARK:"])
   }
 }

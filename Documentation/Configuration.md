@@ -296,6 +296,7 @@ too long.
 
 - `regularComments` _(string)_: Determines how regular (`//` and `/* ... */`) comments should be reflowed.
 - `docComments` _(string)_: Determines how documentation (`///` and `/** ... */`) comments should be reflowed.
+- `commentPragmas` _(array of strings)_: Regular expressions matching comment pragmas or directives that should not be wrapped or reflowed. Each pattern is matched against the multi-line comment text with `^` and `$` matching line boundaries, and any comment line overlapping a match is preserved verbatim. (`swift-format-ignore` and `swift-format-ignore-file` directives are always preserved regardless of this setting.)
 
 `regularComments` and `docComments` each accept one of the following values:
 - `never`: Never reflow comments.
