@@ -289,6 +289,23 @@ too long.
 
 ---
 
+### `reflowComments`
+**type:** object
+
+**description:** Configuration for comment reflowing. Standalone comments (those that are the first non-whitespace on a line) are parsed as Markdown and reflowed according to the configured behavior for each comment category:
+
+- `regularComments` _(string)_: Determines how regular (`//` and `/* ... */`) comments should be reflowed.
+- `docComments` _(string)_: Determines how documentation (`///` and `/** ... */`) comments should be reflowed.
+
+`regularComments` and `docComments` each accept one of the following values:
+- `never`: Never reflow comments.
+- `onlyLinesOverLength`: Only insert line breaks in comment lines that exceed `lineLength`, without reflowing subsequent lines back up onto previous lines.
+- `always`: Always reflow comments as full Markdown paragraphs.
+
+**default:** `{ "regularComments": "never", "docComments": "never", "commentPragmas": [] }`
+
+---
+
 ### `indentBlankLines`  
 **type:** boolean  
 

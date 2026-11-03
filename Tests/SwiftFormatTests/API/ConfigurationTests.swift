@@ -135,4 +135,41 @@ final class ConfigurationTests: XCTestCase {
     XCTAssertEqual(config, expected)
     #endif
   }
+
+  func testDecodingReflowComments() throws {
+    let behaviors: [String: ReflowCommentsConfiguration.Behavior] = [
+      "\"never\"": .never,
+      "\"onlyLinesOverLength\"": .onlyLinesOverLength,
+      "\"always\"": .always,
+    ]
+
+    for (regString, regExpected) in behaviors {
+      for (docString, docExpected) in behaviors {
+        let jsonData = """
+          {
+              "reflowComments": {
+                  "regularComments": \(regString),
+                  "docComments": \(docString)
+              }
+          }
+          """.data(using: .utf8)!
+
+        let config = try Configuration(data: jsonData)
+        XCTAssertEqual(config.reflowComments.regularComments, regExpected)
+        XCTAssertEqual(config.reflowComments.docComments, docExpected)
+      }
+    }
+
+    // Partial configuration should fall back to defaults (.never) for omitted keys.
+    let partialJsonData = """
+      {
+          "reflowComments": {
+              "docComments": "always"
+          }
+      }
+      """.data(using: .utf8)!
+    let partialConfig = try Configuration(data: partialJsonData)
+    XCTAssertEqual(partialConfig.reflowComments.regularComments, .never)
+    XCTAssertEqual(partialConfig.reflowComments.docComments, .always)
+  }
 }

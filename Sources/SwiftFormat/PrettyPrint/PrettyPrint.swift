@@ -484,12 +484,33 @@ public class PrettyPrinter {
           diagnose(.moveEndOfLineComment, category: .endOfLineComment)
         }
       }
-      outputBuffer.write(
-        comment.print(
-          indent: currentIndentation,
-          shouldIndentBlankLines: configuration.indentBlankLines
-        )
+      let unreflowed = comment.print(
+        indent: currentIndentation,
+        shouldIndentBlankLines: configuration.indentBlankLines
       )
+      let reflowBehavior: ReflowCommentsConfiguration.Behavior
+      switch comment.kind {
+      case .line, .block:
+        reflowBehavior = configuration.reflowComments.regularComments
+      case .docLine, .docBlock:
+        reflowBehavior = configuration.reflowComments.docComments
+      }
+      if !reflowBehavior.isNever && !wasEndOfLine && outputBuffer.isAtStartOfLine {
+        let reflowed = comment.printReflowed(
+          indent: currentIndentation,
+          maxLineLength: configuration.lineLength,
+          tabWidth: configuration.tabWidth,
+          behavior: reflowBehavior,
+          shouldIndentBlankLines: configuration.indentBlankLines,
+          unreflowed: unreflowed
+        )
+        if reflowed != unreflowed {
+          diagnose(.reflowComment, category: .reflowComment)
+        }
+        outputBuffer.write(whitespaceOnly ? unreflowed : reflowed)
+      } else {
+        outputBuffer.write(unreflowed)
+      }
 
     case .verbatim(let verbatim):
       outputBuffer.writeVerbatim(verbatim.print(indent: currentIndentation), length)
@@ -862,6 +883,9 @@ public class PrettyPrinter {
 extension Finding.Message {
   fileprivate static let moveEndOfLineComment: Finding.Message =
     "move end-of-line comment that exceeds the line length"
+
+  fileprivate static let reflowComment: Finding.Message =
+    "reflow comment"
 
   fileprivate static let addTrailingComma: Finding.Message =
     "add trailing comma to the last element in multiline collection literal"
