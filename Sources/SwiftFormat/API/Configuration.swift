@@ -47,6 +47,7 @@ public struct Configuration: Codable, Equatable {
     case multilineTrailingCommaBehavior
     case multiElementCollectionTrailingCommas
     case reflowMultilineStringLiterals
+    case reflowComments
     case indentBlankLines
     case orderedImports
     case swiftTestingNamingConventions
@@ -298,6 +299,9 @@ public struct Configuration: Codable, Equatable {
 
   public var reflowMultilineStringLiterals: MultilineStringReflowBehavior
 
+  /// Configuration for reflowing comments.
+  public var reflowComments: ReflowCommentsConfiguration
+
   /// Determines whether to add indentation whitespace to blank lines or remove it entirely.
   ///
   /// If true, blank lines will be modified to match the current indentation level:
@@ -446,6 +450,13 @@ public struct Configuration: Codable, Equatable {
       return defaults.reflowMultilineStringLiterals
     }()
 
+    self.reflowComments =
+      try container.decodeIfPresent(
+        ReflowCommentsConfiguration.self,
+        forKey: .reflowComments
+      )
+      ?? defaults.reflowComments
+
     self.indentBlankLines =
       try container.decodeIfPresent(
         Bool.self,
@@ -506,6 +517,7 @@ public struct Configuration: Codable, Equatable {
     try container.encode(multiElementCollectionTrailingCommas, forKey: .multiElementCollectionTrailingCommas)
     try container.encode(multilineTrailingCommaBehavior, forKey: .multilineTrailingCommaBehavior)
     try container.encode(reflowMultilineStringLiterals, forKey: .reflowMultilineStringLiterals)
+    try container.encode(reflowComments, forKey: .reflowComments)
     try container.encode(indentBlankLines, forKey: .indentBlankLines)
     try container.encode(orderedImports, forKey: .orderedImports)
     try container.encode(swiftTestingNamingConventions, forKey: .swiftTestingNamingConventions)
@@ -573,6 +585,50 @@ public struct NoAssignmentInExpressionsConfiguration: Codable, Equatable {
   ]
 
   public init() {}
+}
+
+/// Configuration for comment reflowing.
+public struct ReflowCommentsConfiguration: Codable, Equatable {
+  /// Determines how comments should be reflowed when formatted.
+  public enum Behavior: String, Codable {
+    /// Never reflow comments.
+    case never
+
+    /// Only insert line breaks in comment lines that exceed the maximum line length, without
+    /// reflowing subsequent lines back up onto previous lines.
+    case onlyLinesOverLength
+
+    /// Always reflow comments as full Markdown paragraphs.
+    case always
+
+    var isNever: Bool {
+      self == .never
+    }
+  }
+
+  private enum CodingKeys: CodingKey {
+    case regularComments
+    case docComments
+  }
+
+  /// The reflow behavior for regular (`//` and `/* ... */`) comments.
+  public var regularComments: Behavior = .never
+
+  /// The reflow behavior for documentation (`///` and `/** ... */`) comments.
+  public var docComments: Behavior = .never
+
+  public init() {}
+
+  public init(from decoder: Decoder) throws {
+    let container = try decoder.container(keyedBy: CodingKeys.self)
+    let defaults = Self()
+    self.regularComments =
+      try container.decodeIfPresent(Behavior.self, forKey: .regularComments)
+      ?? defaults.regularComments
+    self.docComments =
+      try container.decodeIfPresent(Behavior.self, forKey: .docComments)
+      ?? defaults.docComments
+  }
 }
 
 /// Configuration for the `OrderedImports` rule.

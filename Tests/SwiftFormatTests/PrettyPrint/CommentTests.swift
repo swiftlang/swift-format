@@ -1107,4 +1107,496 @@ final class CommentTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: input, linelength: 80)
   }
+
+  func testReflowLineCommentsOnlyLinesOverLength() {
+    let input =
+      """
+      // Short single-line comment stays as-is.
+
+      // This is a single-line comment that is much longer than the configured line length and must be wrapped.
+
+      // This is a multi-line comment
+      // where short lines should not be
+      // joined together.
+      //
+      // In this paragraph, the first line is much longer than the configured line length and wraps
+      // while this second line stays on its own line.
+
+      func foo() {
+        // Inside an indented scope, the available width is smaller so this comment wraps earlier than at top level.
+        let x = 1
+      }
+      """
+
+    let expected =
+      """
+      // Short single-line comment stays as-is.
+
+      // This is a single-line comment that is much
+      // longer than the configured line length and must
+      // be wrapped.
+
+      // This is a multi-line comment
+      // where short lines should not be
+      // joined together.
+      //
+      // In this paragraph, the first line is much
+      // longer than the configured line length and
+      // wraps
+      // while this second line stays on its own line.
+
+      func foo() {
+        // Inside an indented scope, the available width
+        // is smaller so this comment wraps earlier than
+        // at top level.
+        let x = 1
+      }
+
+      """
+
+    var config = Configuration.forTesting
+    config.reflowComments.regularComments = .onlyLinesOverLength
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
+  }
+
+  func testReflowLineCommentsAlways() {
+    let input =
+      """
+      // Short single-line comment stays as-is.
+
+      // This is a single-line comment that is much longer than the configured line length and must be wrapped.
+
+      // This is a multi-line comment
+      // where short lines should be
+      // joined together and reflowed
+      // to fit the line width.
+      //
+      // And this is a second paragraph
+      // in the same comment block.
+
+      func foo() {
+        // Inside an indented scope, the available width is smaller so this comment wraps earlier than at top level.
+        let x = 1
+      }
+      """
+
+    let expected =
+      """
+      // Short single-line comment stays as-is.
+
+      // This is a single-line comment that is much
+      // longer than the configured line length and must
+      // be wrapped.
+
+      // This is a multi-line comment where short lines
+      // should be joined together and reflowed to fit
+      // the line width.
+      //
+      // And this is a second paragraph in the same
+      // comment block.
+
+      func foo() {
+        // Inside an indented scope, the available width
+        // is smaller so this comment wraps earlier than
+        // at top level.
+        let x = 1
+      }
+
+      """
+
+    var config = Configuration.forTesting
+    config.reflowComments.regularComments = .always
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
+  }
+
+  func testReflowDocLineCommentsWithMarkdownConstructs() {
+    let input =
+      """
+      /// A brief summary that is quite long and should be wrapped across multiple lines cleanly.
+      ///
+      /// This is a multi-line paragraph
+      /// where short lines are joined
+      /// together and reflowed.
+      ///
+      /// Here is a detailed discussion with *italic*, _also italic_, **bold**, __also bold__,
+      /// ~~strikethrough~~, `inlineCode(x: 1, y: 2)`, ``SymbolLink``, [a link](https://swift.org),
+      /// and <https://swift.org>.
+      ///
+      /// Hard line breaks with a trailing backslash\\
+      /// are preserved on their own line.
+      ///
+      /// # Heading 1
+      ///
+      /// ```swift
+      /// let veryLongCodeLineInFencedBlock = "This line exceeds 50 columns but must NOT be wrapped!"
+      /// ```
+      ///
+      ///     let veryLongCodeLineInIndentedBlock = "This indented code block must NOT be wrapped!"
+      func documentedFunction(param1: Int, param2: String) -> Bool {
+        return true
+      }
+      """
+
+    let expected =
+      """
+      /// A brief summary that is quite long and should
+      /// be wrapped across multiple lines cleanly.
+      ///
+      /// This is a multi-line paragraph where short
+      /// lines are joined together and reflowed.
+      ///
+      /// Here is a detailed discussion with *italic*,
+      /// _also italic_, **bold**, __also bold__,
+      /// ~~strikethrough~~, `inlineCode(x: 1, y: 2)`,
+      /// ``SymbolLink``, [a link](https://swift.org),
+      /// and <https://swift.org>.
+      ///
+      /// Hard line breaks with a trailing backslash\\
+      /// are preserved on their own line.
+      ///
+      /// # Heading 1
+      ///
+      /// ```swift
+      /// let veryLongCodeLineInFencedBlock = "This line exceeds 50 columns but must NOT be wrapped!"
+      /// ```
+      ///
+      ///     let veryLongCodeLineInIndentedBlock = "This indented code block must NOT be wrapped!"
+      func documentedFunction(
+        param1: Int, param2: String
+      ) -> Bool {
+        return true
+      }
+
+      """
+
+    var config = Configuration.forTesting
+    config.reflowComments.docComments = .always
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
+  }
+
+  func testReflowBlockComments() {
+    let input =
+      """
+      /* Short block comment */
+
+      /* This is a single-line block comment that exceeds the line length and wraps. */
+
+      /* Short line 1
+         Short line 2 */
+
+      /*
+        This block comment has delimiters on their own lines
+        and a short second line.
+      */
+
+      /*
+       * This block comment uses ASCII art asterisks on each
+       * interior line and should preserve them
+       * when reflowed.
+       *
+       * Second paragraph.
+       */
+      let x = 1
+      """
+
+    let expectedOnlyLinesOverLength =
+      """
+      /* Short block comment */
+
+      /* This is a single-line block comment
+         that exceeds the line length and
+         wraps. */
+
+      /* Short line 1
+         Short line 2 */
+
+      /*
+        This block comment has delimiters on
+        their own lines
+        and a short second line.
+      */
+
+      /*
+       * This block comment uses ASCII art
+       * asterisks on each
+       * interior line and should preserve
+       * them
+       * when reflowed.
+       *
+       * Second paragraph.
+       */
+      let x = 1
+
+      """
+
+    var config = Configuration.forTesting
+    config.reflowComments.regularComments = .onlyLinesOverLength
+    assertPrettyPrintEqual(
+      input: input,
+      expected: expectedOnlyLinesOverLength,
+      linelength: 40,
+      configuration: config
+    )
+
+    let expectedAlways =
+      """
+      /* Short block comment */
+
+      /* This is a single-line block comment
+         that exceeds the line length and
+         wraps. */
+
+      /* Short line 1 Short line 2 */
+
+      /*
+        This block comment has delimiters on
+        their own lines and a short second
+        line.
+      */
+
+      /*
+       * This block comment uses ASCII art
+       * asterisks on each interior line and
+       * should preserve them when reflowed.
+       *
+       * Second paragraph.
+       */
+      let x = 1
+
+      """
+
+    config.reflowComments.regularComments = .always
+    assertPrettyPrintEqual(
+      input: input,
+      expected: expectedAlways,
+      linelength: 40,
+      configuration: config
+    )
+  }
+
+  func testReflowDocBlockComments() {
+    let input =
+      """
+      /** A short doc block comment **/
+
+      /** This single-line doc block comment is too long and must wrap onto multiple lines. **/
+
+      /** This is a documentation comment
+       * that has text on the first line
+      **/
+      func myfun(param1: Int) -> String {
+        return ""
+      }
+      """
+
+    let expected =
+      """
+      /** A short doc block comment **/
+
+      /** This single-line doc block comment is too
+          long and must wrap onto multiple
+          lines. **/
+
+      /** This is a documentation comment that has
+       * text on the first line
+      **/
+      func myfun(param1: Int) -> String {
+        return ""
+      }
+
+      """
+
+    var config = Configuration.forTesting
+    config.reflowComments.docComments = .always
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 45, configuration: config)
+  }
+
+  func testReflowCommentsPreservesBannerAndExcludesEndOfLineComments() {
+    let input =
+      """
+      //===----------------------------------------------------------------------===//
+      //
+      // This source file is part of the Swift.org open source project
+      //
+      //===----------------------------------------------------------------------===//
+
+      /*===----------------------------------------------------------------------===*/
+
+      /// Doc line comment
+      // Line comment
+      /// Doc line comment
+      // Line comment
+
+      let x = 1  // This is a very long end-of-line comment that exceeds the line length
+      // and this standalone line comment should not be merged with the end-of-line comment above.
+
+      let z =
+        // one comment
+        // and another comment
+        1 + 2
+
+      let w =
+        /// one doc comment
+        /// and another doc comment
+        1 + 2
+      """
+
+    let expected =
+      """
+      //===----------------------------------------------------------------------===//
+      //
+      // This source file is part of the Swift.org
+      // open source project
+      //
+      //===----------------------------------------------------------------------===//
+
+      /*===----------------------------------------------------------------------===*/
+
+      /// Doc line comment
+      // Line comment
+      /// Doc line comment
+      // Line comment
+
+      let x = 1  // This is a very long end-of-line comment that exceeds the line length
+      // and this standalone line comment should not
+      // be merged with the end-of-line comment above.
+
+      let z =
+        // one comment
+        // and another comment
+        1 + 2
+
+      let w =
+        /// one doc comment and another doc comment
+        1 + 2
+
+      """
+
+    var config = Configuration.forTesting
+    config.reflowComments.regularComments = .onlyLinesOverLength
+    config.reflowComments.docComments = .always
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 48, configuration: config)
+  }
+
+  func testDiagnoseReflowComment() {
+    var config = Configuration.forTesting
+    config.reflowComments.regularComments = .onlyLinesOverLength
+    config.reflowComments.docComments = .always
+    assertPrettyPrintEqual(
+      input: """
+        // This comment fits.
+
+        // Short regular line 1
+        // Short regular line 2
+
+        1️⃣// This single-line comment is too long for the line.
+
+        func foo() {
+          2️⃣/// Short doc line 1
+          /// Short doc line 2
+          let x = 1
+        }
+
+        """,
+      expected: """
+        // This comment fits.
+
+        // Short regular line 1
+        // Short regular line 2
+
+        // This single-line comment is too long for the line.
+
+        func foo() {
+          /// Short doc line 1
+          /// Short doc line 2
+          let x = 1
+        }
+
+        """,
+      linelength: 40,
+      configuration: config,
+      whitespaceOnly: true,
+      findings: [
+        FindingSpec("1️⃣", message: "reflow comment"),
+        FindingSpec("2️⃣", message: "reflow comment"),
+      ]
+    )
+  }
+
+  func testReflowBlockCommentClosingDelimiterBoundaryAndBlankLineIndentation() {
+    // At lineLength = 25, "/* Hello world friendss" is 23 chars (fits in 25),
+    // but adding " */" makes it 26 chars (> 25), so "friendss" must wrap.
+    let input =
+      """
+      /* Hello world
+         friendss */
+
+      func foo() {
+        /*
+          First paragraph in indented block comment.
+
+          Second paragraph in indented block comment.
+        */
+        let x = 1
+      }
+      """
+
+    let expectedNoBlankIndent =
+      """
+      /* Hello world
+         friendss */
+
+      func foo() {
+        /*
+          First paragraph in
+          indented block
+          comment.
+
+          Second paragraph in
+          indented block
+          comment.
+        */
+        let x = 1
+      }
+
+      """
+
+    var config = Configuration.forTesting
+    config.reflowComments.regularComments = .always
+    config.indentBlankLines = false
+    assertPrettyPrintEqual(
+      input: input,
+      expected: expectedNoBlankIndent,
+      linelength: 25,
+      configuration: config
+    )
+
+    let expectedWithBlankIndent =
+      """
+      /* Hello world
+         friendss */
+
+      func foo() {
+        /*
+          First paragraph in
+          indented block
+          comment.
+      \("  ")
+          Second paragraph in
+          indented block
+          comment.
+        */
+        let x = 1
+      }
+
+      """
+
+    config.indentBlankLines = true
+    assertPrettyPrintEqual(
+      input: input,
+      expected: expectedWithBlankIndent,
+      linelength: 25,
+      configuration: config
+    )
+  }
 }
