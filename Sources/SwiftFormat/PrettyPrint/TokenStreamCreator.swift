@@ -3580,7 +3580,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     var requiresNextNewline = false
     // Tracking whether or not the last piece was leading indentation. A newline is considered
     // a 0-space indentation; used for nesting/un-nesting block comments during formatting.
-    var leadingIndent: Indent? = nil
+    var leadingIndent: Indent? = isStartOfFile ? .spaces(0) : nil
 
     for (index, piece) in trivia.enumerated() {
       if let cutoff = cutoffIndex, index == cutoff { break }
@@ -3672,7 +3672,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
         let isBOM = text == "\u{feff}"
         requiresNextNewline = !isBOM
         isStartOfFile = isStartOfFile && isBOM
-        leadingIndent = nil
+        leadingIndent = isStartOfFile ? .spaces(0) : nil
 
       case .backslashes, .formfeeds, .pounds, .verticalTabs:
         leadingIndent = nil
@@ -3791,7 +3791,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
         // where the comment type is the same; these can be merged into a single comment
         if let nextToLast = tokens.dropLast().last,
           case let .comment(c1, false) = nextToLast,
-          c1.kind == c2.kind
+          c1.kind == c2.kind,
+          c1.leadingIndent != nil,
+          c2.leadingIndent != nil
         {
           var mergedComment = c1
           mergedComment.addText(c2.text)

@@ -14,20 +14,48 @@ import Foundation
 import SwiftSyntax
 
 extension StringProtocol {
-  /// Trims whitespace from the end of a string, returning a new string with no trailing whitespace.
+  /// Trims whitespace from the end of a string, returning a substring view with no trailing
+  /// whitespace.
   ///
-  /// If the string is only whitespace, an empty string is returned.
+  /// If the string is only whitespace, an empty substring is returned.
   ///
-  /// - Returns: The string with trailing whitespace removed.
-  func trimmingTrailingWhitespace() -> String {
-    if isEmpty { return String() }
-    let utf8Array = Array(utf8)
-    var idx = utf8Array.endIndex - 1
-    while utf8Array[idx].isWhitespace {
-      if idx == utf8Array.startIndex { return String() }
-      idx -= 1
+  /// - Returns: The substring with trailing whitespace removed.
+  func trimmingTrailingWhitespace() -> Substring {
+    let sub = Substring(self)
+    let utf8 = sub.utf8
+    var end = utf8.endIndex
+    while end > utf8.startIndex {
+      let prev = utf8.index(before: end)
+      guard utf8[prev].isWhitespace else { break }
+      end = prev
     }
-    return String(decoding: utf8Array[...idx], as: UTF8.self)
+    return sub[..<end]
+  }
+
+  /// Trims leading and trailing spaces and tabs, returning a substring view.
+  func trimmingSpacesAndTabs() -> Substring {
+    let sub = Substring(self)
+    let utf8 = sub.utf8
+    var start = utf8.startIndex
+    let endLimit = utf8.endIndex
+    while start < endLimit {
+      let byte = utf8[start]
+      guard byte == UInt8(ascii: " ") || byte == UInt8(ascii: "\t") else { break }
+      start = utf8.index(after: start)
+    }
+    var end = endLimit
+    while end > start {
+      let prev = utf8.index(before: end)
+      let byte = utf8[prev]
+      guard byte == UInt8(ascii: " ") || byte == UInt8(ascii: "\t") else { break }
+      end = prev
+    }
+    return sub[start..<end]
+  }
+
+  /// Returns `true` if the string is empty or contains only spaces and tabs.
+  var isBlankSpacesOrTabs: Bool {
+    return utf8.allSatisfy { $0 == UInt8(ascii: " ") || $0 == UInt8(ascii: "\t") }
   }
 }
 
@@ -93,7 +121,11 @@ struct Comment {
 
       // The last line in a block style comment contains the "*/" pattern to end the comment. The
       // trailing space(s) need to be kept in that line to have space between text and "*/".
-      var trimmedLines = lines.dropLast().map({ $0.trimmingTrailingWhitespace() })
+      var trimmedLines: [String] = []
+      trimmedLines.reserveCapacity(lines.count)
+      for line in lines.dropLast() {
+        trimmedLines.append(String(line.trimmingTrailingWhitespace()))
+      }
       if let lastLine = lines.last {
         trimmedLines.append(String(lastLine))
       }

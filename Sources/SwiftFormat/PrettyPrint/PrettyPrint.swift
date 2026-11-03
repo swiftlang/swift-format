@@ -847,7 +847,10 @@ public class PrettyPrinter {
   /// Emits a finding with the given message and category at the current location in `outputBuffer`.
   private func diagnose(_ message: Finding.Message, category: PrettyPrintFindingCategory) {
     // Add 1 since columns uses 1-based indices.
-    let column = outputBuffer.column + 1
+    let column =
+      (outputBuffer.isAtStartOfLine
+        ? currentIndentation.length(tabWidth: configuration.tabWidth)
+        : outputBuffer.column) + 1
     context.findingEmitter.emit(
       message,
       category: category,
