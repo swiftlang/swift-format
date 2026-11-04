@@ -22,6 +22,11 @@ public class SyntaxLintRule: SyntaxVisitor, Rule {
     return false
   }
 
+  /// The scope of the syntax node that this rule operates on.
+  public class var affectedContent: AffectedContent {
+    return .content
+  }
+
   /// The context in which the rule is executed.
   public let context: Context
 
