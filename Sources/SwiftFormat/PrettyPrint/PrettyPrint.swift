@@ -501,7 +501,9 @@ public class PrettyPrinter {
       case .docLine, .docBlock:
         reflowBehavior = configuration.reflowComments.docComments
       }
-      if !reflowBehavior.isNever && !wasEndOfLine && outputBuffer.isAtStartOfLine {
+      if outputBuffer.isEnabled && !reflowBehavior.isNever && !wasEndOfLine
+        && outputBuffer.isAtStartOfLine
+      {
         let reflowed = comment.printReflowed(
           indent: currentIndentation,
           maxLineLength: configuration.lineLength,
@@ -587,6 +589,8 @@ public class PrettyPrinter {
         options: .backwards
       ) {
         text = String(text[..<nonWhitespace.upperBound])
+      } else {
+        text = ""
       }
 
       self.disabledPosition = nil
@@ -874,6 +878,7 @@ public class PrettyPrinter {
 
   /// Emits a finding with the given message and category at the current location in `outputBuffer`.
   private func diagnose(_ message: Finding.Message, category: PrettyPrintFindingCategory) {
+    guard outputBuffer.isEnabled else { return }
     // Add 1 since columns uses 1-based indices.
     let column =
       (outputBuffer.isAtStartOfLine

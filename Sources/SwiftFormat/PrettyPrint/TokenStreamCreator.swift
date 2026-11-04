@@ -3581,18 +3581,101 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // Tracking whether or not the last piece was leading indentation. A newline is considered
     // a 0-space indentation; used for nesting/un-nesting block comments during formatting.
     var leadingIndent: Indent? = isStartOfFile ? .spaces(0) : nil
+    // Tracks the end trivia index and source position of the current contiguous run of mergeable
+    // line or doc line comments so that selection formatting enables/disables formatting around
+    // the entire merged comment rather than splitting it at selection boundaries.
+    var activeCommentRun: (endIndex: Int, endPosition: AbsolutePosition)? = nil
+
+    func mergeableCommentRunEnd(
+      from startIndex: Int,
+      startPosition: AbsolutePosition,
+      isDocComment: Bool
+    ) -> (endIndex: Int, endPosition: AbsolutePosition) {
+      let limit = cutoffIndex ?? trivia.endIndex
+      var endIndex = startIndex
+      var endPosition = startPosition + trivia[startIndex].sourceLength
+      var cursor = startIndex + 1
+      var cursorPosition = endPosition
+
+      while cursor < limit {
+        // A mergeable continuation comment must be preceded by a single newline.
+        switch trivia[cursor] {
+        case .newlines(1), .carriageReturns(1), .carriageReturnLineFeeds(1):
+          cursorPosition += trivia[cursor].sourceLength
+          cursor += 1
+        default:
+          return (endIndex, endPosition)
+        }
+
+        // Skip any horizontal indentation on the next line before the comment.
+        while cursor < limit, trivia[cursor].isSpaceOrTab {
+          cursorPosition += trivia[cursor].sourceLength
+          cursor += 1
+        }
+
+        guard cursor < limit else { break }
+
+        // Check whether the next trivia piece is a line comment of the same kind.
+        switch (trivia[cursor], isDocComment) {
+        case (.lineComment, false), (.docLineComment, true):
+          endIndex = cursor
+          cursorPosition += trivia[cursor].sourceLength
+          endPosition = cursorPosition
+          cursor += 1
+        default:
+          return (endIndex, endPosition)
+        }
+      }
+      return (endIndex, endPosition)
+    }
 
     for (index, piece) in trivia.enumerated() {
       if let cutoff = cutoffIndex, index == cutoff { break }
 
+      func appendLineComment(
+        kind: Comment.Kind,
+        text: String,
+        shouldMergeAcrossSelection: Bool
+      ) {
+        if shouldMergeAcrossSelection && leadingIndent != nil {
+          if activeCommentRun == nil {
+            let run = mergeableCommentRunEnd(
+              from: index,
+              startPosition: position,
+              isDocComment: kind == .docLine
+            )
+            activeCommentRun = run
+            generateEnableFormattingIfNecessary(position..<run.endPosition)
+          }
+        } else {
+          generateEnableFormattingIfNecessary(position..<position + piece.sourceLength)
+        }
+        appendToken(
+          .comment(
+            Comment(kind: kind, leadingIndent: leadingIndent, text: text),
+            wasEndOfLine: false
+          )
+        )
+        if let run = activeCommentRun {
+          if index == run.endIndex {
+            generateDisableFormattingIfNecessary(run.endPosition)
+            activeCommentRun = nil
+          }
+        } else {
+          generateDisableFormattingIfNecessary(position + piece.sourceLength)
+        }
+        appendNewlines(.soft)
+        isStartOfFile = false
+      }
+
       switch piece {
       case .lineComment(let text):
         if index > 0 || isStartOfFile {
-          generateEnableFormattingIfNecessary(position..<position + piece.sourceLength)
-          appendToken(.comment(Comment(kind: .line, leadingIndent: leadingIndent, text: text), wasEndOfLine: false))
-          generateDisableFormattingIfNecessary(position + piece.sourceLength)
-          appendNewlines(.soft)
-          isStartOfFile = false
+          appendLineComment(
+            kind: .line,
+            text: text,
+            shouldMergeAcrossSelection: !config.reflowComments.regularComments.isNever
+          )
         }
         requiresNextNewline = true
         leadingIndent = nil
@@ -3620,11 +3703,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
         leadingIndent = nil
 
       case .docLineComment(let text):
-        generateEnableFormattingIfNecessary(position..<position + piece.sourceLength)
-        appendToken(.comment(Comment(kind: .docLine, leadingIndent: leadingIndent, text: text), wasEndOfLine: false))
-        generateDisableFormattingIfNecessary(position + piece.sourceLength)
-        appendNewlines(.soft)
-        isStartOfFile = false
+        appendLineComment(
+          kind: .docLine,
+          text: text,
+          shouldMergeAcrossSelection: !config.reflowComments.docComments.isNever
+        )
         requiresNextNewline = true
         leadingIndent = nil
 
