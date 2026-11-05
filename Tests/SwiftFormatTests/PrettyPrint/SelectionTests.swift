@@ -12,6 +12,7 @@
 
 import SwiftFormat
 import XCTest
+@_spi(Testing) import _SwiftFormatTestSupport
 
 final class SelectionTests: PrettyPrintTestCase {
   func testSelectAll() {
@@ -403,5 +404,36 @@ final class SelectionTests: PrettyPrintTestCase {
       """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
+  }
+
+  func testReflowCommentSelectionFindings() {
+    var config = Configuration.forTesting
+    config.reflowComments.regularComments = .always
+    config.reflowComments.docComments = .always
+
+    // Unselected doc comment above a selected function header must not emit a reflow finding,
+    // while a partially selected doc comment on the second function must emit a reflow finding.
+    let input =
+      """
+      /// This is an unselected doc comment that exceeds the line length limit.
+      ⏩func first(a: Int, b: Int) {}⏪
+
+      1️⃣/// This is a partially selected doc comment that exceeds the line length
+      /// ⏩and continues onto a second line.⏪
+      func second() {}
+      """
+
+    assertPrettyPrintEqual(
+      input: input,
+      expected: input.replacingOccurrences(of: "1️⃣", with: "")
+        .replacingOccurrences(of: "⏩", with: "")
+        .replacingOccurrences(of: "⏪", with: ""),
+      linelength: 60,
+      configuration: config,
+      whitespaceOnly: true,
+      findings: [
+        FindingSpec("1️⃣", message: "reflow comment")
+      ]
+    )
   }
 }

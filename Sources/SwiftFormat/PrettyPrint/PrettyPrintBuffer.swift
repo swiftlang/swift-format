@@ -161,9 +161,12 @@ struct PrettyPrintBuffer {
     if str.hasSuffix("\n") {
       isAtStartOfLine = true
       consecutiveNewlineCount = 1
-    } else {
-      isAtStartOfLine = false
+    } else if output.isEmpty {
+      isAtStartOfLine = true
       consecutiveNewlineCount = 0
+    } else {
+      isAtStartOfLine = output.hasSuffix("\n")
+      consecutiveNewlineCount = isAtStartOfLine ? 1 : 0
     }
   }
 
