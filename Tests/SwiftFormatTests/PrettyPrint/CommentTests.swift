@@ -1783,6 +1783,33 @@ final class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 
+  func testReflowCommentsIndentedCodeBlockDoesNotDuplicateBlankLine() {
+    let input =
+      """
+      //     let x = 1
+      //     let y = 2
+      //
+      // A paragraph after the indented code block
+      // that gets merged onto fewer lines.
+      let a = 1
+      """
+
+    let expected =
+      """
+      //     let x = 1
+      //     let y = 2
+      //
+      // A paragraph after the indented code block that
+      // gets merged onto fewer lines.
+      let a = 1
+
+      """
+
+    var config = Configuration.forTesting
+    config.reflowComments.regularComments = .always
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
+  }
+
   func testReflowBlockCommentWithTabAfterStarAndClosingDelimiterOverflow() {
     let input =
       """

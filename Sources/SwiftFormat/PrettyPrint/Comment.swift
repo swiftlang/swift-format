@@ -882,28 +882,60 @@ private struct MarkdownReflower {
     return baseWidth - prefixLength
   }
 
+  /// Returns `true` if `line` consists solely of horizontal whitespace and/or `>` blockquote
+  /// markers.
+  fileprivate func isBlankOrBlockQuoteBlank(_ line: Substring) -> Bool {
+    return line.utf8.allSatisfy {
+      $0 == UInt8(ascii: " ") || $0 == UInt8(ascii: "\t") || $0 == UInt8(ascii: ">")
+    }
+  }
+
+  /// Returns `true` if `codeBlock` is delimited by backtick or tilde fences (` ``` ` or `~~~`)
+  /// rather than 4-space indentation.
+  private func isFencedCodeBlock(_ codeBlock: CodeBlock) -> Bool {
+    guard let range = codeBlock.range,
+      range.lowerBound.line >= 1,
+      range.lowerBound.line <= markdownLines.count
+    else {
+      return codeBlock.language != nil
+    }
+    let line = markdownLines[range.lowerBound.line - 1]
+    let startIdx = utf8Index(in: line, column: range.lowerBound.column)
+    let rest = line[startIdx...]
+    return rest.hasPrefix("`") || rest.hasPrefix("~")
+  }
+
+  /// Returns the 1-based last source line of `block`, excluding any trailing blank lines that
+  /// `cmark-gfm` absorbs into the `SourceRange` of open container and indented code blocks.
+  private func effectiveEndLine(of block: BlockMarkup) -> Int {
+    guard let range = block.range else { return 0 }
+    let startLine = max(1, range.lowerBound.line)
+    var endLine = min(markdownLines.count, range.upperBound.line)
+    if let codeBlock = block as? CodeBlock, isFencedCodeBlock(codeBlock) {
+      return endLine
+    }
+    while endLine > startLine && isBlankOrBlockQuoteBlank(markdownLines[endLine - 1]) {
+      endLine -= 1
+    }
+    return endLine
+  }
+
   /// Returns `true` if `prevBlock` and `block` were separated by at least one blank line in the
   /// original Markdown source.
-  private func hasBlankSeparatorLine(before block: Markup, after prevBlock: Markup) -> Bool {
-    // Standard blocks report a line gap between `prevBlock.range.upperBound` and
-    // `block.range.lowerBound` when a blank line separates them.
-    if let prevEnd = prevBlock.range?.upperBound.line,
-      let currStart = block.range?.lowerBound.line,
+  private func hasBlankSeparatorLine(before block: BlockMarkup, after prevBlock: BlockMarkup) -> Bool {
+    let prevEnd = effectiveEndLine(of: prevBlock)
+    if let currStart = block.range?.lowerBound.line,
+      prevEnd >= 1,
       currStart > prevEnd + 1
     {
       return true
     }
-    // `cmark-gfm` includes trailing blank lines in the `SourceRange` of `UnorderedList`,
-    // `OrderedList`, and `ListItem` nodes, so also check whether the source line immediately
-    // preceding `block` is blank (or an empty blockquote line).
     if let currStart = block.range?.lowerBound.line,
       currStart >= 2,
       currStart - 1 <= markdownLines.count
     {
       let lineBeforeCurr = markdownLines[currStart - 2]
-      if lineBeforeCurr.utf8.allSatisfy({
-        $0 == UInt8(ascii: " ") || $0 == UInt8(ascii: "\t") || $0 == UInt8(ascii: ">")
-      }) {
+      if isBlankOrBlockQuoteBlank(lineBeforeCurr) {
         return true
       }
     }
@@ -1104,20 +1136,7 @@ private struct MarkdownReflower {
     firstLinePrefix: String,
     continuationPrefix: String
   ) {
-    // Check the source line at the start of the code block to distinguish fenced (` ``` ` / `~~~`)
-    // from 4-space indented code blocks.
-    let isFenced: Bool = {
-      guard let range = codeBlock.range,
-        range.lowerBound.line >= 1,
-        range.lowerBound.line <= markdownLines.count
-      else {
-        return codeBlock.language != nil
-      }
-      let line = markdownLines[range.lowerBound.line - 1]
-      let startIdx = utf8Index(in: line, column: range.lowerBound.column)
-      let rest = line[startIdx...]
-      return rest.hasPrefix("`") || rest.hasPrefix("~")
-    }()
+    let isFenced = isFencedCodeBlock(codeBlock)
 
     // Indented code blocks nested inside containers (lists/blockquotes) are emitted using their
     // parsed lines prefixed by 4 spaces; top-level and fenced code blocks are emitted verbatim.
@@ -1152,7 +1171,7 @@ private struct MarkdownReflower {
   ) {
     guard let range = block.range else { return }
     let startLine = max(1, range.lowerBound.line)
-    let endLine = min(markdownLines.count, range.upperBound.line)
+    let endLine = effectiveEndLine(of: block)
     guard startLine <= endLine else { return }
 
     let startCol = range.lowerBound.column
