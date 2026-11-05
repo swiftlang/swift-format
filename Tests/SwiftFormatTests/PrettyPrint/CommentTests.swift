@@ -1783,33 +1783,6 @@ final class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 
-  func testReflowCommentsIndentedCodeBlockDoesNotDuplicateBlankLine() {
-    let input =
-      """
-      //     let x = 1
-      //     let y = 2
-      //
-      // A paragraph after the indented code block
-      // that gets merged onto fewer lines.
-      let a = 1
-      """
-
-    let expected =
-      """
-      //     let x = 1
-      //     let y = 2
-      //
-      // A paragraph after the indented code block that
-      // gets merged onto fewer lines.
-      let a = 1
-
-      """
-
-    var config = Configuration.forTesting
-    config.reflowComments.regularComments = .always
-    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
-  }
-
   func testReflowCommentsPreservesLinkAndAttributeReferenceDefinitions() {
     let input =
       """
@@ -1870,6 +1843,33 @@ final class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 
+  func testReflowCommentsIndentedCodeBlockDoesNotDuplicateBlankLine() {
+    let input =
+      """
+      //     let x = 1
+      //     let y = 2
+      //
+      // A paragraph after the indented code block
+      // that gets merged onto fewer lines.
+      let a = 1
+      """
+
+    let expected =
+      """
+      //     let x = 1
+      //     let y = 2
+      //
+      // A paragraph after the indented code block that
+      // gets merged onto fewer lines.
+      let a = 1
+
+      """
+
+    var config = Configuration.forTesting
+    config.reflowComments.regularComments = .always
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
+  }
+
   func testReflowCommentsVerbatimBlocksInContainers() {
     let input =
       """
@@ -1906,6 +1906,35 @@ final class CommentTests: PrettyPrintTestCase {
       // >
       // > Follow-up paragraph in the blockquote that
       // > gets merged.
+      let b = 2
+
+      """
+
+    var config = Configuration.forTesting
+    config.reflowComments.regularComments = .always
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
+  }
+
+  func testReflowCommentsIndentedContinuationLinesPreserveInlineSpans() {
+    let input =
+      """
+      // First line of paragraph:
+      //   second line with & and \\* escaped and _emphasis_ and `code`.
+      let a = 1
+
+      // - List item first line
+      // café &amp; \\* escaped on lazy continuation line.
+      let b = 2
+      """
+
+    let expected =
+      """
+      // First line of paragraph: second line with & and
+      // \\* escaped and _emphasis_ and `code`.
+      let a = 1
+
+      // - List item first line café &amp; \\* escaped on
+      //   lazy continuation line.
       let b = 2
 
       """
