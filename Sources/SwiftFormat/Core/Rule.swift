@@ -67,20 +67,21 @@ extension Rule {
   ) {
     let syntaxLocation: SourceLocation?
     if let node = node {
+      let start: AbsolutePosition
+      let end: AbsolutePosition
       switch anchor {
       case .start:
-        syntaxLocation = node.startLocation(converter: context.sourceLocationConverter)
+        start = node.positionAfterSkippingLeadingTrivia
+        end = start
       case .leadingTrivia(let index):
-        syntaxLocation = node.startLocation(
-          ofLeadingTriviaAt: index,
-          converter: context.sourceLocationConverter
-        )
+        start = node.position(ofLeadingTriviaAt: index)
+        end = start + node.leadingTrivia[index].sourceLength
       case .trailingTrivia(let index):
-        syntaxLocation = node.startLocation(
-          ofTrailingTriviaAt: index,
-          converter: context.sourceLocationConverter
-        )
+        start = node.position(ofTrailingTriviaAt: index)
+        end = start + node.trailingTrivia[index].sourceLength
       }
+      guard context.selection.overlapsOrTouches(start..<end) else { return }
+      syntaxLocation = context.sourceLocationConverter.location(for: start)
     } else {
       syntaxLocation = nil
     }

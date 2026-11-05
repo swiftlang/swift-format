@@ -45,7 +45,7 @@ public final class SwiftLinter {
   /// This form of the `lint` function automatically folds expressions using the default operator
   /// set defined in Swift. If you need more control over this—for example, to provide the correct
   /// precedence relationships for custom operators—you must parse and fold the syntax tree
-  /// manually and then call ``lint(syntax:source:operatorTable:assumingFileURL:)``.
+  /// manually and then call ``lint(syntax:source:operatorTable:assumingFileURL:selection:)``.
   ///
   /// - Parameters:
   ///   - url: The URL of the file containing the code to format.
@@ -67,6 +67,7 @@ public final class SwiftLinter {
     try lint(
       source: String(contentsOf: url, encoding: .utf8),
       assumingFileURL: url,
+      selection: .infinite,
       parsingDiagnosticHandler: parsingDiagnosticHandler
     )
   }
@@ -94,6 +95,40 @@ public final class SwiftLinter {
     experimentalFeatures: Set<String> = [],
     parsingDiagnosticHandler: ((Diagnostic, SourceLocation) -> Void)? = nil
   ) throws {
+    try lint(
+      source: source,
+      assumingFileURL: url,
+      selection: .infinite,
+      experimentalFeatures: experimentalFeatures,
+      parsingDiagnosticHandler: parsingDiagnosticHandler
+    )
+  }
+
+  /// Lints the given ranges of Swift source code.
+  ///
+  /// This form of the `lint` function automatically folds expressions using the default operator
+  /// set defined in Swift. If you need more control over this—for example, to provide the correct
+  /// precedence relationships for custom operators—you must parse and fold the syntax tree
+  /// manually and then call ``lint(syntax:source:operatorTable:assumingFileURL:selection:)``.
+  ///
+  /// - Parameters:
+  ///   - source: The Swift source code to be linted.
+  ///   - url: A file URL denoting the filename/path that should be assumed for this source code.
+  ///   - selection: The ranges to lint.
+  ///   - experimentalFeatures: The set of experimental features that should be enabled in the
+  ///     parser. These names must be from the set of parser-recognized experimental language
+  ///     features in `SwiftParser`'s `Parser.LanguageFeatures` enum, which match the spelling
+  ///     defined in the compiler's `Features.def` file.
+  ///   - parsingDiagnosticHandler: An optional callback that will be notified if there are any
+  ///     errors when parsing the source code.
+  /// - Throws: If an unrecoverable error occurs when formatting the code.
+  public func lint(
+    source: String,
+    assumingFileURL url: URL,
+    selection: Selection,
+    experimentalFeatures: Set<String> = [],
+    parsingDiagnosticHandler: ((Diagnostic, SourceLocation) -> Void)? = nil
+  ) throws {
     // If the file or input string is completely empty, do nothing. This prevents even a trailing
     // newline from being diagnosed for an empty file. (This is consistent with clang-format, which
     // also does not touch an empty file even if the setting to add trailing newlines is enabled.)
@@ -108,9 +143,10 @@ public final class SwiftLinter {
     )
     try lint(
       syntax: sourceFile,
+      source: source,
       operatorTable: .standardOperators,
       assumingFileURL: url,
-      source: source
+      selection: selection
     )
   }
 
@@ -136,20 +172,45 @@ public final class SwiftLinter {
     operatorTable: OperatorTable,
     assumingFileURL url: URL
   ) throws {
-    try lint(syntax: syntax, operatorTable: operatorTable, assumingFileURL: url, source: source)
+    try lint(
+      syntax: syntax,
+      source: source,
+      operatorTable: operatorTable,
+      assumingFileURL: url,
+      selection: .infinite
+    )
   }
 
-  private func lint(
+  /// Lints the given ranges of a Swift syntax tree.
+  ///
+  /// This form of the `lint` function does not perform any additional processing on the given
+  /// syntax tree. The tree **must** have all expressions folded using an `OperatorTable`, and no
+  /// detection of warnings/errors is performed.
+  ///
+  /// - Note: The linter may be faster using the source text, if it's available.
+  ///
+  /// - Parameters:
+  ///   - syntax: The Swift syntax tree to be converted to be linted.
+  ///   - source: The Swift source code to be linted.
+  ///   - operatorTable: The table that defines the operators and their precedence relationships.
+  ///     This must be the same operator table that was used to fold the expressions in the `syntax`
+  ///     argument.
+  ///   - url: A file URL denoting the filename/path that should be assumed for this syntax tree.
+  ///   - selection: The ranges to lint.
+  /// - Throws: If an unrecoverable error occurs when formatting the code.
+  public func lint(
     syntax: SourceFileSyntax,
+    source: String,
     operatorTable: OperatorTable,
     assumingFileURL url: URL,
-    source: String
+    selection: Selection
   ) throws {
     let context = Context(
       configuration: configuration,
       operatorTable: operatorTable,
       findingConsumer: findingConsumer,
       fileURL: url,
+      selection: selection,
       sourceFileSyntax: syntax,
       source: source,
       ruleNameCache: ruleNameCache

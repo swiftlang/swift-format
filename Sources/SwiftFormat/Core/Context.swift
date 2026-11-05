@@ -101,7 +101,12 @@ public final class Context {
   /// location or not. Also makes sure the entire node is contained inside any selection.
   func shouldFormat<R: Rule>(_ rule: R.Type, node: Syntax) -> Bool {
     guard node.isInsideSelection(selection) else { return false }
+    return isRuleEnabled(rule, node: node)
+  }
 
+  /// Given a rule's name and the node it is examining, determine if the rule is enabled at this
+  /// location.
+  func isRuleEnabled<R: Rule>(_ rule: R.Type, node: Syntax) -> Bool {
     let loc = node.startLocation(converter: self.sourceLocationConverter)
 
     assert(
