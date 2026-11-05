@@ -1782,4 +1782,42 @@ final class CommentTests: PrettyPrintTestCase {
     ]
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
+
+  func testReflowBlockCommentWithTabAfterStarAndClosingDelimiterOverflow() {
+    let input =
+      """
+      /*
+       *\tFirst line after star-tab that should be
+       *\tmerged with the second line as normal prose.
+       */
+      let a = 1
+
+      /*
+       * Introductory line that gets merged
+       * with this line.
+       * ### A heading that fills the 50-col line here */
+      let b = 2
+      """
+
+    let expected =
+      """
+      /*
+       * First line after star-tab that should be merged
+       * with the second line as normal prose.
+       */
+      let a = 1
+
+      /*
+       * Introductory line that gets merged with this
+       * line.
+       * ### A heading that fills the 50-col line here
+       */
+      let b = 2
+
+      """
+
+    var config = Configuration.forTesting
+    config.reflowComments.regularComments = .always
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
+  }
 }

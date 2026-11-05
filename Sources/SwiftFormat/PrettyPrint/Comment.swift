@@ -598,7 +598,7 @@ struct Comment {
           return ""
         }
         var afterStar = Substring(line.utf8.dropFirst(starPrefixEmptyUTF8Count))
-        if afterStar.hasPrefix(" ") {
+        if afterStar.hasPrefix(" ") || afterStar.hasPrefix("\t") {
           afterStar = afterStar.dropFirst()
         }
         return afterStar.trimmingTrailingWhitespace()
@@ -681,7 +681,18 @@ struct Comment {
     if closesOnOwnLine {
       resultLines.append(indentation + ownLineClosingDelimiter)
     } else {
-      resultLines[resultLines.count - 1] += inlineClosingDelimiter
+      let lastIdx = resultLines.count - 1
+      let lastLineColumnWidth = (lastIdx == 0 ? indentLength : 0) + resultLines[lastIdx].count
+      if lastLineColumnWidth + inlineClosingDelimiter.count > maxLineLength {
+        let trimmedClosing = String(inlineClosingDelimiter.trimmingSpacesAndTabs())
+        if let starIndent {
+          resultLines.append(indentation + starIndent + trimmedClosing)
+        } else {
+          resultLines.append(indentation + trimmedClosing)
+        }
+      } else {
+        resultLines[lastIdx] += inlineClosingDelimiter
+      }
     }
     return resultLines.joined(separator: "\n")
   }
