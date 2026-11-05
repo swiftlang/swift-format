@@ -858,6 +858,8 @@ private struct MarkdownReflower {
     reflower.outputLines.reserveCapacity(lines.count)
     reflower.visitBlockChildren(
       Array(document.blockChildren),
+      containerLineRange: 1...lines.count,
+      containerContentStartCol: 1,
       firstLinePrefix: "",
       continuationPrefix: "",
       isLastBlockInDocument: true
@@ -975,29 +977,138 @@ private struct MarkdownReflower {
     return false
   }
 
-  /// Visits a sequence of sibling block nodes, emitting blank separator lines between blocks when
-  /// present in the original source.
+  /// Visits a sequence of sibling block nodes, emitting blank separator lines between blocks as
+  /// well as any unvisited source lines (such as `[label]: url` link reference definitions that
+  /// `cmark-gfm` strips from the syntax tree during block finalization).
   private mutating func visitBlockChildren(
     _ children: [BlockMarkup],
+    containerLineRange: ClosedRange<Int>? = nil,
+    containerContentStartCol: Int = 1,
     firstLinePrefix: String,
     continuationPrefix: String,
     isLastBlockInDocument: Bool
   ) {
+    var hasEmittedAnyInContainer = false
+    var prevEmittedEndLine: Int? = nil
+    let maxPrefixCols = max(containerContentStartCol - 1, continuationPrefix.utf8.count)
+
+    func strippedContainerLine(_ lineNum: Int) -> Substring {
+      let rawLine = markdownLines[lineNum - 1]
+      if lineNum == containerLineRange?.lowerBound {
+        let startIdx = utf8Index(in: rawLine, column: containerContentStartCol)
+        return rawLine[startIdx...]
+      }
+      return stripContinuationPrefix(
+        from: rawLine,
+        maxPrefixColumns: maxPrefixCols,
+        continuationPrefix: continuationPrefix
+      )
+    }
+
+    func hasUnvisitedContent(from startLine: Int, to endLine: Int) -> Bool {
+      let clampedStart = max(1, startLine)
+      let clampedEnd = min(markdownLines.count, endLine)
+      guard clampedStart <= clampedEnd else { return false }
+      for lineNum in clampedStart...clampedEnd {
+        if !isBlankOrBlockQuoteBlank(strippedContainerLine(lineNum)) {
+          return true
+        }
+      }
+      return false
+    }
+
+    // Emits any non-blank unvisited lines in `gapStart...gapEnd` verbatim.
+    func emitUnvisitedGap(from gapStart: Int, to gapEnd: Int) {
+      let clampedStart = max(1, gapStart)
+      let clampedEnd = min(markdownLines.count, gapEnd)
+      guard clampedStart <= clampedEnd else { return }
+
+      var firstNonBlank: Int? = nil
+      var lastNonBlank: Int? = nil
+      for lineNum in clampedStart...clampedEnd {
+        if !isBlankOrBlockQuoteBlank(strippedContainerLine(lineNum)) {
+          if firstNonBlank == nil { firstNonBlank = lineNum }
+          lastNonBlank = lineNum
+        }
+      }
+      guard let contentStart = firstNonBlank, let contentEnd = lastNonBlank else { return }
+
+      if let prevEnd = prevEmittedEndLine, contentStart > prevEnd + 1 {
+        emitLine("", prefix: continuationPrefix)
+      }
+      for lineNum in contentStart...contentEnd {
+        let slice = strippedContainerLine(lineNum)
+        if isBlankOrBlockQuoteBlank(slice) {
+          emitLine("", prefix: continuationPrefix)
+        } else {
+          let prefix = hasEmittedAnyInContainer ? continuationPrefix : firstLinePrefix
+          hasEmittedAnyInContainer = true
+          emitLine(slice, prefix: prefix)
+        }
+      }
+      prevEmittedEndLine = contentEnd
+    }
+
+    if let containerRange = containerLineRange {
+      let firstChildStart = children.first?.range?.lowerBound.line ?? (containerRange.upperBound + 1)
+      if containerRange.lowerBound <= firstChildStart - 1 {
+        emitUnvisitedGap(from: containerRange.lowerBound, to: firstChildStart - 1)
+      }
+    }
+
+    let trailingGapHasContent: Bool = {
+      guard let containerRange = containerLineRange, let lastChild = children.last else {
+        return false
+      }
+      let lastEnd = effectiveEndLine(of: lastChild)
+      guard lastEnd >= 1, lastEnd + 1 <= containerRange.upperBound else { return false }
+      return hasUnvisitedContent(from: lastEnd + 1, to: containerRange.upperBound)
+    }()
+
     for (index, child) in children.enumerated() {
-      if index > 0 {
-        let prevChild = children[index - 1]
-        if hasBlankSeparatorLine(before: child, after: prevChild) {
+      if index > 0,
+        let prevEnd = prevEmittedEndLine,
+        let currStart = child.range?.lowerBound.line,
+        prevEnd + 1 <= currStart - 1
+      {
+        emitUnvisitedGap(from: prevEnd + 1, to: currStart - 1)
+      }
+
+      if hasEmittedAnyInContainer {
+        let separatedByBlank: Bool
+        if let prevEnd = prevEmittedEndLine,
+          let currStart = child.range?.lowerBound.line,
+          currStart > prevEnd + 1
+        {
+          separatedByBlank = true
+        } else if index > 0 {
+          separatedByBlank = hasBlankSeparatorLine(before: child, after: children[index - 1])
+        } else {
+          separatedByBlank = false
+        }
+        if separatedByBlank {
           emitLine("", prefix: continuationPrefix)
         }
       }
-      let childFirstPrefix = index == 0 ? firstLinePrefix : continuationPrefix
-      let childIsLast = isLastBlockInDocument && (index == children.count - 1)
+
+      let childFirstPrefix = hasEmittedAnyInContainer ? continuationPrefix : firstLinePrefix
+      hasEmittedAnyInContainer = true
+      let childIsLast =
+        isLastBlockInDocument && (index == children.count - 1) && !trailingGapHasContent
       visitBlock(
         child,
         firstLinePrefix: childFirstPrefix,
         continuationPrefix: continuationPrefix,
         isLastBlockInDocument: childIsLast
       )
+      prevEmittedEndLine = effectiveEndLine(of: child)
+    }
+
+    if let containerRange = containerLineRange, !children.isEmpty {
+      let afterLastStart = (prevEmittedEndLine ?? (containerRange.lowerBound - 1)) + 1
+      if afterLastStart <= containerRange.upperBound {
+        emitUnvisitedGap(from: afterLastStart, to: containerRange.upperBound)
+      }
     }
   }
 
@@ -1019,8 +1130,34 @@ private struct MarkdownReflower {
       )
 
     case let blockQuote as BlockQuote:
+      let quoteRange: ClosedRange<Int>?
+      let contentStartCol: Int
+      if let range = blockQuote.range {
+        let startLine = max(1, range.lowerBound.line)
+        let endLine = max(startLine, effectiveEndLine(of: blockQuote))
+        quoteRange = startLine <= endLine ? (startLine...endLine) : nil
+        let rawLine = markdownLines[startLine - 1]
+        let startIdx = utf8Index(in: rawLine, column: range.lowerBound.column)
+        let utf8 = rawLine.utf8
+        var idx = startIdx
+        while idx < utf8.endIndex && (utf8[idx] == UInt8(ascii: " ") || utf8[idx] == UInt8(ascii: "\t")) {
+          idx = utf8.index(after: idx)
+        }
+        if idx < utf8.endIndex && utf8[idx] == UInt8(ascii: ">") {
+          idx = utf8.index(after: idx)
+          if idx < utf8.endIndex && (utf8[idx] == UInt8(ascii: " ") || utf8[idx] == UInt8(ascii: "\t")) {
+            idx = utf8.index(after: idx)
+          }
+        }
+        contentStartCol = utf8.distance(from: utf8.startIndex, to: idx) + 1
+      } else {
+        quoteRange = nil
+        contentStartCol = 3
+      }
       visitBlockChildren(
         Array(blockQuote.blockChildren),
+        containerLineRange: quoteRange,
+        containerContentStartCol: contentStartCol,
         firstLinePrefix: firstLinePrefix + "> ",
         continuationPrefix: continuationPrefix + "> ",
         isLastBlockInDocument: isLastBlockInDocument
@@ -1077,13 +1214,42 @@ private struct MarkdownReflower {
         }
       }
       let itemFirstLinePrefix = index == 0 ? firstLinePrefix : continuationPrefix
-      let (markerWithSpace, continuationSpaces) = extractListMarker(for: item, isOrdered: isOrdered)
+      let (markerWithSpace, continuationSpaces, contentStartCol) = extractListMarker(
+        for: item,
+        isOrdered: isOrdered
+      )
+      let itemRange: ClosedRange<Int>? = {
+        guard let range = item.range else { return nil }
+        let startLine = max(1, range.lowerBound.line)
+        let endLine = max(startLine, effectiveEndLine(of: item))
+        return startLine <= endLine ? (startLine...endLine) : nil
+      }()
+      let itemIsLast = isLastBlockInDocument && (index == items.count - 1)
       if item.childCount == 0 {
+        if let itemRange {
+          let firstLine = markdownLines[itemRange.lowerBound - 1]
+          let afterMarkerIdx = utf8Index(in: firstLine, column: contentStartCol)
+          let hasContent =
+            !isBlankOrBlockQuoteBlank(firstLine[afterMarkerIdx...])
+            || itemRange.upperBound > itemRange.lowerBound
+          if hasContent {
+            visitBlockChildren(
+              [],
+              containerLineRange: itemRange,
+              containerContentStartCol: contentStartCol,
+              firstLinePrefix: itemFirstLinePrefix + markerWithSpace,
+              continuationPrefix: continuationPrefix + continuationSpaces,
+              isLastBlockInDocument: itemIsLast
+            )
+            continue
+          }
+        }
         emitLine(markerWithSpace[...], prefix: itemFirstLinePrefix)
       } else {
-        let itemIsLast = isLastBlockInDocument && (index == items.count - 1)
         visitBlockChildren(
           Array(item.blockChildren),
+          containerLineRange: itemRange,
+          containerContentStartCol: contentStartCol,
           firstLinePrefix: itemFirstLinePrefix + markerWithSpace,
           continuationPrefix: continuationPrefix + continuationSpaces,
           isLastBlockInDocument: itemIsLast
@@ -1093,16 +1259,17 @@ private struct MarkdownReflower {
   }
 
   /// Extracts the list marker (including any task-list checkbox and post-marker spacing) from the
-  /// source line of `item`, along with the matching continuation indentation spaces.
+  /// source line of `item`, along with the matching continuation indentation spaces and 1-based
+  /// content start column.
   private func extractListMarker(
     for item: ListItem,
     isOrdered: Bool
-  ) -> (markerWithSpace: String, continuationSpaces: String) {
+  ) -> (markerWithSpace: String, continuationSpaces: String, contentStartCol: Int) {
     guard let range = item.range,
       range.lowerBound.line >= 1,
       range.lowerBound.line <= markdownLines.count
     else {
-      return (isOrdered ? "1. " : "- ", isOrdered ? "   " : "  ")
+      return (isOrdered ? "1. " : "- ", isOrdered ? "   " : "  ", isOrdered ? 4 : 3)
     }
     let line = markdownLines[range.lowerBound.line - 1]
     let startIdx = utf8Index(in: line, column: range.lowerBound.column)
@@ -1111,7 +1278,7 @@ private struct MarkdownReflower {
     // Extract the raw bullet or ordered list marker token (e.g. `-`, `*`, `+`, `1.`, `1)`).
     let markerToken = slice.prefix { !$0.isWhitespace }
     guard !markerToken.isEmpty else {
-      return (isOrdered ? "1. " : "- ", isOrdered ? "   " : "  ")
+      return (isOrdered ? "1. " : "- ", isOrdered ? "   " : "  ", range.lowerBound.column)
     }
 
     // Preserve the original spacing after the marker, unless the marker is followed by an indented
@@ -1137,6 +1304,7 @@ private struct MarkdownReflower {
     if let checkbox = item.checkbox {
       let checkboxToken: Substring
       let spacesAfterCheckboxCount: Int
+      let contentStartIdx: String.Index
       if afterMarkerSpaces.hasPrefix("[x]") || afterMarkerSpaces.hasPrefix("[X]")
         || afterMarkerSpaces.hasPrefix("[ ]")
       {
@@ -1144,6 +1312,7 @@ private struct MarkdownReflower {
         let afterCheckbox = afterMarkerSpaces[checkboxToken.endIndex...]
         let rawSpacesAfterCheckbox = afterCheckbox.prefix { $0 == " " || $0 == "\t" }
         let afterCheckboxSpaces = afterCheckbox[rawSpacesAfterCheckbox.endIndex...]
+        contentStartIdx = afterCheckboxSpaces.startIndex
         if rawSpacesAfterCheckbox.isEmpty || afterCheckboxSpaces.isEmpty {
           spacesAfterCheckboxCount = 1
         } else {
@@ -1152,15 +1321,19 @@ private struct MarkdownReflower {
       } else {
         checkboxToken = checkbox == .checked ? "[x]" : "[ ]"
         spacesAfterCheckboxCount = 1
+        contentStartIdx = afterMarkerSpaces.startIndex
       }
       let fullMarker =
         baseMarkerWithSpace + checkboxToken + String(repeating: " ", count: spacesAfterCheckboxCount)
       let continuationSpaces = String(repeating: " ", count: fullMarker.utf8.count)
-      return (fullMarker, continuationSpaces)
+      let contentStartCol = line.utf8.distance(from: line.utf8.startIndex, to: contentStartIdx) + 1
+      return (fullMarker, continuationSpaces, contentStartCol)
     }
 
     let continuationSpaces = String(repeating: " ", count: baseMarkerWithSpace.utf8.count)
-    return (baseMarkerWithSpace, continuationSpaces)
+    let contentStartCol =
+      line.utf8.distance(from: line.utf8.startIndex, to: afterMarkerSpaces.startIndex) + 1
+    return (baseMarkerWithSpace, continuationSpaces, contentStartCol)
   }
 
   /// Emits a fenced or indented code block without wrapping its contents.
@@ -1233,6 +1406,46 @@ private struct MarkdownReflower {
     }
   }
 
+  /// Returns the number of line breaks spanned by the inline children of `container`.
+  private func countInlineNewlines(in container: InlineContainer) -> Int {
+    var count = 0
+    for child in container.inlineChildren {
+      switch child {
+      case is SoftBreak, is LineBreak:
+        count += 1
+      case let inlineCode as InlineCode:
+        if let range = inlineCode.range, range.upperBound.line > range.lowerBound.line {
+          count += range.upperBound.line - range.lowerBound.line
+        }
+      case let inlineHTML as InlineHTML:
+        count += inlineHTML.rawHTML.utf8.reduce(into: 0) { acc, byte in
+          if byte == UInt8(ascii: "\n") { acc += 1 }
+        }
+      case let nested as InlineContainer:
+        count += countInlineNewlines(in: nested)
+      default:
+        break
+      }
+    }
+    return count
+  }
+
+  /// Returns the stripped paragraph content slice on 1-based `lineNum` for a paragraph starting at
+  /// `(paragraphStartLine, paragraphStartCol)`.
+  fileprivate func paragraphLineContent(
+    atLine lineNum: Int,
+    paragraphStartLine: Int,
+    paragraphStartCol: Int
+  ) -> Substring {
+    guard lineNum >= 1, lineNum <= markdownLines.count else { return "" }
+    let rawLine = markdownLines[lineNum - 1]
+    if lineNum == paragraphStartLine {
+      let startIdx = utf8Index(in: rawLine, column: paragraphStartCol)
+      return rawLine[startIdx...]
+    }
+    return rawLine.drop { $0 == " " || $0 == "\t" || $0 == ">" }
+  }
+
   /// Collects inline words from `paragraph` and wraps them to fit within the available line width.
   private mutating func visitParagraph(
     _ paragraph: Paragraph,
@@ -1240,12 +1453,52 @@ private struct MarkdownReflower {
     continuationPrefix: String,
     isLastBlockInDocument: Bool
   ) {
+    let rawStartLine = max(1, paragraph.range?.lowerBound.line ?? 1)
+    let endLine = min(markdownLines.count, paragraph.range?.upperBound.line ?? markdownLines.count)
+    let paragraphStartCol = paragraph.range?.lowerBound.column ?? 1
+
+    // If `cmark-gfm` stripped leading `[label]: url` or `^[label]: attrs` reference definitions
+    // from the start of this paragraph before parsing its remaining prose, emit those leading
+    // definition lines verbatim first.
+    var strippedLeadingLines = 0
+    if rawStartLine < endLine {
+      let firstContent = paragraphLineContent(
+        atLine: rawStartLine,
+        paragraphStartLine: rawStartLine,
+        paragraphStartCol: paragraphStartCol
+      )
+      if (firstContent.hasPrefix("[") || firstContent.hasPrefix("^["))
+        && firstContent.contains("]:")
+      {
+        let inlineSpanLines = 1 + countInlineNewlines(in: paragraph)
+        let totalLines = endLine - rawStartLine + 1
+        if totalLines > inlineSpanLines {
+          strippedLeadingLines = totalLines - inlineSpanLines
+        }
+      }
+    }
+
+    var isFirstLineOfParagraph = true
+    if strippedLeadingLines > 0 {
+      for lineNum in rawStartLine..<(rawStartLine + strippedLeadingLines) {
+        let prefix = isFirstLineOfParagraph ? firstLinePrefix : continuationPrefix
+        isFirstLineOfParagraph = false
+        let slice = paragraphLineContent(
+          atLine: lineNum,
+          paragraphStartLine: rawStartLine,
+          paragraphStartCol: paragraphStartCol
+        )
+        emitLine(slice, prefix: prefix)
+      }
+    }
+
     // Collect breakable words grouped into logical lines (in `.always` mode a paragraph is a single
     // logical line unless it contains hard `\` line breaks; in `.onlyLinesOverLength` mode each
     // source line is kept as a separate logical line).
     var collector = InlineWordCollector(
       reflower: self,
-      startSourceLine: paragraph.range?.lowerBound.line ?? 1
+      startSourceLine: rawStartLine + strippedLeadingLines,
+      strippedLeadingLines: strippedLeadingLines
     )
     for child in paragraph.inlineChildren {
       collector.collectInline(child)
@@ -1253,7 +1506,6 @@ private struct MarkdownReflower {
     let logicalLines = collector.finish()
     guard !logicalLines.isEmpty else { return }
 
-    var isFirstLineOfParagraph = true
     var currentLine = ""
     currentLine.reserveCapacity(max(64, max(firstLineWidth, continuationWidth)))
 
@@ -1326,9 +1578,9 @@ private struct MarkdownReflower {
   }
 
   /// Extracts the exact source text spanned by a `Markdown.SourceRange` across `markdownLines`.
-  fileprivate func sourceText(in range: Markdown.SourceRange) -> Substring {
-    let startLine = range.lowerBound.line
-    let endLine = range.upperBound.line
+  fileprivate func sourceText(in range: Markdown.SourceRange, lineOffset: Int = 0) -> Substring {
+    let startLine = range.lowerBound.line + lineOffset
+    let endLine = range.upperBound.line + lineOffset
     guard startLine >= 1, endLine <= markdownLines.count, startLine <= endLine else {
       return ""
     }
@@ -1363,6 +1615,7 @@ private struct MarkdownReflower {
 /// autolinks, and link destinations) attached to their surrounding tokens.
 private struct InlineWordCollector {
   let reflower: MarkdownReflower
+  let strippedLeadingLines: Int
   var currentSourceLine: Int
   var currentLineStartSourceLine: Int
   var logicalLines: [(words: [Substring], sourceLine: Int)] = []
@@ -1377,8 +1630,9 @@ private struct InlineWordCollector {
   var hasSeenLineBreak: Bool = false
 
   /// Creates a word collector starting at the 1-based `startSourceLine` in `reflower.markdownLines`.
-  init(reflower: MarkdownReflower, startSourceLine: Int) {
+  init(reflower: MarkdownReflower, startSourceLine: Int, strippedLeadingLines: Int = 0) {
     self.reflower = reflower
+    self.strippedLeadingLines = strippedLeadingLines
     self.currentSourceLine = startSourceLine
     self.currentLineStartSourceLine = startSourceLine
   }
@@ -1495,12 +1749,12 @@ private struct InlineWordCollector {
       // entities (`&`) so `cmark`'s unescaping does not alter the original text.
       if !hasSeenLineBreak,
         let range = text.range,
-        range.lowerBound.line >= 1,
-        range.lowerBound.line <= reflower.markdownLines.count
+        range.lowerBound.line + strippedLeadingLines >= 1,
+        range.lowerBound.line + strippedLeadingLines <= reflower.markdownLines.count
       {
-        let rawLine = reflower.markdownLines[range.lowerBound.line - 1]
+        let rawLine = reflower.markdownLines[range.lowerBound.line + strippedLeadingLines - 1]
         if rawLine.utf8.contains(UInt8(ascii: "\\")) || rawLine.utf8.contains(UInt8(ascii: "&")) {
-          let raw = reflower.sourceText(in: range)
+          let raw = reflower.sourceText(in: range, lineOffset: strippedLeadingLines)
           if !raw.isEmpty && raw.utf8.count >= text.string.utf8.count {
             appendBreakableText(raw)
             return
@@ -1521,14 +1775,14 @@ private struct InlineWordCollector {
       var effectiveTicks: Substring = inlineCode.code.utf8.contains(UInt8(ascii: "`")) ? "``" : "`"
       if !hasSeenLineBreak, let range = inlineCode.range {
         if range.lowerBound.line == range.upperBound.line {
-          let raw = reflower.sourceText(in: range)
+          let raw = reflower.sourceText(in: range, lineOffset: strippedLeadingLines)
           if raw.hasPrefix("`") && raw.hasSuffix("`") && raw.contains(inlineCode.code) {
             appendUnbreakableText(raw)
             return
           }
         } else {
           currentSourceLine += range.upperBound.line - range.lowerBound.line
-          let firstLine = reflower.markdownLines[range.lowerBound.line - 1]
+          let firstLine = reflower.markdownLines[range.lowerBound.line + strippedLeadingLines - 1]
           let startIdx = reflower.utf8Index(in: firstLine, column: range.lowerBound.column)
           let ticks = firstLine[startIdx...].prefix { $0 == "`" }
           if !ticks.isEmpty {
@@ -1547,7 +1801,7 @@ private struct InlineWordCollector {
 
     case let symbolLink as SymbolLink:
       if !hasSeenLineBreak, let range = symbolLink.range {
-        let raw = reflower.sourceText(in: range)
+        let raw = reflower.sourceText(in: range, lineOffset: strippedLeadingLines)
         if raw.hasPrefix("``") && raw.hasSuffix("``") {
           appendUnbreakableText(raw)
           return
@@ -1568,7 +1822,7 @@ private struct InlineWordCollector {
       // Autolinks (`<https://...>`) are kept as a single unbreakable token; standard and reference
       // links allow wrapping inside the link text while keeping `](...)` / `][...]` attached.
       if !hasSeenLineBreak, let range = link.range {
-        let raw = reflower.sourceText(in: range)
+        let raw = reflower.sourceText(in: range, lineOffset: strippedLeadingLines)
         if raw.hasPrefix("<") && raw.hasSuffix(">") && !raw.utf8.contains(UInt8(ascii: "\n")) {
           appendUnbreakableText(raw)
           return
@@ -1609,7 +1863,7 @@ private struct InlineWordCollector {
 
     default:
       if !hasSeenLineBreak, let range = markup.range {
-        appendBreakableText(reflower.sourceText(in: range))
+        appendBreakableText(reflower.sourceText(in: range, lineOffset: strippedLeadingLines))
       }
     }
   }
@@ -1624,7 +1878,7 @@ private struct InlineWordCollector {
   ) {
     let delimiter: Substring = {
       guard !hasSeenLineBreak, let range = markup.range else { return defaultDelimiter }
-      let raw = reflower.sourceText(in: range)
+      let raw = reflower.sourceText(in: range, lineOffset: strippedLeadingLines)
       let prefix = raw.prefix { $0 == alternateChar }
       return (!prefix.isEmpty && raw.hasSuffix(prefix)) ? prefix : defaultDelimiter
     }()
@@ -1647,7 +1901,10 @@ private struct InlineWordCollector {
     let childCount = markup.childCount
     if !hasSeenLineBreak, let range = markup.range {
       if childCount > 0, let lastChildRange = markup.child(at: childCount - 1)?.range {
-        let closingSuffix = reflower.sourceText(in: lastChildRange.upperBound..<range.upperBound)
+        let closingSuffix = reflower.sourceText(
+          in: lastChildRange.upperBound..<range.upperBound,
+          lineOffset: strippedLeadingLines
+        )
         if (closingSuffix.hasPrefix("](") && closingSuffix.hasSuffix(")"))
           || (allowReferenceStyle && closingSuffix.hasPrefix("][") && closingSuffix.hasSuffix("]"))
         {
@@ -1659,7 +1916,7 @@ private struct InlineWordCollector {
           return
         }
       } else if childCount == 0 {
-        let raw = reflower.sourceText(in: range)
+        let raw = reflower.sourceText(in: range, lineOffset: strippedLeadingLines)
         if raw.hasPrefix(opening)
           && (raw.hasSuffix(")") || (allowReferenceStyle && raw.hasSuffix("]")))
         {

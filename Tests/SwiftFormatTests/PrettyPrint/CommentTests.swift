@@ -1810,6 +1810,65 @@ final class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 
+  func testReflowCommentsPreservesLinkAndAttributeReferenceDefinitions() {
+    let input =
+      """
+      /// Visit [the site][swift] or [the repo][repo] for more details
+      /// about the language and its standard library.
+      ///
+      /// [swift]: https://swift.org
+      /// [repo]: https://github.com/swiftlang/swift-format "SwiftFormat"
+      func foo() {}
+
+      /// [leading]: https://swift.org
+      /// A paragraph immediately following a reference definition without a blank
+      /// line should preserve the definition and reflow the prose referencing [it][leading].
+      func bar() {}
+
+      /// > Blockquote referencing [quote][quote-ref] that is long enough to wrap across
+      /// > two lines.
+      /// >
+      /// > [quote-ref]: https://example.com/quote
+      func baz() {}
+
+      /// [only-def]: https://example.com
+      func onlyDef() {}
+      """
+
+    let expected =
+      """
+      /// Visit [the site][swift] or [the repo][repo]
+      /// for more details about the language and its
+      /// standard library.
+      ///
+      /// [swift]: https://swift.org
+      /// [repo]: https://github.com/swiftlang/swift-format "SwiftFormat"
+      func foo() {}
+
+      /// [leading]: https://swift.org
+      /// A paragraph immediately following a reference
+      /// definition without a blank line should
+      /// preserve the definition and reflow the prose
+      /// referencing [it][leading].
+      func bar() {}
+
+      /// > Blockquote referencing [quote][quote-ref]
+      /// > that is long enough to wrap across two
+      /// > lines.
+      /// >
+      /// > [quote-ref]: https://example.com/quote
+      func baz() {}
+
+      /// [only-def]: https://example.com
+      func onlyDef() {}
+
+      """
+
+    var config = Configuration.forTesting
+    config.reflowComments.docComments = .always
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
+  }
+
   func testReflowCommentsVerbatimBlocksInContainers() {
     let input =
       """
