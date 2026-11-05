@@ -920,6 +920,39 @@ private struct MarkdownReflower {
     return endLine
   }
 
+  /// Strips enclosing container prefixes (blockquote `>` markers and list continuation spaces)
+  /// from a continuation line of a block or unvisited source gap.
+  private func stripContinuationPrefix(
+    from rawLine: Substring,
+    maxPrefixColumns: Int,
+    continuationPrefix: String
+  ) -> Substring {
+    guard !continuationPrefix.isEmpty else { return rawLine }
+    let expectedQuotes = continuationPrefix.utf8.reduce(into: 0) { count, byte in
+      if byte == UInt8(ascii: ">") { count += 1 }
+    }
+    let utf8 = rawLine.utf8
+    var idx = utf8.startIndex
+    var colsConsumed = 0
+    var quotesConsumed = 0
+    while idx < utf8.endIndex {
+      let b = utf8[idx]
+      if b == UInt8(ascii: ">") && quotesConsumed < expectedQuotes {
+        quotesConsumed += 1
+        colsConsumed += 1
+        idx = utf8.index(after: idx)
+      } else if (b == UInt8(ascii: " ") || b == UInt8(ascii: "\t"))
+        && colsConsumed < maxPrefixColumns
+      {
+        colsConsumed += 1
+        idx = utf8.index(after: idx)
+      } else {
+        break
+      }
+    }
+    return rawLine[idx...]
+  }
+
   /// Returns `true` if `prevBlock` and `block` were separated by at least one blank line in the
   /// original Markdown source.
   private func hasBlankSeparatorLine(before block: BlockMarkup, after prevBlock: BlockMarkup) -> Bool {
@@ -1175,20 +1208,26 @@ private struct MarkdownReflower {
     guard startLine <= endLine else { return }
 
     let startCol = range.lowerBound.column
+    let maxPrefixCols = max(startCol - 1, continuationPrefix.utf8.count)
     for lineNum in startLine...endLine {
       let rawLine = markdownLines[lineNum - 1]
-      let prefix = lineNum == startLine ? firstLinePrefix : continuationPrefix
-      if continuationPrefix.isEmpty {
-        emitLine(rawLine, prefix: prefix)
-      } else {
-        let startIdx = utf8Index(in: rawLine, column: startCol)
-        let leadingPart = rawLine[..<startIdx]
-        if leadingPart.utf8.allSatisfy({
-          $0 == UInt8(ascii: " ") || $0 == UInt8(ascii: "\t") || $0 == UInt8(ascii: ">")
-        }) {
-          emitLine(rawLine[startIdx...], prefix: prefix)
+      if lineNum == startLine {
+        if firstLinePrefix.isEmpty && continuationPrefix.isEmpty {
+          emitLine(rawLine, prefix: firstLinePrefix)
         } else {
-          emitLine(rawLine, prefix: prefix)
+          let startIdx = utf8Index(in: rawLine, column: startCol)
+          emitLine(rawLine[startIdx...], prefix: firstLinePrefix)
+        }
+      } else {
+        if continuationPrefix.isEmpty {
+          emitLine(rawLine, prefix: continuationPrefix)
+        } else {
+          let stripped = stripContinuationPrefix(
+            from: rawLine,
+            maxPrefixColumns: maxPrefixCols,
+            continuationPrefix: continuationPrefix
+          )
+          emitLine(stripped, prefix: continuationPrefix)
         }
       }
     }

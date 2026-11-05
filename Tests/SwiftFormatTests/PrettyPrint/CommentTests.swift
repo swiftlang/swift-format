@@ -1810,6 +1810,51 @@ final class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 
+  func testReflowCommentsVerbatimBlocksInContainers() {
+    let input =
+      """
+      // 1. ### Section One
+      //    Body text that is long enough to wrap
+      //    onto the next line cleanly.
+      // 2. ```swift
+      //    let x = 1
+      //    ```
+      let a = 1
+
+      // > ```swift
+      // >let x = 1
+      // > ```
+      // >
+      // > Follow-up paragraph in the blockquote
+      // > that gets merged.
+      let b = 2
+      """
+
+    let expected =
+      """
+      // 1. ### Section One
+      //    Body text that is long enough to wrap onto
+      //    the next line cleanly.
+      // 2. ```swift
+      //    let x = 1
+      //    ```
+      let a = 1
+
+      // > ```swift
+      // > let x = 1
+      // > ```
+      // >
+      // > Follow-up paragraph in the blockquote that
+      // > gets merged.
+      let b = 2
+
+      """
+
+    var config = Configuration.forTesting
+    config.reflowComments.regularComments = .always
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
+  }
+
   func testReflowBlockCommentWithTabAfterStarAndClosingDelimiterOverflow() {
     let input =
       """
