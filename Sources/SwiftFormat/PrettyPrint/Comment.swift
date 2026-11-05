@@ -1497,7 +1497,8 @@ private struct MarkdownReflower {
     // source line is kept as a separate logical line).
     var collector = InlineWordCollector(
       reflower: self,
-      startSourceLine: rawStartLine + strippedLeadingLines,
+      paragraphStartLine: rawStartLine,
+      paragraphStartCol: paragraphStartCol,
       strippedLeadingLines: strippedLeadingLines
     )
     for child in paragraph.inlineChildren {
@@ -1569,44 +1570,17 @@ private struct MarkdownReflower {
     }
   }
 
-  /// Converts a 1-based UTF-8 column index from `swift-markdown` into a `String.Index` in `line`.
+  /// Converts a 1-based UTF-8 column index from `swift-markdown` into a scalar-aligned
+  /// `String.Index` in `line`.
   fileprivate func utf8Index(in line: Substring, column: Int) -> String.Index {
     let offset = max(0, column - 1)
     let utf8 = line.utf8
     guard offset < utf8.count else { return line.endIndex }
-    return utf8.index(utf8.startIndex, offsetBy: offset)
-  }
-
-  /// Extracts the exact source text spanned by a `Markdown.SourceRange` across `markdownLines`.
-  fileprivate func sourceText(in range: Markdown.SourceRange, lineOffset: Int = 0) -> Substring {
-    let startLine = range.lowerBound.line + lineOffset
-    let endLine = range.upperBound.line + lineOffset
-    guard startLine >= 1, endLine <= markdownLines.count, startLine <= endLine else {
-      return ""
+    var idx = utf8.index(utf8.startIndex, offsetBy: offset)
+    while idx < utf8.endIndex && (utf8[idx] & 0xC0) == 0x80 {
+      idx = utf8.index(after: idx)
     }
-    if startLine == endLine {
-      let line = markdownLines[startLine - 1]
-      let startIdx = utf8Index(in: line, column: range.lowerBound.column)
-      let endIdx = utf8Index(in: line, column: range.upperBound.column)
-      guard startIdx <= endIdx else { return "" }
-      return line[startIdx..<endIdx]
-    } else {
-      var parts: [Substring] = []
-      parts.reserveCapacity(endLine - startLine + 1)
-      for lineNum in startLine...endLine {
-        let line = markdownLines[lineNum - 1]
-        if lineNum == startLine {
-          let startIdx = utf8Index(in: line, column: range.lowerBound.column)
-          parts.append(line[startIdx...])
-        } else if lineNum == endLine {
-          let endIdx = utf8Index(in: line, column: range.upperBound.column)
-          parts.append(line[..<endIdx])
-        } else {
-          parts.append(line)
-        }
-      }
-      return Substring(parts.joined(separator: "\n"))
-    }
+    return idx
   }
 }
 
@@ -1615,6 +1589,8 @@ private struct MarkdownReflower {
 /// autolinks, and link destinations) attached to their surrounding tokens.
 private struct InlineWordCollector {
   let reflower: MarkdownReflower
+  let paragraphStartLine: Int
+  let paragraphStartCol: Int
   let strippedLeadingLines: Int
   var currentSourceLine: Int
   var currentLineStartSourceLine: Int
@@ -1629,12 +1605,71 @@ private struct InlineWordCollector {
   /// `SourceRange` on subsequent inline nodes in the same paragraph.
   var hasSeenLineBreak: Bool = false
 
-  /// Creates a word collector starting at the 1-based `startSourceLine` in `reflower.markdownLines`.
-  init(reflower: MarkdownReflower, startSourceLine: Int, strippedLeadingLines: Int = 0) {
+  /// Creates a word collector for a paragraph starting at `(paragraphStartLine, paragraphStartCol)`
+  /// in `reflower.markdownLines`, after `strippedLeadingLines` stripped reference definitions.
+  init(
+    reflower: MarkdownReflower,
+    paragraphStartLine: Int,
+    paragraphStartCol: Int,
+    strippedLeadingLines: Int
+  ) {
     self.reflower = reflower
+    self.paragraphStartLine = paragraphStartLine
+    self.paragraphStartCol = paragraphStartCol
     self.strippedLeadingLines = strippedLeadingLines
-    self.currentSourceLine = startSourceLine
-    self.currentLineStartSourceLine = startSourceLine
+    let initialLine = paragraphStartLine + strippedLeadingLines
+    self.currentSourceLine = initialLine
+    self.currentLineStartSourceLine = initialLine
+  }
+
+  /// Returns the stripped paragraph content for 1-based `lineNum`.
+  private func paragraphLineContent(atLine lineNum: Int) -> Substring {
+    return reflower.paragraphLineContent(
+      atLine: lineNum,
+      paragraphStartLine: paragraphStartLine,
+      paragraphStartCol: paragraphStartCol
+    )
+  }
+
+  /// Returns a scalar-aligned `String.Index` at `byteOffset` in `slice`, or `nil` if `byteOffset`
+  /// is out of bounds or lands on a UTF-8 continuation byte.
+  private func scalarAlignedUTF8Index(in slice: Substring, byteOffset: Int) -> String.Index? {
+    let utf8 = slice.utf8
+    guard byteOffset >= 0, byteOffset <= utf8.count else { return nil }
+    let idx = utf8.index(utf8.startIndex, offsetBy: byteOffset)
+    if idx < utf8.endIndex && (utf8[idx] & 0xC0) == 0x80 {
+      return nil
+    }
+    return idx
+  }
+
+  /// Extracts a single-line source slice within the current paragraph corresponding to `range`,
+  /// accounting for continuation line indentation.
+  private func singleLineParagraphSourceText(in range: Markdown.SourceRange) -> Substring? {
+    guard !hasSeenLineBreak, range.lowerBound.line == range.upperBound.line else { return nil }
+    let actualLine = range.lowerBound.line + strippedLeadingLines
+    let lineContent = paragraphLineContent(atLine: actualLine)
+    let startOffset = range.lowerBound.column - paragraphStartCol
+    let endOffset = range.upperBound.column - paragraphStartCol
+    guard startOffset <= endOffset,
+      let startIdx = scalarAlignedUTF8Index(in: lineContent, byteOffset: startOffset),
+      let endIdx = scalarAlignedUTF8Index(in: lineContent, byteOffset: endOffset)
+    else {
+      return nil
+    }
+    return lineContent[startIdx..<endIdx]
+  }
+
+  /// Returns the remainder of the paragraph source line starting at `location`.
+  private func paragraphSourceSlice(from location: Markdown.SourceLocation) -> Substring? {
+    guard !hasSeenLineBreak else { return nil }
+    let actualLine = location.line + strippedLeadingLines
+    let lineContent = paragraphLineContent(atLine: actualLine)
+    let startOffset = location.column - paragraphStartCol
+    guard let startIdx = scalarAlignedUTF8Index(in: lineContent, byteOffset: startOffset) else {
+      return nil
+    }
+    return lineContent[startIdx...]
   }
 
   /// Moves any accumulated characters in `pendingWordSlice` / `compoundWordBuffer` into
@@ -1757,19 +1792,13 @@ private struct InlineWordCollector {
     case let text as Text:
       // Prefer slicing the raw source line when it contains backslash escapes (`\`) or HTML
       // entities (`&`) so `cmark`'s unescaping does not alter the original text.
-      if !hasSeenLineBreak,
-        let range = text.range,
-        range.lowerBound.line + strippedLeadingLines >= 1,
-        range.lowerBound.line + strippedLeadingLines <= reflower.markdownLines.count
+      if let range = text.range,
+        let raw = singleLineParagraphSourceText(in: range),
+        raw.utf8.contains(UInt8(ascii: "\\")) || raw.utf8.contains(UInt8(ascii: "&")),
+        raw.utf8.count >= text.string.utf8.count
       {
-        let rawLine = reflower.markdownLines[range.lowerBound.line + strippedLeadingLines - 1]
-        if rawLine.utf8.contains(UInt8(ascii: "\\")) || rawLine.utf8.contains(UInt8(ascii: "&")) {
-          let raw = reflower.sourceText(in: range, lineOffset: strippedLeadingLines)
-          if !raw.isEmpty && raw.utf8.count >= text.string.utf8.count {
-            appendBreakableText(raw)
-            return
-          }
-        }
+        appendBreakableText(raw)
+        return
       }
       appendBreakableText(text.string[...])
 
@@ -1783,21 +1812,22 @@ private struct InlineWordCollector {
       // Preserve the original backtick delimiter length from source when available, and treat the
       // entire code span as a single unbreakable token.
       var effectiveTicks: Substring = inlineCode.code.utf8.contains(UInt8(ascii: "`")) ? "``" : "`"
-      if !hasSeenLineBreak, let range = inlineCode.range {
+      if let range = inlineCode.range {
         if range.lowerBound.line == range.upperBound.line {
-          let raw = reflower.sourceText(in: range, lineOffset: strippedLeadingLines)
-          if raw.hasPrefix("`") && raw.hasSuffix("`") && raw.contains(inlineCode.code) {
+          if let raw = singleLineParagraphSourceText(in: range),
+            raw.hasPrefix("`") && raw.hasSuffix("`") && raw.contains(inlineCode.code)
+          {
             appendUnbreakableText(raw)
             return
           }
         } else {
-          currentSourceLine += range.upperBound.line - range.lowerBound.line
-          let firstLine = reflower.markdownLines[range.lowerBound.line + strippedLeadingLines - 1]
-          let startIdx = reflower.utf8Index(in: firstLine, column: range.lowerBound.column)
-          let ticks = firstLine[startIdx...].prefix { $0 == "`" }
-          if !ticks.isEmpty {
-            effectiveTicks = ticks
+          if let startSlice = paragraphSourceSlice(from: range.lowerBound) {
+            let ticks = startSlice.prefix { $0 == "`" }
+            if !ticks.isEmpty {
+              effectiveTicks = ticks
+            }
           }
+          currentSourceLine += range.upperBound.line - range.lowerBound.line
         }
       }
       let needsSpace =
@@ -1810,12 +1840,12 @@ private struct InlineWordCollector {
       }
 
     case let symbolLink as SymbolLink:
-      if !hasSeenLineBreak, let range = symbolLink.range {
-        let raw = reflower.sourceText(in: range, lineOffset: strippedLeadingLines)
-        if raw.hasPrefix("``") && raw.hasSuffix("``") {
-          appendUnbreakableText(raw)
-          return
-        }
+      if let range = symbolLink.range,
+        let raw = singleLineParagraphSourceText(in: range),
+        raw.hasPrefix("``") && raw.hasSuffix("``")
+      {
+        appendUnbreakableText(raw)
+        return
       }
       appendUnbreakableText(Substring("``\(symbolLink.destination ?? "")``"))
 
@@ -1831,12 +1861,12 @@ private struct InlineWordCollector {
     case let link as Link:
       // Autolinks (`<https://...>`) are kept as a single unbreakable token; standard and reference
       // links allow wrapping inside the link text while keeping `](...)` / `][...]` attached.
-      if !hasSeenLineBreak, let range = link.range {
-        let raw = reflower.sourceText(in: range, lineOffset: strippedLeadingLines)
-        if raw.hasPrefix("<") && raw.hasSuffix(">") && !raw.utf8.contains(UInt8(ascii: "\n")) {
-          appendUnbreakableText(raw)
-          return
-        }
+      if let range = link.range,
+        let raw = singleLineParagraphSourceText(in: range),
+        raw.hasPrefix("<") && raw.hasSuffix(">")
+      {
+        appendUnbreakableText(raw)
+        return
       }
       if link.isAutolink, let dest = link.destination {
         appendUnbreakableText(Substring("<\(dest)>"))
@@ -1872,8 +1902,8 @@ private struct InlineWordCollector {
       )
 
     default:
-      if !hasSeenLineBreak, let range = markup.range {
-        appendBreakableText(reflower.sourceText(in: range, lineOffset: strippedLeadingLines))
+      if let range = markup.range, let raw = singleLineParagraphSourceText(in: range) {
+        appendBreakableText(raw)
       }
     }
   }
@@ -1887,10 +1917,17 @@ private struct InlineWordCollector {
     alternateChar: Character
   ) {
     let delimiter: Substring = {
-      guard !hasSeenLineBreak, let range = markup.range else { return defaultDelimiter }
-      let raw = reflower.sourceText(in: range, lineOffset: strippedLeadingLines)
-      let prefix = raw.prefix { $0 == alternateChar }
-      return (!prefix.isEmpty && raw.hasSuffix(prefix)) ? prefix : defaultDelimiter
+      guard let range = markup.range,
+        let startSlice = paragraphSourceSlice(from: range.lowerBound)
+      else {
+        return defaultDelimiter
+      }
+      let prefix = startSlice.prefix { $0 == alternateChar }
+      guard !prefix.isEmpty else { return defaultDelimiter }
+      if alternateChar == "_" {
+        return defaultDelimiter.count == 2 ? "__" : "_"
+      }
+      return prefix.count <= 2 ? prefix : defaultDelimiter
     }()
     appendUnbreakableText(delimiter)
     for child in markup.inlineChildren {
@@ -1923,34 +1960,56 @@ private struct InlineWordCollector {
     allowReferenceStyle: Bool
   ) {
     let childCount = markup.childCount
-    if !hasSeenLineBreak, let range = markup.range {
-      if childCount > 0, let lastChildRange = markup.child(at: childCount - 1)?.range {
-        let closingSuffix = reflower.sourceText(
-          in: lastChildRange.upperBound..<range.upperBound,
-          lineOffset: strippedLeadingLines
-        )
-        if isValidBracketedClosingSuffix(closingSuffix, allowReferenceStyle: allowReferenceStyle) {
-          appendUnbreakableText(opening)
-          for child in markup.inlineChildren {
-            collectInline(child)
-          }
-          appendUnbreakableText(closingSuffix)
-          return
-        }
-      } else if childCount == 0 {
-        let raw = reflower.sourceText(in: range, lineOffset: strippedLeadingLines)
-        if raw.hasPrefix(opening)
+    if childCount == 0 {
+      if let range = markup.range,
+        let raw = singleLineParagraphSourceText(in: range),
+        raw.hasPrefix(opening)
           && (raw.hasSuffix(")") || (allowReferenceStyle && raw.hasSuffix("]")))
-        {
-          appendUnbreakableText(raw)
-          return
-        }
+      {
+        appendUnbreakableText(raw)
+        return
       }
+      appendUnbreakableText(opening)
+      appendUnbreakableText(fallbackClosing)
+      return
     }
+
     appendUnbreakableText(opening)
     for child in markup.inlineChildren {
       collectInline(child)
     }
+
+    guard !hasSeenLineBreak, let range = markup.range else {
+      appendUnbreakableText(fallbackClosing)
+      return
+    }
+
+    // Determine the starting byte offset of the closing `](...)` / `][...]` / `]` suffix on
+    // `currentSourceLine` after the last inline child.
+    let startOffset: Int
+    if let lastChildRange = markup.child(at: childCount - 1)?.range {
+      startOffset = lastChildRange.upperBound.column - paragraphStartCol
+    } else {
+      startOffset = 0
+    }
+
+    let endOffset = range.upperBound.column - paragraphStartCol
+    let firstLineContent = paragraphLineContent(atLine: currentSourceLine)
+    let firstLineUTF8Count = firstLineContent.utf8.count
+
+    if endOffset <= firstLineUTF8Count {
+      if startOffset <= endOffset,
+        let startIdx = scalarAlignedUTF8Index(in: firstLineContent, byteOffset: startOffset),
+        let endIdx = scalarAlignedUTF8Index(in: firstLineContent, byteOffset: endOffset)
+      {
+        let closingSuffix = firstLineContent[startIdx..<endIdx].trimmingSpacesAndTabs()
+        if isValidBracketedClosingSuffix(closingSuffix, allowReferenceStyle: allowReferenceStyle) {
+          appendUnbreakableText(closingSuffix)
+          return
+        }
+      }
+    }
+
     appendUnbreakableText(fallbackClosing)
   }
 }
