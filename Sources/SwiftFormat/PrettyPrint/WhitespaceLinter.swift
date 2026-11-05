@@ -368,6 +368,7 @@ public class WhitespaceLinter {
     utf8Offset: Int
   ) {
     let absolutePosition = AbsolutePosition(utf8Offset: utf8Offset)
+    guard context.selection.overlapsOrTouches(absolutePosition..<absolutePosition) else { return }
     let sourceLocation = context.sourceLocationConverter.location(for: absolutePosition)
     context.findingEmitter.emit(
       message,

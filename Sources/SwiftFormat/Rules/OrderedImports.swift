@@ -434,7 +434,7 @@ private func generateLines(
       if currentLine.syntaxNode != nil {
         appendNewLine()
       }
-      let sortable = context.shouldFormat(OrderedImports.self, node: Syntax(block))
+      let sortable = context.isRuleEnabled(OrderedImports.self, node: Syntax(block))
       var blockWithoutTrailingTrivia = block
       blockWithoutTrailingTrivia.trailingTrivia = []
       currentLine.syntaxNode = .importCodeBlock(blockWithoutTrailingTrivia, sortable: sortable)

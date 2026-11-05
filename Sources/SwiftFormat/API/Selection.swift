@@ -49,11 +49,11 @@ public enum Selection {
     case .infinite, .ranges:
       return self
     case .unresolvedLineRanges(let lineRanges):
-      let resolvedRanges = lineRanges.map { lineRange in
+      let resolvedRanges: [Range<AbsolutePosition>] = lineRanges.compactMap { lineRange in
         let start = converter.position(ofLine: lineRange.lowerBound, column: 1)
         let nextLineStart = converter.position(ofLine: lineRange.upperBound + 1, column: 1)
         if start == nextLineStart {
-          return start..<start
+          return nil
         }
         // Subtract 1 from the next line's start offset to get the end of the current line.
         let end = AbsolutePosition(utf8Offset: nextLineStart.utf8Offset - 1)
@@ -93,7 +93,10 @@ public extension Syntax {
     case .infinite:
       return true
     case .ranges(let ranges):
-      return ranges.contains { return $0.lowerBound <= position && endPosition <= $0.upperBound }
+      return ranges.contains {
+        return $0.lowerBound <= positionAfterSkippingLeadingTrivia
+          && endPositionBeforeTrailingTrivia <= $0.upperBound
+      }
     case .unresolvedLineRanges:
       fatalError("Must resolve Selection before calling isInsideSelection")
     }
