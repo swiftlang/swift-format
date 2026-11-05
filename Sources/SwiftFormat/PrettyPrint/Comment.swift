@@ -231,18 +231,27 @@ struct Comment {
       for match in joined.matches(of: regex) {
         let matchRange = match.range
         guard !matchRange.isEmpty else { continue }
-        for (lineIdx, lineRange) in lineRanges.enumerated() {
-          let overlaps: Bool
-          if lineRange.isEmpty {
-            overlaps =
-              matchRange.lowerBound <= lineRange.lowerBound
-              && lineRange.lowerBound < matchRange.upperBound
+
+        // Binary-search `lineRanges` for the first line that ends after `matchRange.lowerBound`
+        // (or is an empty line at `matchRange.lowerBound`).
+        var low = 0
+        var high = lineRanges.count
+        while low < high {
+          let mid = (low + high) / 2
+          let midRange = lineRanges[mid]
+          if midRange.upperBound > matchRange.lowerBound
+            || (midRange.isEmpty && midRange.lowerBound >= matchRange.lowerBound)
+          {
+            high = mid
           } else {
-            overlaps = lineRange.overlaps(matchRange)
+            low = mid + 1
           }
-          if overlaps {
-            matchedLines.insert(lineIdx)
-          }
+        }
+
+        var lineIdx = low
+        while lineIdx < lineRanges.count && lineRanges[lineIdx].lowerBound < matchRange.upperBound {
+          matchedLines.insert(lineIdx)
+          lineIdx += 1
         }
       }
     }
