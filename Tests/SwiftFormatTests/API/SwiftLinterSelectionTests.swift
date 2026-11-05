@@ -269,39 +269,6 @@ final class SwiftLinterSelectionTests: DiagnosingTestCase {
     )
   }
 
-  func testReflowCommentFindingsWithSelection() throws {
-    var config = Configuration.forTesting
-    config.lineLength = 60
-    config.reflowComments.regularComments = .always
-    config.reflowComments.docComments = .always
-
-    let source = """
-      /// This is an unselected doc comment that exceeds the line length limit.
-      func first(a: Int,1️⃣   b: Int) {}
-
-      2️⃣/// This is a partially selected doc comment that exceeds the line length
-      /// and continues onto a second line.
-      func second() {}
-
-      """
-
-    // Selecting lines 2 and 5:
-    // - Line 1's doc comment is not selected, so no reflow or line length finding is emitted on line 1.
-    // - Line 2's spacing finding is emitted.
-    // - Lines 4...5 form a contiguous doc comment touching line 5, so its reflow finding is emitted
-    //   at line 4, while the whitespace line-length finding on line 4 is not emitted unless line 4
-    //   itself is selected.
-    try assertLint(
-      source,
-      selection: Selection(lineRanges: [2...2, 5...5]),
-      configuration: config,
-      findings: [
-        FindingSpec("1️⃣", message: "remove 2 spaces"),
-        FindingSpec("2️⃣", message: "reflow comment"),
-      ]
-    )
-  }
-
   func testWhitespaceFindingsOnSelectedLinesOnly() throws {
     var config = Configuration.forTesting
     config.lineLength = 60

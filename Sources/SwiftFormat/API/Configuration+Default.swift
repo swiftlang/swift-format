@@ -42,7 +42,6 @@ extension Configuration {
     self.multilineTrailingCommaBehavior = .keptAsWritten
     self.multiElementCollectionTrailingCommas = true
     self.reflowMultilineStringLiterals = .never
-    self.reflowComments = ReflowCommentsConfiguration()
     self.indentBlankLines = false
     self.orderedImports = OrderedImportsConfiguration()
     self.swiftTestingNamingConventions = SwiftTestingNamingConventionsConfiguration()
