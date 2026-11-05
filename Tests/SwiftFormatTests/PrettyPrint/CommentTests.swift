@@ -1944,6 +1944,34 @@ final class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 
+  func testReflowCommentsHardLineBreakPreservesSubsequentInlineFormatting() {
+    let input =
+      """
+      /// First line with hard break\\
+      /// second line with \\* escaped, &amp; entity, _italic_, and [ref][id]
+      /// that wraps onto another line.
+      ///
+      /// [id]: https://example.com
+      func foo() {}
+      """
+
+    let expected =
+      """
+      /// First line with hard break\\
+      /// second line with \\* escaped, &amp; entity,
+      /// _italic_, and [ref][id] that wraps onto
+      /// another line.
+      ///
+      /// [id]: https://example.com
+      func foo() {}
+
+      """
+
+    var config = Configuration.forTesting
+    config.reflowComments.docComments = .always
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
+  }
+
   func testReflowBlockCommentWithTabAfterStarAndClosingDelimiterOverflow() {
     let input =
       """
