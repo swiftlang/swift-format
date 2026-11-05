@@ -1600,10 +1600,12 @@ private struct InlineWordCollector {
   var pendingWordSlice: Substring = ""
   /// Holds the current word only when multiple adjacent unbreakable spans are concatenated.
   var compoundWordBuffer: String = ""
-  /// Tracks whether a hard `LineBreak` (`\`) has been encountered in the current paragraph.
-  /// `cmark-gfm` does not increment its line counter after a backslash line break, which invalidates
-  /// `SourceRange` on subsequent inline nodes in the same paragraph.
-  var hasSeenLineBreak: Bool = false
+  /// Number of newlines encountered in the paragraph where `cmark-gfm` did not increment its
+  /// internal `subj.line` counter (such as `\` hard line breaks or multi-line link suffixes).
+  var lineBreakCount: Int = 0
+  /// Cumulative byte offset on the current `cmark-gfm` `subj.line` from preceding newlines that did
+  /// not reset `subj.column_offset`. Reset to `0` on the next `SoftBreak`.
+  var unresetLineBreakByteOffset: Int = 0
 
   /// Creates a word collector for a paragraph starting at `(paragraphStartLine, paragraphStartCol)`
   /// in `reflower.markdownLines`, after `strippedLeadingLines` stripped reference definitions.
@@ -1644,13 +1646,13 @@ private struct InlineWordCollector {
   }
 
   /// Extracts a single-line source slice within the current paragraph corresponding to `range`,
-  /// accounting for continuation line indentation.
+  /// accounting for continuation line indentation and any preceding `\` hard line breaks.
   private func singleLineParagraphSourceText(in range: Markdown.SourceRange) -> Substring? {
-    guard !hasSeenLineBreak, range.lowerBound.line == range.upperBound.line else { return nil }
-    let actualLine = range.lowerBound.line + strippedLeadingLines
+    guard range.lowerBound.line == range.upperBound.line else { return nil }
+    let actualLine = range.lowerBound.line + strippedLeadingLines + lineBreakCount
     let lineContent = paragraphLineContent(atLine: actualLine)
-    let startOffset = range.lowerBound.column - paragraphStartCol
-    let endOffset = range.upperBound.column - paragraphStartCol
+    let startOffset = (range.lowerBound.column - paragraphStartCol) - unresetLineBreakByteOffset
+    let endOffset = (range.upperBound.column - paragraphStartCol) - unresetLineBreakByteOffset
     guard startOffset <= endOffset,
       let startIdx = scalarAlignedUTF8Index(in: lineContent, byteOffset: startOffset),
       let endIdx = scalarAlignedUTF8Index(in: lineContent, byteOffset: endOffset)
@@ -1662,10 +1664,9 @@ private struct InlineWordCollector {
 
   /// Returns the remainder of the paragraph source line starting at `location`.
   private func paragraphSourceSlice(from location: Markdown.SourceLocation) -> Substring? {
-    guard !hasSeenLineBreak else { return nil }
-    let actualLine = location.line + strippedLeadingLines
+    let actualLine = location.line + strippedLeadingLines + lineBreakCount
     let lineContent = paragraphLineContent(atLine: actualLine)
-    let startOffset = location.column - paragraphStartCol
+    let startOffset = (location.column - paragraphStartCol) - unresetLineBreakByteOffset
     guard let startIdx = scalarAlignedUTF8Index(in: lineContent, byteOffset: startOffset) else {
       return nil
     }
@@ -1747,6 +1748,7 @@ private struct InlineWordCollector {
   mutating func softBreak() {
     flushWord()
     currentSourceLine += 1
+    unresetLineBreakByteOffset = 0
     if reflower.preserveLineBreaks {
       logicalLines.append((words: currentLineWords, sourceLine: currentLineStartSourceLine))
       currentLineWords = []
@@ -1757,13 +1759,15 @@ private struct InlineWordCollector {
   /// Handles a hard line break (a trailing `\` at the end of a line), which always forces a line
   /// break in the output.
   mutating func hardLineBreak() {
+    let lineUTF8Count = paragraphLineContent(atLine: currentSourceLine).utf8.count
     appendUnbreakableText("\\")
     flushWord()
     logicalLines.append((words: currentLineWords, sourceLine: currentLineStartSourceLine))
     currentLineWords = []
     currentSourceLine += 1
     currentLineStartSourceLine = currentSourceLine
-    hasSeenLineBreak = true
+    lineBreakCount += 1
+    unresetLineBreakByteOffset += lineUTF8Count + 1
   }
 
   /// Flushes any remaining buffered word/line and returns the collected logical lines.
@@ -1828,6 +1832,7 @@ private struct InlineWordCollector {
             }
           }
           currentSourceLine += range.upperBound.line - range.lowerBound.line
+          unresetLineBreakByteOffset = 0
         }
       }
       let needsSpace =
@@ -1979,7 +1984,7 @@ private struct InlineWordCollector {
       collectInline(child)
     }
 
-    guard !hasSeenLineBreak, let range = markup.range else {
+    guard let range = markup.range else {
       appendUnbreakableText(fallbackClosing)
       return
     }
@@ -1988,12 +1993,12 @@ private struct InlineWordCollector {
     // `currentSourceLine` after the last inline child.
     let startOffset: Int
     if let lastChildRange = markup.child(at: childCount - 1)?.range {
-      startOffset = lastChildRange.upperBound.column - paragraphStartCol
+      startOffset = (lastChildRange.upperBound.column - paragraphStartCol) - unresetLineBreakByteOffset
     } else {
       startOffset = 0
     }
 
-    let endOffset = range.upperBound.column - paragraphStartCol
+    let endOffset = (range.upperBound.column - paragraphStartCol) - unresetLineBreakByteOffset
     let firstLineContent = paragraphLineContent(atLine: currentSourceLine)
     let firstLineUTF8Count = firstLineContent.utf8.count
 
