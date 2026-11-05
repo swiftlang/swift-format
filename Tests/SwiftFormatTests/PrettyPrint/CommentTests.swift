@@ -1944,6 +1944,36 @@ final class CommentTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 
+  func testReflowCommentsMultilineLinkSuffixAndInlineHTMLDoNotEmitRawNewlines() {
+    let input =
+      """
+      /// See [the guide](https://example.com
+      /// "Guide Title") for details about this API.
+      func foo() {}
+
+      /// Prefix <!-- inline comment
+      /// spanning two lines --> suffix text here.
+      func bar() {}
+      """
+
+    let expected =
+      """
+      /// See [the
+      /// guide](https://example.com "Guide Title") for
+      /// details about this API.
+      func foo() {}
+
+      /// Prefix <!-- inline comment spanning two lines
+      /// --> suffix text here.
+      func bar() {}
+
+      """
+
+    var config = Configuration.forTesting
+    config.reflowComments.docComments = .always
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
+  }
+
   func testReflowCommentsHardLineBreakPreservesSubsequentInlineFormatting() {
     let input =
       """

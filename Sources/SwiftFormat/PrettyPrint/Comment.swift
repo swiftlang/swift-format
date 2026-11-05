@@ -1893,7 +1893,18 @@ private struct InlineWordCollector {
       )
 
     case let inlineHTML as InlineHTML:
-      appendUnbreakableText(inlineHTML.rawHTML[...])
+      let rawHTML = inlineHTML.rawHTML[...]
+      if rawHTML.utf8.contains(UInt8(ascii: "\n")) || rawHTML.utf8.contains(UInt8(ascii: "\r")) {
+        let lines = rawHTML.split(omittingEmptySubsequences: false) { $0 == "\n" || $0 == "\r\n" || $0 == "\r" }
+        for (idx, lineSlice) in lines.enumerated() {
+          if idx > 0 {
+            softBreak()
+          }
+          appendBreakableText(lineSlice)
+        }
+      } else {
+        appendUnbreakableText(rawHTML)
+      }
 
     case let customInline as CustomInline:
       appendBreakableText(customInline.text[...])
@@ -1998,7 +2009,7 @@ private struct InlineWordCollector {
       startOffset = 0
     }
 
-    let endOffset = (range.upperBound.column - paragraphStartCol) - unresetLineBreakByteOffset
+    var endOffset = (range.upperBound.column - paragraphStartCol) - unresetLineBreakByteOffset
     let firstLineContent = paragraphLineContent(atLine: currentSourceLine)
     let firstLineUTF8Count = firstLineContent.utf8.count
 
@@ -2012,6 +2023,63 @@ private struct InlineWordCollector {
           appendUnbreakableText(closingSuffix)
           return
         }
+      }
+      appendUnbreakableText(fallbackClosing)
+      return
+    }
+
+    // The closing suffix `](...)` or `][...]` spanned across one or more newlines in `subj.input`.
+    // `cmark-gfm` advances `subj.pos` across newlines inside `handle_close_bracket` without
+    // incrementing `subj.line` or resetting `subj.column_offset`, so advance our line/column state
+    // and join the suffix parts onto a single line without any embedded `\n`.
+    var parts: [Substring] = []
+    if let startIdx = scalarAlignedUTF8Index(in: firstLineContent, byteOffset: max(0, startOffset)) {
+      let firstPart = firstLineContent[startIdx...].trimmingSpacesAndTabs()
+      if !firstPart.isEmpty {
+        parts.append(firstPart)
+      }
+    }
+
+    var currentLineLen = firstLineUTF8Count
+    while endOffset > currentLineLen && currentSourceLine < reflower.markdownLines.count {
+      let consumedBytes = currentLineLen + 1
+      endOffset -= consumedBytes
+      currentSourceLine += 1
+      lineBreakCount += 1
+      unresetLineBreakByteOffset += consumedBytes
+
+      let nextLineContent = paragraphLineContent(atLine: currentSourceLine)
+      currentLineLen = nextLineContent.utf8.count
+      if endOffset <= currentLineLen {
+        if let endIdx = scalarAlignedUTF8Index(in: nextLineContent, byteOffset: max(0, endOffset)) {
+          let lastPart = nextLineContent[..<endIdx].trimmingSpacesAndTabs()
+          if !lastPart.isEmpty {
+            parts.append(lastPart)
+          }
+        }
+        break
+      } else {
+        let midPart = nextLineContent.trimmingSpacesAndTabs()
+        if !midPart.isEmpty {
+          parts.append(midPart)
+        }
+      }
+    }
+
+    if !parts.isEmpty {
+      var combined = String(parts[0])
+      for part in parts.dropFirst() {
+        if combined.hasSuffix("(") || combined.hasSuffix("[") || part.hasPrefix(")") || part.hasPrefix("]") {
+          combined.append(contentsOf: part)
+        } else {
+          combined.append(" ")
+          combined.append(contentsOf: part)
+        }
+      }
+      let combinedSub = combined[...]
+      if isValidBracketedClosingSuffix(combinedSub, allowReferenceStyle: allowReferenceStyle) {
+        appendUnbreakableText(combinedSub)
+        return
       }
     }
 
