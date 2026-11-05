@@ -1813,19 +1813,20 @@ final class CommentTests: PrettyPrintTestCase {
   func testReflowCommentsPreservesLinkAndAttributeReferenceDefinitions() {
     let input =
       """
-      /// Visit [the site][swift] or [the repo][repo] for more details
+      /// Visit [swift] or [the repo][repo] or [collapsed][] for more details
       /// about the language and its standard library.
       ///
       /// [swift]: https://swift.org
       /// [repo]: https://github.com/swiftlang/swift-format "SwiftFormat"
+      /// [collapsed]: https://swift.org/documentation
       func foo() {}
 
       /// [leading]: https://swift.org
       /// A paragraph immediately following a reference definition without a blank
-      /// line should preserve the definition and reflow the prose referencing [it][leading].
+      /// line should preserve the definition and reflow the prose referencing [leading].
       func bar() {}
 
-      /// > Blockquote referencing [quote][quote-ref] that is long enough to wrap across
+      /// > Blockquote referencing [quote-ref] that is long enough to wrap across
       /// > two lines.
       /// >
       /// > [quote-ref]: https://example.com/quote
@@ -1837,24 +1838,24 @@ final class CommentTests: PrettyPrintTestCase {
 
     let expected =
       """
-      /// Visit [the site][swift] or [the repo][repo]
-      /// for more details about the language and its
-      /// standard library.
+      /// Visit [swift] or [the repo][repo] or
+      /// [collapsed][] for more details about the
+      /// language and its standard library.
       ///
       /// [swift]: https://swift.org
       /// [repo]: https://github.com/swiftlang/swift-format "SwiftFormat"
+      /// [collapsed]: https://swift.org/documentation
       func foo() {}
 
       /// [leading]: https://swift.org
       /// A paragraph immediately following a reference
       /// definition without a blank line should
       /// preserve the definition and reflow the prose
-      /// referencing [it][leading].
+      /// referencing [leading].
       func bar() {}
 
-      /// > Blockquote referencing [quote][quote-ref]
-      /// > that is long enough to wrap across two
-      /// > lines.
+      /// > Blockquote referencing [quote-ref] that is
+      /// > long enough to wrap across two lines.
       /// >
       /// > [quote-ref]: https://example.com/quote
       func baz() {}

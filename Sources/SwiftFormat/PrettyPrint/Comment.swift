@@ -1741,6 +1741,16 @@ private struct InlineWordCollector {
     return logicalLines
   }
 
+  /// Formats a fallback closing suffix `](destination "title")` for a `Link` or `Image`.
+  private func formatLinkFallbackClosing(destination: String?, title: String?) -> Substring {
+    let dest = destination ?? ""
+    if let title, !title.isEmpty {
+      let escapedTitle = title.replacingOccurrences(of: "\"", with: "\\\"")
+      return Substring("](\(dest) \"\(escapedTitle)\")")
+    }
+    return Substring("](\(dest))")
+  }
+
   /// Recursively collects words and inline formatting delimiters from `markup`.
   mutating func collectInline(_ markup: InlineMarkup) {
     switch markup {
@@ -1835,7 +1845,7 @@ private struct InlineWordCollector {
       collectBracketedInline(
         link,
         opening: "[",
-        fallbackClosing: Substring("](\(link.destination ?? ""))"),
+        fallbackClosing: formatLinkFallbackClosing(destination: link.destination, title: link.title),
         allowReferenceStyle: true
       )
 
@@ -1843,7 +1853,7 @@ private struct InlineWordCollector {
       collectBracketedInline(
         image,
         opening: "![",
-        fallbackClosing: Substring("](\(image.source ?? ""))"),
+        fallbackClosing: formatLinkFallbackClosing(destination: image.source, title: image.title),
         allowReferenceStyle: true
       )
 
@@ -1889,6 +1899,20 @@ private struct InlineWordCollector {
     appendUnbreakableText(delimiter)
   }
 
+  /// Returns `true` if `suffix` is a valid closing suffix for a bracketed inline (`](...)`,
+  /// `][...]`, or shortcut `]`).
+  private func isValidBracketedClosingSuffix(_ suffix: Substring, allowReferenceStyle: Bool) -> Bool {
+    if suffix.hasPrefix("](") && suffix.hasSuffix(")") {
+      return true
+    }
+    if allowReferenceStyle {
+      if (suffix.hasPrefix("][") && suffix.hasSuffix("]")) || suffix == "]" {
+        return true
+      }
+    }
+    return false
+  }
+
   /// Collects a bracketed inline container (such as a link `[...](...)`, image `![...](...)`, or
   /// inline attributes `^[...](...)`), allowing word breaks between children while keeping the
   /// opening bracket and closing destination/reference suffix attached to the first and last words.
@@ -1905,9 +1929,7 @@ private struct InlineWordCollector {
           in: lastChildRange.upperBound..<range.upperBound,
           lineOffset: strippedLeadingLines
         )
-        if (closingSuffix.hasPrefix("](") && closingSuffix.hasSuffix(")"))
-          || (allowReferenceStyle && closingSuffix.hasPrefix("][") && closingSuffix.hasSuffix("]"))
-        {
+        if isValidBracketedClosingSuffix(closingSuffix, allowReferenceStyle: allowReferenceStyle) {
           appendUnbreakableText(opening)
           for child in markup.inlineChildren {
             collectInline(child)
