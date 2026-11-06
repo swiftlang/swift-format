@@ -26,6 +26,8 @@ add_executable(swift-format
   Utilities/FileHandleTextOutputStream.swift
   Utilities/StderrDiagnosticPrinter.swift
   Utilities/TTY.swift)
+set_target_properties(swift-format PROPERTIES
+  Swift_MODULE_NAME swift_format)
 target_link_libraries(swift-format PRIVATE
   _SwiftFormatInstructionCounter
   ArgumentParser
