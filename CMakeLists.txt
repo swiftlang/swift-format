@@ -7,14 +7,7 @@ Licensed under Apache License v2.0 with Runtime Library Exception
 See https://swift.org/LICENSE.txt for license information
 #]]
 
-cmake_minimum_required(VERSION 3.19.0)
-
-if(POLICY CMP0077)
-  cmake_policy(SET CMP0077 NEW)
-endif()
-if(POLICY CMP0091)
-  cmake_policy(SET CMP0091 NEW)
-endif()
+cmake_minimum_required(VERSION 3.29)
 
 project(SwiftFormat
   LANGUAGES C Swift)
