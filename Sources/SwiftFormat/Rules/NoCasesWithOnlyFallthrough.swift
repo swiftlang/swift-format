@@ -145,6 +145,18 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
     {
       return false
     }
+    // Check for any comments on or trailing the case label (e.g. after the colon or between patterns).
+    if switchCase.label.tokens(viewMode: .sourceAccurate).contains(where: { token in
+      token.trailingTrivia.contains(where: { $0.isComment }) ||
+      token.leadingTrivia.contains(where: { $0.isComment })
+    }) {
+      return false
+    }
+    if switchCase.label.allFollowingTrivia
+      .prefix(while: { !$0.isNewline }).contains(where: { $0.isComment })
+    {
+      return false
+    }
     if onlyStatement.allPrecedingTrivia
       .drop(while: { !$0.isNewline }).contains(where: { $0.isComment })
     {
