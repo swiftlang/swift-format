@@ -95,6 +95,31 @@ struct GitIgnorePatternTests {
     #expect(pattern.matches("test.java", isDirectory: false) == false)
   }
 
+  @Test func doubleAsteriskPatternWithWildcardSuffix() throws {
+    let pattern = try GitIgnorePattern("**/*.generated.swift")
+
+    #expect(pattern.matches("top.generated.swift", isDirectory: false) == true)
+    #expect(pattern.matches("src/x.generated.swift", isDirectory: false) == true)
+    #expect(pattern.matches("src/deep/deep.generated.swift", isDirectory: false) == true)
+    #expect(pattern.matches("src/main.swift", isDirectory: false) == false)
+  }
+
+  @Test func doubleAsteriskPatternRespectsComponentBoundaries() throws {
+    let pattern = try GitIgnorePattern("**/Generated")
+
+    #expect(pattern.matches("Generated", isDirectory: true) == true)
+    #expect(pattern.matches("src/Generated", isDirectory: true) == true)
+    #expect(pattern.matches("src/MyGenerated", isDirectory: true) == false)
+    #expect(pattern.matches("MyGenerated", isDirectory: true) == false)
+  }
+
+  @Test func doubleAsteriskDirectoryOnlyPatternRespectsComponentBoundaries() throws {
+    let pattern = try GitIgnorePattern("**/Generated/")
+
+    #expect(pattern.matches("src/Generated/G.swift", isDirectory: false) == true)
+    #expect(pattern.matches("src/MyGenerated/M.swift", isDirectory: false) == false)
+  }
+
   @Test func doubleAsteriskDirectoryPattern() throws {
     let pattern = try GitIgnorePattern("src/**/build")
 

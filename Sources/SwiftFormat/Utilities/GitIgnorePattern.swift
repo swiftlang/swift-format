@@ -158,7 +158,7 @@ public struct GitIgnorePattern {
       // Pattern: **/suffix (matches suffix at any depth)
       if prefix.isEmpty {
         let cleanSuffix = suffix.hasPrefix("/") ? String(suffix.dropFirst()) : suffix
-        return path.hasSuffix(cleanSuffix) || simpleMatch(path, pattern: cleanSuffix)
+        return matchesAtAnyDepth(path, pattern: cleanSuffix)
       }
 
       // Pattern: prefix/** (matches everything under prefix)
@@ -197,6 +197,18 @@ public struct GitIgnorePattern {
       }
     }
 
+    return false
+  }
+
+  /// Tests the pattern against every suffix of the path that starts at a component boundary,
+  /// which is what a leading `**/` means.
+  private func matchesAtAnyDepth(_ path: String, pattern: String) -> Bool {
+    let components = path.components(separatedBy: "/")
+    for index in components.indices {
+      if simpleMatch(components[index...].joined(separator: "/"), pattern: pattern) {
+        return true
+      }
+    }
     return false
   }
 
