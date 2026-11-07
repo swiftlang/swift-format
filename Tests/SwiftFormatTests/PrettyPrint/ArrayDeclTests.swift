@@ -64,17 +64,9 @@ final class ArrayDeclTests: PrettyPrintTestCase {
         "One", "Two", "Three", "Four", "Five",
         "Six", "Seven", "Eight",
       ]
+      let a = [11111111, 2222222, 33333333, 444444]
 
       """
-        // Ideally, this array would be left on 1 line without a trailing comma. We don't know if the
-        // comma is required when calculating the length of array elements, so the comma's length is
-        // always added to last element and that 1 character causes the newlines inside of the array.
-        + """
-        let a = [
-          11111111, 2222222, 33333333, 444444,
-        ]
-
-        """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 45)
   }
@@ -288,17 +280,9 @@ final class ArrayDeclTests: PrettyPrintTestCase {
         ("this", "str"),
         ("is", "lng"),
       ]
+      a = [("az", "by"), ("cf", "de")]
 
       """
-        // Ideally, this array would be left on 1 line without a trailing comma. We don't know if the
-        // comma is required when calculating the length of array elements, so the comma's length is
-        // always added to last element and that 1 character causes the newlines inside of the array.
-        + """
-        a = [
-          ("az", "by"), ("cf", "de"),
-        ]
-
-        """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 32)
   }
