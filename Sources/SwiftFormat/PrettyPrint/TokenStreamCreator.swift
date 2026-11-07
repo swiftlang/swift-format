@@ -1340,8 +1340,34 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // TODO: For now, just use the raw text of the node and don't try to format it deeper. In the
     // future, we should find a way to format the expression but without wrapping so that at least
     // internal whitespace is fixed.
-    appendToken(.syntax(node.description))
-    // Visiting children is not needed here.
+    let text = node.description
+    let lines = text.split(separator: "\n", omittingEmptySubsequences: false)
+
+    // An interpolation that spans multiple lines still has the indentation it had in the original
+    // source. The rest of the multiline string is re-indented by the pretty printer, so emitting
+    // the raw text would leave these lines behind, and a line less indented than the closing
+    // delimiter doesn't compile. Emit each line separately instead, dropping the literal's original
+    // indentation so the printer can apply the new one.
+    guard lines.count > 1,
+      let stringLiteral = node.parent?.as(StringLiteralSegmentListSyntax.self)?.parent?
+        .as(StringLiteralExprSyntax.self),
+      stringLiteral.openingQuote.tokenKind == .multilineStringQuote
+    else {
+      appendToken(.syntax(text))
+      return .skipChildren
+    }
+
+    let originalIndentation = stringLiteral.closingQuote.leadingTrivia.reversed()
+      .prefix { $0.isSpaceOrTab }
+      .reduce(0) { $0 + $1.sourceLength.utf8Length }
+    let breakKind = pendingMultilineStringBreakKinds[stringLiteral, default: .same]
+
+    appendToken(.syntax(String(lines[0])))
+    for line in lines.dropFirst() {
+      let strippableWhitespace = line.prefix { $0 == " " || $0 == "\t" }.count
+      appendToken(.break(breakKind, newlines: .hard(count: 1)))
+      appendToken(.syntax(String(line.dropFirst(min(originalIndentation, strippableWhitespace)))))
+    }
     return .skipChildren
   }
 
