@@ -856,7 +856,17 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   override func visit(_ node: SwitchCaseLabelSyntax) -> SyntaxVisitorContinueKind {
     before(node.caseKeyword, tokens: .open)
-    after(node.caseKeyword, tokens: .space)
+
+    let firstCaseItemComment = node.caseItems.firstToken(viewMode: .sourceAccurate)?
+      .allPrecedingTrivia.first(where: { $0.isComment })
+    let spaceAfterCase: Int
+    switch firstCaseItemComment {
+    case .lineComment?, .docLineComment?:
+      spaceAfterCase = config.spacesBeforeEndOfLineComments
+    default:
+      spaceAfterCase = 1
+    }
+    after(node.caseKeyword, tokens: .space(size: spaceAfterCase))
 
     // If an item with a `where` clause follows an item without a `where` clause, the compiler emits
     // a warning telling the user that they should insert a newline between them to disambiguate
