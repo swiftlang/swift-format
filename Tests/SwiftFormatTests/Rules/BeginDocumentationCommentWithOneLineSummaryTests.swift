@@ -264,6 +264,26 @@ final class BeginDocumentationCommentWithOneLineSummaryTests: LintOrFormatRuleTe
     )
   }
 
+  func testOperatorPunctuationDoesNotTerminateSentences() {
+    let input = """
+      /// Number of failed build attempts (exit status != 0).
+      var failedAttempts: Int = 0
+
+      /// Returns true if a!=b and c !== d.
+      func compare() {}
+
+      /// Checks that status != 0. Then does more.
+      1️⃣func check() {}
+      """
+    let findings = [
+      FindingSpec("1️⃣", message: #"add a blank comment line after this sentence: "Checks that status != 0.""#)
+    ]
+    assertLint(BeginDocumentationCommentWithOneLineSummary.self, input, findings: findings)
+
+    BeginDocumentationCommentWithOneLineSummary._forcesFallbackModeForTesting = true
+    assertLint(BeginDocumentationCommentWithOneLineSummary.self, input, findings: findings)
+  }
+
   func testNestedInsideStruct() {
     assertLint(
       BeginDocumentationCommentWithOneLineSummary.self,

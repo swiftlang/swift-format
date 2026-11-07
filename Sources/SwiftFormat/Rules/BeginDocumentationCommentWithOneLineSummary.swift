@@ -161,6 +161,7 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
         isInsideQuotes = false
       }
       return !isInsideQuotes && $0.element == NLTag.sentenceTerminator
+        && Self.endsSentence(in: text, terminatorRange: tokenRanges[$0.offset])
     }.map {
       tokenRanges[$0.offset].lowerBound
     }
@@ -176,6 +177,24 @@ public final class BeginDocumentationCommentWithOneLineSummary: SyntaxLintRule {
     #else
     return nonLinguisticSentenceApproximations(in: text)
     #endif
+  }
+
+  /// Returns whether the terminator that the tagger found at `terminatorRange` really ends a
+  /// sentence.
+  ///
+  /// The tagger reports ASCII terminators even when they are part of a larger run of punctuation,
+  /// such as the `!` in `a != b`. An ASCII terminator only ends a sentence when it is followed by
+  /// the end of the text, by whitespace, by another terminator, or by closing punctuation (as in
+  /// `(see this.)`). Terminators outside ASCII, like the ideographic full stop, are not written
+  /// with a following space, so they always end a sentence.
+  private static func endsSentence(
+    in text: String,
+    terminatorRange: Range<String.Index>
+  ) -> Bool {
+    guard let last = text[terminatorRange].last, last.isASCII else { return true }
+    guard terminatorRange.upperBound < text.endIndex else { return true }
+    let next = text[terminatorRange.upperBound]
+    return next.isWhitespace || ".!?)]}\"'’”".contains(next)
   }
 
   /// The characters that the fallback implementation treats as full stops.
