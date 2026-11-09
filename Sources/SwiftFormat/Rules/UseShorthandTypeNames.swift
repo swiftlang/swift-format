@@ -38,6 +38,15 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       return super.visit(node)
     }
 
+    // Rewriting the type removes the angle brackets and moves the arguments into new tokens, so
+    // comments that aren't inside the arguments themselves (e.g., `Optional<Foo /* comment */>`)
+    // would be lost or end up in invalid positions. Treat those as intentional and leave the type
+    // alone, but still visit the children so that they can be rewritten.
+    guard !hasCommentsOutsideArguments(name: node.name, genericArgumentClause: genericArgumentClause)
+    else {
+      return super.visit(node)
+    }
+
     // Ensure that all arguments in the clause are shortened and in the expected format by visiting
     // the argument list, first.
     let genericArgumentList = visit(genericArgumentClause.arguments)
@@ -130,6 +139,13 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
       return super.visit(node)
     }
 
+    // See the comment in `visit(_: IdentifierTypeSyntax)`.
+    guard
+      !hasCommentsOutsideArguments(name: expression.baseName, genericArgumentClause: node.genericArgumentClause)
+    else {
+      return super.visit(node)
+    }
+
     // Ensure that all arguments in the clause are shortened and in the expected format by visiting
     // the argument list, first.
     let genericArgumentList = visit(node.genericArgumentClause.arguments)
@@ -193,6 +209,28 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     var result = node
     result.genericArgumentClause.arguments = genericArgumentList
     return ExprSyntax(result)
+  }
+
+  /// Returns true if there are any comments between the given type name and the end of its generic
+  /// argument clause, other than those inside the arguments themselves.
+  ///
+  /// For example, this returns true for `Optional</* comment */ Foo>` but false for
+  /// `Optional<(Foo, /* comment */ Bar)>`. Comments before the name or after the `>` are not
+  /// checked, since they are preserved when the type is shortened.
+  private func hasCommentsOutsideArguments(
+    name: TokenSyntax,
+    genericArgumentClause: GenericArgumentClauseSyntax
+  ) -> Bool {
+    var trivia = name.trailingTrivia + genericArgumentClause.leftAngle.leadingTrivia
+    trivia += genericArgumentClause.leftAngle.trailingTrivia
+    for argument in genericArgumentClause.arguments {
+      trivia += argument.argument.leadingTrivia + argument.argument.trailingTrivia
+      if let trailingComma = argument.trailingComma {
+        trivia += trailingComma.leadingTrivia + trailingComma.trailingTrivia
+      }
+    }
+    trivia += genericArgumentClause.rightAngle.leadingTrivia
+    return trivia.hasAnyComments
   }
 
   /// Returns the two arguments in the given argument list, if there are exactly two elements;
