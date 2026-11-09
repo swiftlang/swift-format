@@ -510,11 +510,85 @@ final class SwiftFormatterSelectionTests: XCTestCase {
     )
   }
 
+  func testMultilineCollectionTrailingCommaWithSelection() throws {
+    let dictionaryWithTrailingComma = """
+      let dict = [
+        "a": 1,
+        "b": 2,
+      ]
+
+      """
+
+    // Selecting the last element lines of a multi-line dictionary literal must preserve an
+    // existing trailing comma even when the closing bracket line is outside the selection.
+    try assertFormatting(
+      dictionaryWithTrailingComma,
+      expected: dictionaryWithTrailingComma,
+      selection: Selection(lineRanges: [2...3]),
+      multiElementCollectionTrailingCommas: true
+    )
+
+    let dictionaryWithoutTrailingComma = """
+      let dict = [
+        "a": 1,
+        "b": 2
+      ]
+
+      """
+
+    // Selecting the last element line when a trailing comma is missing must insert it.
+    try assertFormatting(
+      dictionaryWithoutTrailingComma,
+      expected: dictionaryWithTrailingComma,
+      selection: Selection(lineRanges: [3...3]),
+      multiElementCollectionTrailingCommas: true
+    )
+
+    // Selecting only an earlier element line must not modify the unselected last element line.
+    try assertFormatting(
+      dictionaryWithoutTrailingComma,
+      expected: dictionaryWithoutTrailingComma,
+      selection: Selection(lineRanges: [2...2]),
+      multiElementCollectionTrailingCommas: true
+    )
+
+    let arrayWithoutTrailingComma = """
+      let array = [
+        1,
+        2
+      ]
+
+      """
+
+    let arrayWithTrailingComma = """
+      let array = [
+        1,
+        2,
+      ]
+
+      """
+
+    try assertFormatting(
+      arrayWithoutTrailingComma,
+      expected: arrayWithTrailingComma,
+      selection: Selection(lineRanges: [3...3]),
+      multiElementCollectionTrailingCommas: true
+    )
+
+    try assertFormatting(
+      arrayWithTrailingComma,
+      expected: arrayWithTrailingComma,
+      selection: Selection(lineRanges: [2...3]),
+      multiElementCollectionTrailingCommas: true
+    )
+  }
+
   private func assertFormatting(
     _ source: String,
     expected: String,
     selection: Selection,
     reflowComments: Bool = false,
+    multiElementCollectionTrailingCommas: Bool = false,
     file: StaticString = #file,
     line: UInt = #line
   ) throws {
@@ -523,6 +597,9 @@ final class SwiftFormatterSelectionTests: XCTestCase {
     if reflowComments {
       configuration.reflowComments.regularComments = .always
       configuration.reflowComments.docComments = .always
+    }
+    if multiElementCollectionTrailingCommas {
+      configuration.multiElementCollectionTrailingCommas = true
     }
 
     let formatter = SwiftFormatter(configuration: configuration)

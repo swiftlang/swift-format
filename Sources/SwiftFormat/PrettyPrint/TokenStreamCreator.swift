@@ -2971,10 +2971,17 @@ private final class TokenStreamCreator: SyntaxVisitor {
       appendToken(.syntax(token.presence == .present ? token.text : ""))
     }
 
-    generateDisableFormattingIfNecessary(token.endPositionBeforeTrailingTrivia)
+    let shouldDeferDisableAfterMissingTrailingComma =
+      hasCommaDelimitedRegionEndWithoutTrailingComma(for: token)
+    if !shouldDeferDisableAfterMissingTrailingComma {
+      generateDisableFormattingIfNecessary(token.endPositionBeforeTrailingTrivia)
+    }
 
     appendTrailingTrivia(token)
-    appendAfterTokensAndTrailingComments(token)
+    appendAfterTokensAndTrailingComments(
+      token,
+      disableFormattingAfterMissingTrailingComma: shouldDeferDisableAfterMissingTrailingComma
+    )
 
     // It doesn't matter what we return here, tokens do not have children.
     return .skipChildren
@@ -3065,7 +3072,10 @@ private final class TokenStreamCreator: SyntaxVisitor {
   ///   we append the comment, and then the remaining after-tokens. Due to visitation ordering,
   ///   this ensures that a trailing line comment is not incorrectly inserted into the token stream
   ///   *after* a break or newline.
-  private func appendAfterTokensAndTrailingComments(_ token: TokenSyntax) {
+  private func appendAfterTokensAndTrailingComments(
+    _ token: TokenSyntax,
+    disableFormattingAfterMissingTrailingComma: Bool = false
+  ) {
     let (wasLineComment, trailingCommentTokens) = afterTokensForTrailingComment(token)
     let afterGroups = afterMap.removeValue(forKey: token) ?? []
     var hasAppendedTrailingComment = false
@@ -3096,11 +3106,42 @@ private final class TokenStreamCreator: SyntaxVisitor {
           hasAppendedTrailingComment = true
         }
         appendToken(afterToken)
+        if disableFormattingAfterMissingTrailingComma,
+          case .commaDelimitedRegionEnd(_, hasTrailingComma: false, _) = afterToken
+        {
+          generateDisableFormattingIfNecessary(token.endPositionBeforeTrailingTrivia)
+        }
       }
     }
 
     if wasLineComment && !hasAppendedTrailingComment {
       trailingCommentTokens.forEach(appendToken)
+    }
+  }
+
+  /// Returns `true` if `afterMap[token]` contains a `.commaDelimitedRegionEnd` token with
+  /// `hasTrailingComma == false` and the token has no unexpected trailing trivia or trailing
+  /// comments.
+  ///
+  /// When a comma-delimited region lacks a trailing comma and the selection ends at the end of its
+  /// last element, deferring `.disableFormatting` until immediately after `.commaDelimitedRegionEnd`
+  /// allows the pretty printer and linter to insert or diagnose the missing trailing comma before
+  /// formatting is disabled at `token.endPositionBeforeTrailingTrivia`.
+  private func hasCommaDelimitedRegionEndWithoutTrailingComma(for token: TokenSyntax) -> Bool {
+    guard
+      let afterGroups = afterMap[token],
+      !token.trailingTrivia.contains(where: \.isUnexpectedText),
+      afterTokensForTrailingComment(token).tokens.isEmpty
+    else {
+      return false
+    }
+    return afterGroups.contains { group in
+      group.contains { afterToken in
+        if case .commaDelimitedRegionEnd(_, hasTrailingComma: false, _) = afterToken {
+          return true
+        }
+        return false
+      }
     }
   }
 

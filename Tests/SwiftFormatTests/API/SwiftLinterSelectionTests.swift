@@ -343,6 +343,85 @@ final class SwiftLinterSelectionTests: DiagnosingTestCase {
     )
   }
 
+  func testMultilineCollectionTrailingCommaWithSelection() throws {
+    var config = Configuration.forTesting
+    config.multiElementCollectionTrailingCommas = true
+
+    let dictionaryWithTrailingComma = """
+      let dict = [
+        "a": 1,
+        "b": 2,
+      ]
+
+      """
+
+    // Selecting the last element lines of a multi-line dictionary literal that already has a
+    // trailing comma must emit no findings (and must not desynchronize WhitespaceLinter).
+    try assertLint(
+      dictionaryWithTrailingComma,
+      selection: Selection(lineRanges: [2...3]),
+      configuration: config,
+      findings: []
+    )
+
+    let dictionaryWithoutTrailingComma = """
+      let dict = [
+        "a": 1,
+        "b": 21️⃣
+      ]
+
+      """
+
+    // Selecting the last element line when a trailing comma is missing must emit the finding.
+    try assertLint(
+      dictionaryWithoutTrailingComma,
+      selection: Selection(lineRanges: [3...3]),
+      configuration: config,
+      findings: [
+        FindingSpec(
+          "1️⃣",
+          message: "add trailing comma to the last element in multiline collection literal"
+        )
+      ]
+    )
+
+    // Selecting only an earlier element line must not emit a finding on the unselected last line.
+    let dictionarySelectingFirstElementOnly = """
+      let dict = [
+        "a": 1,
+        "b": 2
+      ]
+
+      """
+
+    try assertLint(
+      dictionarySelectingFirstElementOnly,
+      selection: Selection(lineRanges: [2...2]),
+      configuration: config,
+      findings: []
+    )
+
+    let arrayWithoutTrailingComma = """
+      let array = [
+        1,
+        21️⃣
+      ]
+
+      """
+
+    try assertLint(
+      arrayWithoutTrailingComma,
+      selection: Selection(lineRanges: [3...3]),
+      configuration: config,
+      findings: [
+        FindingSpec(
+          "1️⃣",
+          message: "add trailing comma to the last element in multiline collection literal"
+        )
+      ]
+    )
+  }
+
   private func assertLint(
     _ markedSource: String,
     selection: Selection? = nil,
