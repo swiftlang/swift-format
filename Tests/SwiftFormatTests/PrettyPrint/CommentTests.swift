@@ -1142,8 +1142,8 @@ final class CommentTests: PrettyPrintTestCase {
       //
       // In this paragraph, the first line is much
       // longer than the configured line length and
-      // wraps
-      // while this second line stays on its own line.
+      // wraps while this second line stays on its own
+      // line.
 
       func foo() {
         // Inside an indented scope, the available width
@@ -1349,16 +1349,14 @@ final class CommentTests: PrettyPrintTestCase {
 
       /*
         This block comment has delimiters on
-        their own lines
-        and a short second line.
+        their own lines and a short second
+        line.
       */
 
       /*
        * This block comment uses ASCII art
-       * asterisks on each
-       * interior line and should preserve
-       * them
-       * when reflowed.
+       * asterisks on each interior line and
+       * should preserve them when reflowed.
        *
        * Second paragraph.
        */
@@ -2037,6 +2035,217 @@ final class CommentTests: PrettyPrintTestCase {
 
     var config = Configuration.forTesting
     config.reflowComments.regularComments = .always
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
+  }
+
+  func testReflowDocCommentsOnlyLinesOverLength() {
+    let input =
+      """
+      /// Short doc line 1 stays on its own line.
+      /// Short doc line 2 stays on its own line.
+      ///
+      /// In this paragraph, the first line is much longer than the configured line length and wraps
+      /// onto this short second line.
+      /// And this third line stays untouched.
+      ///
+      /// - First list item has a very long first line that exceeds the limit
+      ///   on the second line.
+      ///   And its third line stays untouched.
+      /// - Second list item stays as-is.
+      ///
+      /// This overlong paragraph line wraps right before a fenced code block without merging into it:
+      /// ```swift
+      /// let veryLongCodeLineInFencedBlock = "This line exceeds 50 columns but must NOT be wrapped!"
+      /// ```
+      ///
+      /// This overlong paragraph line wraps right before a parameter list without merging into it:
+      /// - Parameter x: The parameter description that also exceeds the limit
+      ///   on line two.
+      ///   While this third line stays untouched.
+      func documentedFunction(x: Int) {}
+
+      /**
+       * This doc block comment has an over-length first line that wraps
+       * onto the second line cleanly.
+       * While this third line stays untouched.
+       */
+      func documentedBlockFunction() {}
+      """
+
+    let expected =
+      """
+      /// Short doc line 1 stays on its own line.
+      /// Short doc line 2 stays on its own line.
+      ///
+      /// In this paragraph, the first line is much
+      /// longer than the configured line length and
+      /// wraps onto this short second line.
+      /// And this third line stays untouched.
+      ///
+      /// - First list item has a very long first line
+      ///   that exceeds the limit on the second line.
+      ///   And its third line stays untouched.
+      /// - Second list item stays as-is.
+      ///
+      /// This overlong paragraph line wraps right
+      /// before a fenced code block without merging
+      /// into it:
+      /// ```swift
+      /// let veryLongCodeLineInFencedBlock = "This line exceeds 50 columns but must NOT be wrapped!"
+      /// ```
+      ///
+      /// This overlong paragraph line wraps right
+      /// before a parameter list without merging into
+      /// it:
+      /// - Parameter x: The parameter description that
+      ///   also exceeds the limit on line two.
+      ///   While this third line stays untouched.
+      func documentedFunction(x: Int) {}
+
+      /**
+       * This doc block comment has an over-length first
+       * line that wraps onto the second line cleanly.
+       * While this third line stays untouched.
+       */
+      func documentedBlockFunction() {}
+
+      """
+
+    var config = Configuration.forTesting
+    config.reflowComments.docComments = .onlyLinesOverLength
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
+  }
+
+  func testReflowRegularCommentsOnlyLinesOverLengthForwardCarryAndExclusions() {
+    let input =
+      """
+      // Short line  with   spaces stays untouched
+      // followed by a long line that wraps onto the next line
+      // cleanly here.
+      // And this line  with   spaces stays untouched.
+
+      // Regular comments skip lazy list continuation:
+      // - A short bullet item
+      // followed by a very long unindented line that exceeds the limit and wraps without list indent.
+
+      // Over-length line before a bullet list item does not merge into the bullet
+      // - Bullet item stays on its own line.
+
+      // Over-length line before a numbered list item does not merge into it
+      // 1. Numbered item stays on its own line.
+
+      // Over-length line before a doxygen numbered list item does not merge
+      // -# Numbered item stays on its own line.
+
+      // Over-length line before a plus bullet list item does not merge into it
+      // + Plus bullet item stays on its own line.
+
+      // Over-length line before an asterisk bullet list item does not merge
+      // * Asterisk bullet item stays on its own line.
+
+      // Over-length line before a TODO comment does not merge into the TODO line
+      // TODO: keep this on its own line.
+
+      // Over-length line before a FIXME comment does not merge into the FIXME line
+      // FIXME: keep this on its own line.
+
+      // Over-length line before an XXX comment does not merge into the XXX line
+      // XXX: keep this on its own line.
+
+      // Over-length line before an @annotation line does not merge into it
+      // @param x stays on its own line.
+
+      // Over-length line before a \\backslash command does not merge into it
+      // \\param x stays on its own line.
+
+      // Over-length line before a single-character line does not merge into it
+      // }
+
+      // Over-length line before a line starting with two punctuation chars
+      // != second line starts with two punctuation.
+
+      // Over-length line before a line ending with a backslash does not merge
+      // second line ends with a backslash\\
+
+      // Over-length line before an indented continuation line does not merge
+      //   indented continuation stays separate.
+      let x = 1
+      """
+
+    let expected =
+      """
+      // Short line  with   spaces stays untouched
+      // followed by a long line that wraps onto the
+      // next line cleanly here.
+      // And this line  with   spaces stays untouched.
+
+      // Regular comments skip lazy list continuation:
+      // - A short bullet item
+      // followed by a very long unindented line that
+      // exceeds the limit and wraps without list
+      // indent.
+
+      // Over-length line before a bullet list item does
+      // not merge into the bullet
+      // - Bullet item stays on its own line.
+
+      // Over-length line before a numbered list item
+      // does not merge into it
+      // 1. Numbered item stays on its own line.
+
+      // Over-length line before a doxygen numbered list
+      // item does not merge
+      // -# Numbered item stays on its own line.
+
+      // Over-length line before a plus bullet list item
+      // does not merge into it
+      // + Plus bullet item stays on its own line.
+
+      // Over-length line before an asterisk bullet list
+      // item does not merge
+      // * Asterisk bullet item stays on its own line.
+
+      // Over-length line before a TODO comment does not
+      // merge into the TODO line
+      // TODO: keep this on its own line.
+
+      // Over-length line before a FIXME comment does
+      // not merge into the FIXME line
+      // FIXME: keep this on its own line.
+
+      // Over-length line before an XXX comment does not
+      // merge into the XXX line
+      // XXX: keep this on its own line.
+
+      // Over-length line before an @annotation line
+      // does not merge into it
+      // @param x stays on its own line.
+
+      // Over-length line before a \\backslash command
+      // does not merge into it
+      // \\param x stays on its own line.
+
+      // Over-length line before a single-character line
+      // does not merge into it
+      // }
+
+      // Over-length line before a line starting with
+      // two punctuation chars
+      // != second line starts with two punctuation.
+
+      // Over-length line before a line ending with a
+      // backslash does not merge
+      // second line ends with a backslash\\
+
+      // Over-length line before an indented
+      // continuation line does not merge
+      //   indented continuation stays separate.
+      let x = 1
+
+      """
+
+    var config = Configuration.forTesting
+    config.reflowComments.regularComments = .onlyLinesOverLength
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50, configuration: config)
   }
 }

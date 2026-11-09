@@ -421,13 +421,23 @@ struct Comment {
       let markdownLines = bodyRawLines.map { line -> Substring in
         line.hasPrefix(" ") ? line.dropFirst() : line
       }
-      let reflowedLines = MarkdownReflower.reflow(
-        lines: markdownLines,
-        firstLineWidth: availableWidth,
-        continuationWidth: availableWidth,
-        lastLineReservedSuffixLength: 0,
-        preserveLineBreaks: preserveLineBreaks
-      )
+      let reflowedLines: [String]
+      if preserveLineBreaks && self.kind == .line {
+        reflowedLines = OverlongLineReflower.reflow(
+          lines: markdownLines,
+          firstLineWidth: availableWidth,
+          continuationWidth: availableWidth,
+          lastLineReservedSuffixLength: 0
+        )
+      } else {
+        reflowedLines = MarkdownReflower.reflow(
+          lines: markdownLines,
+          firstLineWidth: availableWidth,
+          continuationWidth: availableWidth,
+          lastLineReservedSuffixLength: 0,
+          preserveLineBreaks: preserveLineBreaks
+        )
+      }
       for mdLine in reflowedLines {
         if mdLine.isEmpty {
           outputLines.append(kind.prefix)
@@ -655,6 +665,7 @@ struct Comment {
     // Reflow the stripped Markdown lines and re-attach the block comment prefixes and delimiters.
     let reflowedLines = Self.reflowBlockBodyLines(
       strippedLines,
+      kind: self.kind,
       firstLineWidth: firstLineWidth,
       continuationWidth: continuationWidth,
       lastLineReservedSuffixLength: reservedSuffixLength,
@@ -721,6 +732,7 @@ struct Comment {
   /// contiguous Markdown segment.
   private static func reflowBlockBodyLines(
     _ lines: [Substring],
+    kind: Kind,
     firstLineWidth: Int,
     continuationWidth: Int,
     lastLineReservedSuffixLength: Int,
@@ -753,13 +765,23 @@ struct Comment {
 
       let effectiveFirstWidth = output.isEmpty ? firstLineWidth : continuationWidth
       let effectiveReservedSuffix = (isFinalSegment && trailingEmptyCount == 0) ? lastLineReservedSuffixLength : 0
-      let reflowed = MarkdownReflower.reflow(
-        lines: bodyLines,
-        firstLineWidth: effectiveFirstWidth,
-        continuationWidth: continuationWidth,
-        lastLineReservedSuffixLength: effectiveReservedSuffix,
-        preserveLineBreaks: preserveLineBreaks
-      )
+      let reflowed: [String]
+      if preserveLineBreaks && kind == .block {
+        reflowed = OverlongLineReflower.reflow(
+          lines: bodyLines,
+          firstLineWidth: effectiveFirstWidth,
+          continuationWidth: continuationWidth,
+          lastLineReservedSuffixLength: effectiveReservedSuffix
+        )
+      } else {
+        reflowed = MarkdownReflower.reflow(
+          lines: bodyLines,
+          firstLineWidth: effectiveFirstWidth,
+          continuationWidth: continuationWidth,
+          lastLineReservedSuffixLength: effectiveReservedSuffix,
+          preserveLineBreaks: preserveLineBreaks
+        )
+      }
       output.append(contentsOf: reflowed)
 
       for _ in 0..<trailingEmptyCount {
@@ -820,6 +842,267 @@ struct Comment {
       return true
     }
     return false
+  }
+}
+
+/// Reflows over-length regular comment lines (`//` and `/* */`) in `.onlyLinesOverLength` mode
+/// without parsing Markdown, following `clang-format`'s conservative comment reflowing strategy
+/// (`ContinuationIndenter::breakProtrudingToken` in `clang/lib/Format/ContinuationIndenter.cpp` and
+/// `mayReflowContent`, `BreakableLineCommentSection::mayReflow`, and `getCommentSplit` in
+/// `clang/lib/Format/BreakableToken.cpp`).
+///
+/// Only lines that exceed the available column width are broken. When an over-length line is
+/// broken, its leftover tail is joined onto the start of the following line if that line can be
+/// reflowed into the previous line (`mayReflowIntoPreviousLine`) and at least the first token of
+/// the following line fits after the leftover tail. Reflowing continues across consecutive lines
+/// only while lines keep overflowing, and stops as soon as a line fits without overflowing.
+/// Earlier lines, lines that already fit, and intra-line whitespace on untouched segments are
+/// preserved verbatim.
+private struct OverlongLineReflower {
+  /// Reflows `lines` by wrapping over-length lines and carrying leftover tails forward into
+  /// mergeable continuation lines while lines continue to overflow.
+  static func reflow(
+    lines: [Substring],
+    firstLineWidth: Int,
+    continuationWidth: Int,
+    lastLineReservedSuffixLength: Int
+  ) -> [String] {
+    guard !lines.isEmpty else { return [] }
+
+    var output: [String] = []
+    output.reserveCapacity(lines.count)
+    var lineIdx = 0
+
+    while lineIdx < lines.count {
+      let rawLine = lines[lineIdx]
+      let leadingSpaces = rawLine.prefix { $0 == " " || $0 == "\t" }
+      let content = rawLine[leadingSpaces.endIndex...].trimmingTrailingWhitespace()
+      let currentWidth = output.isEmpty ? firstLineWidth : continuationWidth
+      let initialReservedSuffix = (lineIdx == lines.count - 1) ? lastLineReservedSuffixLength : 0
+      let effectiveInitialWidth = currentWidth - initialReservedSuffix
+
+      // Fast path: if this line already fits, emit it verbatim without normalizing internal spaces.
+      if leadingSpaces.count + content.count <= effectiveInitialWidth || content.isEmpty {
+        output.append(String(leadingSpaces + content))
+        lineIdx += 1
+        continue
+      }
+
+      // Wrap the overlong line and carry its leftover tail forward into subsequent lines only while
+      // lines continue to exceed the available width, stopping at the first line that fits.
+      var workingText = String(content)
+      while true {
+        let isLastInputLine = (lineIdx == lines.count - 1)
+        let reservedSuffix = isLastInputLine ? lastLineReservedSuffixLength : 0
+        let lineMaxWidth = output.isEmpty ? firstLineWidth : continuationWidth
+        let availableForContent = lineMaxWidth - leadingSpaces.count
+
+        // Once the remaining text fits on the current line (accounting for `reservedSuffix` if we
+        // are at the final input line), emit it and stop carrying forward.
+        if workingText.count <= availableForContent - reservedSuffix {
+          output.append(leadingSpaces + workingText)
+          break
+        }
+
+        // Split `workingText` at the last whitespace boundary at or before `availableForContent`
+        // (or at the first whitespace boundary if the very first word exceeds the limit).
+        let (head, tail) = splitAtLastWhitespace(
+          workingText[...],
+          maxWidth: availableForContent
+        )
+        guard !tail.isEmpty else {
+          // A single unbreakable token fills the entire remaining text.
+          output.append(leadingSpaces + String(head))
+          break
+        }
+
+        output.append(leadingSpaces + String(head))
+        let leftover = String(tail)
+
+        // Check whether `leftover` can be joined onto the start of `lines[lineIdx + 1]` following
+        // `clang-format`'s `ContinuationIndenter::breakProtrudingToken` and
+        // `BreakableLineCommentSection::mayReflow`.
+        let nextMaxWidth = continuationWidth - leadingSpaces.count
+        if lineIdx + 1 < lines.count,
+          mayReflowIntoPreviousLine(
+            nextLine: lines[lineIdx + 1],
+            previousLeadingSpaces: leadingSpaces,
+            previousTrimmedContent: leftover[...]
+          ),
+          let nextFirstToken = firstWhitespaceDelimitedToken(
+            of: lines[lineIdx + 1].trimmingSpacesAndTabs()
+          ),
+          leftover.count + 1 + nextFirstToken.count
+            <= nextMaxWidth
+            - ((lineIdx + 1 == lines.count - 1 && isSingleToken(lines[lineIdx + 1]))
+              ? lastLineReservedSuffixLength : 0)
+        {
+          lineIdx += 1
+          let nextContent = lines[lineIdx].trimmingSpacesAndTabs()
+          workingText = leftover + " " + nextContent
+        } else {
+          // Continue wrapping `leftover` alone if it still exceeds the column limit.
+          workingText = leftover
+        }
+      }
+
+      lineIdx += 1
+    }
+
+    return output
+  }
+
+  /// Splits `text` at the last horizontal whitespace run whose preceding non-whitespace head has
+  /// length `<= maxWidth`. If the very first token exceeds `maxWidth`, splits at the first
+  /// horizontal whitespace run after that token.
+  private static func splitAtLastWhitespace(
+    _ text: Substring,
+    maxWidth: Int
+  ) -> (head: Substring, tail: Substring) {
+    let trimmed = text.trimmingSpacesAndTabs()
+    guard !trimmed.isEmpty else { return ("", "") }
+
+    var lastFitBreakEnd: String.Index? = nil
+    var lastFitNextStart: String.Index? = nil
+    var firstBreakEnd: String.Index? = nil
+    var firstNextStart: String.Index? = nil
+
+    var idx = trimmed.startIndex
+    var charCount = 0
+    while idx < trimmed.endIndex {
+      let ch = trimmed[idx]
+      if ch == " " || ch == "\t" {
+        let breakEnd = idx
+        var nextStart = trimmed.index(after: idx)
+        while nextStart < trimmed.endIndex
+          && (trimmed[nextStart] == " " || trimmed[nextStart] == "\t")
+        {
+          nextStart = trimmed.index(after: nextStart)
+        }
+        if firstBreakEnd == nil {
+          firstBreakEnd = breakEnd
+          firstNextStart = nextStart
+        }
+        if charCount <= maxWidth {
+          lastFitBreakEnd = breakEnd
+          lastFitNextStart = nextStart
+        } else {
+          break
+        }
+        // Advance `charCount` across the whitespace run.
+        var wsIdx = idx
+        while wsIdx < nextStart {
+          charCount += 1
+          wsIdx = trimmed.index(after: wsIdx)
+        }
+        idx = nextStart
+      } else {
+        charCount += 1
+        idx = trimmed.index(after: idx)
+      }
+    }
+
+    if let breakEnd = lastFitBreakEnd, let nextStart = lastFitNextStart {
+      return (trimmed[..<breakEnd], trimmed[nextStart...])
+    }
+    if let breakEnd = firstBreakEnd, let nextStart = firstNextStart {
+      return (trimmed[..<breakEnd], trimmed[nextStart...])
+    }
+    return (trimmed, "")
+  }
+
+  /// Returns the first whitespace-delimited token of `trimmedLine`, or `nil` if empty.
+  private static func firstWhitespaceDelimitedToken(of trimmedLine: Substring) -> Substring? {
+    let token = trimmedLine.prefix { $0 != " " && $0 != "\t" }
+    return token.isEmpty ? nil : token
+  }
+
+  /// Returns `true` if `line` contains at most one whitespace-delimited token.
+  private static func isSingleToken(_ line: Substring) -> Bool {
+    let trimmed = line.trimmingSpacesAndTabs()
+    return !trimmed.utf8.contains { $0 == UInt8(ascii: " ") || $0 == UInt8(ascii: "\t") }
+  }
+
+  /// Returns `true` if `nextLine` may be reflowed onto the leftover tail of the previous line,
+  /// mirroring `mayReflowContent` and `BreakableLineCommentSection::mayReflow` in
+  /// `clang/lib/Format/BreakableToken.cpp`.
+  private static func mayReflowIntoPreviousLine(
+    nextLine: Substring,
+    previousLeadingSpaces: Substring,
+    previousTrimmedContent: Substring
+  ) -> Bool {
+    // Do not join across a trailing `\` hard line break on the previous line.
+    if previousTrimmedContent.hasSuffix("\\") {
+      return false
+    }
+
+    // Both lines must share the same original indentation prefix
+    // (`BreakableLineCommentSection::mayReflow`: `OriginalPrefix[LineIndex] ==
+    // OriginalPrefix[LineIndex - 1]`).
+    let nextLeadingSpaces = nextLine.prefix { $0 == " " || $0 == "\t" }
+    guard nextLeadingSpaces == previousLeadingSpaces else {
+      return false
+    }
+
+    return mayReflowContent(nextLine[nextLeadingSpaces.endIndex...])
+  }
+
+  /// Mirrors `mayReflowContent` in `clang/lib/Format/BreakableToken.cpp`.
+  private static func mayReflowContent(_ rawContent: Substring) -> Bool {
+    let content = rawContent.trimmingSpacesAndTabs()
+
+    // Do not reflow lines shorter than 2 characters or lines ending with `\`.
+    guard content.count >= 2, !content.hasSuffix("\\") else {
+      return false
+    }
+
+    // Lines starting with `@` (annotations), `\`, `TODO`, `FIXME`, `XXX`, or bullet/numbered list
+    // markers (`-# `, `- `, `+ `, `* `, `^[1-9][0-9]?\. `) must not be joined onto the previous
+    // line.
+    for prefix in ["@", "TODO", "FIXME", "XXX", "-# ", "- ", "+ ", "* ", "\\"] {
+      if content.hasPrefix(prefix) {
+        return false
+      }
+    }
+    if startsWithOrderedListMarker(content) {
+      return false
+    }
+
+    // Content must not start with two ASCII punctuation characters (`!isPunctuation(Content[0]) ||
+    // !isPunctuation(Content[1])`).
+    let utf8 = content.utf8
+    let firstByte = utf8[utf8.startIndex]
+    let secondByte = utf8[utf8.index(after: utf8.startIndex)]
+    if isASCIIPunctuation(firstByte) && isASCIIPunctuation(secondByte) {
+      return false
+    }
+
+    return true
+  }
+
+  /// Returns `true` if `byte` is an ASCII punctuation character (`isPunctuation` in
+  /// `clang/lib/Format/BreakableToken.cpp`).
+  private static func isASCIIPunctuation(_ byte: UInt8) -> Bool {
+    return (byte >= 0x21 && byte <= 0x2F)
+      || (byte >= 0x3A && byte <= 0x40)
+      || (byte >= 0x5B && byte <= 0x60)
+      || (byte >= 0x7B && byte <= 0x7E)
+  }
+
+  /// Matches `clang-format`'s `^[1-9][0-9]?\. ` ordered list marker regex in `mayReflowContent`.
+  private static func startsWithOrderedListMarker(_ content: Substring) -> Bool {
+    let utf8 = content.utf8
+    guard let first = utf8.first, first >= UInt8(ascii: "1") && first <= UInt8(ascii: "9") else {
+      return false
+    }
+    var idx = utf8.index(after: utf8.startIndex)
+    if idx < utf8.endIndex && utf8[idx] >= UInt8(ascii: "0") && utf8[idx] <= UInt8(ascii: "9") {
+      idx = utf8.index(after: idx)
+    }
+    guard idx < utf8.endIndex && utf8[idx] == UInt8(ascii: ".") else { return false }
+    idx = utf8.index(after: idx)
+    guard idx < utf8.endIndex && utf8[idx] == UInt8(ascii: " ") else { return false }
+    return true
   }
 }
 
@@ -1509,6 +1792,7 @@ private struct MarkdownReflower {
 
     var currentLine = ""
     currentLine.reserveCapacity(max(64, max(firstLineWidth, continuationWidth)))
+    var currentLineLength = 0
 
     for (lineIdx, entry) in logicalLines.enumerated() {
       let words = entry.words
@@ -1536,8 +1820,7 @@ private struct MarkdownReflower {
 
       // Greedily pack words onto `currentLine` up to `maxWidth`, reserving space on the very last
       // word of the document if an inline closing `*/` delimiter needs to fit on that line.
-      currentLine.removeAll(keepingCapacity: true)
-      var currentLineLength = 0
+      var didWrapCurrentEntry = false
       for (wordIdx, word) in words.enumerated() {
         let isFinalWord = isFinalLogicalLine && (wordIdx == words.count - 1)
         let reservedSuffix = isFinalWord ? lastLineReservedSuffixLength : 0
@@ -1559,13 +1842,54 @@ private struct MarkdownReflower {
           currentLine.removeAll(keepingCapacity: true)
           currentLine.append(contentsOf: word)
           currentLineLength = wordLength
+          didWrapCurrentEntry = true
         }
       }
 
-      if !currentLine.isEmpty {
+      // In `.onlyLinesOverLength` mode, if wrapping this logical line produced a leftover tail,
+      // carry that tail forward onto the next logical line in the same paragraph so it doesn't sit
+      // on an orphan line of its own—mirroring `clang-format`'s conservative reflowing strategy
+      // (`ContinuationIndenter::breakProtrudingToken`). Stop carrying forward as soon as a logical
+      // line fits without wrapping.
+      let shouldCarryToNextLine: Bool = {
+        guard
+          preserveLineBreaks,
+          didWrapCurrentEntry,
+          !entry.endsWithHardBreak,
+          !currentLine.isEmpty,
+          lineIdx + 1 < logicalLines.count
+        else {
+          return false
+        }
+        let nextEntry = logicalLines[lineIdx + 1]
+        guard let firstNextWord = nextEntry.words.first else { return false }
+        let nextExtraIndent: Substring
+        if firstLinePrefix.isEmpty && continuationPrefix.isEmpty,
+          nextEntry.sourceLine >= 1,
+          nextEntry.sourceLine <= markdownLines.count
+        {
+          let rawNextLine = markdownLines[nextEntry.sourceLine - 1]
+          nextExtraIndent = rawNextLine.prefix { $0 == " " || $0 == "\t" }
+        } else {
+          nextExtraIndent = ""
+        }
+        guard nextExtraIndent == extraIndent else { return false }
+        let activePrefixCount = isFirstLineOfParagraph ? firstPrefixCount : contPrefixCount
+        let maxWidth = availableWidth(forPrefixLength: activePrefixCount)
+        let nextIsFinalWord =
+          isLastBlockInDocument
+          && (lineIdx + 1 == logicalLines.count - 1)
+          && (nextEntry.words.count == 1)
+        let nextReserved = nextIsFinalWord ? lastLineReservedSuffixLength : 0
+        return currentLineLength + 1 + firstNextWord.count + nextReserved <= maxWidth
+      }()
+
+      if !shouldCarryToNextLine && !currentLine.isEmpty {
         let activePrefix = isFirstLineOfParagraph ? firstActivePrefix : contActivePrefix
         emitLine(currentLine[...], prefix: activePrefix)
         isFirstLineOfParagraph = false
+        currentLine.removeAll(keepingCapacity: true)
+        currentLineLength = 0
       }
     }
   }
@@ -1594,7 +1918,7 @@ private struct InlineWordCollector {
   let strippedLeadingLines: Int
   var currentSourceLine: Int
   var currentLineStartSourceLine: Int
-  var logicalLines: [(words: [Substring], sourceLine: Int)] = []
+  var logicalLines: [(words: [Substring], sourceLine: Int, endsWithHardBreak: Bool)] = []
   var currentLineWords: [Substring] = []
   /// Holds the current word when it consists of a single slice from source or `Text.string`.
   var pendingWordSlice: Substring = ""
@@ -1782,7 +2106,9 @@ private struct InlineWordCollector {
     unresetLinkSuffixByteOffset = 0
     unresetLegacyHardBreakByteOffset = 0
     if reflower.preserveLineBreaks {
-      logicalLines.append((words: currentLineWords, sourceLine: currentLineStartSourceLine))
+      logicalLines.append(
+        (words: currentLineWords, sourceLine: currentLineStartSourceLine, endsWithHardBreak: false)
+      )
       currentLineWords = []
       currentLineStartSourceLine = currentSourceLine
     }
@@ -1794,7 +2120,9 @@ private struct InlineWordCollector {
     let lineUTF8Count = paragraphLineContent(atLine: currentSourceLine).utf8.count
     appendUnbreakableText("\\")
     flushWord()
-    logicalLines.append((words: currentLineWords, sourceLine: currentLineStartSourceLine))
+    logicalLines.append(
+      (words: currentLineWords, sourceLine: currentLineStartSourceLine, endsWithHardBreak: true)
+    )
     currentLineWords = []
     currentSourceLine += 1
     currentLineStartSourceLine = currentSourceLine
@@ -1804,10 +2132,12 @@ private struct InlineWordCollector {
   }
 
   /// Flushes any remaining buffered word/line and returns the collected logical lines.
-  mutating func finish() -> [(words: [Substring], sourceLine: Int)] {
+  mutating func finish() -> [(words: [Substring], sourceLine: Int, endsWithHardBreak: Bool)] {
     flushWord()
     if !currentLineWords.isEmpty {
-      logicalLines.append((words: currentLineWords, sourceLine: currentLineStartSourceLine))
+      logicalLines.append(
+        (words: currentLineWords, sourceLine: currentLineStartSourceLine, endsWithHardBreak: false)
+      )
       currentLineWords = []
     }
     return logicalLines

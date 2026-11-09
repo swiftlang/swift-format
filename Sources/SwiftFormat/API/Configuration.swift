@@ -594,8 +594,11 @@ public struct ReflowCommentsConfiguration: Codable, Equatable {
     /// Never reflow comments.
     case never
 
-    /// Only insert line breaks in comment lines that exceed the maximum line length, without
-    /// reflowing subsequent lines back up onto previous lines.
+    /// Only insert line breaks in comment lines that exceed the maximum line length, carrying any
+    /// leftover tail forward onto the following continuation line while lines continue to overflow
+    /// (like `clang-format`'s conservative comment reflowing strategy), without reflowing earlier
+    /// or non-overflowing lines. Documentation comments are parsed as Markdown and reflowed within
+    /// paragraph boundaries, whereas regular comments are wrapped without parsing Markdown.
     case onlyLinesOverLength
 
     /// Always reflow comments as full Markdown paragraphs.
