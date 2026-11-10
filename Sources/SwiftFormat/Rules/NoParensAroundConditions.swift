@@ -28,8 +28,11 @@ import SwiftSyntax
 public final class NoParensAroundConditions: SyntaxFormatRule {
   public override func visit(_ node: IfExprSyntax) -> ExprSyntax {
     var result = node
-    fixKeywordTrailingTrivia(&result.ifKeyword.trailingTrivia)
-    result.conditions = visit(node.conditions)
+    let newConditions = visit(node.conditions)
+    result.conditions = newConditions
+    if newConditions.detached != node.conditions.detached {
+      fixKeywordTrailingTrivia(&result.ifKeyword.trailingTrivia)
+    }
     result.body = visit(node.body)
     if let elseBody = node.elseBody {
       result.elseBody = visit(elseBody)
@@ -39,6 +42,7 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
 
   public override func visit(_ node: ConditionElementSyntax) -> ConditionElementSyntax {
     guard
+      shouldFormat(node),
       case .expression(let condition) = node.condition,
       let newExpr = minimalSingleExpression(condition)
     else {
@@ -52,14 +56,19 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
 
   public override func visit(_ node: GuardStmtSyntax) -> StmtSyntax {
     var result = node
-    fixKeywordTrailingTrivia(&result.guardKeyword.trailingTrivia)
-    result.conditions = visit(node.conditions)
+    let newConditions = visit(node.conditions)
+    result.conditions = newConditions
+    if newConditions.detached != node.conditions.detached {
+      fixKeywordTrailingTrivia(&result.guardKeyword.trailingTrivia)
+    }
     result.body = visit(node.body)
     return StmtSyntax(result)
   }
 
   public override func visit(_ node: SwitchExprSyntax) -> ExprSyntax {
-    guard let newSubject = minimalSingleExpression(node.subject) else {
+    guard shouldFormat(node.subject),
+      let newSubject = minimalSingleExpression(node.subject)
+    else {
       return super.visit(node)
     }
 
@@ -71,7 +80,9 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
   }
 
   public override func visit(_ node: RepeatStmtSyntax) -> StmtSyntax {
-    guard let newCondition = minimalSingleExpression(node.condition) else {
+    guard shouldFormat(node.condition),
+      let newCondition = minimalSingleExpression(node.condition)
+    else {
       return super.visit(node)
     }
 
@@ -84,8 +95,11 @@ public final class NoParensAroundConditions: SyntaxFormatRule {
 
   public override func visit(_ node: WhileStmtSyntax) -> StmtSyntax {
     var result = node
-    fixKeywordTrailingTrivia(&result.whileKeyword.trailingTrivia)
-    result.conditions = visit(node.conditions)
+    let newConditions = visit(node.conditions)
+    result.conditions = newConditions
+    if newConditions.detached != node.conditions.detached {
+      fixKeywordTrailingTrivia(&result.whileKeyword.trailingTrivia)
+    }
     result.body = visit(node.body)
     return StmtSyntax(result)
   }

@@ -89,6 +89,7 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
 
   /// Returns true if this case can definitely be merged with any that come before it.
   private func canMergeWithPreviousCases(_ node: SwitchCaseSyntax) -> Bool {
+    guard shouldFormat(node.label) else { return false }
     return node.label.is(SwitchCaseLabelSyntax.self) && !containsValueBindingPattern(node.label)
   }
 
@@ -120,6 +121,7 @@ public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
   ///
   /// - Parameter switchCase: A syntax node describing a case in a switch statement.
   private func isMergeableFallthroughOnly(_ switchCase: SwitchCaseSyntax) -> Bool {
+    guard shouldFormat(switchCase) else { return false }
     // Ignore anything that isn't a `SwitchCaseLabelSyntax`, like a `default`.
     guard switchCase.label.is(SwitchCaseLabelSyntax.self) else {
       return false

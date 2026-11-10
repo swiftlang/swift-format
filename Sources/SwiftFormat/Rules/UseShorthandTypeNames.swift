@@ -45,48 +45,54 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     let (leadingTrivia, trailingTrivia) = boundaryTrivia(around: Syntax(node))
     let newNode: TypeSyntax?
 
-    switch node.name.text {
-    case "Array":
-      guard case .type(let typeArgument) = genericArgumentList.firstAndOnly?.argument else {
-        newNode = nil
-        break
-      }
-      newNode = shorthandArrayType(
-        element: typeArgument,
-        leadingTrivia: leadingTrivia,
-        trailingTrivia: trailingTrivia
-      )
+    if shouldFormat(node) {
+      switch node.name.text {
+      case "Array":
+        guard case .type(let typeArgument) = genericArgumentList.firstAndOnly?.argument else {
+          newNode = nil
+          break
+        }
+        newNode = shorthandArrayType(
+          element: typeArgument,
+          leadingTrivia: leadingTrivia,
+          trailingTrivia: trailingTrivia
+        )
 
-    case "Dictionary":
-      guard let arguments = exactlyTwoChildren(of: genericArgumentList),
-        case (.type(let type0Argument), .type(let type1Argument)) = (arguments.0.argument, arguments.1.argument)
-      else {
-        newNode = nil
-        break
-      }
-      newNode = shorthandDictionaryType(
-        key: type0Argument,
-        value: type1Argument,
-        leadingTrivia: leadingTrivia,
-        trailingTrivia: trailingTrivia
-      )
+      case "Dictionary":
+        guard let arguments = exactlyTwoChildren(of: genericArgumentList),
+          case (.type(let type0Argument), .type(let type1Argument)) = (
+            arguments.0.argument, arguments.1.argument
+          )
+        else {
+          newNode = nil
+          break
+        }
+        newNode = shorthandDictionaryType(
+          key: type0Argument,
+          value: type1Argument,
+          leadingTrivia: leadingTrivia,
+          trailingTrivia: trailingTrivia
+        )
 
-    case "Optional":
-      guard !isTypeOfUninitializedStoredVar(node) else {
-        newNode = nil
-        break
-      }
-      guard case .type(let typeArgument) = genericArgumentList.firstAndOnly?.argument else {
-        newNode = nil
-        break
-      }
-      newNode = shorthandOptionalType(
-        wrapping: typeArgument,
-        leadingTrivia: leadingTrivia,
-        trailingTrivia: trailingTrivia
-      )
+      case "Optional":
+        guard !isTypeOfUninitializedStoredVar(node) else {
+          newNode = nil
+          break
+        }
+        guard case .type(let typeArgument) = genericArgumentList.firstAndOnly?.argument else {
+          newNode = nil
+          break
+        }
+        newNode = shorthandOptionalType(
+          wrapping: typeArgument,
+          leadingTrivia: leadingTrivia,
+          trailingTrivia: trailingTrivia
+        )
 
-    default:
+      default:
+        newNode = nil
+      }
+    } else {
       newNode = nil
     }
 
@@ -137,48 +143,54 @@ public final class UseShorthandTypeNames: SyntaxFormatRule {
     let (leadingTrivia, trailingTrivia) = boundaryTrivia(around: Syntax(node))
     let newNode: ExprSyntax?
 
-    switch expression.baseName.text {
-    case "Array":
-      guard case .type(let typeArgument) = genericArgumentList.firstAndOnly?.argument else {
-        newNode = nil
-        break
-      }
-      let arrayTypeExpr = makeArrayTypeExpression(
-        elementType: typeArgument,
-        leftSquare: TokenSyntax.leftSquareToken(leadingTrivia: leadingTrivia),
-        rightSquare: TokenSyntax.rightSquareToken(trailingTrivia: trailingTrivia)
-      )
-      newNode = ExprSyntax(arrayTypeExpr)
+    if shouldFormat(node) {
+      switch expression.baseName.text {
+      case "Array":
+        guard case .type(let typeArgument) = genericArgumentList.firstAndOnly?.argument else {
+          newNode = nil
+          break
+        }
+        let arrayTypeExpr = makeArrayTypeExpression(
+          elementType: typeArgument,
+          leftSquare: TokenSyntax.leftSquareToken(leadingTrivia: leadingTrivia),
+          rightSquare: TokenSyntax.rightSquareToken(trailingTrivia: trailingTrivia)
+        )
+        newNode = ExprSyntax(arrayTypeExpr)
 
-    case "Dictionary":
-      guard let arguments = exactlyTwoChildren(of: genericArgumentList),
-        case (.type(let type0Argument), .type(let type1Argument)) = (arguments.0.argument, arguments.1.argument)
-      else {
-        newNode = nil
-        break
-      }
-      let dictTypeExpr = makeDictionaryTypeExpression(
-        keyType: type0Argument,
-        valueType: type1Argument,
-        leftSquare: TokenSyntax.leftSquareToken(leadingTrivia: leadingTrivia),
-        colon: TokenSyntax.colonToken(trailingTrivia: .spaces(1)),
-        rightSquare: TokenSyntax.rightSquareToken(trailingTrivia: trailingTrivia)
-      )
-      newNode = ExprSyntax(dictTypeExpr)
+      case "Dictionary":
+        guard let arguments = exactlyTwoChildren(of: genericArgumentList),
+          case (.type(let type0Argument), .type(let type1Argument)) = (
+            arguments.0.argument, arguments.1.argument
+          )
+        else {
+          newNode = nil
+          break
+        }
+        let dictTypeExpr = makeDictionaryTypeExpression(
+          keyType: type0Argument,
+          valueType: type1Argument,
+          leftSquare: TokenSyntax.leftSquareToken(leadingTrivia: leadingTrivia),
+          colon: TokenSyntax.colonToken(trailingTrivia: .spaces(1)),
+          rightSquare: TokenSyntax.rightSquareToken(trailingTrivia: trailingTrivia)
+        )
+        newNode = ExprSyntax(dictTypeExpr)
 
-    case "Optional":
-      guard case .type(let typeArgument) = genericArgumentList.firstAndOnly?.argument else {
-        newNode = nil
-        break
-      }
-      let optionalTypeExpr = makeOptionalTypeExpression(
-        wrapping: typeArgument,
-        leadingTrivia: leadingTrivia,
-        questionMark: TokenSyntax.postfixQuestionMarkToken(trailingTrivia: trailingTrivia)
-      )
-      newNode = ExprSyntax(optionalTypeExpr)
+      case "Optional":
+        guard case .type(let typeArgument) = genericArgumentList.firstAndOnly?.argument else {
+          newNode = nil
+          break
+        }
+        let optionalTypeExpr = makeOptionalTypeExpression(
+          wrapping: typeArgument,
+          leadingTrivia: leadingTrivia,
+          questionMark: TokenSyntax.postfixQuestionMarkToken(trailingTrivia: trailingTrivia)
+        )
+        newNode = ExprSyntax(optionalTypeExpr)
 
-    default:
+      default:
+        newNode = nil
+      }
+    } else {
       newNode = nil
     }
 

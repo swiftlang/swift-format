@@ -25,65 +25,96 @@ import SwiftSyntax
 @_spi(Rules)
 public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
   public override func visit(_ node: FunctionDeclSyntax) -> DeclSyntax {
-    return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
+    return convertDocBlockCommentToDocLineComment(node, visitChildren: super.visit)
   }
 
   public override func visit(_ node: EnumDeclSyntax) -> DeclSyntax {
-    return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
+    return convertDocBlockCommentToDocLineComment(node, visitChildren: super.visit)
   }
 
   public override func visit(_ node: InitializerDeclSyntax) -> DeclSyntax {
-    return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
+    return convertDocBlockCommentToDocLineComment(node, visitChildren: super.visit)
   }
 
   public override func visit(_ node: DeinitializerDeclSyntax) -> DeclSyntax {
-    return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
+    return convertDocBlockCommentToDocLineComment(node, visitChildren: super.visit)
   }
 
   public override func visit(_ node: SubscriptDeclSyntax) -> DeclSyntax {
-    return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
+    return convertDocBlockCommentToDocLineComment(node, visitChildren: super.visit)
   }
 
   public override func visit(_ node: ClassDeclSyntax) -> DeclSyntax {
-    return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
+    return convertDocBlockCommentToDocLineComment(node, visitChildren: super.visit)
   }
 
   public override func visit(_ node: VariableDeclSyntax) -> DeclSyntax {
-    return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
+    return convertDocBlockCommentToDocLineComment(node, visitChildren: super.visit)
   }
 
   public override func visit(_ node: StructDeclSyntax) -> DeclSyntax {
-    return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
+    return convertDocBlockCommentToDocLineComment(node, visitChildren: super.visit)
   }
 
   public override func visit(_ node: ProtocolDeclSyntax) -> DeclSyntax {
-    return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
+    return convertDocBlockCommentToDocLineComment(node, visitChildren: super.visit)
   }
 
   public override func visit(_ node: TypeAliasDeclSyntax) -> DeclSyntax {
-    return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
+    return convertDocBlockCommentToDocLineComment(node, visitChildren: super.visit)
   }
 
   public override func visit(_ node: ExtensionDeclSyntax) -> DeclSyntax {
-    return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
+    return convertDocBlockCommentToDocLineComment(node, visitChildren: super.visit)
   }
 
   /// If the declaration has a doc block comment, return the declaration with the comment rewritten
   /// as a line comment.
   ///
-  /// If the declaration had no comment or had only line comments, it is returned unchanged.
-  private func convertDocBlockCommentToDocLineComment(_ decl: DeclSyntax) -> DeclSyntax {
+  /// If the declaration had no comment or had only line comments, it is returned unchanged (apart
+  /// from any rewritten child declarations).
+  private func convertDocBlockCommentToDocLineComment<Node: DeclSyntaxProtocol>(
+    _ node: Node,
+    visitChildren: (Node) -> DeclSyntax
+  ) -> DeclSyntax {
+    let rewrittenTrivia = rewrittenDocCommentLeadingTrivia(for: DeclSyntax(node))
+    var result = visitChildren(node)
+    if let rewrittenTrivia {
+      result.leadingTrivia = rewrittenTrivia
+    }
+    return result
+  }
+
+  private func rewrittenDocCommentLeadingTrivia(for decl: DeclSyntax) -> Trivia? {
     guard
       let commentInfo = DocumentationCommentText(extractedFrom: decl.leadingTrivia),
       commentInfo.introducer != .line
     else {
-      return decl
+      return nil
+    }
+
+    let commentStart = decl.position(ofLeadingTriviaAt: commentInfo.startIndex)
+    let commentEnd = commentStart + decl.leadingTrivia[commentInfo.startIndex].sourceLength
+    guard shouldFormat(decl, triviaRange: commentStart..<commentEnd) else {
+      return nil
     }
 
     diagnose(.avoidDocBlockComment, on: decl, anchor: .leadingTrivia(commentInfo.startIndex))
 
     // Keep any trivia leading up to the doc comment.
     var pieces = Array(decl.leadingTrivia[..<commentInfo.startIndex])
+    let commentIndentation: TriviaPiece?
+    if let lastBeforeComment = pieces.last, lastBeforeComment.isSpaceOrTab {
+      commentIndentation = lastBeforeComment
+    } else {
+      commentIndentation = nil
+    }
+    let declIndentation: TriviaPiece?
+    if let lastPiece = decl.leadingTrivia.pieces.last, lastPiece.isSpaceOrTab {
+      declIndentation = lastPiece
+    } else {
+      declIndentation = nil
+    }
 
     // If the comment text ends with a newline, remove it so that we don't end up with an extra
     // blank line after splitting.
@@ -93,7 +124,11 @@ public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
     }
 
     // Append each line of the doc comment with `///` prefixes.
-    for line in text.split(separator: "\n", omittingEmptySubsequences: false) {
+    let lines = text.split(separator: "\n", omittingEmptySubsequences: false)
+    for (index, line) in lines.enumerated() {
+      if index > 0, let commentIndentation {
+        pieces.append(commentIndentation)
+      }
       var newLine = "///"
       if !line.isEmpty {
         newLine.append(" \(line)")
@@ -101,10 +136,11 @@ public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
       pieces.append(.docLineComment(newLine))
       pieces.append(.newlines(1))
     }
+    if let declIndentation {
+      pieces.append(declIndentation)
+    }
 
-    var decl = decl
-    decl.leadingTrivia = Trivia(pieces: pieces)
-    return decl
+    return Trivia(pieces: pieces)
   }
 }
 

@@ -57,6 +57,7 @@ public final class UseEarlyExits: SyntaxFormatRule {
       guard
         let exprStmt = codeBlockItem.item.as(ExpressionStmtSyntax.self),
         let ifStatement = exprStmt.expression.as(IfExprSyntax.self),
+        shouldFormat(ifStatement),
         let elseBody = ifStatement.elseBody?.as(CodeBlockSyntax.self),
         codeBlockEndsWithEarlyExit(elseBody)
       else {
