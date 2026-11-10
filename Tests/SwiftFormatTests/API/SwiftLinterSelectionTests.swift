@@ -337,6 +337,20 @@ final class SwiftLinterSelectionTests: DiagnosingTestCase {
         FindingSpec("2️⃣", message: "remove 2 spaces"),
       ]
     )
+
+    let multilineCRLFSource =
+      "func foo() {\r\n"
+      + "  let s = \"\"\"\r\n"
+      + "    hello\r\n"
+      + "    world\r\n"
+      + "    \"\"\"\r\n"
+      + "}\r\n"
+
+    try assertLint(
+      multilineCRLFSource,
+      selection: Selection(lineRanges: [2...5]),
+      findings: []
+    )
   }
 
   func testWhitespaceFindingsOnSelectedLinesOnly() throws {

@@ -392,6 +392,30 @@ final class SwiftFormatterSelectionTests: XCTestCase {
       expected: expected,
       selection: Selection(lineRanges: [2...2])
     )
+
+    // Multiline string segments ending with `\r\n` must preserve their line breaks and indentation
+    // (because `"\r\n"` is a single Character grapheme cluster whose last UTF-8 byte is `\n`).
+    let multilineCRLFSource =
+      "func foo() {\r\n"
+      + "    let s = \"\"\"\r\n"
+      + "        hello\r\n"
+      + "        world\r\n"
+      + "        \"\"\"\r\n"
+      + "}\r\n"
+
+    let expectedMultilineCRLF =
+      "func foo() {\r\n"
+      + "  let s = \"\"\"\n"
+      + "    hello\n"
+      + "    world\n"
+      + "    \"\"\"\r\n"
+      + "}\r\n"
+
+    try assertFormatting(
+      multilineCRLFSource,
+      expected: expectedMultilineCRLF,
+      selection: Selection(lineRanges: [2...5])
+    )
   }
 
   func testReflowCommentFunctionHeaderEncompassedButNotDocComment() throws {
