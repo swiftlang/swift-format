@@ -25,7 +25,8 @@ public final class AlwaysUseLiteralForEmptyCollectionInit: SyntaxFormatRule {
   public override class var isOptIn: Bool { return true }
 
   public override func visit(_ node: PatternBindingSyntax) -> PatternBindingSyntax {
-    guard let initializer = node.initializer,
+    guard shouldFormat(node),
+      let initializer = node.initializer,
       let type = isRewritable(initializer)
     else {
       return node
@@ -43,7 +44,8 @@ public final class AlwaysUseLiteralForEmptyCollectionInit: SyntaxFormatRule {
   }
 
   public override func visit(_ param: FunctionParameterSyntax) -> FunctionParameterSyntax {
-    guard let initializer = param.defaultValue,
+    guard shouldFormat(param),
+      let initializer = param.defaultValue,
       let type = isRewritable(initializer)
     else {
       return param

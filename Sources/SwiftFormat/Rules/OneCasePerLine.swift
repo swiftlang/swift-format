@@ -118,6 +118,7 @@ public final class OneCasePerLine: SyntaxFormatRule {
   }
 
   public override func visit(_ node: EnumDeclSyntax) -> DeclSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     var newMembers: [MemberBlockItemSyntax] = []
 
     for member in node.memberBlock.members {

@@ -23,6 +23,7 @@ public final class UseSingleLinePropertyGetter: SyntaxFormatRule {
   public override func visit(_ node: PatternBindingSyntax) -> PatternBindingSyntax {
     guard
       let accessorBlock = node.accessorBlock,
+      shouldFormat(accessorBlock),
       case .accessors(let accessors) = accessorBlock.accessors,
       let acc = accessors.first,
       let body = acc.body,

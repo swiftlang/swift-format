@@ -24,6 +24,7 @@ import SwiftSyntax
 @_spi(Rules)
 public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
   public override func visit(_ node: CodeBlockItemListSyntax) -> CodeBlockItemListSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     guard node.contains(where: codeBlockItemHasMultipleVariableBindings) else {
       return super.visit(node)
     }

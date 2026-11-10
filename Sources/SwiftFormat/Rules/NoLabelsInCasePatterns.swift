@@ -49,7 +49,7 @@ public final class NoLabelsInCasePatterns: SyntaxFormatRule {
 
         // Remove label if it's the same as the value identifier
         let name = valueBinding.pattern.trimmedDescription
-        guard name == label.text else {
+        guard name == label.text, shouldFormat(label) else {
           newArguments.append(argument)
           continue
         }

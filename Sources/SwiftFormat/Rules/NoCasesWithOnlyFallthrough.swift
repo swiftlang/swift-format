@@ -22,6 +22,7 @@ import SwiftSyntax
 public final class NoCasesWithOnlyFallthrough: SyntaxFormatRule {
 
   public override func visit(_ node: SwitchCaseListSyntax) -> SwitchCaseListSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     var newChildren: [SwitchCaseListSyntax.Element] = []
     var fallthroughOnlyCases: [SwitchCaseSyntax] = []
 

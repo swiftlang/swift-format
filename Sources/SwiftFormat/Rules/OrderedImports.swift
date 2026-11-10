@@ -32,6 +32,7 @@ import SwiftSyntax
 public final class OrderedImports: SyntaxFormatRule {
 
   public override func visit(_ node: SourceFileSyntax) -> SourceFileSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     var newNode = node
     newNode.statements = orderImports(in: node.statements)
 

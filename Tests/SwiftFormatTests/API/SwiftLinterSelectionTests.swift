@@ -422,6 +422,30 @@ final class SwiftLinterSelectionTests: DiagnosingTestCase {
     )
   }
 
+  func testSyntaxFormatRulesAgreeWithSelection() throws {
+    let source = """
+      func foo(x: Int?) {
+        let unselected: Array<Int> = Array<Int>()
+        if 1️⃣let _ = x {
+          let selected: 2️⃣Array<Int> = []
+        }
+      }
+
+      """
+
+    try assertLint(
+      source,
+      selection: Selection(lineRanges: [3...5]),
+      findings: [
+        FindingSpec(
+          "1️⃣",
+          message: "compare this value using `!= nil` instead of binding and discarding it"
+        ),
+        FindingSpec("2️⃣", message: "use shorthand syntax for this 'Array' type"),
+      ]
+    )
+  }
+
   private func assertLint(
     _ markedSource: String,
     selection: Selection? = nil,

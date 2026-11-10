@@ -23,6 +23,7 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
   public override class var isOptIn: Bool { return true }
 
   public override func visit(_ node: FunctionDeclSyntax) -> DeclSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     let decl = super.visit(node)
 
     // func <name>() -> <Type> { return ... }
@@ -39,6 +40,7 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
   }
 
   public override func visit(_ node: SubscriptDeclSyntax) -> DeclSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     let decl = super.visit(node)
 
     guard var subscriptDecl = decl.as(SubscriptDeclSyntax.self),
@@ -55,6 +57,7 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
   }
 
   public override func visit(_ node: PatternBindingSyntax) -> PatternBindingSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     var binding = node
 
     guard let accessorBlock = binding.accessorBlock,
@@ -68,6 +71,7 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
   }
 
   public override func visit(_ node: ClosureExprSyntax) -> ExprSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     let expr = super.visit(node)
 
     // test { return ... }

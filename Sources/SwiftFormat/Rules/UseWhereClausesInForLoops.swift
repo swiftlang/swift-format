@@ -26,6 +26,7 @@ public final class UseWhereClausesInForLoops: SyntaxFormatRule {
   public override class var isOptIn: Bool { return true }
 
   public override func visit(_ node: ForStmtSyntax) -> StmtSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     // Extract IfStmt node if it's the only node in the function's body.
     guard !node.body.statements.isEmpty else { return StmtSyntax(node) }
     let firstStatement = node.body.statements.first!

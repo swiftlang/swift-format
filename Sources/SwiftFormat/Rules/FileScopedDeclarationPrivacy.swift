@@ -23,6 +23,7 @@ import SwiftSyntax
 @_spi(Rules)
 public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
   public override func visit(_ node: SourceFileSyntax) -> SourceFileSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     var result = node
     result.statements = rewrittenCodeBlockItems(node.statements)
     return result

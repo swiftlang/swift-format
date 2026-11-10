@@ -27,6 +27,7 @@ import SwiftSyntax
 @_spi(Rules)
 public final class GroupNumericLiterals: SyntaxFormatRule {
   public override func visit(_ node: IntegerLiteralExprSyntax) -> ExprSyntax {
+    guard shouldFormat(node) else { return ExprSyntax(node) }
     var originalDigits = node.literal.text
     guard !originalDigits.contains("_") else { return ExprSyntax(node) }
 

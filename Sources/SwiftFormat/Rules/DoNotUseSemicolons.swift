@@ -98,10 +98,12 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
   }
 
   public override func visit(_ node: CodeBlockItemListSyntax) -> CodeBlockItemListSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return nodeByRemovingSemicolons(from: node)
   }
 
   public override func visit(_ node: MemberBlockItemListSyntax) -> MemberBlockItemListSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return nodeByRemovingSemicolons(from: node)
   }
 

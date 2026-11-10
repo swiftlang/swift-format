@@ -86,6 +86,22 @@ public class RuleMask {
     }
     return .default
   }
+
+  /// Returns the `RuleState` for the given rule across the provided source range.
+  ///
+  /// A rule is considered disabled for `range` only if a single ignore directive covers the entire
+  /// range (both its start and end locations). This prevents a node-level ignore directive on the
+  /// first statement in a file or code block from disabling the rule for the enclosing container.
+  public func ruleState(_ rule: String, at range: SourceRange) -> RuleState {
+    if allRulesIgnoredRanges.contains(where: { $0.contains(range.start) && $0.contains(range.end) }) {
+      return .disabled
+    }
+    if let ignoredRanges = ruleMap[rule] {
+      return ignoredRanges.contains { $0.contains(range.start) && $0.contains(range.end) }
+        ? .disabled : .default
+    }
+    return .default
+  }
 }
 
 extension SourceRange {

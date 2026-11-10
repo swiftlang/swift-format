@@ -25,46 +25,57 @@ import SwiftSyntax
 @_spi(Rules)
 public final class UseTripleSlashForDocumentationComments: SyntaxFormatRule {
   public override func visit(_ node: FunctionDeclSyntax) -> DeclSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 
   public override func visit(_ node: EnumDeclSyntax) -> DeclSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 
   public override func visit(_ node: InitializerDeclSyntax) -> DeclSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 
   public override func visit(_ node: DeinitializerDeclSyntax) -> DeclSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 
   public override func visit(_ node: SubscriptDeclSyntax) -> DeclSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 
   public override func visit(_ node: ClassDeclSyntax) -> DeclSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 
   public override func visit(_ node: VariableDeclSyntax) -> DeclSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 
   public override func visit(_ node: StructDeclSyntax) -> DeclSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 
   public override func visit(_ node: ProtocolDeclSyntax) -> DeclSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 
   public override func visit(_ node: TypeAliasDeclSyntax) -> DeclSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 
   public override func visit(_ node: ExtensionDeclSyntax) -> DeclSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return convertDocBlockCommentToDocLineComment(DeclSyntax(node))
   }
 

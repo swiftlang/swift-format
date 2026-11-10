@@ -43,7 +43,7 @@ public final class Context {
   let configuration: Configuration
 
   /// The selection to process
-  let selection: Selection
+  private(set) var selection: Selection
 
   /// Defines the operators and their precedence relationships that were used during parsing.
   let operatorTable: OperatorTable
@@ -62,10 +62,10 @@ public final class Context {
     self.importsAnyTestLibrary
   }
   /// An object that converts `AbsolutePosition` values to `SourceLocation` values.
-  public let sourceLocationConverter: SourceLocationConverter
+  public private(set) var sourceLocationConverter: SourceLocationConverter
 
   /// Contains the rules have been disabled by comments for certain line numbers.
-  let ruleMask: RuleMask
+  private(set) var ruleMask: RuleMask
 
   /// Contains all the available rules' names associated to their types' object identifiers.
   let ruleNameCache: [ObjectIdentifier: String]
@@ -97,6 +97,18 @@ public final class Context {
     self.ruleNameCache = ruleNameCache
   }
 
+  /// Updates the context's source location converter, rule mask, and resolved selection ranges
+  /// after a syntax rewrite changes the root syntax tree.
+  func updateSyntaxTree(_ newTree: Syntax, from oldTree: Syntax) {
+    self.selection = self.selection.adjusted(from: oldTree, to: newTree)
+    self.sourceLocationConverter =
+      SourceLocationConverter(fileName: fileURL.relativePath, tree: newTree)
+    self.ruleMask = RuleMask(
+      syntaxNode: newTree,
+      sourceLocationConverter: self.sourceLocationConverter
+    )
+  }
+
   /// Given a rule's name and the node it is examining, determine if the rule is disabled at this
   /// location or not. Also makes sure the entire node is contained inside any selection.
   func shouldFormat<R: Rule>(_ rule: R.Type, node: Syntax) -> Bool {
@@ -104,10 +116,21 @@ public final class Context {
     return isRuleEnabled(rule, node: node)
   }
 
+  /// Given a rule's name, the node it is examining, and a range of trivia belonging to that node,
+  /// determine if the rule is enabled on the node and the trivia range overlaps the selection.
+  func shouldFormat<R: Rule>(
+    _ rule: R.Type,
+    node: Syntax,
+    triviaRange: Range<AbsolutePosition>
+  ) -> Bool {
+    guard selection.overlapsOrTouches(triviaRange) else { return false }
+    return isRuleEnabled(rule, node: node)
+  }
+
   /// Given a rule's name and the node it is examining, determine if the rule is enabled at this
   /// location.
   func isRuleEnabled<R: Rule>(_ rule: R.Type, node: Syntax) -> Bool {
-    let loc = node.startLocation(converter: self.sourceLocationConverter)
+    let range = node.sourceRange(converter: self.sourceLocationConverter)
 
     assert(
       ruleNameCache[ObjectIdentifier(rule)] != nil,
@@ -118,7 +141,7 @@ public final class Context {
     )
 
     let ruleName = ruleNameCache[ObjectIdentifier(rule)] ?? R.ruleName
-    switch ruleMask.ruleState(ruleName, at: loc) {
+    switch ruleMask.ruleState(ruleName, at: range) {
     case .default:
       return configuration.rules[ruleName] ?? false
     case .disabled:

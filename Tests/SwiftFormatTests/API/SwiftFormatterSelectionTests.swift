@@ -583,16 +583,45 @@ final class SwiftFormatterSelectionTests: XCTestCase {
     )
   }
 
+  func testSyntaxFormatRulesWithSelection() throws {
+    let source = """
+      func foo(x: Int?) {
+        let unselected: Array<Int> = Array<Int>()
+        if let _ = x {
+          let selected: Array<Dictionary<String, Optional<Int>>> = []
+        }
+      }
+
+      """
+
+    let expected = """
+      func foo(x: Int?) {
+        let unselected: Array<Int> = Array<Int>()
+        if x != nil {
+          let selected: [[String: Int?]] = []
+        }
+      }
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expected,
+      selection: Selection(lineRanges: [3...5])
+    )
+  }
+
   private func assertFormatting(
     _ source: String,
     expected: String,
     selection: Selection,
     reflowComments: Bool = false,
     multiElementCollectionTrailingCommas: Bool = false,
+    configuration: Configuration? = nil,
     file: StaticString = #file,
     line: UInt = #line
   ) throws {
-    var configuration = Configuration.forTesting
+    var configuration = configuration ?? Configuration.forTesting
     configuration.lineLength = 60
     if reflowComments {
       configuration.reflowComments.regularComments = .always

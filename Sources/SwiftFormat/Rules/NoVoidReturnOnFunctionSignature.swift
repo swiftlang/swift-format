@@ -24,6 +24,7 @@ public final class NoVoidReturnOnFunctionSignature: SyntaxFormatRule {
   /// it for closure signatures, because that may introduce an ambiguity when closure signatures
   /// are inferred.
   public override func visit(_ node: FunctionSignatureSyntax) -> FunctionSignatureSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     guard let returnType = node.returnClause?.type else { return node }
 
     if let identifierType = returnType.as(IdentifierTypeSyntax.self),

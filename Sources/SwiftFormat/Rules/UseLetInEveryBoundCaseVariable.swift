@@ -24,6 +24,7 @@ import SwiftSyntax
 @_spi(Rules)
 public final class UseLetInEveryBoundCaseVariable: SyntaxFormatRule {
   public override func visit(_ node: MatchingPatternConditionSyntax) -> MatchingPatternConditionSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     if let (replacement, specifier) = distributeLetVarThroughPattern(node.pattern) {
       diagnose(.useLetInBoundCaseVariables(specifier), on: node.pattern)
 
@@ -36,6 +37,7 @@ public final class UseLetInEveryBoundCaseVariable: SyntaxFormatRule {
   }
 
   public override func visit(_ node: SwitchCaseItemSyntax) -> SwitchCaseItemSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     if let (replacement, specifier) = distributeLetVarThroughPattern(node.pattern) {
       diagnose(.useLetInBoundCaseVariables(specifier), on: node.pattern)
 
@@ -49,6 +51,7 @@ public final class UseLetInEveryBoundCaseVariable: SyntaxFormatRule {
   }
 
   public override func visit(_ node: ForStmtSyntax) -> StmtSyntax {
+    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     guard node.caseKeyword != nil else {
       return super.visit(node)
     }
