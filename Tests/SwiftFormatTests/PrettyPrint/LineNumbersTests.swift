@@ -127,4 +127,60 @@ final class LineNumbersTests: PrettyPrintTestCase {
       findings: []
     )
   }
+
+  func testEndOfLineCommentFindingAfterRemovedBlankLines() {
+    let input =
+      """
+      let a = 1
+
+
+
+      var f = l.a  1️⃣// This comment is long enough to go past the end of the line
+      """
+
+    let expected =
+      """
+      let a = 1
+
+      var f = l.a  // This comment is long enough to go past the end of the line
+
+      """
+
+    assertPrettyPrintEqual(
+      input: input,
+      expected: expected,
+      linelength: 40,
+      whitespaceOnly: true,
+      findings: [
+        FindingSpec("1️⃣", message: "move end-of-line comment that exceeds the line length")
+      ]
+    )
+  }
+
+  func testTrailingCommaFindingAfterAddedLineBreaks() {
+    let input =
+      """
+      let x = someFunction(argumentOne, argumentTwo, argumentThree)
+      let a = [1, 2, 31️⃣,]
+      """
+
+    let expected =
+      """
+      let x = someFunction(
+        argumentOne, argumentTwo,
+        argumentThree)
+      let a = [1, 2, 3,]
+
+      """
+
+    assertPrettyPrintEqual(
+      input: input,
+      expected: expected,
+      linelength: 30,
+      whitespaceOnly: true,
+      findings: [
+        FindingSpec("1️⃣", message: "remove trailing comma from the last element in single line collection literal")
+      ]
+    )
+  }
 }
