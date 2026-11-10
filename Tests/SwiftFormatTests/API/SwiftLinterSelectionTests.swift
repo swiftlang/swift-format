@@ -320,6 +320,25 @@ final class SwiftLinterSelectionTests: DiagnosingTestCase {
     )
   }
 
+  func testCRLFLineEndingsWithSelection() throws {
+    let source =
+      "func foo() {\r\n"
+      + "1️⃣    let a =2️⃣   1\r\n"
+      + "    let b =   2\r\n"
+      + "}\r\n"
+
+    // Linting line 2 of a CRLF file emits only the indentation and spacing findings on line 2,
+    // without bogus trailing-whitespace findings from `\r\n` or leaking onto line 3.
+    try assertLint(
+      source,
+      selection: Selection(lineRanges: [2...2]),
+      findings: [
+        FindingSpec("1️⃣", message: "unindent by 2 spaces"),
+        FindingSpec("2️⃣", message: "remove 2 spaces"),
+      ]
+    )
+  }
+
   func testWhitespaceFindingsOnSelectedLinesOnly() throws {
     var config = Configuration.forTesting
     config.lineLength = 60

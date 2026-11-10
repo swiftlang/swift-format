@@ -13,6 +13,7 @@
 import SwiftSyntax
 
 private let utf8Newline = UTF8.CodeUnit(ascii: "\n")
+private let utf8CarriageReturn = UTF8.CodeUnit(ascii: "\r")
 private let utf8Tab = UTF8.CodeUnit(ascii: "\t")
 
 /// Emits linter errors for whitespace style violations by comparing the raw text of the input Swift
@@ -213,7 +214,7 @@ public class WhitespaceLinter {
     var userLength = userIndent
     for index in adjustedUserIndex..<userText.count {
       // Count characters up to the newline.
-      if userText[index] == utf8Newline { break }
+      if userText[index] == utf8Newline || userText[index] == utf8CarriageReturn { break }
       userLength += 1
     }
 
@@ -238,7 +239,7 @@ public class WhitespaceLinter {
     var formattedLength = formattedIndent
     for index in adjustedFormattedIndex..<formattedText.count {
       // Count characters up to the newline.
-      if formattedText[index] == utf8Newline { break }
+      if formattedText[index] == utf8Newline || formattedText[index] == utf8CarriageReturn { break }
       formattedLength += 1
     }
 
@@ -291,9 +292,18 @@ public class WhitespaceLinter {
     userRun: ArraySlice<UTF8.CodeUnit>,
     formattedRun: ArraySlice<UTF8.CodeUnit>
   ) {
-    if userRun != formattedRun {
+    if trimmingTrailingCarriageReturn(userRun) != trimmingTrailingCarriageReturn(formattedRun) {
       diagnose(.trailingWhitespaceError, category: .trailingWhitespace, utf8Offset: userIndex)
     }
+  }
+
+  private func trimmingTrailingCarriageReturn(
+    _ run: ArraySlice<UTF8.CodeUnit>
+  ) -> ArraySlice<UTF8.CodeUnit> {
+    if run.last == utf8CarriageReturn {
+      return run.dropLast()
+    }
+    return run
   }
 
   /// Compare user and formatted whitespace buffers, and check for spacing errors.

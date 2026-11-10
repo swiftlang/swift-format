@@ -158,14 +158,14 @@ struct PrettyPrintBuffer {
   /// enabled formatting, writing all the previous information as-is.
   mutating func writeVerbatimAfterEnablingFormatting<S: StringProtocol>(_ str: S) {
     writeRaw(str)
-    if str.hasSuffix("\n") {
+    if String(str).utf8.last == UInt8(ascii: "\n") {
       isAtStartOfLine = true
       consecutiveNewlineCount = 1
     } else if output.isEmpty {
       isAtStartOfLine = true
       consecutiveNewlineCount = 0
     } else {
-      isAtStartOfLine = output.hasSuffix("\n")
+      isAtStartOfLine = output.utf8.last == UInt8(ascii: "\n")
       consecutiveNewlineCount = isAtStartOfLine ? 1 : 0
     }
   }
