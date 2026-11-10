@@ -23,9 +23,9 @@ import SwiftSyntax
 public final class FullyIndirectEnum: SyntaxFormatRule {
 
   public override func visit(_ node: EnumDeclSyntax) -> DeclSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     let enumMembers = node.memberBlock.members
-    guard !node.modifiers.contains(anyOf: [.indirect]),
+    guard shouldFormat(node),
+      !node.modifiers.contains(anyOf: [.indirect]),
       case let indirectModifiers = indirectModifiersIfAllCasesIndirect(in: enumMembers),
       !indirectModifiers.isEmpty
     else {

@@ -24,7 +24,6 @@ import SwiftSyntax
 @_spi(Rules)
 public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
   public override func visit(_ node: CodeBlockItemListSyntax) -> CodeBlockItemListSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     guard node.contains(where: codeBlockItemHasMultipleVariableBindings) else {
       return super.visit(node)
     }
@@ -32,7 +31,8 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
     var newItems = [CodeBlockItemSyntax]()
     for codeBlockItem in node {
       guard let varDecl = codeBlockItem.item.as(VariableDeclSyntax.self),
-        varDecl.bindings.count > 1
+        varDecl.bindings.count > 1,
+        shouldFormat(varDecl)
       else {
         // It's not a variable declaration with multiple bindings, so visit it
         // recursively (in case it's something that contains bindings that need
@@ -67,7 +67,8 @@ public final class OneVariableDeclarationPerLine: SyntaxFormatRule {
     _ node: CodeBlockItemSyntax
   ) -> Bool {
     if let varDecl = node.item.as(VariableDeclSyntax.self),
-      varDecl.bindings.count > 1
+      varDecl.bindings.count > 1,
+      shouldFormat(varDecl)
     {
       return true
     }

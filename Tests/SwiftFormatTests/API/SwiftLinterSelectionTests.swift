@@ -423,25 +423,121 @@ final class SwiftLinterSelectionTests: DiagnosingTestCase {
   }
 
   func testSyntaxFormatRulesAgreeWithSelection() throws {
-    let source = """
-      func foo(x: Int?) {
-        let unselected: Array<Int> = Array<Int>()
-        if 1️⃣let _ = x {
-          let selected: 2️⃣Array<Int> = []
+    var config = Configuration.forTesting
+    config.rules["NoEmptyLinesOpeningClosingBraces"] = true
+    config.rules["OmitExplicitReturns"] = true
+
+    // Statement- and condition-level rules inside a function body: only selected lines are
+    // diagnosed, even when the enclosing function or control-flow block spans unselected lines.
+    let statementAndConditionSource = """
+      func foo(x: Int?, y: Bool) -> Void {
+        var a = 1, b = 2;
+        1️⃣var c = 3, d = 42️⃣;
+        if(y) {
+          let unselected: Array<Int> = []
+        }
+        if 3️⃣(y), 4️⃣let _ = x {
+          let selected: 5️⃣Array<Int> = []
         }
       }
 
       """
 
     try assertLint(
-      source,
-      selection: Selection(lineRanges: [3...5]),
+      statementAndConditionSource,
+      selection: Selection(lineRanges: [3...3, 7...8]),
+      configuration: config,
       findings: [
         FindingSpec(
           "1️⃣",
+          message: "split this variable declaration to introduce only one variable per 'var'"
+        ),
+        FindingSpec("2️⃣", message: "remove ';'"),
+        FindingSpec("3️⃣", message: "remove the parentheses around this expression"),
+        FindingSpec(
+          "4️⃣",
           message: "compare this value using `!= nil` instead of binding and discarding it"
         ),
-        FindingSpec("2️⃣", message: "use shorthand syntax for this 'Array' type"),
+        FindingSpec("5️⃣", message: "use shorthand syntax for this 'Array' type"),
+      ]
+    )
+
+    // NoEmptyLinesOpeningClosingBraces: selecting the empty line after `{` diagnoses only the
+    // leading empty line, while selecting the closing `}` line diagnoses only the trailing empty
+    // line.
+    let emptyLinesAfterOpeningBrace = """
+      func bar() {1️⃣
+
+        let x = 1
+
+      }
+
+      """
+
+    try assertLint(
+      emptyLinesAfterOpeningBrace,
+      selection: Selection(lineRanges: [1...2]),
+      configuration: config,
+      findings: [
+        FindingSpec("1️⃣", message: "remove empty line after '{'")
+      ]
+    )
+
+    let emptyLinesBeforeClosingBrace = """
+      func bar() {
+
+        let x = 1
+
+      1️⃣}
+
+      """
+
+    try assertLint(
+      emptyLinesBeforeClosingBrace,
+      selection: Selection(lineRanges: [5...5]),
+      configuration: config,
+      findings: [
+        FindingSpec("1️⃣", message: "remove empty line before '}'")
+      ]
+    )
+
+    // FileScopedDeclarationPrivacy, NoVoidReturnOnFunctionSignature, OmitExplicitReturns, and
+    // OneCasePerLine on partial selections.
+    let declRulesSource = """
+      fileprivate struct UnselectedStruct {
+        let value: Int
+      }
+      1️⃣fileprivate struct SelectedHeaderStruct {
+        let value: Int
+      }
+      func unselectedSingleReturn() -> Void {
+        return 1
+      }
+      func selectedHeaderAndReturn() -> 2️⃣Void {
+        3️⃣return 2
+      }
+      enum MyEnum: Int {
+        case unselectedA, unselectedB = 1
+        case selectedA, 4️⃣selectedB = 2
+      }
+
+      """
+
+    try assertLint(
+      declRulesSource,
+      selection: Selection(lineRanges: [4...4, 10...11, 15...15]),
+      configuration: config,
+      findings: [
+        FindingSpec(
+          "1️⃣",
+          message: "replace 'fileprivate' with 'private' on file-scoped declarations"
+        ),
+        FindingSpec("2️⃣", message: "remove the explicit return type 'Void' from this function"),
+        FindingSpec(
+          "3️⃣",
+          message: "'return' can be omitted because body consists of a single expression"
+        ),
+        FindingSpec("4️⃣", message: "move 'selectedB' to its own 'case' declaration"),
       ]
     )
   }

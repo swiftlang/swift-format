@@ -44,8 +44,10 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
         return node
       }
 
+      let shouldRemoveSemicolon = item.semicolon.map { shouldFormat($0) } ?? false
+
       // Check if we need to make any modifications (removing semicolon/adding newlines).
-      guard newItem != item || item.semicolon != nil || !pendingTrivia.isEmpty else {
+      guard newItem.detached != item.detached || shouldRemoveSemicolon || !pendingTrivia.isEmpty else {
         continue
       }
 
@@ -59,6 +61,7 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
       // Exception: Do not remove the semicolon if it is separating a `do` statement from a `while`
       // statement.
       if let semicolon = item.semicolon,
+        shouldRemoveSemicolon,
         !(idx < node.count - 1
           && isCodeBlockItem(item, containingStmtType: DoStmtSyntax.self)
           && isCodeBlockItem(newItems[idx + 1], containingStmtType: WhileStmtSyntax.self))
@@ -98,12 +101,10 @@ public final class DoNotUseSemicolons: SyntaxFormatRule {
   }
 
   public override func visit(_ node: CodeBlockItemListSyntax) -> CodeBlockItemListSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return nodeByRemovingSemicolons(from: node)
   }
 
   public override func visit(_ node: MemberBlockItemListSyntax) -> MemberBlockItemListSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return nodeByRemovingSemicolons(from: node)
   }
 

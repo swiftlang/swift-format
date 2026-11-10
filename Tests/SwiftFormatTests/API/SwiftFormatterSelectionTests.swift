@@ -419,6 +419,9 @@ final class SwiftFormatterSelectionTests: XCTestCase {
   }
 
   func testReflowBlockCommentPartiallyEncompassed() throws {
+    var config = Configuration.forTesting
+    config.rules["UseTripleSlashForDocumentationComments"] = false
+
     let source = """
       /**
        * This is the first line of a doc block comment that is very long and exceeds the limit
@@ -442,7 +445,8 @@ final class SwiftFormatterSelectionTests: XCTestCase {
       source,
       expected: expected,
       selection: Selection(lineRanges: [3...3]),
-      reflowComments: true
+      reflowComments: true,
+      configuration: config
     )
   }
 
@@ -585,20 +589,29 @@ final class SwiftFormatterSelectionTests: XCTestCase {
 
   func testSyntaxFormatRulesWithSelection() throws {
     let source = """
-      func foo(x: Int?) {
-        let unselected: Array<Int> = Array<Int>()
-        if let _ = x {
-          let selected: Array<Dictionary<String, Optional<Int>>> = []
+      func foo(x: Int?, y: Bool) -> Void {
+        var a = 1, b = 2;
+        var c = 3, d = 4;
+        if(y) {
+          let unselected: Array<Int> = []
+        }
+        if(y), let _ = x {
+          let selected: Array<Int> = []
         }
       }
 
       """
 
     let expected = """
-      func foo(x: Int?) {
-        let unselected: Array<Int> = Array<Int>()
-        if x != nil {
-          let selected: [[String: Int?]] = []
+      func foo(x: Int?, y: Bool) -> Void {
+        var a = 1, b = 2;
+        var c = 3
+        var d = 4
+        if(y) {
+          let unselected: Array<Int> = []
+        }
+        if y, x != nil {
+          let selected: [Int] = []
         }
       }
 
@@ -607,7 +620,150 @@ final class SwiftFormatterSelectionTests: XCTestCase {
     try assertFormatting(
       source,
       expected: expected,
-      selection: Selection(lineRanges: [3...5])
+      selection: Selection(lineRanges: [3...3, 7...8])
+    )
+  }
+
+  func testDocBlockCommentsWithSelection() throws {
+    let source = """
+      /**
+       * Unselected doc block comment.
+       */
+      func first() {}
+
+      /**
+       * Selected doc block comment.
+       */
+      func second() {
+      let x = 1;
+      }
+
+      """
+
+    // Selecting a line inside the second doc block comment converts it to doc line comments
+    // without formatting the unselected body of `second()` or the first doc block comment.
+    let expectedWhenDocCommentSelected = """
+      /**
+       * Unselected doc block comment.
+       */
+      func first() {}
+
+      /// Selected doc block comment.
+      func second() {
+      let x = 1;
+      }
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expectedWhenDocCommentSelected,
+      selection: Selection(lineRanges: [7...7])
+    )
+
+    // Selecting only the declaration line below the doc block comment leaves the doc block
+    // comment untouched.
+    try assertFormatting(
+      source,
+      expected: source,
+      selection: Selection(lineRanges: [9...9])
+    )
+  }
+
+  func testNoEmptyLinesOpeningClosingBracesWithSelection() throws {
+    var config = Configuration.forTesting
+    config.rules["NoEmptyLinesOpeningClosingBraces"] = true
+
+    let source = """
+      func bar() {
+
+        let x = 1
+
+      }
+
+      """
+
+    let expectedOpeningTrimmed = """
+      func bar() {
+        let x = 1
+
+      }
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expectedOpeningTrimmed,
+      selection: Selection(lineRanges: [1...2]),
+      configuration: config
+    )
+
+    let expectedClosingTrimmed = """
+      func bar() {
+
+        let x = 1
+      }
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expectedClosingTrimmed,
+      selection: Selection(lineRanges: [5...5]),
+      configuration: config
+    )
+  }
+
+  func testDeclarationAndByteOffsetShiftingSyntaxRulesWithSelection() throws {
+    var config = Configuration.forTesting
+    config.rules["OmitExplicitReturns"] = true
+
+    let source = """
+      fileprivate struct UnselectedStruct {
+        let value: Array<Dictionary<String, Optional<Int>>> = []
+      }
+      fileprivate struct SelectedHeaderStruct {
+        let value: Array<Dictionary<String, Optional<Int>>> = []
+      }
+      func unselectedSingleReturn() -> Void {
+        return 1
+      }
+      func selectedHeaderAndReturn() -> Void {
+        return 2
+      }
+      enum MyEnum: Int {
+        case unselectedA, unselectedB = 1
+        case selectedA, selectedB = 2
+      }
+
+      """
+
+    let expected = """
+      fileprivate struct UnselectedStruct {
+        let value: Array<Dictionary<String, Optional<Int>>> = []
+      }
+      private struct SelectedHeaderStruct {
+        let value: Array<Dictionary<String, Optional<Int>>> = []
+      }
+      func unselectedSingleReturn() -> Void {
+        return 1
+      }
+      func selectedHeaderAndReturn() {
+        2
+      }
+      enum MyEnum: Int {
+        case unselectedA, unselectedB = 1
+        case selectedA
+        case selectedB = 2
+      }
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expected,
+      selection: Selection(lineRanges: [4...4, 10...11, 15...15]),
+      configuration: config
     )
   }
 

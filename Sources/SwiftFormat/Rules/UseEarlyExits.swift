@@ -49,7 +49,6 @@ public final class UseEarlyExits: SyntaxFormatRule {
   public override class var isOptIn: Bool { return true }
 
   public override func visit(_ node: CodeBlockItemListSyntax) -> CodeBlockItemListSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     var newItems = [CodeBlockItemSyntax]()
 
     for codeBlockItem in node {
@@ -58,6 +57,7 @@ public final class UseEarlyExits: SyntaxFormatRule {
       guard
         let exprStmt = codeBlockItem.item.as(ExpressionStmtSyntax.self),
         let ifStatement = exprStmt.expression.as(IfExprSyntax.self),
+        shouldFormat(ifStatement),
         let elseBody = ifStatement.elseBody?.as(CodeBlockSyntax.self),
         codeBlockEndsWithEarlyExit(elseBody)
       else {

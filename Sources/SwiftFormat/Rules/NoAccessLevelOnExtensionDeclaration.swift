@@ -39,11 +39,28 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
   /// Findings propagated up to the extension visitor from any members that were rewritten.
   private var notesFromRewrittenMembers: [Finding.Note] = []
 
+  public override func visitAny(_ node: Syntax) -> Syntax? {
+    let shouldTraverse: Bool
+    if case .insideExtension = state {
+      shouldTraverse = true
+    } else {
+      shouldTraverse = isRewriting
+    }
+    guard
+      shouldTraverse,
+      context.isRuleEnabled(type(of: self), node: node),
+      context.selection.overlapsOrTouches(node.position..<node.endPosition)
+    else {
+      return node
+    }
+    return nil
+  }
+
   public override func visit(_ node: ExtensionDeclSyntax) -> DeclSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     guard
       // Skip nested extensions; these are semantic errors but they still parse successfully.
       case .topLevel = state,
+      shouldFormat(node),
       // Skip extensions that don't have an access level modifier.
       let accessKeyword = node.modifiers.accessLevelModifier,
       case .keyword(let keyword) = accessKeyword.name.tokenKind
@@ -127,27 +144,22 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
   }
 
   public override func visit(_ node: ActorDeclSyntax) -> DeclSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return applyingAccessModifierIfNone(to: node)
   }
 
   public override func visit(_ node: ClassDeclSyntax) -> DeclSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return applyingAccessModifierIfNone(to: node)
   }
 
   public override func visit(_ node: EnumDeclSyntax) -> DeclSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return applyingAccessModifierIfNone(to: node)
   }
 
   public override func visit(_ node: FunctionDeclSyntax) -> DeclSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return applyingAccessModifierIfNone(to: node)
   }
 
   public override func visit(_ node: InitializerDeclSyntax) -> DeclSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return applyingAccessModifierIfNone(to: node)
   }
 
@@ -157,27 +169,22 @@ public final class NoAccessLevelOnExtensionDeclaration: SyntaxFormatRule {
   /// implicitly have the protocol's own access level and it is an error to state one explicitly, so
   /// the access level must land on the protocol itself and never descend into its body.
   public override func visit(_ node: ProtocolDeclSyntax) -> DeclSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return applyingAccessModifierIfNone(to: node)
   }
 
   public override func visit(_ node: StructDeclSyntax) -> DeclSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return applyingAccessModifierIfNone(to: node)
   }
 
   public override func visit(_ node: SubscriptDeclSyntax) -> DeclSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return applyingAccessModifierIfNone(to: node)
   }
 
   public override func visit(_ node: TypeAliasDeclSyntax) -> DeclSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return applyingAccessModifierIfNone(to: node)
   }
 
   public override func visit(_ node: VariableDeclSyntax) -> DeclSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     return applyingAccessModifierIfNone(to: node)
   }
 

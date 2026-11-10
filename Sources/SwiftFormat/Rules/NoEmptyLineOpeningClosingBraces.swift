@@ -22,7 +22,6 @@ public final class NoEmptyLinesOpeningClosingBraces: SyntaxFormatRule {
   public override class var isOptIn: Bool { return true }
 
   public override func visit(_ node: AccessorBlockSyntax) -> AccessorBlockSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     var result = node
     switch node.accessors {
     case .accessors(let accessors):
@@ -35,7 +34,6 @@ public final class NoEmptyLinesOpeningClosingBraces: SyntaxFormatRule {
   }
 
   public override func visit(_ node: CodeBlockSyntax) -> CodeBlockSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     var result = node
     result.statements = rewritten(node.statements)
     result.rightBrace = rewritten(node.rightBrace)
@@ -43,7 +41,6 @@ public final class NoEmptyLinesOpeningClosingBraces: SyntaxFormatRule {
   }
 
   public override func visit(_ node: MemberBlockSyntax) -> MemberBlockSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     var result = node
     result.members = rewritten(node.members)
     result.rightBrace = rewritten(node.rightBrace)
@@ -51,7 +48,6 @@ public final class NoEmptyLinesOpeningClosingBraces: SyntaxFormatRule {
   }
 
   public override func visit(_ node: ClosureExprSyntax) -> ExprSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     var result = node
     result.statements = rewritten(node.statements)
     result.rightBrace = rewritten(node.rightBrace)
@@ -59,7 +55,6 @@ public final class NoEmptyLinesOpeningClosingBraces: SyntaxFormatRule {
   }
 
   public override func visit(_ node: SwitchExprSyntax) -> ExprSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     var result = node
     result.cases = rewritten(node.cases)
     result.rightBrace = rewritten(node.rightBrace)
@@ -67,7 +62,6 @@ public final class NoEmptyLinesOpeningClosingBraces: SyntaxFormatRule {
   }
 
   public override func visit(_ node: PrecedenceGroupDeclSyntax) -> DeclSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     var result = node
     result.attributes = rewritten(node.attributes)
     result.rightBrace = rewritten(node.rightBrace)
@@ -75,6 +69,7 @@ public final class NoEmptyLinesOpeningClosingBraces: SyntaxFormatRule {
   }
 
   func rewritten(_ token: TokenSyntax) -> TokenSyntax {
+    guard shouldFormat(token) else { return token }
     let (trimmedLeadingTrivia, count) = token.leadingTrivia.trimmingSuperfluousNewlines(
       fromClosingBrace: token.tokenKind == .rightBrace
     )
@@ -88,7 +83,10 @@ public final class NoEmptyLinesOpeningClosingBraces: SyntaxFormatRule {
 
   func rewritten<C: SyntaxCollection>(_ collection: C) -> C {
     var result = collection
-    if let first = collection.first, first.leadingTrivia.containsNewlines,
+    if let first = collection.first,
+      let firstPiece = first.leadingTrivia.first,
+      first.leadingTrivia.containsNewlines,
+      shouldFormat(first, triviaRange: first.position..<(first.position + firstPiece.sourceLength)),
       let index = collection.index(of: first)
     {
       let (trimmedLeadingTrivia, count) = first.leadingTrivia.trimmingSuperfluousNewlines(fromClosingBrace: false)

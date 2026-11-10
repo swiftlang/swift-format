@@ -23,7 +23,6 @@ import SwiftSyntax
 @_spi(Rules)
 public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
   public override func visit(_ node: SourceFileSyntax) -> SourceFileSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     var result = node
     result.statements = rewrittenCodeBlockItems(node.statements)
     return result
@@ -143,17 +142,20 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
       return decl
     }
 
+    var modified = false
     let newModifiers = decl.modifiers.map { modifier -> DeclModifierSyntax in
       var modifier = modifier
 
       let name = modifier.name
-      if case .keyword(invalidAccess) = name.tokenKind {
+      if case .keyword(invalidAccess) = name.tokenKind, shouldFormat(name) {
         diagnose(diagnostic, on: name)
         modifier.name.tokenKind = .keyword(validAccess)
+        modified = true
       }
       return modifier
     }
 
+    guard modified else { return decl }
     var result = decl
     result.modifiers = DeclModifierListSyntax(newModifiers)
     return result
