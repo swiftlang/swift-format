@@ -194,7 +194,15 @@ enum Token {
 
   /// Marks the end of a comma delimited collection, where a trailing comma should be inserted
   /// if and only if the collection spans multiple lines and has multiple elements.
-  case commaDelimitedRegionEnd(isCollection: Bool, hasTrailingComma: Bool, isSingleElement: Bool)
+  ///
+  /// `position` is the source position where the trailing comma is or would be, used to report
+  /// findings about it.
+  case commaDelimitedRegionEnd(
+    isCollection: Bool,
+    hasTrailingComma: Bool,
+    isSingleElement: Bool,
+    position: AbsolutePosition
+  )
 
   /// Starts a scope where `contextual` breaks have consistent behavior.
   case contextualBreakingStart

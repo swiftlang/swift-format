@@ -103,10 +103,13 @@ struct Comment {
   var length: Int
   // what was the leading indentation, if any, that preceded this comment?
   var leadingIndent: Indent?
+  /// The position of the comment in the original source, used to report findings about it.
+  let position: AbsolutePosition?
 
-  init(kind: Kind, leadingIndent: Indent?, text: String) {
+  init(kind: Kind, leadingIndent: Indent?, text: String, position: AbsolutePosition? = nil) {
     self.kind = kind
     self.leadingIndent = leadingIndent
+    self.position = position
 
     switch kind {
     case .line, .docLine:

@@ -487,7 +487,7 @@ public class PrettyPrinter {
       shouldOverrideBreakSuppression = comment.kind == .docLine || comment.kind == .line
       if wasEndOfLine {
         if !(canFit(comment.length) || isBreakingSuppressed) {
-          diagnose(.moveEndOfLineComment, category: .endOfLineComment)
+          diagnose(.moveEndOfLineComment, category: .endOfLineComment, at: comment.position)
         }
       }
       let unreflowed = comment.print(
@@ -514,7 +514,7 @@ public class PrettyPrinter {
           unreflowed: unreflowed
         )
         if reflowed != unreflowed {
-          diagnose(.reflowComment, category: .reflowComment)
+          diagnose(.reflowComment, category: .reflowComment, at: comment.position)
         }
         outputBuffer.write(whitespaceOnly ? unreflowed : reflowed)
       } else {
@@ -542,7 +542,7 @@ public class PrettyPrinter {
     case .commaDelimitedRegionStart:
       commaDelimitedRegionStack.append(openCloseBreakCompensatingLineNumber)
 
-    case .commaDelimitedRegionEnd(let isCollection, let hasTrailingComma, let isSingleElement):
+    case .commaDelimitedRegionEnd(let isCollection, let hasTrailingComma, let isSingleElement, let position):
       guard let startLineNumber = commaDelimitedRegionStack.popLast() else {
         fatalError("Found trailing comma end with no corresponding start.")
       }
@@ -557,9 +557,9 @@ public class PrettyPrinter {
           startLineNumber != openCloseBreakCompensatingLineNumber && !isSingleElement
           && shouldHandleCommaDelimitedRegion
         if shouldHaveTrailingComma && !hasTrailingComma {
-          diagnose(.addTrailingComma, category: .trailingComma)
+          diagnose(.addTrailingComma, category: .trailingComma, at: position)
         } else if !shouldHaveTrailingComma && hasTrailingComma {
-          diagnose(.removeTrailingComma, category: .trailingComma)
+          diagnose(.removeTrailingComma, category: .trailingComma, at: position)
         }
 
         let shouldWriteComma = whitespaceOnly ? hasTrailingComma : shouldHaveTrailingComma
@@ -733,7 +733,7 @@ public class PrettyPrinter {
       case .commaDelimitedRegionStart:
         lengths.append(0)
 
-      case .commaDelimitedRegionEnd(let isCollection, _, let isSingleElement):
+      case .commaDelimitedRegionEnd(let isCollection, _, let isSingleElement, _):
         // The token's length is only necessary when a comma will be printed, but it's impossible to
         // know at this point whether the region-start token will be on the same line as this token.
         // Without adding this length to the total, it would be possible for this comma to be
@@ -876,19 +876,33 @@ public class PrettyPrinter {
     }
   }
 
-  /// Emits a finding with the given message and category at the current location in `outputBuffer`.
-  private func diagnose(_ message: Finding.Message, category: PrettyPrintFindingCategory) {
+  /// Emits a finding with the given message and category.
+  ///
+  /// If `position` is given, the finding is reported at that position in the original source.
+  /// Otherwise, it is reported at the current location in `outputBuffer`, which can differ from the
+  /// source when earlier lines have been reformatted.
+  private func diagnose(
+    _ message: Finding.Message,
+    category: PrettyPrintFindingCategory,
+    at position: AbsolutePosition? = nil
+  ) {
     guard outputBuffer.isEnabled else { return }
-    // Add 1 since columns uses 1-based indices.
-    let column =
-      (outputBuffer.isAtStartOfLine
-        ? currentIndentation.length(tabWidth: configuration.tabWidth)
-        : outputBuffer.column) + 1
-    context.findingEmitter.emit(
-      message,
-      category: category,
-      location: Finding.Location(file: context.fileURL.relativePath, line: outputBuffer.lineNumber, column: column)
-    )
+    let location: Finding.Location
+    if let position {
+      location = Finding.Location(context.sourceLocationConverter.location(for: position))
+    } else {
+      // Add 1 since columns uses 1-based indices.
+      let column =
+        (outputBuffer.isAtStartOfLine
+          ? currentIndentation.length(tabWidth: configuration.tabWidth)
+          : outputBuffer.column) + 1
+      location = Finding.Location(
+        file: context.fileURL.relativePath,
+        line: outputBuffer.lineNumber,
+        column: column
+      )
+    }
+    context.findingEmitter.emit(message, category: category, location: location)
   }
 }
 
