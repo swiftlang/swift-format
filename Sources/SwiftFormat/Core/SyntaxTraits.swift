@@ -77,7 +77,7 @@ extension ArrayElementListSyntax: CommaSeparatedListSyntaxProtocol {
   var lastNodeForTrailingComma: SyntaxProtocol? { last?.expression }
 }
 extension DictionaryElementListSyntax: CommaSeparatedListSyntaxProtocol {
-  var lastNodeForTrailingComma: SyntaxProtocol? { last }
+  var lastNodeForTrailingComma: SyntaxProtocol? { last?.value }
 }
 extension LabeledExprListSyntax: CommaSeparatedListSyntaxProtocol {
   var lastNodeForTrailingComma: SyntaxProtocol? { last?.expression }
