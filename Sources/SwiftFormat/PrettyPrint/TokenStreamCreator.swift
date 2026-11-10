@@ -72,6 +72,15 @@ private final class TokenStreamCreator: SyntaxVisitor {
   /// Tracks whether we last considered ourselves inside the selection
   private var isInsideSelection = true
 
+  /// Multiline string opening quote tokens after which formatting must be disabled because the
+  /// enclosing multiline string literal is not completely inside the selection.
+  private var multilineStringOpeningQuotesForcingDisable = Set<TokenSyntax>()
+
+  /// Source ranges of multiline string literal bodies (from the end of the opening quote through
+  /// the end of the closing delimiter) that must not enable formatting because the enclosing
+  /// multiline string literal is not completely inside the selection.
+  private var partiallySelectedMultilineStringBodyRanges = [Range<AbsolutePosition>]()
+
   init(configuration: Configuration, selection: Selection, operatorTable: OperatorTable) {
     self.config = configuration
     self.selection = selection
@@ -2594,6 +2603,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
         appendAfterTokensAndTrailingComments(node.closingQuote)
         return .skipChildren
       }
+      excludeMultilineStringBodyFromPartialSelection(Syntax(node), openingQuote: node.openingQuote)
     }
     return .visitChildren
   }
@@ -2604,8 +2614,30 @@ private final class TokenStreamCreator: SyntaxVisitor {
       if !node.segments.isEmpty {
         before(node.closingQuote, tokens: .break(.same, newlines: .hard(count: 1)))
       }
+      excludeMultilineStringBodyFromPartialSelection(Syntax(node), openingQuote: node.openingQuote)
     }
     return .visitChildren
+  }
+
+  /// Excludes the body and closing delimiter of a multiline string literal from selection
+  /// formatting when the literal as a whole is not completely inside the selection.
+  ///
+  /// Because Swift strips prefix indentation from every content line based on the indentation of
+  /// the closing `"""` and `swift-format` computes the indentation of the content lines and closing
+  /// `"""` from the opening `"""`, re-indenting or reflowing only part of a multiline string
+  /// literal can silently alter its runtime `String` value or produce invalid indentation.
+  private func excludeMultilineStringBodyFromPartialSelection(
+    _ node: Syntax,
+    openingQuote: TokenSyntax
+  ) {
+    if case .infinite = selection { return }
+    guard !node.isInsideSelection(selection) else { return }
+    multilineStringOpeningQuotesForcingDisable.insert(openingQuote)
+    let bodyStart = openingQuote.endPositionBeforeTrailingTrivia
+    let bodyEnd = node.endPositionBeforeTrailingTrivia
+    if bodyStart < bodyEnd {
+      partiallySelectedMultilineStringBodyRanges.append(bodyStart..<bodyEnd)
+    }
   }
 
   // Insert an `.escaped` break token after each series of whitespace in a substring
@@ -2971,6 +3003,13 @@ private final class TokenStreamCreator: SyntaxVisitor {
       appendToken(.syntax(token.presence == .present ? token.text : ""))
     }
 
+    if multilineStringOpeningQuotesForcingDisable.contains(token) {
+      if isInsideSelection {
+        appendToken(.disableFormatting(token.endPositionBeforeTrailingTrivia))
+        isInsideSelection = false
+      }
+    }
+
     let shouldDeferDisableAfterMissingTrailingComma =
       hasCommaDelimitedRegionEndWithoutTrailingComma(for: token)
     if !shouldDeferDisableAfterMissingTrailingComma {
@@ -2989,6 +3028,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   private func generateEnableFormattingIfNecessary(_ range: Range<AbsolutePosition>) {
     if case .infinite = selection { return }
+    if partiallySelectedMultilineStringBodyRanges.contains(where: { $0.overlaps(range) }) {
+      return
+    }
     if !isInsideSelection && selection.overlapsOrTouches(range) {
       appendToken(.enableFormatting(range.lowerBound))
       isInsideSelection = true

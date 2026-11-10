@@ -343,6 +343,84 @@ final class SwiftLinterSelectionTests: DiagnosingTestCase {
     )
   }
 
+  func testMultilineStringLiteralWithSelection() throws {
+    let partiallySelectedClosingQuote = #"""
+      let s = """
+          hello
+          """
+
+      """#
+
+    // Selecting only the closing `"""` line must not diagnose an indentation error on `"""` when
+    // the enclosing multiline string literal is not completely selected.
+    try assertLint(
+      partiallySelectedClosingQuote,
+      selection: Selection(lineRanges: [3...3]),
+      findings: []
+    )
+
+    // Selecting the entire multiline string literal diagnoses the over-indented content and closing
+    // quote lines together.
+    let fullySelectedMultilineString = #"""
+      let s = """
+      1️⃣    hello
+      2️⃣    """
+
+      """#
+
+    try assertLint(
+      fullySelectedMultilineString,
+      selection: Selection(lineRanges: [1...3]),
+      findings: [
+        FindingSpec("1️⃣", message: "unindent by 2 spaces"),
+        FindingSpec("2️⃣", message: "unindent by 2 spaces"),
+      ]
+    )
+  }
+
+  func testReflowMultilineStringLiteralsInLinter() throws {
+    var config = Configuration.forTesting
+    config.lineLength = 30
+    config.reflowMultilineStringLiterals = .onlyLinesOverLength
+
+    let overlongMultilineString = #"""
+      let someString = """
+        this string's total lengths will be longer than the column limit
+        """
+      let x =1️⃣   1
+
+      """#
+
+    try assertLint(
+      overlongMultilineString,
+      selection: .infinite,
+      configuration: config,
+      findings: [
+        FindingSpec("1️⃣", message: "remove 2 spaces")
+      ]
+    )
+
+    config.reflowMultilineStringLiterals = .always
+    let multilineStringWithContinuations = #"""
+      let someString = """
+        short \
+        line
+        this string's total lengths will be longer than the column limit
+        """
+      let x =1️⃣   1
+
+      """#
+
+    try assertLint(
+      multilineStringWithContinuations,
+      selection: .infinite,
+      configuration: config,
+      findings: [
+        FindingSpec("1️⃣", message: "remove 2 spaces")
+      ]
+    )
+  }
+
   func testOffsetRangesSelection() throws {
     let source = """
       let a = 1;

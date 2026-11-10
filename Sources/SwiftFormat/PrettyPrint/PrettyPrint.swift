@@ -191,7 +191,13 @@ public class PrettyPrinter {
   public init(context: Context, source: String, node: Syntax, printTokenStream: Bool, whitespaceOnly: Bool) {
     self.context = context
     self.source = source
-    let configuration = context.configuration
+    var configuration = context.configuration
+    if whitespaceOnly && !configuration.reflowMultilineStringLiterals.isNever {
+      // In whitespace-only mode (used by WhitespaceLinter), reflowing multiline string literals
+      // requires inserting or removing `\` line continuations, which are non-whitespace characters
+      // that `WhitespaceLinter` cannot modify and requires to match the input source text.
+      configuration.reflowMultilineStringLiterals = .never
+    }
     self.tokens = node.makeTokenStream(
       configuration: configuration,
       selection: context.selection,
@@ -448,7 +454,7 @@ public class PrettyPrinter {
       let suppressBreaking = isBreakingSuppressed && !overrideBreakingSuppressed
       if !suppressBreaking && (!canFit(length) || mustBreak) {
         currentLineIsContinuation = isContinuationIfBreakFires
-        if case .escaped = newline {
+        if case .escaped = newline, !whitespaceOnly {
           outputBuffer.enqueueSpaces(size)
           outputBuffer.write("\\")
         }
