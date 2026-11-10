@@ -300,7 +300,7 @@ too long.
 
 `regularComments` and `docComments` each accept one of the following values:
 - `never`: Never reflow comments.
-- `onlyLinesOverLength`: Only insert line breaks in comment lines that exceed `lineLength`, without reflowing subsequent lines back up onto previous lines.
+- `onlyLinesOverLength`: Only insert line breaks in comment lines that exceed `lineLength`, carrying any leftover tail forward onto the following continuation line while lines continue to overflow (like `clang-format`'s conservative comment reflowing strategy), without reflowing earlier or non-overflowing lines. Documentation comments are parsed as Markdown and reflowed within paragraph boundaries, whereas regular comments are wrapped without parsing Markdown.
 - `always`: Always reflow comments as full Markdown paragraphs.
 
 **default:** `{ "regularComments": "never", "docComments": "never", "commentPragmas": [] }`
