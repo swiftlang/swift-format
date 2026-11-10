@@ -2994,9 +2994,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
     extractLeadingTrivia(token)
     closeScopeTokens.forEach(appendToken)
 
-    generateEnableFormattingIfNecessary(
-      token.positionAfterSkippingLeadingTrivia..<token.endPositionBeforeTrailingTrivia
-    )
+    if token.tokenKind != .endOfFile {
+      generateEnableFormattingIfNecessary(
+        token.positionAfterSkippingLeadingTrivia..<token.endPositionBeforeTrailingTrivia
+      )
+    }
 
     if !ignoredTokens.contains(token) {
       // Otherwise, it's just a regular token, so add the text as-is.
@@ -3012,7 +3014,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
     let shouldDeferDisableAfterMissingTrailingComma =
       hasCommaDelimitedRegionEndWithoutTrailingComma(for: token)
-    if !shouldDeferDisableAfterMissingTrailingComma {
+    if !shouldDeferDisableAfterMissingTrailingComma && token.tokenKind != .endOfFile {
       generateDisableFormattingIfNecessary(token.endPositionBeforeTrailingTrivia)
     }
 
@@ -3035,6 +3037,26 @@ private final class TokenStreamCreator: SyntaxVisitor {
       appendToken(.enableFormatting(range.lowerBound))
       isInsideSelection = true
     }
+  }
+
+  private func enableFormattingForBlankLines(_ range: Range<AbsolutePosition>) {
+    if case .infinite = selection { return }
+    if partiallySelectedMultilineStringBodyRanges.contains(where: { $0.overlaps(range) }) {
+      return
+    }
+    guard !isInsideSelection && selection.overlapsOrTouches(range) else { return }
+    if canMergeNewlinesIntoLastBreak,
+      let breakIndex = lastBreakIndex,
+      !tokens[breakIndex...].contains(where: {
+        if case .disableFormatting = $0 { return true } else { return false }
+      })
+    {
+      tokens.insert(.enableFormatting(range.lowerBound), at: breakIndex)
+      lastBreakIndex = breakIndex + 1
+    } else {
+      appendToken(.enableFormatting(range.lowerBound))
+    }
+    isInsideSelection = true
   }
 
   private func generateDisableFormattingIfNecessary(_ position: AbsolutePosition) {
@@ -3684,6 +3706,76 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // line or doc line comments so that selection formatting enables/disables formatting around
     // the entire merged comment rather than splitting it at selection boundaries.
     var activeCommentRun: (endIndex: Int, endPosition: AbsolutePosition)? = nil
+    // Tracks the end trivia index and source positions of the current contiguous run of newlines
+    // and blank lines so that selection formatting enables/disables formatting across blank lines.
+    var activeNewlineRun:
+      (
+        endIndex: Int,
+        endPosition: AbsolutePosition,
+        blankLinesRange: Range<AbsolutePosition>?
+      )? = nil
+
+    func newlineRun(
+      from startIndex: Int,
+      startPosition: AbsolutePosition,
+      isStartOfFile: Bool
+    ) -> (
+      endIndex: Int,
+      endPosition: AbsolutePosition,
+      blankLinesRange: Range<AbsolutePosition>?
+    ) {
+      let limit = cutoffIndex ?? trivia.endIndex
+      var endIndex = startIndex
+      var endPosition = startPosition
+      var cursor = startIndex
+      var cursorPosition = startPosition
+      var totalNewlines = 0
+      var firstNewlineBytes = 0
+      var lastNewlineBytes = 0
+
+      while cursor < limit {
+        switch trivia[cursor] {
+        case .newlines(let count), .carriageReturns(let count):
+          if totalNewlines == 0 {
+            firstNewlineBytes = 1
+          }
+          totalNewlines += count
+          endIndex = cursor
+          cursorPosition += trivia[cursor].sourceLength
+          endPosition = cursorPosition
+          lastNewlineBytes = 1
+          cursor += 1
+        case .carriageReturnLineFeeds(let count):
+          if totalNewlines == 0 {
+            firstNewlineBytes = 2
+          }
+          totalNewlines += count
+          endIndex = cursor
+          cursorPosition += trivia[cursor].sourceLength
+          endPosition = cursorPosition
+          lastNewlineBytes = 2
+          cursor += 1
+        case .spaces, .tabs:
+          cursorPosition += trivia[cursor].sourceLength
+          cursor += 1
+        default:
+          cursor = limit
+        }
+      }
+
+      let blankLinesRange: Range<AbsolutePosition>?
+      if isStartOfFile && totalNewlines >= 1 {
+        let lastBlankLineEnd = endPosition - SourceLength(utf8Length: lastNewlineBytes)
+        blankLinesRange = startPosition..<lastBlankLineEnd
+      } else if !isStartOfFile && totalNewlines >= 2 {
+        let firstBlankLineStart = startPosition + SourceLength(utf8Length: firstNewlineBytes)
+        let lastBlankLineEnd = endPosition - SourceLength(utf8Length: lastNewlineBytes)
+        blankLinesRange = firstBlankLineStart..<lastBlankLineEnd
+      } else {
+        blankLinesRange = nil
+      }
+      return (endIndex, endPosition, blankLinesRange)
+    }
 
     func mergeableCommentRunEnd(
       from startIndex: Int,
@@ -3820,6 +3912,14 @@ private final class TokenStreamCreator: SyntaxVisitor {
         leadingIndent = nil
 
       case .newlines(let count), .carriageReturns(let count), .carriageReturnLineFeeds(let count):
+        if activeCommentRun == nil && activeNewlineRun == nil {
+          let run = newlineRun(from: index, startPosition: position, isStartOfFile: isStartOfFile)
+          activeNewlineRun = run
+          if let blankLinesRange = run.blankLinesRange {
+            enableFormattingForBlankLines(blankLinesRange)
+          }
+        }
+
         if config.indentBlankLines,
           let leadingIndent, leadingIndent.count > 0
         {
@@ -3827,19 +3927,26 @@ private final class TokenStreamCreator: SyntaxVisitor {
         }
 
         leadingIndent = .spaces(0)
-        guard !isStartOfFile else { break }
-
-        if requiresNextNewline || (config.respectsExistingLineBreaks && isDiscretionaryNewlineAllowed(before: token)) {
-          appendNewlines(.soft(count: count, discretionary: true))
-        } else {
-          // Even if discretionary line breaks are not being respected, we still respect multiple
-          // line breaks in order to keep blank separator lines that the user might want.
-          // TODO: It would be nice to restrict this to only allow multiple lines between statements
-          // and declarations; as currently implemented, multiple newlines will locally ignore the
-          // configuration setting.
-          if count > 1 {
+        if !isStartOfFile {
+          if requiresNextNewline
+            || (config.respectsExistingLineBreaks && isDiscretionaryNewlineAllowed(before: token))
+          {
             appendNewlines(.soft(count: count, discretionary: true))
+          } else {
+            // Even if discretionary line breaks are not being respected, we still respect multiple
+            // line breaks in order to keep blank separator lines that the user might want.
+            // TODO: It would be nice to restrict this to only allow multiple lines between statements
+            // and declarations; as currently implemented, multiple newlines will locally ignore the
+            // configuration setting.
+            if count > 1 {
+              appendNewlines(.soft(count: count, discretionary: true))
+            }
           }
+        }
+
+        if let run = activeNewlineRun, index == run.endIndex {
+          generateDisableFormattingIfNecessary(run.endPosition)
+          activeNewlineRun = nil
         }
 
       case .unexpectedText(let text):
@@ -3868,6 +3975,41 @@ private final class TokenStreamCreator: SyntaxVisitor {
         leadingIndent = .tabs(n)
       }
       position += piece.sourceLength
+    }
+
+    if token.tokenKind == .endOfFile,
+      let cutoff = cutoffIndex,
+      cutoff < trivia.endIndex
+    {
+      var totalNewlines = 0
+      var firstNewlineBytes = 0
+      var lastNewlineBytes = 0
+      var endPosition = position
+      for piece in trivia[cutoff...] {
+        switch piece {
+        case .newlines(let count), .carriageReturns(let count):
+          if totalNewlines == 0 {
+            firstNewlineBytes = 1
+          }
+          totalNewlines += count
+          endPosition += piece.sourceLength
+          lastNewlineBytes = 1
+        case .carriageReturnLineFeeds(let count):
+          if totalNewlines == 0 {
+            firstNewlineBytes = 2
+          }
+          totalNewlines += count
+          endPosition += piece.sourceLength
+          lastNewlineBytes = 2
+        default:
+          endPosition += piece.sourceLength
+        }
+      }
+      if totalNewlines >= 2 {
+        let firstBlankLineStart = position + SourceLength(utf8Length: firstNewlineBytes)
+        let lastBlankLineEnd = endPosition - SourceLength(utf8Length: lastNewlineBytes)
+        enableFormattingForBlankLines(firstBlankLineStart..<lastBlankLineEnd)
+      }
     }
   }
 

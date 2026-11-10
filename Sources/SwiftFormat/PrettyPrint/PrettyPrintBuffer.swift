@@ -94,7 +94,7 @@ struct PrettyPrintBuffer {
 
     guard numberToPrint > 0 else { return }
     for number in 0..<numberToPrint {
-      if shouldIndentBlankLines, number >= 1 {
+      if shouldIndentBlankLines, number + consecutiveNewlineCount >= 1 {
         writeRaw(currentIndentation.indentation())
       }
       writeRaw("\n")
