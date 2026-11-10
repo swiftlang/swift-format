@@ -624,6 +624,57 @@ final class SwiftFormatterSelectionTests: XCTestCase {
     )
   }
 
+  func testOrderedImportsWithSelection() throws {
+    let source = """
+      import Zebra
+      import Alpha
+      import Beta
+
+      let x = 1;
+
+      """
+
+    // Selecting the entire import block reorders the imports without formatting unselected line 5.
+    let expectedWhenImportsSelected = """
+      import Alpha
+      import Beta
+      import Zebra
+
+      let x = 1;
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expectedWhenImportsSelected,
+      selection: Selection(lineRanges: [1...3])
+    )
+
+    // Selecting only a single line of the import block leaves the imports unchanged.
+    try assertFormatting(
+      source,
+      expected: source,
+      selection: Selection(lineRanges: [2...2])
+    )
+
+    // Selecting only line 5 formats line 5 (removing the semicolon) without reordering the
+    // unselected imports on lines 1...3.
+    let expectedWhenLine5Selected = """
+      import Zebra
+      import Alpha
+      import Beta
+
+      let x = 1
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expectedWhenLine5Selected,
+      selection: Selection(lineRanges: [5...5])
+    )
+  }
+
   func testDocBlockCommentsWithSelection() throws {
     let source = """
       /**

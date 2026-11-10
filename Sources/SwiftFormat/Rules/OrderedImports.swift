@@ -32,7 +32,6 @@ import SwiftSyntax
 public final class OrderedImports: SyntaxFormatRule {
 
   public override func visit(_ node: SourceFileSyntax) -> SourceFileSyntax {
-    guard !isRewriting || shouldFormat(node) else { return super.visit(node) }
     var newNode = node
     newNode.statements = orderImports(in: node.statements)
 
@@ -53,6 +52,110 @@ public final class OrderedImports: SyntaxFormatRule {
   }
 
   private func orderImports(in codeBlockItemList: CodeBlockItemListSyntax) -> CodeBlockItemListSyntax {
+    if case .ranges = context.selection {
+      return orderImportsWithSelection(in: codeBlockItemList)
+    }
+    return orderImportsInSlice(codeBlockItemList)
+  }
+
+  /// Orders imports in `codeBlockItemList` when a partial line/offset selection is active.
+  ///
+  /// Reordering a group of imports can move declarations across the entire import span (and across
+  /// any code blocks that appear before a misplaced import). Therefore, imports at a given scope
+  /// are reordered and diagnosed only when all statements in the affected span lie inside the
+  /// active selection. When only part of the file is selected, trailing statements after the last
+  /// import that lie outside the selection are left untouched so their leading trivia and AST nodes
+  /// are preserved verbatim.
+  private func orderImportsWithSelection(
+    in codeBlockItemList: CodeBlockItemListSyntax
+  ) -> CodeBlockItemListSyntax {
+    let sortableImportIndices = codeBlockItemList.indices.filter { index in
+      let item = codeBlockItemList[index]
+      return item.item.is(ImportDeclSyntax.self)
+        && context.isRuleEnabled(OrderedImports.self, node: Syntax(item))
+    }
+
+    guard
+      let firstImportIndex = sortableImportIndices.first,
+      let lastImportIndex = sortableImportIndices.last
+    else {
+      return rewriteConditionalImportsIfEnabled(in: codeBlockItemList)
+    }
+
+    let firstNonImportIndex = codeBlockItemList[..<lastImportIndex].firstIndex {
+      !$0.item.is(ImportDeclSyntax.self)
+    }
+    let firstAffectedIndex = min(firstImportIndex, firstNonImportIndex ?? firstImportIndex)
+    let affectedSlice = codeBlockItemList[firstAffectedIndex...lastImportIndex]
+
+    guard affectedSlice.allSatisfy({ Syntax($0).isInsideSelection(context.selection) }) else {
+      return rewriteConditionalImportsIfEnabled(in: codeBlockItemList)
+    }
+
+    if codeBlockItemList.allSatisfy({ Syntax($0).isInsideSelection(context.selection) }) {
+      return orderImportsInSlice(codeBlockItemList)
+    }
+
+    let prefix = Array(codeBlockItemList[..<firstAffectedIndex])
+    let target = CodeBlockItemListSyntax(Array(affectedSlice))
+    let afterLastImport = codeBlockItemList.index(after: lastImportIndex)
+    let suffix = rewriteConditionalImportsIfEnabled(
+      in: CodeBlockItemListSyntax(Array(codeBlockItemList[afterLastImport...]))
+    )
+
+    var orderedTarget = orderImportsInSlice(target)
+    if !prefix.isEmpty, !orderedTarget.isEmpty, !orderedTarget.leadingTrivia.containsNewlines {
+      orderedTarget.leadingTrivia = .newlines(1) + orderedTarget.leadingTrivia
+    }
+    return CodeBlockItemListSyntax(prefix + Array(orderedTarget) + Array(suffix))
+  }
+
+  /// Recurses into `#if` conditional compilation blocks to order their imports when
+  /// `includeConditionalImports` is enabled, without reordering top-level statements in
+  /// `codeBlockItemList`.
+  private func rewriteConditionalImportsIfEnabled(
+    in codeBlockItemList: CodeBlockItemListSyntax
+  ) -> CodeBlockItemListSyntax {
+    guard context.configuration.orderedImports.includeConditionalImports else {
+      return codeBlockItemList
+    }
+    var modified = false
+    let newItems = codeBlockItemList.map { item -> CodeBlockItemSyntax in
+      guard
+        context.selection.overlapsOrTouches(item.position..<item.endPosition),
+        var ifConfigDecl = item.item.as(IfConfigDeclSyntax.self)
+      else {
+        return item
+      }
+      let newClauses = ifConfigDecl.clauses.map { clause -> IfConfigClauseSyntax in
+        guard case .statements(let statements) = clause.elements else {
+          return clause
+        }
+        let ordered = orderImports(in: statements)
+        guard ordered.detached != statements.detached else {
+          return clause
+        }
+        modified = true
+        var newClause = clause
+        var newStatements = ordered
+        if !newStatements.leadingTrivia.containsNewlines {
+          newStatements.leadingTrivia = .newline + newStatements.leadingTrivia
+        }
+        newClause.elements = .statements(newStatements)
+        return newClause
+      }
+      guard modified else { return item }
+      ifConfigDecl.clauses = IfConfigClauseListSyntax(newClauses)
+      var newItem = item
+      newItem.item = .decl(DeclSyntax(ifConfigDecl))
+      return newItem
+    }
+    return modified ? CodeBlockItemListSyntax(newItems) : codeBlockItemList
+  }
+
+  private func orderImportsInSlice(
+    _ codeBlockItemList: CodeBlockItemListSyntax
+  ) -> CodeBlockItemListSyntax {
     let lines = generateLines(codeBlockItemList: codeBlockItemList, context: context)
 
     // Stores the formatted and sorted lines that will be used to reconstruct the list of code block

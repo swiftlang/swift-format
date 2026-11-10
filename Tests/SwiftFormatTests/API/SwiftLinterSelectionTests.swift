@@ -191,13 +191,31 @@ final class SwiftLinterSelectionTests: DiagnosingTestCase {
 
       """
 
-    // Selecting only line 2 emits the import ordering finding on line 2.
+    // Selecting the entire import block (lines 1...3) emits the import ordering finding on line 2,
+    // matching `SwiftFormatter` which reorders the import block when lines 1...3 are selected.
     try assertLint(
       source,
-      selection: Selection(lineRanges: [2...2]),
+      selection: Selection(lineRanges: [1...3]),
       findings: [
         FindingSpec("1️⃣", message: "sort import statements lexicographically")
       ]
+    )
+
+    // Selecting only a single line of the multi-line import block does not emit an import ordering
+    // finding because reordering the block would modify unselected lines 1 and 3.
+    let sourceWithoutImportMarkers = """
+      import Zebra
+      import Alpha
+      import Beta
+
+      let x = 1;
+
+      """
+
+    try assertLint(
+      sourceWithoutImportMarkers,
+      selection: Selection(lineRanges: [2...2]),
+      findings: []
     )
 
     // Selecting only line 5 does not emit import ordering findings on lines 2 or 3.
