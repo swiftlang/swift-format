@@ -4429,7 +4429,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // `verbatim` token in order for the first token to be printed with correct indentation. All
     // following lines in the ignored node are printed as-is with no changes to indentation.
     var nodeText = node.description
-    if let firstToken = node.firstToken(viewMode: .sourceAccurate) {
+    let firstToken = node.firstToken(viewMode: .sourceAccurate)
+    if let firstToken {
       extractLeadingTrivia(firstToken)
       let leadingTriviaText = firstToken.leadingTrivia.reduce(into: "") { $1.write(to: &$0) }
       nodeText = String(nodeText.dropFirst(leadingTriviaText.count))
@@ -4438,13 +4439,14 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // The leading trivia of the next token, after the ignored node, may contain content that
     // belongs with the ignored node. The trivia extraction that is performed for `lastToken` later
     // excludes that content so it needs to be extracted and added to the token stream here.
+    var endPosition = node.endPosition
     if let next = node.lastToken(viewMode: .sourceAccurate)?.nextToken(viewMode: .all),
       let trivia = next.leadingTrivia.first
     {
       switch trivia {
       case .lineComment, .blockComment:
         trivia.write(to: &nodeText)
-        break
+        endPosition = next.position + trivia.sourceLength
       default:
         // All other kinds of trivia are inserted into the token stream by `extractLeadingTrivia`
         // when the relevant token is visited.
@@ -4452,7 +4454,13 @@ private final class TokenStreamCreator: SyntaxVisitor {
       }
     }
 
+    if let firstToken {
+      generateEnableFormattingIfNecessary(
+        firstToken.positionAfterSkippingLeadingTrivia..<firstToken.endPositionBeforeTrailingTrivia
+      )
+    }
     appendToken(.verbatim(Verbatim(text: nodeText, indentingBehavior: .firstLine)))
+    generateDisableFormattingIfNecessary(endPosition)
 
     // Add this break so that trivia parsing will allow discretionary newlines after the node.
     appendToken(.break(.same, size: 0))
@@ -4616,9 +4624,13 @@ extension Syntax {
   func makeTokenStream(
     configuration: Configuration,
     selection: Selection,
-    operatorTable: OperatorTable
+    operatorTable: OperatorTable,
+    whitespaceOnly: Bool = false
   ) -> [Token] {
-    let commentsMoved = CommentMovingRewriter(selection: selection).rewrite(self)
+    // In whitespace-only mode (used by WhitespaceLinter), comments must not be moved across infix
+    // operators because doing so reorders non-whitespace tokens relative to the user's source text.
+    let commentsMoved =
+      whitespaceOnly ? self : CommentMovingRewriter(selection: selection).rewrite(self)
     return TokenStreamCreator(
       configuration: configuration,
       selection: selection,
@@ -4647,14 +4659,18 @@ class CommentMovingRewriter: SyntaxRewriter {
   }
 
   override func visit(_ node: CodeBlockItemSyntax) -> CodeBlockItemSyntax {
-    if shouldFormatterIgnore(node: Syntax(node)) || !Syntax(node).isInsideSelection(selection) {
+    if shouldFormatterIgnore(node: Syntax(node))
+      || !selection.overlapsOrTouches(node.position..<node.endPosition)
+    {
       return node
     }
     return super.visit(node)
   }
 
   override func visit(_ node: MemberBlockItemSyntax) -> MemberBlockItemSyntax {
-    if shouldFormatterIgnore(node: Syntax(node)) || !Syntax(node).isInsideSelection(selection) {
+    if shouldFormatterIgnore(node: Syntax(node))
+      || !selection.overlapsOrTouches(node.position..<node.endPosition)
+    {
       return node
     }
     return super.visit(node)
@@ -4662,7 +4678,10 @@ class CommentMovingRewriter: SyntaxRewriter {
 
   override func visit(_ node: InfixOperatorExprSyntax) -> ExprSyntax {
     var node = super.visit(node).as(InfixOperatorExprSyntax.self)!
-    guard node.rightOperand.hasAnyPrecedingComment else {
+    guard
+      node.rightOperand.hasAnyPrecedingComment,
+      isReorderedOperatorSpanInsideSelection(node)
+    else {
       return ExprSyntax(node)
     }
 
@@ -4694,6 +4713,21 @@ class CommentMovingRewriter: SyntaxRewriter {
     node.rightOperand.leadingTrivia = []
 
     return ExprSyntax(node)
+  }
+
+  /// Returns `true` if the span between `node.operator` and `node.rightOperand` (excluding the
+  /// right operand's leading trivia) is completely contained within a single selection range.
+  private func isReorderedOperatorSpanInsideSelection(_ node: InfixOperatorExprSyntax) -> Bool {
+    switch selection {
+    case .infinite:
+      return true
+    case .ranges(let ranges):
+      let start = node.operator.position
+      let end = node.rightOperand.positionAfterSkippingLeadingTrivia
+      return ranges.contains { $0.lowerBound <= start && end <= $0.upperBound }
+    case .unresolvedLineRanges:
+      fatalError("Must resolve Selection before calling isReorderedOperatorSpanInsideSelection")
+    }
   }
 
   /// Extracts trivia containing and related to line comments from `token`'s leading trivia. Returns

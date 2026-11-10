@@ -954,6 +954,64 @@ final class SwiftFormatterSelectionTests: XCTestCase {
     )
   }
 
+  func testFormatterIgnoredNodeOverlappingEndOfSelection() throws {
+    let source = """
+      let   a   =   1
+      // swift-format-ignore
+      func ignored() {
+        let   x   =   2
+      }
+      let   b   =   3
+      """
+
+    let expected = """
+      let a = 1
+      // swift-format-ignore
+      func ignored() {
+        let   x   =   2
+      }
+      let   b   =   3
+      """
+
+    // Selecting lines 1...3 (ending inside the ignored declaration) formats line 1, preserves the
+    // ignored declaration verbatim, and disables formatting at the end of the ignored declaration
+    // so line 6 is not formatted.
+    try assertFormatting(
+      source,
+      expected: expected,
+      selection: Selection(lineRanges: [1...3])
+    )
+  }
+
+  func testCommentMovingRewriterInsideNestedSelection() throws {
+    let source = """
+      func foo(a: Int, b: Int) -> Int {
+        let unselected = a + // unselected comment
+          b
+        let selected = a + // selected comment
+          b
+        return unselected + selected
+      }
+      """
+
+    let expected = """
+      func foo(a: Int, b: Int) -> Int {
+        let unselected = a + // unselected comment
+          b
+        let selected =
+          a  // selected comment
+          + b
+        return unselected + selected
+      }
+      """
+
+    try assertFormatting(
+      source,
+      expected: expected,
+      selection: Selection(lineRanges: [4...5])
+    )
+  }
+
   private func assertFormatting(
     _ source: String,
     expected: String,

@@ -688,6 +688,56 @@ final class SwiftLinterSelectionTests: DiagnosingTestCase {
     )
   }
 
+  func testPrettyPrintFindingLineNumbersWithUnselectedOverlongPrefix() throws {
+    var config = Configuration.forTesting
+    config.lineLength = 40
+    config.multiElementCollectionTrailingCommas = true
+
+    // Line 1 exceeds 40 columns and would wrap across multiple lines if formatted, which increments
+    // PrettyPrintBuffer.lineNumber during the unselected prefix. The trailing-comma finding on
+    // line 4 must still be reported at line 4 in the original source.
+    let source = """
+      let unselectedVeryLongVariableName = someFunctionCall(firstArgument: 1, secondArgument: 2)
+      let array = [
+        1,
+        21️⃣
+      ]
+
+      """
+
+    try assertLint(
+      source,
+      selection: Selection(lineRanges: [4...4]),
+      configuration: config,
+      findings: [
+        FindingSpec(
+          "1️⃣",
+          message: "add trailing comma to the last element in multiline collection literal"
+        )
+      ]
+    )
+  }
+
+  func testInfixOperatorTrailingCommentDoesNotDesynchronizeWhitespaceLinter() throws {
+    let source = """
+      func foo(a: Int, b: Int) -> Int {
+        let x =1️⃣ a +  // trailing comment after operator
+      2️⃣        b
+        return x
+      }
+
+      """
+
+    try assertLint(
+      source,
+      selection: Selection(lineRanges: [2...3]),
+      findings: [
+        FindingSpec("1️⃣", message: "add 1 line break"),
+        FindingSpec("2️⃣", message: "unindent by 4 spaces"),
+      ]
+    )
+  }
+
   private func assertLint(
     _ markedSource: String,
     selection: Selection? = nil,
