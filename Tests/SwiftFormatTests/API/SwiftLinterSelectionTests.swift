@@ -378,6 +378,49 @@ final class SwiftLinterSelectionTests: DiagnosingTestCase {
     )
   }
 
+  func testReflowMultilineStringLiteralsInLinter() throws {
+    var config = Configuration.forTesting
+    config.lineLength = 30
+    config.reflowMultilineStringLiterals = .onlyLinesOverLength
+
+    let overlongMultilineString = #"""
+      let someString = """
+        this string's total lengths will be longer than the column limit
+        """
+      let x =1️⃣   1
+
+      """#
+
+    try assertLint(
+      overlongMultilineString,
+      selection: .infinite,
+      configuration: config,
+      findings: [
+        FindingSpec("1️⃣", message: "remove 2 spaces")
+      ]
+    )
+
+    config.reflowMultilineStringLiterals = .always
+    let multilineStringWithContinuations = #"""
+      let someString = """
+        short \
+        line
+        this string's total lengths will be longer than the column limit
+        """
+      let x =1️⃣   1
+
+      """#
+
+    try assertLint(
+      multilineStringWithContinuations,
+      selection: .infinite,
+      configuration: config,
+      findings: [
+        FindingSpec("1️⃣", message: "remove 2 spaces")
+      ]
+    )
+  }
+
   func testOffsetRangesSelection() throws {
     let source = """
       let a = 1;
