@@ -49,14 +49,34 @@ public enum Selection {
     case .infinite, .ranges:
       return self
     case .unresolvedLineRanges(let lineRanges):
+      let sourceLines = converter.sourceLines
       let resolvedRanges: [Range<AbsolutePosition>] = lineRanges.compactMap { lineRange in
         let start = converter.position(ofLine: lineRange.lowerBound, column: 1)
         let nextLineStart = converter.position(ofLine: lineRange.upperBound + 1, column: 1)
         if start == nextLineStart {
           return nil
         }
-        // Subtract 1 from the next line's start offset to get the end of the current line.
-        let end = AbsolutePosition(utf8Offset: nextLineStart.utf8Offset - 1)
+        // Strip the trailing line terminator (`\n`, `\r\n`, or `\r`) of the last selected line to
+        // get the end offset of that line's contents.
+        var endOffset = nextLineStart.utf8Offset
+        var lastLineIndex = min(lineRange.upperBound, sourceLines.count) - 1
+        if lastLineIndex > 0 && sourceLines[lastLineIndex].isEmpty {
+          lastLineIndex -= 1
+        }
+        if lastLineIndex >= 0 && lastLineIndex < sourceLines.count {
+          let lastLineUTF8 = sourceLines[lastLineIndex].utf8
+          if lastLineUTF8.last == UInt8(ascii: "\n") {
+            endOffset -= 1
+            if lastLineUTF8.dropLast().last == UInt8(ascii: "\r") {
+              endOffset -= 1
+            }
+          } else {
+            endOffset -= 1
+          }
+        } else {
+          endOffset -= 1
+        }
+        let end = AbsolutePosition(utf8Offset: max(start.utf8Offset, endOffset))
         return start..<end
       }
       return .ranges(resolvedRanges)

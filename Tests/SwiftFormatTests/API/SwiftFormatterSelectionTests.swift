@@ -258,6 +258,28 @@ final class SwiftFormatterSelectionTests: XCTestCase {
     )
   }
 
+  func testCRLFLineEndingsWithSelection() throws {
+    let source =
+      "func foo() {\r\n"
+      + "    let   a   =   1\r\n"
+      + "    let   b   =   2\r\n"
+      + "}\r\n"
+
+    // Selecting only line 2 formats and indents line 2 properly (preserving `isAtStartOfLine` after
+    // line 1's `\r\n`) and stops at the end of line 2 without leaking formatting onto line 3.
+    let expected =
+      "func foo() {\r\n"
+      + "  let a = 1\r\n"
+      + "    let   b   =   2\r\n"
+      + "}\r\n"
+
+    try assertFormatting(
+      source,
+      expected: expected,
+      selection: Selection(lineRanges: [2...2])
+    )
+  }
+
   func testReflowCommentFunctionHeaderEncompassedButNotDocComment() throws {
     let source = """
       /// This is a very long doc comment attached to a function that exceeds the line length limit.
