@@ -361,6 +361,37 @@ final class SwiftLinterSelectionTests: DiagnosingTestCase {
     )
   }
 
+  func testEndOfLineCommentAtEndOfSelectionDoesNotLeakLintOntoNextLine() throws {
+    let source = """
+      let a =1️⃣   1  // trailing comment
+        let   b   =   2
+
+      """
+
+    try assertLint(
+      source,
+      selection: Selection(lineRanges: [1...1]),
+      findings: [
+        FindingSpec("1️⃣", message: "remove 2 spaces")
+      ]
+    )
+
+    // Selecting only an end-of-line comment with an offset range diagnoses spacing before the
+    // comment without touching the next line.
+    let offsetSelectedComment = """
+      let a = 11️⃣⏩ // trailing comment⏪
+        let   b   =   2
+
+      """
+
+    try assertLint(
+      offsetSelectedComment,
+      findings: [
+        FindingSpec("1️⃣", message: "add 1 space")
+      ]
+    )
+  }
+
   func testMultilineCollectionTrailingCommaWithSelection() throws {
     var config = Configuration.forTesting
     config.multiElementCollectionTrailingCommas = true

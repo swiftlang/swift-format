@@ -200,6 +200,40 @@ final class SwiftFormatterSelectionTests: XCTestCase {
     try assertFormatting(source, expected: expected, selection: Selection(lineRanges: [10...20]))
   }
 
+  func testEndOfLineCommentAtEndOfSelectionDoesNotLeakFormattingOntoNextLine() throws {
+    let lineCommentSource = """
+      let   a   =   1 // trailing comment
+        let   b   =   2
+      """
+
+    let expectedLineCommentFormatted = """
+      let a = 1  // trailing comment
+        let   b   =   2
+      """
+
+    try assertFormatting(
+      lineCommentSource,
+      expected: expectedLineCommentFormatted,
+      selection: Selection(lineRanges: [1...1])
+    )
+
+    let blockCommentSource = """
+      let   a   =   1 /* trailing block comment */
+        let   b   =   2
+      """
+
+    let expectedBlockCommentFormatted = """
+      let a = 1 /* trailing block comment */
+        let   b   =   2
+      """
+
+    try assertFormatting(
+      blockCommentSource,
+      expected: expectedBlockCommentFormatted,
+      selection: Selection(lineRanges: [1...1])
+    )
+  }
+
   func testPartialOutOfBoundsLineRange() throws {
     let source = """
       let x = 1

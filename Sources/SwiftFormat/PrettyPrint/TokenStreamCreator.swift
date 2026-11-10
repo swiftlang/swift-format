@@ -3076,12 +3076,23 @@ private final class TokenStreamCreator: SyntaxVisitor {
     _ token: TokenSyntax,
     disableFormattingAfterMissingTrailingComma: Bool = false
   ) {
-    let (wasLineComment, trailingCommentTokens) = afterTokensForTrailingComment(token)
+    let (wasLineComment, trailingCommentTokens, commentRange) = afterTokensForTrailingComment(token)
     let afterGroups = afterMap.removeValue(forKey: token) ?? []
     var hasAppendedTrailingComment = false
 
+    func appendTrailingComment() {
+      guard let commentRange else { return }
+      generateEnableFormattingIfNecessary(commentRange)
+      for commentToken in trailingCommentTokens {
+        appendToken(commentToken)
+        if case .comment = commentToken {
+          generateDisableFormattingIfNecessary(commentRange.upperBound)
+        }
+      }
+    }
+
     if !wasLineComment {
-      trailingCommentTokens.forEach(appendToken)
+      appendTrailingComment()
     }
 
     for after in afterGroups.reversed() {
@@ -3102,7 +3113,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
           }
         }
         if shouldExtractTrailingComment {
-          trailingCommentTokens.forEach(appendToken)
+          appendTrailingComment()
           hasAppendedTrailingComment = true
         }
         appendToken(afterToken)
@@ -3115,7 +3126,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     }
 
     if wasLineComment && !hasAppendedTrailingComment {
-      trailingCommentTokens.forEach(appendToken)
+      appendTrailingComment()
     }
   }
 
@@ -3502,15 +3513,18 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   private func afterTokensForTrailingComment(
     _ token: TokenSyntax
-  ) -> (isLineComment: Bool, tokens: [Token]) {
+  ) -> (isLineComment: Bool, tokens: [Token], commentRange: Range<AbsolutePosition>?) {
     let (_, trailingComments) = partitionTrailingTrivia(token.trailingTrivia)
+    let prevTrivia = Trivia(pieces: trailingComments)
     let trivia =
-      Trivia(pieces: trailingComments)
+      prevTrivia
       + (token.nextToken(viewMode: .sourceAccurate)?.leadingTrivia ?? [])
 
     guard let firstPiece = trivia.first else {
-      return (false, [])
+      return (false, [], nil)
     }
+    let startPosition = token.endPosition - prevTrivia.sourceLength
+    let commentRange = startPosition..<(startPosition + firstPiece.sourceLength)
 
     switch firstPiece {
     case .lineComment(let text):
@@ -3522,7 +3536,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
           // There must be a break with a soft newline after the comment, but it's impossible to
           // know which kind of break must be used. Adding this newline is deferred until the
           // comment is added to the token stream.
-        ]
+        ],
+        commentRange
       )
 
     case .blockComment(let text):
@@ -3535,11 +3550,12 @@ private final class TokenStreamCreator: SyntaxVisitor {
           // the comment if the user places one here but the comment is otherwise adjacent to a
           // text token.
           .break(.same, size: 0),
-        ]
+        ],
+        commentRange
       )
 
     default:
-      return (false, [])
+      return (false, [], nil)
     }
   }
 
