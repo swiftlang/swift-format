@@ -343,6 +343,41 @@ final class SwiftLinterSelectionTests: DiagnosingTestCase {
     )
   }
 
+  func testMultilineStringLiteralWithSelection() throws {
+    let partiallySelectedClosingQuote = #"""
+      let s = """
+          hello
+          """
+
+      """#
+
+    // Selecting only the closing `"""` line must not diagnose an indentation error on `"""` when
+    // the enclosing multiline string literal is not completely selected.
+    try assertLint(
+      partiallySelectedClosingQuote,
+      selection: Selection(lineRanges: [3...3]),
+      findings: []
+    )
+
+    // Selecting the entire multiline string literal diagnoses the over-indented content and closing
+    // quote lines together.
+    let fullySelectedMultilineString = #"""
+      let s = """
+      1️⃣    hello
+      2️⃣    """
+
+      """#
+
+    try assertLint(
+      fullySelectedMultilineString,
+      selection: Selection(lineRanges: [1...3]),
+      findings: [
+        FindingSpec("1️⃣", message: "unindent by 2 spaces"),
+        FindingSpec("2️⃣", message: "unindent by 2 spaces"),
+      ]
+    )
+  }
+
   func testOffsetRangesSelection() throws {
     let source = """
       let a = 1;

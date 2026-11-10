@@ -232,6 +232,86 @@ final class SwiftFormatterSelectionTests: XCTestCase {
     try assertFormatting(source, expected: expected, selection: Selection(lineRanges: [0...0]))
   }
 
+  func testMultilineStringLiteralWithSelection() throws {
+    let source = #"""
+      let   s   =   """
+          hello \(1 + 2)
+          world
+          """
+
+      """#
+
+    // Selecting only the closing `"""` line must not dedent `"""` relative to the unselected
+    // content lines (which would silently alter the string literal's runtime value).
+    try assertFormatting(
+      source,
+      expected: source,
+      selection: Selection(lineRanges: [4...4])
+    )
+
+    // Selecting only a middle content line (even one containing string interpolation) must not
+    // partially format or re-indent the multiline string literal.
+    try assertFormatting(
+      source,
+      expected: source,
+      selection: Selection(lineRanges: [2...2])
+    )
+
+    // Selecting only the opening line formats the declaration up to `"""` without re-indenting the
+    // unselected content lines or closing `"""`.
+    let expectedOpeningLineFormatted = #"""
+      let s = """
+          hello \(1 + 2)
+          world
+          """
+
+      """#
+    try assertFormatting(
+      source,
+      expected: expectedOpeningLineFormatted,
+      selection: Selection(lineRanges: [1...1])
+    )
+
+    // Selecting the entire multiline string literal formats the declaration and re-indents the
+    // string lines and closing quote together.
+    let expectedAllFormatted = #"""
+      let s = """
+        hello \(1 + 2)
+        world
+        """
+
+      """#
+    try assertFormatting(
+      source,
+      expected: expectedAllFormatted,
+      selection: Selection(lineRanges: [1...4])
+    )
+
+    // Selecting the closing line of a multiline string argument still formats tokens after `"""` on
+    // that line while keeping the closing `"""` indentation intact.
+    let callSource = #"""
+      foo(
+        """
+          hello
+          """,   bar:   1
+      )
+
+      """#
+    let expectedCallClosingLineFormatted = #"""
+      foo(
+        """
+          hello
+          """, bar: 1
+      )
+
+      """#
+    try assertFormatting(
+      callSource,
+      expected: expectedCallClosingLineFormatted,
+      selection: Selection(lineRanges: [4...4])
+    )
+  }
+
   func testReflowCommentCompletelyEncompassed() throws {
     let source = """
       /// This is a very long doc comment attached to a function that exceeds the line length limit.
