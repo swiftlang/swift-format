@@ -2706,7 +2706,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
       : { (segment) in self.appendToken(.syntax(String(segment))) }
 
     let segmentText = node.content.text
-    if segmentText.hasSuffix("\n") {
+    if segmentText.utf8.last == UInt8(ascii: "\n") {
       // If this is a multiline string segment, it will end in a newline. Remove the newline and
       // append the rest of the string, followed by a break if it's not the last line before the
       // closing quotes. (The `StringLiteralExpr` above does the closing break.)
