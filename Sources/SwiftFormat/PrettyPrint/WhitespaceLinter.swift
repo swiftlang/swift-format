@@ -123,20 +123,19 @@ public class WhitespaceLinter {
       }
     } else {
       var runIndex = 0
-      var remainingExcessLines = userRuns.count - formattedRuns.count
+      let excessUserLines = userRuns.count - formattedRuns.count
 
       while let userRun = userRunsIterator.next() {
-        if runIndex != userRuns.count - 1 {
-          let position = AbsolutePosition(utf8Offset: userIndex)
-          if remainingExcessLines > 0
-            && context.selection.overlapsOrTouches(position..<position)
-          {
-            // If there were excess newlines in the user input, tell the user to remove them. This
-            // short-circuits the trailing whitespace check below; we don't bother telling the user
-            // about trailing whitespace on a line that we're also telling them to delete.
-            diagnose(.removeLineError, category: .removeLine, utf8Offset: userIndex)
-            remainingExcessLines -= 1
-          } else if let formattedRun = formattedRunsIterator.next() {
+        let possibleFormattedRun = formattedRunsIterator.next()
+
+        if runIndex < excessUserLines {
+          // If there were excess newlines in the user input, tell the user to remove them. This
+          // short-circuits the trailing whitespace check below; we don't bother telling the user
+          // about trailing whitespace on a line that we're also telling them to delete.
+          diagnose(.removeLineError, category: .removeLine, utf8Offset: userIndex)
+          userIndex += userRun.count + 1
+        } else if runIndex != userRuns.count - 1 {
+          if let formattedRun = possibleFormattedRun {
             // If this isn't the last whitespace run, then it must precede a newline, so we check
             // for trailing whitespace violations.
             checkForTrailingWhitespaceErrors(
