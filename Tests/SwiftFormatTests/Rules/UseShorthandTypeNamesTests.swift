@@ -14,6 +14,22 @@
 import _SwiftFormatTestSupport
 
 final class UseShorthandTypeNamesTests: LintOrFormatRuleTestCase {
+  func testModuleQualifiedTypesAreNotShortened() {
+    assertFormatting(
+      UseShorthandTypeNames.self,
+      input: """
+        typealias ArrayType = Array::Array<Int>
+        typealias DictionaryType = Dictionary::Dictionary<String, Int>
+        typealias OptionalType = Optional::Optional<Int>
+        """,
+      expected: """
+        typealias ArrayType = Array::Array<Int>
+        typealias DictionaryType = Dictionary::Dictionary<String, Int>
+        typealias OptionalType = Optional::Optional<Int>
+        """
+    )
+  }
+
   func testNamesInTypeContextsAreShortened() {
     assertFormatting(
       UseShorthandTypeNames.self,
