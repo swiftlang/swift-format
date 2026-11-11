@@ -362,6 +362,84 @@ final class SwiftLinterSelectionTests: DiagnosingTestCase {
     )
   }
 
+  func testBlankLinesWithSelection() throws {
+    let source = """
+      func foo() {
+        let a = 1
+      1️⃣
+      2️⃣
+      3️⃣
+        let b = 2
+      }
+
+      """
+
+    // Selecting lines 3...6 diagnoses the 2 excess blank lines inside the selection (at lines 3
+    // and 4) without emitting a bogus trailing-whitespace finding on line 5.
+    try assertLint(
+      source,
+      selection: Selection(lineRanges: [3...6]),
+      findings: [
+        FindingSpec("1️⃣", message: "remove line break"),
+        FindingSpec("2️⃣", message: "remove line break"),
+      ]
+    )
+
+    // Selecting lines 4...6 (when line 3 was an existing blank line and lines 4...5 were added)
+    // diagnoses the 2 excess blank lines at lines 4 and 5.
+    try assertLint(
+      source,
+      selection: Selection(lineRanges: [4...6]),
+      findings: [
+        FindingSpec("2️⃣", message: "remove line break"),
+        FindingSpec("3️⃣", message: "remove line break"),
+      ]
+    )
+
+    // Selecting only the blank lines (lines 3...5) diagnoses the 2 excess blank lines.
+    try assertLint(
+      source,
+      selection: Selection(lineRanges: [3...5]),
+      findings: [
+        FindingSpec("1️⃣", message: "remove line break"),
+        FindingSpec("2️⃣", message: "remove line break"),
+      ]
+    )
+
+    // Selecting only line 2 or only line 6 does not diagnose the unselected blank lines.
+    try assertLint(
+      source,
+      selection: Selection(lineRanges: [2...2]),
+      findings: []
+    )
+    try assertLint(
+      source,
+      selection: Selection(lineRanges: [6...6]),
+      findings: []
+    )
+
+    // Leading and trailing blank lines at the boundaries of a file.
+    let leadingSource = "1️⃣\n2️⃣\nlet a = 1\n"
+    try assertLint(
+      leadingSource,
+      selection: Selection(lineRanges: [1...2]),
+      findings: [
+        FindingSpec("1️⃣", message: "remove line break"),
+        FindingSpec("2️⃣", message: "remove line break"),
+      ]
+    )
+
+    let trailingSource = "let a = 1\n1️⃣\n2️⃣\n"
+    try assertLint(
+      trailingSource,
+      selection: Selection(lineRanges: [2...3]),
+      findings: [
+        FindingSpec("1️⃣", message: "remove line break"),
+        FindingSpec("2️⃣", message: "remove line break"),
+      ]
+    )
+  }
+
   func testMultilineStringLiteralWithSelection() throws {
     let partiallySelectedClosingQuote = #"""
       let s = """
