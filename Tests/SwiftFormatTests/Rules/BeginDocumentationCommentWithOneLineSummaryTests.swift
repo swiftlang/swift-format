@@ -234,6 +234,56 @@ final class BeginDocumentationCommentWithOneLineSummaryTests: LintOrFormatRuleTe
     )
   }
 
+  func testInlineCodeDoesNotHideSentenceBoundaries() {
+    assertLint(
+      BeginDocumentationCommentWithOneLineSummary.self,
+      """
+      /// Held in the keychain. `Keychain` is immutable.
+      1️⃣struct CodeSpanStartsSecondSentence {}
+
+      /// Alpha `beta`. Gamma delta.
+      2️⃣struct CodeSpanInsideFirstSentence {}
+
+      /// Pass `"` to escape the delimiter. Callers must balance it.
+      3️⃣struct UnbalancedQuoteInsideCodeSpan {}
+
+      /// Uses `x.kind != Subject.kind` to compare two instances.
+      struct PunctuationStaysInsideCodeSpan {}
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: #"add a blank comment line after this sentence: "Held in the keychain.""#),
+        FindingSpec("2️⃣", message: #"add a blank comment line after this sentence: "Alpha beta.""#),
+        FindingSpec("3️⃣", message: #"add a blank comment line after this sentence: "Pass  to escape the delimiter.""#),
+      ]
+    )
+  }
+
+  func testInlineCodeDoesNotHideSentenceBoundariesInFallbackMode() {
+    BeginDocumentationCommentWithOneLineSummary._forcesFallbackModeForTesting = true
+
+    assertLint(
+      BeginDocumentationCommentWithOneLineSummary.self,
+      """
+      /// Held in the keychain. `Keychain` is immutable.
+      1️⃣struct CodeSpanStartsSecondSentence {}
+
+      /// Alpha `beta`. Gamma delta.
+      2️⃣struct CodeSpanInsideFirstSentence {}
+
+      /// Pass `"` to escape the delimiter. Callers must balance it.
+      3️⃣struct UnbalancedQuoteInsideCodeSpan {}
+
+      /// Uses `x.kind != Subject.kind` to compare two instances.
+      struct PunctuationStaysInsideCodeSpan {}
+      """,
+      findings: [
+        FindingSpec("1️⃣", message: #"add a blank comment line after this sentence: "Held in the keychain.""#),
+        FindingSpec("2️⃣", message: #"add a blank comment line after this sentence: "Alpha beta.""#),
+        FindingSpec("3️⃣", message: #"add a blank comment line after this sentence: "Pass  to escape the delimiter.""#),
+      ]
+    )
+  }
+
   func testSentenceTerminationInsideQuotes() {
     assertLint(
       BeginDocumentationCommentWithOneLineSummary.self,
