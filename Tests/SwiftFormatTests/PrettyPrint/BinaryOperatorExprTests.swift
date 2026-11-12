@@ -263,4 +263,31 @@ final class BinaryOperatorExprTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected10, linelength: 10)
   }
+
+  func testRangeFormationOperatorsAreNotCompactedWhenBlockCommentPrecedesOperator() {
+    let input =
+      """
+      for i in 1 /* start */ ..< n { _ = i }
+      x = 1 /* end */ ... 100
+      """
+
+    // The space between the block comment and the operator must be preserved.
+    // A block comment counts as whitespace for operator-fixity classification,
+    // so removing the space would make the parser treat the operator as prefix.
+    let expected =
+      """
+      for i in 1 /* start */ ..< n { _ = i }
+      x = 1 /* end */ ... 100
+
+      """
+
+    var configuration = Configuration.forTesting
+    configuration.spacesAroundRangeFormationOperators = false
+    assertPrettyPrintEqual(
+      input: input,
+      expected: expected,
+      linelength: 80,
+      configuration: configuration
+    )
+  }
 }
