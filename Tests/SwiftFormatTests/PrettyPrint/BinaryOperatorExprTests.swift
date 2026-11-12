@@ -72,6 +72,27 @@ final class BinaryOperatorExprTests: PrettyPrintTestCase {
     )
   }
 
+  func testRangeFormationOperatorsAreNotCompactedNextToBlockComments() {
+    let input =
+      """
+      x = 1 /* lower bound */ ..< n
+      x = 1 ..< /* upper bound */ n
+      x = 1 /* lower bound */ ... n
+      x = 1 ... /* upper bound */ n
+      """
+
+    let expected =
+      """
+      x = 1 /* lower bound */ ..< n
+      x = 1 ..< /* upper bound */ n
+      x = 1 /* lower bound */ ... n
+      x = 1 ... /* upper bound */ n
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
+  }
+
   func testRangeFormationOperatorCompaction_spacesAroundRangeFormation() {
     let input =
       """
