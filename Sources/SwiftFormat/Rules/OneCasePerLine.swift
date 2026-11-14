@@ -123,8 +123,12 @@ public final class OneCasePerLine: SyntaxFormatRule {
     for member in node.memberBlock.members {
       // If it's not a case declaration, or it's a case declaration with only one element, leave it
       // alone.
-      guard let caseDecl = member.decl.as(EnumCaseDeclSyntax.self), caseDecl.elements.count > 1 else {
-        newMembers.append(member)
+      guard
+        let caseDecl = member.decl.as(EnumCaseDeclSyntax.self),
+        caseDecl.elements.count > 1,
+        shouldFormat(caseDecl)
+      else {
+        newMembers.append(visit(member))
         continue
       }
 

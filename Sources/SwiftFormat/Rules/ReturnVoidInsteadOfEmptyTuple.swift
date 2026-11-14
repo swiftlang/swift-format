@@ -24,7 +24,8 @@ import SwiftSyntax
 public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
   public override func visit(_ node: FunctionTypeSyntax) -> TypeSyntax {
     guard let returnType = node.returnClause.type.as(TupleTypeSyntax.self),
-      returnType.elements.count == 0
+      returnType.elements.count == 0,
+      shouldFormat(returnType)
     else {
       return super.visit(node)
     }
@@ -54,7 +55,8 @@ public final class ReturnVoidInsteadOfEmptyTuple: SyntaxFormatRule {
     guard
       let returnClause = node.returnClause,
       let returnType = returnClause.type.as(TupleTypeSyntax.self),
-      returnType.elements.count == 0
+      returnType.elements.count == 0,
+      shouldFormat(returnType)
     else {
       return super.visit(node)
     }

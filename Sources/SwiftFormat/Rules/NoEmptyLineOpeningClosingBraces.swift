@@ -69,6 +69,7 @@ public final class NoEmptyLinesOpeningClosingBraces: SyntaxFormatRule {
   }
 
   func rewritten(_ token: TokenSyntax) -> TokenSyntax {
+    guard shouldFormat(token) else { return token }
     let (trimmedLeadingTrivia, count) = token.leadingTrivia.trimmingSuperfluousNewlines(
       fromClosingBrace: token.tokenKind == .rightBrace
     )
@@ -82,7 +83,10 @@ public final class NoEmptyLinesOpeningClosingBraces: SyntaxFormatRule {
 
   func rewritten<C: SyntaxCollection>(_ collection: C) -> C {
     var result = collection
-    if let first = collection.first, first.leadingTrivia.containsNewlines,
+    if let first = collection.first,
+      let firstPiece = first.leadingTrivia.first,
+      first.leadingTrivia.containsNewlines,
+      shouldFormat(first, triviaRange: first.position..<(first.position + firstPiece.sourceLength)),
       let index = collection.index(of: first)
     {
       let (trimmedLeadingTrivia, count) = first.leadingTrivia.trimmingSuperfluousNewlines(fromClosingBrace: false)

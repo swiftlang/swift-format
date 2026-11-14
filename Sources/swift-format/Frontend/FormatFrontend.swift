@@ -63,7 +63,12 @@ class FormatFrontend: Frontend {
 
         if buffer != source {
           let bufferData = buffer.data(using: .utf8)!  // Conversion to UTF-8 cannot fail
+          #if !os(WASI)
           try bufferData.writeAtomicallyPreservingPermissions(to: url)
+          #else
+          // WASI does not support atomic file-writing (temporary directories) and POSIX permissions.
+          try bufferData.write(to: url)
+          #endif
         }
       } else {
         try formatter.format(

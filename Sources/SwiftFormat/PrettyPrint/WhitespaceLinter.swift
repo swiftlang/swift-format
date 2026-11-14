@@ -13,6 +13,7 @@
 import SwiftSyntax
 
 private let utf8Newline = UTF8.CodeUnit(ascii: "\n")
+private let utf8CarriageReturn = UTF8.CodeUnit(ascii: "\r")
 private let utf8Tab = UTF8.CodeUnit(ascii: "\t")
 
 /// Emits linter errors for whitespace style violations by comparing the raw text of the input Swift
@@ -122,19 +123,20 @@ public class WhitespaceLinter {
       }
     } else {
       var runIndex = 0
-      let excessUserLines = userRuns.count - formattedRuns.count
+      var remainingExcessLines = userRuns.count - formattedRuns.count
 
       while let userRun = userRunsIterator.next() {
-        let possibleFormattedRun = formattedRunsIterator.next()
-
-        if runIndex < excessUserLines {
-          // If there were excess newlines in the user input, tell the user to remove them. This
-          // short-circuits the trailing whitespace check below; we don't bother telling the user
-          // about trailing whitespace on a line that we're also telling them to delete.
-          diagnose(.removeLineError, category: .removeLine, utf8Offset: userIndex)
-          userIndex += userRun.count + 1
-        } else if runIndex != userRuns.count - 1 {
-          if let formattedRun = possibleFormattedRun {
+        if runIndex != userRuns.count - 1 {
+          let position = AbsolutePosition(utf8Offset: userIndex)
+          if remainingExcessLines > 0
+            && context.selection.overlapsOrTouches(position..<position)
+          {
+            // If there were excess newlines in the user input, tell the user to remove them. This
+            // short-circuits the trailing whitespace check below; we don't bother telling the user
+            // about trailing whitespace on a line that we're also telling them to delete.
+            diagnose(.removeLineError, category: .removeLine, utf8Offset: userIndex)
+            remainingExcessLines -= 1
+          } else if let formattedRun = formattedRunsIterator.next() {
             // If this isn't the last whitespace run, then it must precede a newline, so we check
             // for trailing whitespace violations.
             checkForTrailingWhitespaceErrors(
@@ -213,7 +215,7 @@ public class WhitespaceLinter {
     var userLength = userIndent
     for index in adjustedUserIndex..<userText.count {
       // Count characters up to the newline.
-      if userText[index] == utf8Newline { break }
+      if userText[index] == utf8Newline || userText[index] == utf8CarriageReturn { break }
       userLength += 1
     }
 
@@ -238,7 +240,7 @@ public class WhitespaceLinter {
     var formattedLength = formattedIndent
     for index in adjustedFormattedIndex..<formattedText.count {
       // Count characters up to the newline.
-      if formattedText[index] == utf8Newline { break }
+      if formattedText[index] == utf8Newline || formattedText[index] == utf8CarriageReturn { break }
       formattedLength += 1
     }
 
@@ -291,9 +293,18 @@ public class WhitespaceLinter {
     userRun: ArraySlice<UTF8.CodeUnit>,
     formattedRun: ArraySlice<UTF8.CodeUnit>
   ) {
-    if userRun != formattedRun {
+    if trimmingTrailingCarriageReturn(userRun) != trimmingTrailingCarriageReturn(formattedRun) {
       diagnose(.trailingWhitespaceError, category: .trailingWhitespace, utf8Offset: userIndex)
     }
+  }
+
+  private func trimmingTrailingCarriageReturn(
+    _ run: ArraySlice<UTF8.CodeUnit>
+  ) -> ArraySlice<UTF8.CodeUnit> {
+    if run.last == utf8CarriageReturn {
+      return run.dropLast()
+    }
+    return run
   }
 
   /// Compare user and formatted whitespace buffers, and check for spacing errors.
@@ -368,6 +379,7 @@ public class WhitespaceLinter {
     utf8Offset: Int
   ) {
     let absolutePosition = AbsolutePosition(utf8Offset: utf8Offset)
+    guard context.selection.overlapsOrTouches(absolutePosition..<absolutePosition) else { return }
     let sourceLocation = context.sourceLocationConverter.location(for: absolutePosition)
     context.findingEmitter.emit(
       message,

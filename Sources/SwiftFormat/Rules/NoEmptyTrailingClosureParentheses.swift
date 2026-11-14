@@ -28,6 +28,8 @@ public final class NoEmptyTrailingClosureParentheses: SyntaxFormatRule {
       let trailingClosure = node.trailingClosure,
       let leftParen = node.leftParen,
       let rightParen = node.rightParen,
+      shouldFormat(leftParen),
+      shouldFormat(rightParen),
       node.arguments.isEmpty,
       !leftParen.trailingTrivia.hasAnyComments,
       !rightParen.leadingTrivia.hasAnyComments

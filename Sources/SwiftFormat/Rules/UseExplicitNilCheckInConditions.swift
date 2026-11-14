@@ -29,6 +29,7 @@ import SwiftSyntaxBuilder
 @_spi(Rules)
 public final class UseExplicitNilCheckInConditions: SyntaxFormatRule {
   public override func visit(_ node: ConditionElementSyntax) -> ConditionElementSyntax {
+    guard shouldFormat(node) else { return node }
     switch node.condition {
     case .optionalBinding(let optionalBindingCondition):
       guard

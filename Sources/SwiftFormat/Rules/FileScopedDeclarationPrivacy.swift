@@ -142,17 +142,20 @@ public final class FileScopedDeclarationPrivacy: SyntaxFormatRule {
       return decl
     }
 
+    var modified = false
     let newModifiers = decl.modifiers.map { modifier -> DeclModifierSyntax in
       var modifier = modifier
 
       let name = modifier.name
-      if case .keyword(invalidAccess) = name.tokenKind {
+      if case .keyword(invalidAccess) = name.tokenKind, shouldFormat(name) {
         diagnose(diagnostic, on: name)
         modifier.name.tokenKind = .keyword(validAccess)
+        modified = true
       }
       return modifier
     }
 
+    guard modified else { return decl }
     var result = decl
     result.modifiers = DeclModifierListSyntax(newModifiers)
     return result

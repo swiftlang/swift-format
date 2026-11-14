@@ -27,12 +27,12 @@ public final class UseWhereClausesInForLoops: SyntaxFormatRule {
 
   public override func visit(_ node: ForStmtSyntax) -> StmtSyntax {
     // Extract IfStmt node if it's the only node in the function's body.
-    guard !node.body.statements.isEmpty else { return StmtSyntax(node) }
+    guard shouldFormat(node), !node.body.statements.isEmpty else { return super.visit(node) }
     let firstStatement = node.body.statements.first!
 
     // Ignore for-loops with a `where` clause already.
     // TODO: Create an `&&` expression with both conditions?
-    guard node.whereClause == nil else { return StmtSyntax(node) }
+    guard node.whereClause == nil else { return super.visit(node) }
 
     // Match:
     //  - If the for loop has 1 statement, and it is an IfStmt, with a single

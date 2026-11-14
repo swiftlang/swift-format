@@ -49,14 +49,34 @@ public enum Selection {
     case .infinite, .ranges:
       return self
     case .unresolvedLineRanges(let lineRanges):
-      let resolvedRanges = lineRanges.map { lineRange in
+      let sourceLines = converter.sourceLines
+      let resolvedRanges: [Range<AbsolutePosition>] = lineRanges.compactMap { lineRange in
         let start = converter.position(ofLine: lineRange.lowerBound, column: 1)
         let nextLineStart = converter.position(ofLine: lineRange.upperBound + 1, column: 1)
         if start == nextLineStart {
-          return start..<start
+          return nil
         }
-        // Subtract 1 from the next line's start offset to get the end of the current line.
-        let end = AbsolutePosition(utf8Offset: nextLineStart.utf8Offset - 1)
+        // Strip the trailing line terminator (`\n`, `\r\n`, or `\r`) of the last selected line to
+        // get the end offset of that line's contents.
+        var endOffset = nextLineStart.utf8Offset
+        var lastLineIndex = min(lineRange.upperBound, sourceLines.count) - 1
+        if lastLineIndex > 0 && sourceLines[lastLineIndex].isEmpty {
+          lastLineIndex -= 1
+        }
+        if lastLineIndex >= 0 && lastLineIndex < sourceLines.count {
+          let lastLineUTF8 = sourceLines[lastLineIndex].utf8
+          if lastLineUTF8.last == UInt8(ascii: "\n") {
+            endOffset -= 1
+            if lastLineUTF8.dropLast().last == UInt8(ascii: "\r") {
+              endOffset -= 1
+            }
+          } else {
+            endOffset -= 1
+          }
+        } else {
+          endOffset -= 1
+        }
+        let end = AbsolutePosition(utf8Offset: max(start.utf8Offset, endOffset))
         return start..<end
       }
       return .ranges(resolvedRanges)
@@ -84,6 +104,115 @@ public enum Selection {
       fatalError("Must resolve Selection before calling overlapsOrTouches")
     }
   }
+
+  /// Returns a copy of this selection with its UTF-8 byte ranges adjusted to account for syntax
+  /// rewrites between `oldTree` and `newTree`.
+  func adjusted(from oldTree: Syntax, to newTree: Syntax) -> Selection {
+    switch self {
+    case .infinite:
+      return .infinite
+    case .ranges(let ranges):
+      guard !ranges.isEmpty else { return self }
+      var edits: [(range: Range<AbsolutePosition>, delta: Int)] = []
+      Self.collectEdits(from: oldTree, to: newTree, into: &edits)
+      guard !edits.isEmpty else { return self }
+
+      let adjustedRanges = ranges.map { range -> Range<AbsolutePosition> in
+        var lowerDelta = 0
+        var upperDelta = 0
+        for edit in edits {
+          if edit.range.upperBound.utf8Offset <= range.lowerBound.utf8Offset {
+            lowerDelta += edit.delta
+            upperDelta += edit.delta
+          } else if edit.range.lowerBound.utf8Offset < range.upperBound.utf8Offset {
+            if edit.range.lowerBound.utf8Offset < range.lowerBound.utf8Offset {
+              let minLower = edit.range.lowerBound.utf8Offset - range.lowerBound.utf8Offset
+              lowerDelta += max(minLower, min(0, edit.delta))
+            }
+            upperDelta += edit.delta
+          }
+        }
+        let newLower = max(0, range.lowerBound.utf8Offset + lowerDelta)
+        let newUpper = max(newLower, range.upperBound.utf8Offset + upperDelta)
+        return AbsolutePosition(utf8Offset: newLower)..<AbsolutePosition(utf8Offset: newUpper)
+      }
+      return .ranges(adjustedRanges)
+    case .unresolvedLineRanges:
+      fatalError("Must resolve Selection before calling adjusted(from:to:)")
+    }
+  }
+
+  /// Recursively computes the UTF-8 byte-length deltas between `oldNode` and `newNode`, expressed
+  /// in the coordinate space of `oldNode`.
+  private static func collectEdits(
+    from oldNode: Syntax,
+    to newNode: Syntax,
+    into edits: inout [(range: Range<AbsolutePosition>, delta: Int)]
+  ) {
+    if oldNode.detached == newNode.detached {
+      return
+    }
+
+    if oldNode.kind == newNode.kind {
+      let oldChildren = Array(oldNode.children(viewMode: .all))
+      let newChildren = Array(newNode.children(viewMode: .all))
+      if !oldChildren.isEmpty || !newChildren.isEmpty {
+        var prefixCount = 0
+        while prefixCount < oldChildren.count,
+          prefixCount < newChildren.count,
+          oldChildren[prefixCount].detached == newChildren[prefixCount].detached
+        {
+          prefixCount += 1
+        }
+
+        var suffixCount = 0
+        while suffixCount < (oldChildren.count - prefixCount),
+          suffixCount < (newChildren.count - prefixCount),
+          oldChildren[oldChildren.count - 1 - suffixCount].detached
+            == newChildren[newChildren.count - 1 - suffixCount].detached
+        {
+          suffixCount += 1
+        }
+
+        let oldMid = oldChildren[prefixCount..<(oldChildren.count - suffixCount)]
+        let newMid = newChildren[prefixCount..<(newChildren.count - suffixCount)]
+
+        if oldMid.count == newMid.count {
+          for (oldChild, newChild) in zip(oldMid, newMid) {
+            collectEdits(from: oldChild, to: newChild, into: &edits)
+          }
+          return
+        }
+
+        let newLen = newMid.reduce(0) { $0 + $1.totalLength.utf8Length }
+        if let firstOld = oldMid.first, let lastOld = oldMid.last {
+          let start = firstOld.position
+          let end = lastOld.endPosition
+          let oldLen = end.utf8Offset - start.utf8Offset
+          let delta = newLen - oldLen
+          if delta != 0 {
+            edits.append((range: start..<end, delta: delta))
+          }
+        } else if newLen != 0 {
+          let insertionPoint: AbsolutePosition
+          if prefixCount > 0 {
+            insertionPoint = oldChildren[prefixCount - 1].endPosition
+          } else if suffixCount > 0 {
+            insertionPoint = oldChildren[oldChildren.count - suffixCount].position
+          } else {
+            insertionPoint = oldNode.position
+          }
+          edits.append((range: insertionPoint..<insertionPoint, delta: newLen))
+        }
+        return
+      }
+    }
+
+    let delta = newNode.totalLength.utf8Length - oldNode.totalLength.utf8Length
+    if delta != 0 {
+      edits.append((range: oldNode.position..<oldNode.endPosition, delta: delta))
+    }
+  }
 }
 
 public extension Syntax {
@@ -93,7 +222,10 @@ public extension Syntax {
     case .infinite:
       return true
     case .ranges(let ranges):
-      return ranges.contains { return $0.lowerBound <= position && endPosition <= $0.upperBound }
+      return ranges.contains {
+        return $0.lowerBound <= positionAfterSkippingLeadingTrivia
+          && endPositionBeforeTrailingTrivia <= $0.upperBound
+      }
     case .unresolvedLineRanges:
       fatalError("Must resolve Selection before calling isInsideSelection")
     }

@@ -200,6 +200,40 @@ final class SwiftFormatterSelectionTests: XCTestCase {
     try assertFormatting(source, expected: expected, selection: Selection(lineRanges: [10...20]))
   }
 
+  func testEndOfLineCommentAtEndOfSelectionDoesNotLeakFormattingOntoNextLine() throws {
+    let lineCommentSource = """
+      let   a   =   1 // trailing comment
+        let   b   =   2
+      """
+
+    let expectedLineCommentFormatted = """
+      let a = 1  // trailing comment
+        let   b   =   2
+      """
+
+    try assertFormatting(
+      lineCommentSource,
+      expected: expectedLineCommentFormatted,
+      selection: Selection(lineRanges: [1...1])
+    )
+
+    let blockCommentSource = """
+      let   a   =   1 /* trailing block comment */
+        let   b   =   2
+      """
+
+    let expectedBlockCommentFormatted = """
+      let a = 1 /* trailing block comment */
+        let   b   =   2
+      """
+
+    try assertFormatting(
+      blockCommentSource,
+      expected: expectedBlockCommentFormatted,
+      selection: Selection(lineRanges: [1...1])
+    )
+  }
+
   func testPartialOutOfBoundsLineRange() throws {
     let source = """
       let x = 1
@@ -232,15 +266,986 @@ final class SwiftFormatterSelectionTests: XCTestCase {
     try assertFormatting(source, expected: expected, selection: Selection(lineRanges: [0...0]))
   }
 
+  func testMultilineStringLiteralWithSelection() throws {
+    let source = #"""
+      let   s   =   """
+          hello \(1 + 2)
+          world
+          """
+
+      """#
+
+    // Selecting only the closing `"""` line must not dedent `"""` relative to the unselected
+    // content lines (which would silently alter the string literal's runtime value).
+    try assertFormatting(
+      source,
+      expected: source,
+      selection: Selection(lineRanges: [4...4])
+    )
+
+    // Selecting only a middle content line (even one containing string interpolation) must not
+    // partially format or re-indent the multiline string literal.
+    try assertFormatting(
+      source,
+      expected: source,
+      selection: Selection(lineRanges: [2...2])
+    )
+
+    // Selecting only the opening line formats the declaration up to `"""` without re-indenting the
+    // unselected content lines or closing `"""`.
+    let expectedOpeningLineFormatted = #"""
+      let s = """
+          hello \(1 + 2)
+          world
+          """
+
+      """#
+    try assertFormatting(
+      source,
+      expected: expectedOpeningLineFormatted,
+      selection: Selection(lineRanges: [1...1])
+    )
+
+    // Selecting the entire multiline string literal formats the declaration and re-indents the
+    // string lines and closing quote together.
+    let expectedAllFormatted = #"""
+      let s = """
+        hello \(1 + 2)
+        world
+        """
+
+      """#
+    try assertFormatting(
+      source,
+      expected: expectedAllFormatted,
+      selection: Selection(lineRanges: [1...4])
+    )
+
+    // Selecting the closing line of a multiline string argument still formats tokens after `"""` on
+    // that line while keeping the closing `"""` indentation intact.
+    let callSource = #"""
+      foo(
+        """
+          hello
+          """,   bar:   1
+      )
+
+      """#
+    let expectedCallClosingLineFormatted = #"""
+      foo(
+        """
+          hello
+          """, bar: 1
+      )
+
+      """#
+    try assertFormatting(
+      callSource,
+      expected: expectedCallClosingLineFormatted,
+      selection: Selection(lineRanges: [4...4])
+    )
+  }
+
+  func testReflowCommentCompletelyEncompassed() throws {
+    let source = """
+      /// This is a very long doc comment attached to a function that exceeds the line length limit.
+      func foo(a: Int,   b: Int) {
+      let x = 1
+      }
+
+      """
+
+    let expected = """
+      /// This is a very long doc comment attached to a function
+      /// that exceeds the line length limit.
+      func foo(a: Int,   b: Int) {
+      let x = 1
+      }
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expected,
+      selection: Selection(lineRanges: [1...1]),
+      reflowComments: true
+    )
+  }
+
+  func testCRLFLineEndingsWithSelection() throws {
+    let source =
+      "func foo() {\r\n"
+      + "    let   a   =   1\r\n"
+      + "    let   b   =   2\r\n"
+      + "}\r\n"
+
+    // Selecting only line 2 formats and indents line 2 properly (preserving `isAtStartOfLine` after
+    // line 1's `\r\n`) and stops at the end of line 2 without leaking formatting onto line 3.
+    let expected =
+      "func foo() {\r\n"
+      + "  let a = 1\r\n"
+      + "    let   b   =   2\r\n"
+      + "}\r\n"
+
+    try assertFormatting(
+      source,
+      expected: expected,
+      selection: Selection(lineRanges: [2...2])
+    )
+
+    // Multiline string segments ending with `\r\n` must preserve their line breaks and indentation
+    // (because `"\r\n"` is a single Character grapheme cluster whose last UTF-8 byte is `\n`).
+    let multilineCRLFSource =
+      "func foo() {\r\n"
+      + "    let s = \"\"\"\r\n"
+      + "        hello\r\n"
+      + "        world\r\n"
+      + "        \"\"\"\r\n"
+      + "}\r\n"
+
+    let expectedMultilineCRLF =
+      "func foo() {\r\n"
+      + "  let s = \"\"\"\n"
+      + "    hello\n"
+      + "    world\n"
+      + "    \"\"\"\r\n"
+      + "}\r\n"
+
+    try assertFormatting(
+      multilineCRLFSource,
+      expected: expectedMultilineCRLF,
+      selection: Selection(lineRanges: [2...5])
+    )
+  }
+
+  func testReflowCommentFunctionHeaderEncompassedButNotDocComment() throws {
+    let source = """
+      /// This is a very long doc comment attached to a function that exceeds the line length limit.
+      /// And a second line of the doc comment.
+      func foo(a: Int,   b: Int) {
+      let x = 1
+      }
+
+      """
+
+    let expected = """
+      /// This is a very long doc comment attached to a function that exceeds the line length limit.
+      /// And a second line of the doc comment.
+      func foo(a: Int, b: Int) {
+      let x = 1
+      }
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expected,
+      selection: Selection(lineRanges: [3...3]),
+      reflowComments: true
+    )
+  }
+
+  func testBlankLinesWithSelection() throws {
+    let source = """
+      func foo() {
+          let   a   =   1
+
+
+
+          let   b   =   2
+      }
+
+      """
+
+    // Selecting the blank lines and the second declaration (lines 3...6) or the newly added excess
+    // blank lines and the second declaration (lines 4...6) collapses the excess blank lines and
+    // formats line 6 while leaving unselected line 2 untouched.
+    let expectedBlankLinesAndSecondDecl = """
+      func foo() {
+          let   a   =   1
+
+        let b = 2
+      }
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expectedBlankLinesAndSecondDecl,
+      selection: Selection(lineRanges: [3...6])
+    )
+    try assertFormatting(
+      source,
+      expected: expectedBlankLinesAndSecondDecl,
+      selection: Selection(lineRanges: [4...6])
+    )
+
+    // Selecting only the blank lines (lines 3...5) collapses the excess blank lines without
+    // formatting or re-indenting either surrounding declaration.
+    let expectedBlankLinesOnly = """
+      func foo() {
+          let   a   =   1
+
+          let   b   =   2
+      }
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expectedBlankLinesOnly,
+      selection: Selection(lineRanges: [3...5])
+    )
+
+    // Selecting only one of the surrounding declarations without any of the blank lines preserves
+    // the unselected excess blank lines.
+    let expectedFirstDeclOnly = """
+      func foo() {
+        let a = 1
+
+
+
+          let   b   =   2
+      }
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expectedFirstDeclOnly,
+      selection: Selection(lineRanges: [2...2])
+    )
+
+    let expectedSecondDeclOnly = """
+      func foo() {
+          let   a   =   1
+
+
+
+        let b = 2
+      }
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expectedSecondDeclOnly,
+      selection: Selection(lineRanges: [6...6])
+    )
+
+    // Selecting a declaration and a single following blank line must not leak formatting onto the
+    // unselected declaration after the blank line.
+    let singleBlankLineSource = """
+      func foo() {
+          let   a   =   1
+
+          let   b   =   2
+      }
+
+      """
+
+    let expectedSingleBlankLine = """
+      func foo() {
+        let a = 1
+
+          let   b   =   2
+      }
+
+      """
+
+    try assertFormatting(
+      singleBlankLineSource,
+      expected: expectedSingleBlankLine,
+      selection: Selection(lineRanges: [2...3])
+    )
+  }
+
+  func testLeadingAndTrailingFileBlankLinesWithSelection() throws {
+    let leadingBlankLinesSource = "\n\nlet   a   =   1\n"
+
+    // Selecting only the leading blank lines at the start of the file strips them without
+    // formatting the unselected declaration on line 3.
+    try assertFormatting(
+      leadingBlankLinesSource,
+      expected: "let   a   =   1\n",
+      selection: Selection(lineRanges: [1...2])
+    )
+
+    // Selecting only the declaration on line 3 preserves the unselected leading blank lines.
+    try assertFormatting(
+      leadingBlankLinesSource,
+      expected: "\n\nlet a = 1\n",
+      selection: Selection(lineRanges: [3...3])
+    )
+
+    let trailingBlankLinesSource = "let   a   =   1\n\n\n"
+
+    // Selecting only the trailing blank lines at the end of the file strips them to a single
+    // trailing newline without formatting line 1.
+    try assertFormatting(
+      trailingBlankLinesSource,
+      expected: "let   a   =   1\n",
+      selection: Selection(lineRanges: [2...3])
+    )
+
+    // Selecting line 1 through the trailing blank lines formats line 1 and preserves the final
+    // trailing newline.
+    try assertFormatting(
+      trailingBlankLinesSource,
+      expected: "let a = 1\n",
+      selection: Selection(lineRanges: [1...3])
+    )
+
+    // Selecting only line 1 preserves the unselected trailing blank lines.
+    try assertFormatting(
+      trailingBlankLinesSource,
+      expected: "let a = 1\n\n\n",
+      selection: Selection(lineRanges: [1...1])
+    )
+  }
+
+  func testIndentBlankLinesWithSelection() throws {
+    var config = Configuration.forTesting
+    config.indentBlankLines = true
+
+    let source = """
+      func foo() {
+        let a = 1
+
+
+
+        let b = 2
+      }
+
+      """
+
+    let expected = """
+      func foo() {
+        let a = 1
+      \u{0020}\u{0020}
+        let b = 2
+      }
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expected,
+      selection: Selection(lineRanges: [3...6]),
+      configuration: config
+    )
+  }
+
+  func testReflowCommentFunctionHeaderEncompassedButNotDocBlockComment() throws {
+    let source = """
+      /**
+       * This is a very long doc block comment attached to a function that exceeds the line length.
+       */
+      func foo(a: Int,   b: Int) {
+      let x = 1
+      }
+
+      """
+
+    let expected = """
+      /**
+       * This is a very long doc block comment attached to a function that exceeds the line length.
+       */
+      func foo(a: Int, b: Int) {
+      let x = 1
+      }
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expected,
+      selection: Selection(lineRanges: [4...4]),
+      reflowComments: true
+    )
+  }
+
+  func testReflowMultilineLineCommentPartiallyEncompassedFirstLine() throws {
+    let source = """
+      /// This is the first line of a doc comment that is very long and exceeds the column limit
+      /// and this is the second line of the paragraph
+      /// and the third line.
+      func foo(a: Int,   b: Int) {}
+
+      """
+
+    let expected = """
+      /// This is the first line of a doc comment that is very
+      /// long and exceeds the column limit and this is the second
+      /// line of the paragraph and the third line.
+      func foo(a: Int,   b: Int) {}
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expected,
+      selection: Selection(lineRanges: [1...1]),
+      reflowComments: true
+    )
+  }
+
+  func testReflowMultilineLineCommentPartiallyEncompassedMiddleLine() throws {
+    let source = """
+      /// This is the first line of a doc comment that is very long and exceeds the column limit
+      /// and this is the second line of the paragraph
+      /// and the third line.
+      func foo(a: Int,   b: Int) {}
+
+      """
+
+    let expected = """
+      /// This is the first line of a doc comment that is very
+      /// long and exceeds the column limit and this is the second
+      /// line of the paragraph and the third line.
+      func foo(a: Int,   b: Int) {}
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expected,
+      selection: Selection(lineRanges: [2...2]),
+      reflowComments: true
+    )
+  }
+
+  func testReflowMultilineLineCommentPartiallyEncompassedLastLine() throws {
+    let source = """
+      /// This is the first line of a doc comment that is very long and exceeds the column limit
+      /// and this is the second line of the paragraph
+      /// and the third line.
+      func foo(a: Int,   b: Int) {}
+
+      """
+
+    let expected = """
+      /// This is the first line of a doc comment that is very
+      /// long and exceeds the column limit and this is the second
+      /// line of the paragraph and the third line.
+      func foo(a: Int,   b: Int) {}
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expected,
+      selection: Selection(lineRanges: [3...3]),
+      reflowComments: true
+    )
+  }
+
+  func testReflowMultilineLineCommentPartiallyEncompassedAndFunctionHeader() throws {
+    let source = """
+      /// This is the first line of a doc comment that is very long and exceeds the column limit
+      /// and this is the second line of the paragraph
+      /// and the third line.
+      func foo(a: Int,   b: Int) {
+      let x = 1
+      }
+
+      """
+
+    let expected = """
+      /// This is the first line of a doc comment that is very
+      /// long and exceeds the column limit and this is the second
+      /// line of the paragraph and the third line.
+      func foo(a: Int, b: Int) {
+      let x = 1
+      }
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expected,
+      selection: Selection(lineRanges: [3...4]),
+      reflowComments: true
+    )
+  }
+
+  func testReflowBlockCommentPartiallyEncompassed() throws {
+    var config = Configuration.forTesting
+    config.rules["UseTripleSlashForDocumentationComments"] = false
+
+    let source = """
+      /**
+       * This is the first line of a doc block comment that is very long and exceeds the limit
+       * and this is the second line of the paragraph.
+       */
+      func foo(a: Int,   b: Int) {}
+
+      """
+
+    let expected = """
+      /**
+       * This is the first line of a doc block comment that is
+       * very long and exceeds the limit and this is the second
+       * line of the paragraph.
+       */
+      func foo(a: Int,   b: Int) {}
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expected,
+      selection: Selection(lineRanges: [3...3]),
+      reflowComments: true,
+      configuration: config
+    )
+  }
+
+  func testReflowCommentPartiallyEncompassedInsideFencedCodeBlock() throws {
+    let source = """
+      /// This is a very long summary line above the code block that exceeds the line length limit.
+      ///
+      /// ```swift
+      /// let veryLongCodeLineInsideCodeBlock = someFunction(firstArg: 1, secondArg: 2)
+      /// ```
+      func foo() {}
+
+      """
+
+    let expected = """
+      /// This is a very long summary line above the code block
+      /// that exceeds the line length limit.
+      ///
+      /// ```swift
+      /// let veryLongCodeLineInsideCodeBlock = someFunction(firstArg: 1, secondArg: 2)
+      /// ```
+      func foo() {}
+
+      """
+
+    // Selecting only line 4 (inside the fenced code block) still keeps the contiguous doc comment
+    // together so the code block is recognized and preserved while the prose is reflowed.
+    try assertFormatting(
+      source,
+      expected: expected,
+      selection: Selection(lineRanges: [4...4]),
+      reflowComments: true
+    )
+  }
+
+  func testReflowOnlyTouchedCommentAmongMultipleComments() throws {
+    let source = """
+      // First separate comment that is very long and exceeds the line length limit.
+
+      // Second separate comment that is also very long and exceeds the line length limit.
+      // Continuation of the second comment.
+
+      // Third separate comment that is also very long and exceeds the line length limit.
+      let x = 1
+
+      """
+
+    let expected = """
+      // First separate comment that is very long and exceeds the line length limit.
+
+      // Second separate comment that is also very long and
+      // exceeds the line length limit. Continuation of the second
+      // comment.
+
+      // Third separate comment that is also very long and exceeds the line length limit.
+      let x = 1
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expected,
+      selection: Selection(lineRanges: [4...4]),
+      reflowComments: true
+    )
+  }
+
+  func testMultilineCollectionTrailingCommaWithSelection() throws {
+    let dictionaryWithTrailingComma = """
+      let dict = [
+        "a": 1,
+        "b": 2,
+      ]
+
+      """
+
+    // Selecting the last element lines of a multi-line dictionary literal must preserve an
+    // existing trailing comma even when the closing bracket line is outside the selection.
+    try assertFormatting(
+      dictionaryWithTrailingComma,
+      expected: dictionaryWithTrailingComma,
+      selection: Selection(lineRanges: [2...3]),
+      multiElementCollectionTrailingCommas: true
+    )
+
+    let dictionaryWithoutTrailingComma = """
+      let dict = [
+        "a": 1,
+        "b": 2
+      ]
+
+      """
+
+    // Selecting the last element line when a trailing comma is missing must insert it.
+    try assertFormatting(
+      dictionaryWithoutTrailingComma,
+      expected: dictionaryWithTrailingComma,
+      selection: Selection(lineRanges: [3...3]),
+      multiElementCollectionTrailingCommas: true
+    )
+
+    // Selecting only an earlier element line must not modify the unselected last element line.
+    try assertFormatting(
+      dictionaryWithoutTrailingComma,
+      expected: dictionaryWithoutTrailingComma,
+      selection: Selection(lineRanges: [2...2]),
+      multiElementCollectionTrailingCommas: true
+    )
+
+    let arrayWithoutTrailingComma = """
+      let array = [
+        1,
+        2
+      ]
+
+      """
+
+    let arrayWithTrailingComma = """
+      let array = [
+        1,
+        2,
+      ]
+
+      """
+
+    try assertFormatting(
+      arrayWithoutTrailingComma,
+      expected: arrayWithTrailingComma,
+      selection: Selection(lineRanges: [3...3]),
+      multiElementCollectionTrailingCommas: true
+    )
+
+    try assertFormatting(
+      arrayWithTrailingComma,
+      expected: arrayWithTrailingComma,
+      selection: Selection(lineRanges: [2...3]),
+      multiElementCollectionTrailingCommas: true
+    )
+  }
+
+  func testSyntaxFormatRulesWithSelection() throws {
+    let source = """
+      func foo(x: Int?, y: Bool) -> Void {
+        var a = 1, b = 2;
+        var c = 3, d = 4;
+        if(y) {
+          let unselected: Array<Int> = []
+        }
+        if(y), let _ = x {
+          let selected: Array<Int> = []
+        }
+      }
+
+      """
+
+    let expected = """
+      func foo(x: Int?, y: Bool) -> Void {
+        var a = 1, b = 2;
+        var c = 3
+        var d = 4
+        if(y) {
+          let unselected: Array<Int> = []
+        }
+        if y, x != nil {
+          let selected: [Int] = []
+        }
+      }
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expected,
+      selection: Selection(lineRanges: [3...3, 7...8])
+    )
+  }
+
+  func testOrderedImportsWithSelection() throws {
+    let source = """
+      import Zebra
+      import Alpha
+      import Beta
+
+      let x = 1;
+
+      """
+
+    // Selecting the entire import block reorders the imports without formatting unselected line 5.
+    let expectedWhenImportsSelected = """
+      import Alpha
+      import Beta
+      import Zebra
+
+      let x = 1;
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expectedWhenImportsSelected,
+      selection: Selection(lineRanges: [1...3])
+    )
+
+    // Selecting only a single line of the import block leaves the imports unchanged.
+    try assertFormatting(
+      source,
+      expected: source,
+      selection: Selection(lineRanges: [2...2])
+    )
+
+    // Selecting only line 5 formats line 5 (removing the semicolon) without reordering the
+    // unselected imports on lines 1...3.
+    let expectedWhenLine5Selected = """
+      import Zebra
+      import Alpha
+      import Beta
+
+      let x = 1
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expectedWhenLine5Selected,
+      selection: Selection(lineRanges: [5...5])
+    )
+  }
+
+  func testDocBlockCommentsWithSelection() throws {
+    let source = """
+      /**
+       * Unselected doc block comment.
+       */
+      func first() {}
+
+      /**
+       * Selected doc block comment.
+       */
+      func second() {
+      let x = 1;
+      }
+
+      """
+
+    // Selecting a line inside the second doc block comment converts it to doc line comments
+    // without formatting the unselected body of `second()` or the first doc block comment.
+    let expectedWhenDocCommentSelected = """
+      /**
+       * Unselected doc block comment.
+       */
+      func first() {}
+
+      /// Selected doc block comment.
+      func second() {
+      let x = 1;
+      }
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expectedWhenDocCommentSelected,
+      selection: Selection(lineRanges: [7...7])
+    )
+
+    // Selecting only the declaration line below the doc block comment leaves the doc block
+    // comment untouched.
+    try assertFormatting(
+      source,
+      expected: source,
+      selection: Selection(lineRanges: [9...9])
+    )
+  }
+
+  func testNoEmptyLinesOpeningClosingBracesWithSelection() throws {
+    var config = Configuration.forTesting
+    config.rules["NoEmptyLinesOpeningClosingBraces"] = true
+
+    let source = """
+      func bar() {
+
+        let x = 1
+
+      }
+
+      """
+
+    let expectedOpeningTrimmed = """
+      func bar() {
+        let x = 1
+
+      }
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expectedOpeningTrimmed,
+      selection: Selection(lineRanges: [1...2]),
+      configuration: config
+    )
+
+    let expectedClosingTrimmed = """
+      func bar() {
+
+        let x = 1
+      }
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expectedClosingTrimmed,
+      selection: Selection(lineRanges: [5...5]),
+      configuration: config
+    )
+  }
+
+  func testDeclarationAndByteOffsetShiftingSyntaxRulesWithSelection() throws {
+    var config = Configuration.forTesting
+    config.rules["OmitExplicitReturns"] = true
+
+    let source = """
+      fileprivate struct UnselectedStruct {
+        let value: Array<Dictionary<String, Optional<Int>>> = []
+      }
+      fileprivate struct SelectedHeaderStruct {
+        let value: Array<Dictionary<String, Optional<Int>>> = []
+      }
+      func unselectedSingleReturn() -> Void {
+        return 1
+      }
+      func selectedHeaderAndReturn() -> Void {
+        return 2
+      }
+      enum MyEnum: Int {
+        case unselectedA, unselectedB = 1
+        case selectedA, selectedB = 2
+      }
+
+      """
+
+    let expected = """
+      fileprivate struct UnselectedStruct {
+        let value: Array<Dictionary<String, Optional<Int>>> = []
+      }
+      private struct SelectedHeaderStruct {
+        let value: Array<Dictionary<String, Optional<Int>>> = []
+      }
+      func unselectedSingleReturn() -> Void {
+        return 1
+      }
+      func selectedHeaderAndReturn() {
+        2
+      }
+      enum MyEnum: Int {
+        case unselectedA, unselectedB = 1
+        case selectedA
+        case selectedB = 2
+      }
+
+      """
+
+    try assertFormatting(
+      source,
+      expected: expected,
+      selection: Selection(lineRanges: [4...4, 10...11, 15...15]),
+      configuration: config
+    )
+  }
+
+  func testFormatterIgnoredNodeOverlappingEndOfSelection() throws {
+    let source = """
+      let   a   =   1
+      // swift-format-ignore
+      func ignored() {
+        let   x   =   2
+      }
+      let   b   =   3
+      """
+
+    let expected = """
+      let a = 1
+      // swift-format-ignore
+      func ignored() {
+        let   x   =   2
+      }
+      let   b   =   3
+      """
+
+    // Selecting lines 1...3 (ending inside the ignored declaration) formats line 1, preserves the
+    // ignored declaration verbatim, and disables formatting at the end of the ignored declaration
+    // so line 6 is not formatted.
+    try assertFormatting(
+      source,
+      expected: expected,
+      selection: Selection(lineRanges: [1...3])
+    )
+  }
+
+  func testCommentMovingRewriterInsideNestedSelection() throws {
+    let source = """
+      func foo(a: Int, b: Int) -> Int {
+        let unselected = a + // unselected comment
+          b
+        let selected = a + // selected comment
+          b
+        return unselected + selected
+      }
+      """
+
+    let expected = """
+      func foo(a: Int, b: Int) -> Int {
+        let unselected = a + // unselected comment
+          b
+        let selected =
+          a  // selected comment
+          + b
+        return unselected + selected
+      }
+      """
+
+    try assertFormatting(
+      source,
+      expected: expected,
+      selection: Selection(lineRanges: [4...5])
+    )
+  }
+
   private func assertFormatting(
     _ source: String,
     expected: String,
     selection: Selection,
+    reflowComments: Bool = false,
+    multiElementCollectionTrailingCommas: Bool = false,
+    configuration: Configuration? = nil,
     file: StaticString = #file,
     line: UInt = #line
   ) throws {
-    var configuration = Configuration.forTesting
+    var configuration = configuration ?? Configuration.forTesting
     configuration.lineLength = 60
+    if reflowComments {
+      configuration.reflowComments.regularComments = .always
+      configuration.reflowComments.docComments = .always
+    }
+    if multiElementCollectionTrailingCommas {
+      configuration.multiElementCollectionTrailingCommas = true
+    }
 
     let formatter = SwiftFormatter(configuration: configuration)
     var output = ""

@@ -327,6 +327,7 @@ class Frontend {
     )
 
     if parallel {
+      #if !os(WASI)
       let filesToProcess =
         FileIterator(
           urls: urls,
@@ -336,6 +337,9 @@ class Frontend {
       DispatchQueue.concurrentPerform(iterations: filesToProcess.count) { index in
         processFile(filesToProcess[index])
       }
+      #else
+      fatalError("`--parallel` is not yet implemented on WASI.")
+      #endif
     } else {
       FileIterator(
         urls: urls,

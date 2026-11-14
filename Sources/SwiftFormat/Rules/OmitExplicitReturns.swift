@@ -26,7 +26,11 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
     let decl = super.visit(node)
 
     // func <name>() -> <Type> { return ... }
-    guard var funcDecl = decl.as(FunctionDeclSyntax.self),
+    guard
+      let originalBody = node.body,
+      let originalReturnStmt = containsSingleReturn(originalBody.statements),
+      shouldFormat(originalReturnStmt),
+      var funcDecl = decl.as(FunctionDeclSyntax.self),
       let body = funcDecl.body,
       let returnStmt = containsSingleReturn(body.statements)
     else {
@@ -34,18 +38,23 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
     }
 
     funcDecl.body?.statements = rewrapReturnedExpression(returnStmt)
-    diagnose(.omitReturnStatement, on: returnStmt)
+    diagnose(.omitReturnStatement, on: originalReturnStmt)
     return DeclSyntax(funcDecl)
   }
 
   public override func visit(_ node: SubscriptDeclSyntax) -> DeclSyntax {
     let decl = super.visit(node)
 
-    guard var subscriptDecl = decl.as(SubscriptDeclSyntax.self),
+    guard
+      let originalAccessorBlock = node.accessorBlock,
+      var subscriptDecl = decl.as(SubscriptDeclSyntax.self),
       let accessorBlock = subscriptDecl.accessorBlock,
       // We are assuming valid Swift code here where only
       // one `get { ... }` is allowed.
-      let transformed = transformAccessorBlock(accessorBlock)
+      let transformed = transformAccessorBlock(
+        accessorBlock,
+        originalAccessorBlock: originalAccessorBlock
+      )
     else {
       return decl
     }
@@ -55,12 +64,18 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
   }
 
   public override func visit(_ node: PatternBindingSyntax) -> PatternBindingSyntax {
-    var binding = node
+    let visited = super.visit(node)
+    var binding = visited
 
-    guard let accessorBlock = binding.accessorBlock,
-      let transformed = transformAccessorBlock(accessorBlock)
+    guard
+      let originalAccessorBlock = node.accessorBlock,
+      let accessorBlock = binding.accessorBlock,
+      let transformed = transformAccessorBlock(
+        accessorBlock,
+        originalAccessorBlock: originalAccessorBlock
+      )
     else {
-      return super.visit(node)
+      return visited
     }
 
     binding.accessorBlock = transformed
@@ -71,31 +86,44 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
     let expr = super.visit(node)
 
     // test { return ... }
-    guard var closureExpr = expr.as(ClosureExprSyntax.self),
+    guard
+      let originalReturnStmt = containsSingleReturn(node.statements),
+      shouldFormat(originalReturnStmt),
+      var closureExpr = expr.as(ClosureExprSyntax.self),
       let returnStmt = containsSingleReturn(closureExpr.statements)
     else {
       return expr
     }
 
     closureExpr.statements = rewrapReturnedExpression(returnStmt)
-    diagnose(.omitReturnStatement, on: returnStmt)
+    diagnose(.omitReturnStatement, on: originalReturnStmt)
     return ExprSyntax(closureExpr)
   }
 
-  private func transformAccessorBlock(_ accessorBlock: AccessorBlockSyntax) -> AccessorBlockSyntax? {
+  private func transformAccessorBlock(
+    _ accessorBlock: AccessorBlockSyntax,
+    originalAccessorBlock: AccessorBlockSyntax
+  ) -> AccessorBlockSyntax? {
     // We are assuming valid Swift code here where only
     // one `get { ... }` is allowed.
-    switch accessorBlock.accessors {
-    case .accessors(var accessors):
+    switch (accessorBlock.accessors, originalAccessorBlock.accessors) {
+    case (.accessors(var accessors), .accessors(let originalAccessors)):
       guard
-        var getter = accessors.filter({
+        var getter = accessors.first(where: {
           $0.accessorSpecifier.tokenKind == .keyword(.get)
-        }).first
+        }),
+        let originalGetter = originalAccessors.first(where: {
+          $0.accessorSpecifier.tokenKind == .keyword(.get)
+        })
       else {
         return nil
       }
 
-      guard let body = getter.body,
+      guard
+        let originalBody = originalGetter.body,
+        let originalReturnStmt = containsSingleReturn(originalBody.statements),
+        shouldFormat(originalReturnStmt),
+        let body = getter.body,
         let returnStmt = containsSingleReturn(body.statements)
       else {
         return nil
@@ -111,23 +139,30 @@ public final class OmitExplicitReturns: SyntaxFormatRule {
 
       getter.body?.statements = rewrapReturnedExpression(returnStmt)
 
-      diagnose(.omitReturnStatement, on: returnStmt)
+      diagnose(.omitReturnStatement, on: originalReturnStmt)
 
       accessors[getterAt] = getter
       var newBlock = accessorBlock
       newBlock.accessors = .accessors(accessors)
       return newBlock
 
-    case .getter(let getter):
-      guard let returnStmt = containsSingleReturn(getter) else {
+    case (.getter(let getter), .getter(let originalGetter)):
+      guard
+        let originalReturnStmt = containsSingleReturn(originalGetter),
+        shouldFormat(originalReturnStmt),
+        let returnStmt = containsSingleReturn(getter)
+      else {
         return nil
       }
 
-      diagnose(.omitReturnStatement, on: returnStmt)
+      diagnose(.omitReturnStatement, on: originalReturnStmt)
 
       var newBlock = accessorBlock
       newBlock.accessors = .getter(rewrapReturnedExpression(returnStmt))
       return newBlock
+
+    default:
+      return nil
     }
   }
 

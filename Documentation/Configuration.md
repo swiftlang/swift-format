@@ -289,6 +289,24 @@ too long.
 
 ---
 
+### `reflowComments`
+**type:** object
+
+**description:** Configuration for comment reflowing. Standalone comments (those that are the first non-whitespace on a line) are parsed as Markdown and reflowed according to the configured behavior for each comment category:
+
+- `regularComments` _(string)_: Determines how regular (`//` and `/* ... */`) comments should be reflowed.
+- `docComments` _(string)_: Determines how documentation (`///` and `/** ... */`) comments should be reflowed.
+- `commentPragmas` _(array of strings)_: Regular expressions matching comment pragmas or directives that should not be wrapped or reflowed. Each pattern is matched against the multi-line comment text with `^` and `$` matching line boundaries, and any comment line overlapping a match is preserved verbatim. (`swift-format-ignore` and `swift-format-ignore-file` directives are always preserved regardless of this setting.)
+
+`regularComments` and `docComments` each accept one of the following values:
+- `never`: Never reflow comments.
+- `onlyLinesOverLength`: Only insert line breaks in comment lines that exceed `lineLength`, carrying any leftover tail forward onto the following continuation line while lines continue to overflow (like `clang-format`'s conservative comment reflowing strategy), without reflowing earlier or non-overflowing lines. Documentation comments are parsed as Markdown and reflowed within paragraph boundaries, whereas regular comments are wrapped without parsing Markdown.
+- `always`: Always reflow comments as full Markdown paragraphs.
+
+**default:** `{ "regularComments": "never", "docComments": "never", "commentPragmas": [] }`
+
+---
+
 ### `indentBlankLines`  
 **type:** boolean  
 

@@ -176,9 +176,11 @@ public final class SwiftFormatter {
       return
     }
 
+    let printerSource =
+      transformedSyntax == Syntax(syntax) ? source : transformedSyntax.description
     let printer = PrettyPrinter(
       context: context,
-      source: source,
+      source: printerSource,
       node: transformedSyntax,
       printTokenStream: debugOptions.contains(.dumpTokenStream),
       whitespaceOnly: false

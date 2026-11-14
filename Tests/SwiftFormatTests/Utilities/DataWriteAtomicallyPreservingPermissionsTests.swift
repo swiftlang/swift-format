@@ -10,7 +10,7 @@
 //
 //===----------------------------------------------------------------------===//
 
-#if !os(Windows)
+#if !os(Windows) && !os(WASI)
 
 import Foundation
 @_spi(Internal) import SwiftFormat

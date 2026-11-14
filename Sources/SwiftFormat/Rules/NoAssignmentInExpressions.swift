@@ -27,7 +27,8 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
   public override func visit(_ node: InfixOperatorExprSyntax) -> ExprSyntax {
     // Diagnose any assignment that isn't directly a child of a `CodeBlockItem` (which would be the
     // case if it was its own statement).
-    if isAssignmentExpression(node)
+    if shouldFormat(node)
+      && isAssignmentExpression(node)
       && !isStandaloneAssignmentStatement(node)
       && !isInAllowedFunction(node)
     {
@@ -41,6 +42,7 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
     newItems.reserveCapacity(node.count)
 
     for item in node {
+      let canFormatItem = shouldFormat(item)
       // Make sure to visit recursively so that any nested decls get processed first.
       let visitedItem = visit(item)
 
@@ -48,6 +50,7 @@ public final class NoAssignmentInExpressions: SyntaxFormatRule {
       switch visitedItem.item {
       case .stmt(let stmt):
         guard
+          canFormatItem,
           var returnStmt = stmt.as(ReturnStmtSyntax.self),
           let assignmentExpr = assignmentExpression(from: returnStmt)
         else {

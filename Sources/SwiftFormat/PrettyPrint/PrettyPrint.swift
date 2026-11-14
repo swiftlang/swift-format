@@ -102,6 +102,9 @@ public class PrettyPrinter {
   /// trailing commas) are performed in addition to whitespace.
   private let whitespaceOnly: Bool
 
+  /// Compiled regular expressions for comment pragmas that should not be reflowed.
+  private let commentPragmaRegexes: [Regex<AnyRegexOutput>]
+
   /// Keeps track of the line numbers and indentation states of the open (and unclosed) breaks seen
   /// so far.
   private var activeOpenBreaks: [ActiveOpenBreak] = [] {
@@ -188,15 +191,25 @@ public class PrettyPrinter {
   public init(context: Context, source: String, node: Syntax, printTokenStream: Bool, whitespaceOnly: Bool) {
     self.context = context
     self.source = source
-    let configuration = context.configuration
+    var configuration = context.configuration
+    if whitespaceOnly && !configuration.reflowMultilineStringLiterals.isNever {
+      // In whitespace-only mode (used by WhitespaceLinter), reflowing multiline string literals
+      // requires inserting or removing `\` line continuations, which are non-whitespace characters
+      // that `WhitespaceLinter` cannot modify and requires to match the input source text.
+      configuration.reflowMultilineStringLiterals = .never
+    }
     self.tokens = node.makeTokenStream(
       configuration: configuration,
       selection: context.selection,
-      operatorTable: context.operatorTable
+      operatorTable: context.operatorTable,
+      whitespaceOnly: whitespaceOnly
     )
     self.maxLineLength = configuration.lineLength
     self.printTokenStream = printTokenStream
     self.whitespaceOnly = whitespaceOnly
+    self.commentPragmaRegexes = Comment.compilePragmaRegexes(
+      from: configuration.reflowComments.commentPragmas
+    )
     self.outputBuffer = PrettyPrintBuffer(
       maximumBlankLines: configuration.maximumBlankLines,
       tabWidth: configuration.tabWidth
@@ -442,7 +455,7 @@ public class PrettyPrinter {
       let suppressBreaking = isBreakingSuppressed && !overrideBreakingSuppressed
       if !suppressBreaking && (!canFit(length) || mustBreak) {
         currentLineIsContinuation = isContinuationIfBreakFires
-        if case .escaped = newline {
+        if case .escaped = newline, !whitespaceOnly {
           outputBuffer.enqueueSpaces(size)
           outputBuffer.write("\\")
         }
@@ -484,12 +497,36 @@ public class PrettyPrinter {
           diagnose(.moveEndOfLineComment, category: .endOfLineComment)
         }
       }
-      outputBuffer.write(
-        comment.print(
-          indent: currentIndentation,
-          shouldIndentBlankLines: configuration.indentBlankLines
-        )
+      let unreflowed = comment.print(
+        indent: currentIndentation,
+        shouldIndentBlankLines: configuration.indentBlankLines
       )
+      let reflowBehavior: ReflowCommentsConfiguration.Behavior
+      switch comment.kind {
+      case .line, .block:
+        reflowBehavior = configuration.reflowComments.regularComments
+      case .docLine, .docBlock:
+        reflowBehavior = configuration.reflowComments.docComments
+      }
+      if outputBuffer.isEnabled && !reflowBehavior.isNever && !wasEndOfLine
+        && outputBuffer.isAtStartOfLine
+      {
+        let reflowed = comment.printReflowed(
+          indent: currentIndentation,
+          maxLineLength: configuration.lineLength,
+          tabWidth: configuration.tabWidth,
+          behavior: reflowBehavior,
+          shouldIndentBlankLines: configuration.indentBlankLines,
+          pragmaRegexes: commentPragmaRegexes,
+          unreflowed: unreflowed
+        )
+        if reflowed != unreflowed {
+          diagnose(.reflowComment, category: .reflowComment)
+        }
+        outputBuffer.write(whitespaceOnly ? unreflowed : reflowed)
+      } else {
+        outputBuffer.write(unreflowed)
+      }
 
     case .verbatim(let verbatim):
       outputBuffer.writeVerbatim(verbatim.print(indent: currentIndentation), length)
@@ -559,6 +596,8 @@ public class PrettyPrinter {
         options: .backwards
       ) {
         text = String(text[..<nonWhitespace.upperBound])
+      } else {
+        text = ""
       }
 
       self.disabledPosition = nil
@@ -846,12 +885,20 @@ public class PrettyPrinter {
 
   /// Emits a finding with the given message and category at the current location in `outputBuffer`.
   private func diagnose(_ message: Finding.Message, category: PrettyPrintFindingCategory) {
+    guard outputBuffer.isEnabled else { return }
     // Add 1 since columns uses 1-based indices.
-    let column = outputBuffer.column + 1
+    let column =
+      (outputBuffer.isAtStartOfLine
+        ? currentIndentation.length(tabWidth: configuration.tabWidth)
+        : outputBuffer.column) + 1
     context.findingEmitter.emit(
       message,
       category: category,
-      location: Finding.Location(file: context.fileURL.relativePath, line: outputBuffer.lineNumber, column: column)
+      location: Finding.Location(
+        file: context.fileURL.relativePath,
+        line: outputBuffer.outputLineNumber,
+        column: column
+      )
     )
   }
 }
@@ -859,6 +906,9 @@ public class PrettyPrinter {
 extension Finding.Message {
   fileprivate static let moveEndOfLineComment: Finding.Message =
     "move end-of-line comment that exceeds the line length"
+
+  fileprivate static let reflowComment: Finding.Message =
+    "reflow comment"
 
   fileprivate static let addTrailingComma: Finding.Message =
     "add trailing comma to the last element in multiline collection literal"

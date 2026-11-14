@@ -36,6 +36,7 @@ class LintFrontend: Frontend {
       try linter.lint(
         source: source,
         assumingFileURL: url,
+        selection: fileToProcess.selection,
         experimentalFeatures: Set(lintFormatOptions.experimentalFeatures)
       ) { (diagnostic, location) in
         guard !self.lintFormatOptions.ignoreUnparsableFiles else {

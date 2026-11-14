@@ -10,8 +10,11 @@
 //
 //===----------------------------------------------------------------------===//
 
-import Dispatch
 import Foundation
+
+#if !os(WASI)
+import Dispatch
+#endif
 
 /// Manages printing of diagnostics to standard error.
 final class StderrDiagnosticPrinter {
@@ -38,8 +41,10 @@ final class StderrDiagnosticPrinter {
     case reset = "0"
   }
 
+  #if !os(WASI)
   /// The queue used to synchronize printing uninterrupted diagnostic messages.
   private let printQueue = DispatchQueue(label: "com.apple.swift-format.StderrDiagnosticPrinter")
+  #endif
 
   /// Indicates whether colors should be used when printing diagnostics.
   private let useColors: Bool
@@ -58,22 +63,32 @@ final class StderrDiagnosticPrinter {
 
   /// Prints a diagnostic to standard error.
   func printDiagnostic(_ diagnostic: Diagnostic) {
+    #if !os(WASI)
     printQueue.sync {
-      let stderr = FileHandleTextOutputStream(FileHandle.standardError)
-
-      stderr.write("\(ansiSGR(.reset))\(description(of: diagnostic.location)): ")
-
-      switch diagnostic.severity {
-      case .error: stderr.write("\(ansiSGR(.boldRed))error: ")
-      case .warning: stderr.write("\(ansiSGR(.boldYellow))warning: ")
-      case .note: stderr.write("\(ansiSGR(.boldGray))note: ")
-      }
-
-      if let category = diagnostic.category {
-        stderr.write("\(ansiSGR(.boldMagenta))[\(category)] ")
-      }
-      stderr.write("\(ansiSGR(.reset))\(ansiSGR(.bold))\(diagnostic.message)\(ansiSGR(.reset))\n")
+      _printDiagnostic(diagnostic)
     }
+    #else
+    // This is safe because swift-format can't process files in parallel on WASI.
+    _printDiagnostic(diagnostic)
+    #endif
+  }
+
+  /// Prints a diagnostic to standard error.
+  private func _printDiagnostic(_ diagnostic: Diagnostic) {
+    let stderr = FileHandleTextOutputStream(FileHandle.standardError)
+
+    stderr.write("\(ansiSGR(.reset))\(description(of: diagnostic.location)): ")
+
+    switch diagnostic.severity {
+    case .error: stderr.write("\(ansiSGR(.boldRed))error: ")
+    case .warning: stderr.write("\(ansiSGR(.boldYellow))warning: ")
+    case .note: stderr.write("\(ansiSGR(.boldGray))note: ")
+    }
+
+    if let category = diagnostic.category {
+      stderr.write("\(ansiSGR(.boldMagenta))[\(category)] ")
+    }
+    stderr.write("\(ansiSGR(.reset))\(ansiSGR(.bold))\(diagnostic.message)\(ansiSGR(.reset))\n")
   }
 
   /// Returns a string representation of the given diagnostic location, or a fallback string if the

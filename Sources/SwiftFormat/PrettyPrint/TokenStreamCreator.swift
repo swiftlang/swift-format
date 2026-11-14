@@ -72,6 +72,15 @@ private final class TokenStreamCreator: SyntaxVisitor {
   /// Tracks whether we last considered ourselves inside the selection
   private var isInsideSelection = true
 
+  /// Multiline string opening quote tokens after which formatting must be disabled because the
+  /// enclosing multiline string literal is not completely inside the selection.
+  private var multilineStringOpeningQuotesForcingDisable = Set<TokenSyntax>()
+
+  /// Source ranges of multiline string literal bodies (from the end of the opening quote through
+  /// the end of the closing delimiter) that must not enable formatting because the enclosing
+  /// multiline string literal is not completely inside the selection.
+  private var partiallySelectedMultilineStringBodyRanges = [Range<AbsolutePosition>]()
+
   init(configuration: Configuration, selection: Selection, operatorTable: OperatorTable) {
     self.config = configuration
     self.selection = selection
@@ -2594,6 +2603,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
         appendAfterTokensAndTrailingComments(node.closingQuote)
         return .skipChildren
       }
+      excludeMultilineStringBodyFromPartialSelection(Syntax(node), openingQuote: node.openingQuote)
     }
     return .visitChildren
   }
@@ -2604,8 +2614,30 @@ private final class TokenStreamCreator: SyntaxVisitor {
       if !node.segments.isEmpty {
         before(node.closingQuote, tokens: .break(.same, newlines: .hard(count: 1)))
       }
+      excludeMultilineStringBodyFromPartialSelection(Syntax(node), openingQuote: node.openingQuote)
     }
     return .visitChildren
+  }
+
+  /// Excludes the body and closing delimiter of a multiline string literal from selection
+  /// formatting when the literal as a whole is not completely inside the selection.
+  ///
+  /// Because Swift strips prefix indentation from every content line based on the indentation of
+  /// the closing `"""` and `swift-format` computes the indentation of the content lines and closing
+  /// `"""` from the opening `"""`, re-indenting or reflowing only part of a multiline string
+  /// literal can silently alter its runtime `String` value or produce invalid indentation.
+  private func excludeMultilineStringBodyFromPartialSelection(
+    _ node: Syntax,
+    openingQuote: TokenSyntax
+  ) {
+    if case .infinite = selection { return }
+    guard !node.isInsideSelection(selection) else { return }
+    multilineStringOpeningQuotesForcingDisable.insert(openingQuote)
+    let bodyStart = openingQuote.endPositionBeforeTrailingTrivia
+    let bodyEnd = node.endPositionBeforeTrailingTrivia
+    if bodyStart < bodyEnd {
+      partiallySelectedMultilineStringBodyRanges.append(bodyStart..<bodyEnd)
+    }
   }
 
   // Insert an `.escaped` break token after each series of whitespace in a substring
@@ -2674,7 +2706,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
       : { (segment) in self.appendToken(.syntax(String(segment))) }
 
     let segmentText = node.content.text
-    if segmentText.hasSuffix("\n") {
+    if segmentText.utf8.last == UInt8(ascii: "\n") {
       // If this is a multiline string segment, it will end in a newline. Remove the newline and
       // append the rest of the string, followed by a break if it's not the last line before the
       // closing quotes. (The `StringLiteralExpr` above does the closing break.)
@@ -2962,19 +2994,35 @@ private final class TokenStreamCreator: SyntaxVisitor {
     extractLeadingTrivia(token)
     closeScopeTokens.forEach(appendToken)
 
-    generateEnableFormattingIfNecessary(
-      token.positionAfterSkippingLeadingTrivia..<token.endPositionBeforeTrailingTrivia
-    )
+    if token.tokenKind != .endOfFile {
+      generateEnableFormattingIfNecessary(
+        token.positionAfterSkippingLeadingTrivia..<token.endPositionBeforeTrailingTrivia
+      )
+    }
 
     if !ignoredTokens.contains(token) {
       // Otherwise, it's just a regular token, so add the text as-is.
       appendToken(.syntax(token.presence == .present ? token.text : ""))
     }
 
-    generateDisableFormattingIfNecessary(token.endPositionBeforeTrailingTrivia)
+    if multilineStringOpeningQuotesForcingDisable.contains(token) {
+      if isInsideSelection {
+        appendToken(.disableFormatting(token.endPositionBeforeTrailingTrivia))
+        isInsideSelection = false
+      }
+    }
+
+    let shouldDeferDisableAfterMissingTrailingComma =
+      hasCommaDelimitedRegionEndWithoutTrailingComma(for: token)
+    if !shouldDeferDisableAfterMissingTrailingComma && token.tokenKind != .endOfFile {
+      generateDisableFormattingIfNecessary(token.endPositionBeforeTrailingTrivia)
+    }
 
     appendTrailingTrivia(token)
-    appendAfterTokensAndTrailingComments(token)
+    appendAfterTokensAndTrailingComments(
+      token,
+      disableFormattingAfterMissingTrailingComma: shouldDeferDisableAfterMissingTrailingComma
+    )
 
     // It doesn't matter what we return here, tokens do not have children.
     return .skipChildren
@@ -2982,10 +3030,33 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   private func generateEnableFormattingIfNecessary(_ range: Range<AbsolutePosition>) {
     if case .infinite = selection { return }
+    if partiallySelectedMultilineStringBodyRanges.contains(where: { $0.overlaps(range) }) {
+      return
+    }
     if !isInsideSelection && selection.overlapsOrTouches(range) {
       appendToken(.enableFormatting(range.lowerBound))
       isInsideSelection = true
     }
+  }
+
+  private func enableFormattingForBlankLines(_ range: Range<AbsolutePosition>) {
+    if case .infinite = selection { return }
+    if partiallySelectedMultilineStringBodyRanges.contains(where: { $0.overlaps(range) }) {
+      return
+    }
+    guard !isInsideSelection && selection.overlapsOrTouches(range) else { return }
+    if canMergeNewlinesIntoLastBreak,
+      let breakIndex = lastBreakIndex,
+      !tokens[breakIndex...].contains(where: {
+        if case .disableFormatting = $0 { return true } else { return false }
+      })
+    {
+      tokens.insert(.enableFormatting(range.lowerBound), at: breakIndex)
+      lastBreakIndex = breakIndex + 1
+    } else {
+      appendToken(.enableFormatting(range.lowerBound))
+    }
+    isInsideSelection = true
   }
 
   private func generateDisableFormattingIfNecessary(_ position: AbsolutePosition) {
@@ -3065,13 +3136,27 @@ private final class TokenStreamCreator: SyntaxVisitor {
   ///   we append the comment, and then the remaining after-tokens. Due to visitation ordering,
   ///   this ensures that a trailing line comment is not incorrectly inserted into the token stream
   ///   *after* a break or newline.
-  private func appendAfterTokensAndTrailingComments(_ token: TokenSyntax) {
-    let (wasLineComment, trailingCommentTokens) = afterTokensForTrailingComment(token)
+  private func appendAfterTokensAndTrailingComments(
+    _ token: TokenSyntax,
+    disableFormattingAfterMissingTrailingComma: Bool = false
+  ) {
+    let (wasLineComment, trailingCommentTokens, commentRange) = afterTokensForTrailingComment(token)
     let afterGroups = afterMap.removeValue(forKey: token) ?? []
     var hasAppendedTrailingComment = false
 
+    func appendTrailingComment() {
+      guard let commentRange else { return }
+      generateEnableFormattingIfNecessary(commentRange)
+      for commentToken in trailingCommentTokens {
+        appendToken(commentToken)
+        if case .comment = commentToken {
+          generateDisableFormattingIfNecessary(commentRange.upperBound)
+        }
+      }
+    }
+
     if !wasLineComment {
-      trailingCommentTokens.forEach(appendToken)
+      appendTrailingComment()
     }
 
     for after in afterGroups.reversed() {
@@ -3092,15 +3177,46 @@ private final class TokenStreamCreator: SyntaxVisitor {
           }
         }
         if shouldExtractTrailingComment {
-          trailingCommentTokens.forEach(appendToken)
+          appendTrailingComment()
           hasAppendedTrailingComment = true
         }
         appendToken(afterToken)
+        if disableFormattingAfterMissingTrailingComma,
+          case .commaDelimitedRegionEnd(_, hasTrailingComma: false, _) = afterToken
+        {
+          generateDisableFormattingIfNecessary(token.endPositionBeforeTrailingTrivia)
+        }
       }
     }
 
     if wasLineComment && !hasAppendedTrailingComment {
-      trailingCommentTokens.forEach(appendToken)
+      appendTrailingComment()
+    }
+  }
+
+  /// Returns `true` if `afterMap[token]` contains a `.commaDelimitedRegionEnd` token with
+  /// `hasTrailingComma == false` and the token has no unexpected trailing trivia or trailing
+  /// comments.
+  ///
+  /// When a comma-delimited region lacks a trailing comma and the selection ends at the end of its
+  /// last element, deferring `.disableFormatting` until immediately after `.commaDelimitedRegionEnd`
+  /// allows the pretty printer and linter to insert or diagnose the missing trailing comma before
+  /// formatting is disabled at `token.endPositionBeforeTrailingTrivia`.
+  private func hasCommaDelimitedRegionEndWithoutTrailingComma(for token: TokenSyntax) -> Bool {
+    guard
+      let afterGroups = afterMap[token],
+      !token.trailingTrivia.contains(where: \.isUnexpectedText),
+      afterTokensForTrailingComment(token).tokens.isEmpty
+    else {
+      return false
+    }
+    return afterGroups.contains { group in
+      group.contains { afterToken in
+        if case .commaDelimitedRegionEnd(_, hasTrailingComma: false, _) = afterToken {
+          return true
+        }
+        return false
+      }
     }
   }
 
@@ -3461,15 +3577,18 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
   private func afterTokensForTrailingComment(
     _ token: TokenSyntax
-  ) -> (isLineComment: Bool, tokens: [Token]) {
+  ) -> (isLineComment: Bool, tokens: [Token], commentRange: Range<AbsolutePosition>?) {
     let (_, trailingComments) = partitionTrailingTrivia(token.trailingTrivia)
+    let prevTrivia = Trivia(pieces: trailingComments)
     let trivia =
-      Trivia(pieces: trailingComments)
+      prevTrivia
       + (token.nextToken(viewMode: .sourceAccurate)?.leadingTrivia ?? [])
 
     guard let firstPiece = trivia.first else {
-      return (false, [])
+      return (false, [], nil)
     }
+    let startPosition = token.endPosition - prevTrivia.sourceLength
+    let commentRange = startPosition..<(startPosition + firstPiece.sourceLength)
 
     switch firstPiece {
     case .lineComment(let text):
@@ -3481,7 +3600,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
           // There must be a break with a soft newline after the comment, but it's impossible to
           // know which kind of break must be used. Adding this newline is deferred until the
           // comment is added to the token stream.
-        ]
+        ],
+        commentRange
       )
 
     case .blockComment(let text):
@@ -3494,11 +3614,12 @@ private final class TokenStreamCreator: SyntaxVisitor {
           // the comment if the user places one here but the comment is otherwise adjacent to a
           // text token.
           .break(.same, size: 0),
-        ]
+        ],
+        commentRange
       )
 
     default:
-      return (false, [])
+      return (false, [], nil)
     }
   }
 
@@ -3580,19 +3701,172 @@ private final class TokenStreamCreator: SyntaxVisitor {
     var requiresNextNewline = false
     // Tracking whether or not the last piece was leading indentation. A newline is considered
     // a 0-space indentation; used for nesting/un-nesting block comments during formatting.
-    var leadingIndent: Indent? = nil
+    var leadingIndent: Indent? = isStartOfFile ? .spaces(0) : nil
+    // Tracks the end trivia index and source position of the current contiguous run of mergeable
+    // line or doc line comments so that selection formatting enables/disables formatting around
+    // the entire merged comment rather than splitting it at selection boundaries.
+    var activeCommentRun: (endIndex: Int, endPosition: AbsolutePosition)? = nil
+    // Tracks the end trivia index and source positions of the current contiguous run of newlines
+    // and blank lines so that selection formatting enables/disables formatting across blank lines.
+    var activeNewlineRun:
+      (
+        endIndex: Int,
+        endPosition: AbsolutePosition,
+        blankLinesRange: Range<AbsolutePosition>?
+      )? = nil
+
+    func newlineRun(
+      from startIndex: Int,
+      startPosition: AbsolutePosition,
+      isStartOfFile: Bool
+    ) -> (
+      endIndex: Int,
+      endPosition: AbsolutePosition,
+      blankLinesRange: Range<AbsolutePosition>?
+    ) {
+      let limit = cutoffIndex ?? trivia.endIndex
+      var endIndex = startIndex
+      var endPosition = startPosition
+      var cursor = startIndex
+      var cursorPosition = startPosition
+      var totalNewlines = 0
+      var firstNewlineBytes = 0
+      var lastNewlineBytes = 0
+
+      while cursor < limit {
+        switch trivia[cursor] {
+        case .newlines(let count), .carriageReturns(let count):
+          if totalNewlines == 0 {
+            firstNewlineBytes = 1
+          }
+          totalNewlines += count
+          endIndex = cursor
+          cursorPosition += trivia[cursor].sourceLength
+          endPosition = cursorPosition
+          lastNewlineBytes = 1
+          cursor += 1
+        case .carriageReturnLineFeeds(let count):
+          if totalNewlines == 0 {
+            firstNewlineBytes = 2
+          }
+          totalNewlines += count
+          endIndex = cursor
+          cursorPosition += trivia[cursor].sourceLength
+          endPosition = cursorPosition
+          lastNewlineBytes = 2
+          cursor += 1
+        case .spaces, .tabs:
+          cursorPosition += trivia[cursor].sourceLength
+          cursor += 1
+        default:
+          cursor = limit
+        }
+      }
+
+      let blankLinesRange: Range<AbsolutePosition>?
+      if isStartOfFile && totalNewlines >= 1 {
+        let lastBlankLineEnd = endPosition - SourceLength(utf8Length: lastNewlineBytes)
+        blankLinesRange = startPosition..<lastBlankLineEnd
+      } else if !isStartOfFile && totalNewlines >= 2 {
+        let firstBlankLineStart = startPosition + SourceLength(utf8Length: firstNewlineBytes)
+        let lastBlankLineEnd = endPosition - SourceLength(utf8Length: lastNewlineBytes)
+        blankLinesRange = firstBlankLineStart..<lastBlankLineEnd
+      } else {
+        blankLinesRange = nil
+      }
+      return (endIndex, endPosition, blankLinesRange)
+    }
+
+    func mergeableCommentRunEnd(
+      from startIndex: Int,
+      startPosition: AbsolutePosition,
+      isDocComment: Bool
+    ) -> (endIndex: Int, endPosition: AbsolutePosition) {
+      let limit = cutoffIndex ?? trivia.endIndex
+      var endIndex = startIndex
+      var endPosition = startPosition + trivia[startIndex].sourceLength
+      var cursor = startIndex + 1
+      var cursorPosition = endPosition
+
+      while cursor < limit {
+        // A mergeable continuation comment must be preceded by a single newline.
+        switch trivia[cursor] {
+        case .newlines(1), .carriageReturns(1), .carriageReturnLineFeeds(1):
+          cursorPosition += trivia[cursor].sourceLength
+          cursor += 1
+        default:
+          return (endIndex, endPosition)
+        }
+
+        // Skip any horizontal indentation on the next line before the comment.
+        while cursor < limit, trivia[cursor].isSpaceOrTab {
+          cursorPosition += trivia[cursor].sourceLength
+          cursor += 1
+        }
+
+        guard cursor < limit else { break }
+
+        // Check whether the next trivia piece is a line comment of the same kind.
+        switch (trivia[cursor], isDocComment) {
+        case (.lineComment, false), (.docLineComment, true):
+          endIndex = cursor
+          cursorPosition += trivia[cursor].sourceLength
+          endPosition = cursorPosition
+          cursor += 1
+        default:
+          return (endIndex, endPosition)
+        }
+      }
+      return (endIndex, endPosition)
+    }
 
     for (index, piece) in trivia.enumerated() {
       if let cutoff = cutoffIndex, index == cutoff { break }
 
+      func appendLineComment(
+        kind: Comment.Kind,
+        text: String,
+        shouldMergeAcrossSelection: Bool
+      ) {
+        if shouldMergeAcrossSelection && leadingIndent != nil {
+          if activeCommentRun == nil {
+            let run = mergeableCommentRunEnd(
+              from: index,
+              startPosition: position,
+              isDocComment: kind == .docLine
+            )
+            activeCommentRun = run
+            generateEnableFormattingIfNecessary(position..<run.endPosition)
+          }
+        } else {
+          generateEnableFormattingIfNecessary(position..<position + piece.sourceLength)
+        }
+        appendToken(
+          .comment(
+            Comment(kind: kind, leadingIndent: leadingIndent, text: text),
+            wasEndOfLine: false
+          )
+        )
+        if let run = activeCommentRun {
+          if index == run.endIndex {
+            generateDisableFormattingIfNecessary(run.endPosition)
+            activeCommentRun = nil
+          }
+        } else {
+          generateDisableFormattingIfNecessary(position + piece.sourceLength)
+        }
+        appendNewlines(.soft)
+        isStartOfFile = false
+      }
+
       switch piece {
       case .lineComment(let text):
         if index > 0 || isStartOfFile {
-          generateEnableFormattingIfNecessary(position..<position + piece.sourceLength)
-          appendToken(.comment(Comment(kind: .line, leadingIndent: leadingIndent, text: text), wasEndOfLine: false))
-          generateDisableFormattingIfNecessary(position + piece.sourceLength)
-          appendNewlines(.soft)
-          isStartOfFile = false
+          appendLineComment(
+            kind: .line,
+            text: text,
+            shouldMergeAcrossSelection: !config.reflowComments.regularComments.isNever
+          )
         }
         requiresNextNewline = true
         leadingIndent = nil
@@ -3620,11 +3894,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
         leadingIndent = nil
 
       case .docLineComment(let text):
-        generateEnableFormattingIfNecessary(position..<position + piece.sourceLength)
-        appendToken(.comment(Comment(kind: .docLine, leadingIndent: leadingIndent, text: text), wasEndOfLine: false))
-        generateDisableFormattingIfNecessary(position + piece.sourceLength)
-        appendNewlines(.soft)
-        isStartOfFile = false
+        appendLineComment(
+          kind: .docLine,
+          text: text,
+          shouldMergeAcrossSelection: !config.reflowComments.docComments.isNever
+        )
         requiresNextNewline = true
         leadingIndent = nil
 
@@ -3638,6 +3912,14 @@ private final class TokenStreamCreator: SyntaxVisitor {
         leadingIndent = nil
 
       case .newlines(let count), .carriageReturns(let count), .carriageReturnLineFeeds(let count):
+        if activeCommentRun == nil && activeNewlineRun == nil {
+          let run = newlineRun(from: index, startPosition: position, isStartOfFile: isStartOfFile)
+          activeNewlineRun = run
+          if let blankLinesRange = run.blankLinesRange {
+            enableFormattingForBlankLines(blankLinesRange)
+          }
+        }
+
         if config.indentBlankLines,
           let leadingIndent, leadingIndent.count > 0
         {
@@ -3645,19 +3927,26 @@ private final class TokenStreamCreator: SyntaxVisitor {
         }
 
         leadingIndent = .spaces(0)
-        guard !isStartOfFile else { break }
-
-        if requiresNextNewline || (config.respectsExistingLineBreaks && isDiscretionaryNewlineAllowed(before: token)) {
-          appendNewlines(.soft(count: count, discretionary: true))
-        } else {
-          // Even if discretionary line breaks are not being respected, we still respect multiple
-          // line breaks in order to keep blank separator lines that the user might want.
-          // TODO: It would be nice to restrict this to only allow multiple lines between statements
-          // and declarations; as currently implemented, multiple newlines will locally ignore the
-          // configuration setting.
-          if count > 1 {
+        if !isStartOfFile {
+          if requiresNextNewline
+            || (config.respectsExistingLineBreaks && isDiscretionaryNewlineAllowed(before: token))
+          {
             appendNewlines(.soft(count: count, discretionary: true))
+          } else {
+            // Even if discretionary line breaks are not being respected, we still respect multiple
+            // line breaks in order to keep blank separator lines that the user might want.
+            // TODO: It would be nice to restrict this to only allow multiple lines between statements
+            // and declarations; as currently implemented, multiple newlines will locally ignore the
+            // configuration setting.
+            if count > 1 {
+              appendNewlines(.soft(count: count, discretionary: true))
+            }
           }
+        }
+
+        if let run = activeNewlineRun, index == run.endIndex {
+          generateDisableFormattingIfNecessary(run.endPosition)
+          activeNewlineRun = nil
         }
 
       case .unexpectedText(let text):
@@ -3672,7 +3961,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
         let isBOM = text == "\u{feff}"
         requiresNextNewline = !isBOM
         isStartOfFile = isStartOfFile && isBOM
-        leadingIndent = nil
+        leadingIndent = isStartOfFile ? .spaces(0) : nil
 
       case .backslashes, .formfeeds, .pounds, .verticalTabs:
         leadingIndent = nil
@@ -3686,6 +3975,41 @@ private final class TokenStreamCreator: SyntaxVisitor {
         leadingIndent = .tabs(n)
       }
       position += piece.sourceLength
+    }
+
+    if token.tokenKind == .endOfFile,
+      let cutoff = cutoffIndex,
+      cutoff < trivia.endIndex
+    {
+      var totalNewlines = 0
+      var firstNewlineBytes = 0
+      var lastNewlineBytes = 0
+      var endPosition = position
+      for piece in trivia[cutoff...] {
+        switch piece {
+        case .newlines(let count), .carriageReturns(let count):
+          if totalNewlines == 0 {
+            firstNewlineBytes = 1
+          }
+          totalNewlines += count
+          endPosition += piece.sourceLength
+          lastNewlineBytes = 1
+        case .carriageReturnLineFeeds(let count):
+          if totalNewlines == 0 {
+            firstNewlineBytes = 2
+          }
+          totalNewlines += count
+          endPosition += piece.sourceLength
+          lastNewlineBytes = 2
+        default:
+          endPosition += piece.sourceLength
+        }
+      }
+      if totalNewlines >= 2 {
+        let firstBlankLineStart = position + SourceLength(utf8Length: firstNewlineBytes)
+        let lastBlankLineEnd = endPosition - SourceLength(utf8Length: lastNewlineBytes)
+        enableFormattingForBlankLines(firstBlankLineStart..<lastBlankLineEnd)
+      }
     }
   }
 
@@ -3791,7 +4115,9 @@ private final class TokenStreamCreator: SyntaxVisitor {
         // where the comment type is the same; these can be merged into a single comment
         if let nextToLast = tokens.dropLast().last,
           case let .comment(c1, false) = nextToLast,
-          c1.kind == c2.kind
+          c1.kind == c2.kind,
+          c1.leadingIndent != nil,
+          c2.leadingIndent != nil
         {
           var mergedComment = c1
           mergedComment.addText(c2.text)
@@ -4245,7 +4571,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // `verbatim` token in order for the first token to be printed with correct indentation. All
     // following lines in the ignored node are printed as-is with no changes to indentation.
     var nodeText = node.description
-    if let firstToken = node.firstToken(viewMode: .sourceAccurate) {
+    let firstToken = node.firstToken(viewMode: .sourceAccurate)
+    if let firstToken {
       extractLeadingTrivia(firstToken)
       let leadingTriviaText = firstToken.leadingTrivia.reduce(into: "") { $1.write(to: &$0) }
       nodeText = String(nodeText.dropFirst(leadingTriviaText.count))
@@ -4254,13 +4581,14 @@ private final class TokenStreamCreator: SyntaxVisitor {
     // The leading trivia of the next token, after the ignored node, may contain content that
     // belongs with the ignored node. The trivia extraction that is performed for `lastToken` later
     // excludes that content so it needs to be extracted and added to the token stream here.
+    var endPosition = node.endPosition
     if let next = node.lastToken(viewMode: .sourceAccurate)?.nextToken(viewMode: .all),
       let trivia = next.leadingTrivia.first
     {
       switch trivia {
       case .lineComment, .blockComment:
         trivia.write(to: &nodeText)
-        break
+        endPosition = next.position + trivia.sourceLength
       default:
         // All other kinds of trivia are inserted into the token stream by `extractLeadingTrivia`
         // when the relevant token is visited.
@@ -4268,7 +4596,13 @@ private final class TokenStreamCreator: SyntaxVisitor {
       }
     }
 
+    if let firstToken {
+      generateEnableFormattingIfNecessary(
+        firstToken.positionAfterSkippingLeadingTrivia..<firstToken.endPositionBeforeTrailingTrivia
+      )
+    }
     appendToken(.verbatim(Verbatim(text: nodeText, indentingBehavior: .firstLine)))
+    generateDisableFormattingIfNecessary(endPosition)
 
     // Add this break so that trivia parsing will allow discretionary newlines after the node.
     appendToken(.break(.same, size: 0))
@@ -4432,9 +4766,13 @@ extension Syntax {
   func makeTokenStream(
     configuration: Configuration,
     selection: Selection,
-    operatorTable: OperatorTable
+    operatorTable: OperatorTable,
+    whitespaceOnly: Bool = false
   ) -> [Token] {
-    let commentsMoved = CommentMovingRewriter(selection: selection).rewrite(self)
+    // In whitespace-only mode (used by WhitespaceLinter), comments must not be moved across infix
+    // operators because doing so reorders non-whitespace tokens relative to the user's source text.
+    let commentsMoved =
+      whitespaceOnly ? self : CommentMovingRewriter(selection: selection).rewrite(self)
     return TokenStreamCreator(
       configuration: configuration,
       selection: selection,
@@ -4463,14 +4801,18 @@ class CommentMovingRewriter: SyntaxRewriter {
   }
 
   override func visit(_ node: CodeBlockItemSyntax) -> CodeBlockItemSyntax {
-    if shouldFormatterIgnore(node: Syntax(node)) || !Syntax(node).isInsideSelection(selection) {
+    if shouldFormatterIgnore(node: Syntax(node))
+      || !selection.overlapsOrTouches(node.position..<node.endPosition)
+    {
       return node
     }
     return super.visit(node)
   }
 
   override func visit(_ node: MemberBlockItemSyntax) -> MemberBlockItemSyntax {
-    if shouldFormatterIgnore(node: Syntax(node)) || !Syntax(node).isInsideSelection(selection) {
+    if shouldFormatterIgnore(node: Syntax(node))
+      || !selection.overlapsOrTouches(node.position..<node.endPosition)
+    {
       return node
     }
     return super.visit(node)
@@ -4478,7 +4820,10 @@ class CommentMovingRewriter: SyntaxRewriter {
 
   override func visit(_ node: InfixOperatorExprSyntax) -> ExprSyntax {
     var node = super.visit(node).as(InfixOperatorExprSyntax.self)!
-    guard node.rightOperand.hasAnyPrecedingComment else {
+    guard
+      node.rightOperand.hasAnyPrecedingComment,
+      isReorderedOperatorSpanInsideSelection(node)
+    else {
       return ExprSyntax(node)
     }
 
@@ -4510,6 +4855,21 @@ class CommentMovingRewriter: SyntaxRewriter {
     node.rightOperand.leadingTrivia = []
 
     return ExprSyntax(node)
+  }
+
+  /// Returns `true` if the span between `node.operator` and `node.rightOperand` (excluding the
+  /// right operand's leading trivia) is completely contained within a single selection range.
+  private func isReorderedOperatorSpanInsideSelection(_ node: InfixOperatorExprSyntax) -> Bool {
+    switch selection {
+    case .infinite:
+      return true
+    case .ranges(let ranges):
+      let start = node.operator.position
+      let end = node.rightOperand.positionAfterSkippingLeadingTrivia
+      return ranges.contains { $0.lowerBound <= start && end <= $0.upperBound }
+    case .unresolvedLineRanges:
+      fatalError("Must resolve Selection before calling isReorderedOperatorSpanInsideSelection")
+    }
   }
 
   /// Extracts trivia containing and related to line comments from `token`'s leading trivia. Returns

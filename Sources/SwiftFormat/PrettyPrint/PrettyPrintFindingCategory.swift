@@ -15,12 +15,16 @@ enum PrettyPrintFindingCategory: FindingCategorizing {
   /// Finding related to an end-of-line comment.
   case endOfLineComment
 
+  /// Finding related to reflowing a comment.
+  case reflowComment
+
   /// Findings related to the presence of absence of a trailing comma in collection literals.
   case trailingComma
 
   var description: String {
     switch self {
     case .endOfLineComment: return "EndOfLineComment"
+    case .reflowComment: return "ReflowComment"
     case .trailingComma: return "TrailingComma"
     }
   }
