@@ -78,4 +78,28 @@ final class PatternBindingTests: PrettyPrintTestCase {
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 18)
   }
+  func testLabeledTuplePattern() {
+    let input =
+      """
+      let (width: w, height: h) = size
+      var (x: a, y: b) = point
+
+      for (key: k, value: v) in pairs {
+        print(k, v)
+      }
+      """
+
+    let expected =
+      """
+      let (width: w, height: h) = size
+      var (x: a, y: b) = point
+
+      for (key: k, value: v) in pairs {
+        print(k, v)
+      }
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
+  }
 }
