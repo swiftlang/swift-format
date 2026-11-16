@@ -41,7 +41,30 @@ elif command -v apt-get >/dev/null 2>&1 ; then # bookworm, noble, jammy
     apt-get install -y libc6-dbg
 
     if [[ "$INSTALL_CMAKE" == "1" ]] ; then
-        apt-get install -y cmake ninja-build
+        apt-get install -y curl ninja-build
+
+        # The distribution-provided CMake may be too old (e.g. noble ships 3.28),
+        # so install a pinned release from Kitware instead.
+        case "$(uname -m)" in
+            x86_64)
+                cmake_arch=x86_64
+                cmake_sha256=773cc679c3a7395413bd096523f8e5d6c39f8718af4e12eb4e4195f72f35e4ab
+                ;;
+            aarch64|arm64)
+                cmake_arch=aarch64
+                cmake_sha256=0634996f918b3bab11f45522899c81c987b09c9a64d15f6a0d2bb51c42099534
+                ;;
+            *)
+                echo "Unsupported architecture for CMake install: $(uname -m)" >&2
+                exit 1
+                ;;
+        esac
+        cmake_tarball="cmake-4.1.2-linux-$cmake_arch.tar.gz"
+        curl -fsSLO "https://github.com/Kitware/CMake/releases/download/v4.1.2/$cmake_tarball"
+        echo "$cmake_sha256 $cmake_tarball" > "$cmake_tarball.sha256"
+        sha256sum -c "$cmake_tarball.sha256"
+        tar -xzf "$cmake_tarball" --strip-components=1 -C /usr/local
+        rm -f "$cmake_tarball" "$cmake_tarball.sha256"
     fi
 elif command -v dnf >/dev/null 2>&1 ; then # rhel-ubi9
     dnf update -y
