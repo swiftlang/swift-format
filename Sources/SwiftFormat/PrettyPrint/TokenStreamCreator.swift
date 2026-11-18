@@ -2796,6 +2796,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
   }
 
   override func visit(_ node: TuplePatternElementSyntax) -> SyntaxVisitorContinueKind {
+    after(node.colon, tokens: .break)
     after(node.trailingComma, tokens: .break(.same))
     return .visitChildren
   }

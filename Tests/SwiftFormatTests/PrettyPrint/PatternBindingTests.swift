@@ -36,6 +36,23 @@ final class PatternBindingTests: PrettyPrintTestCase {
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 40)
   }
 
+  func testTuplePatternLabelSpacing() {
+    let input =
+      """
+      let (width:w, height:h) = size
+      var (x:a, y:b) = point
+      """
+
+    let expected =
+      """
+      let (width: w, height: h) = size
+      var (x: a, y: b) = point
+
+      """
+
+    assertPrettyPrintEqual(input: input, expected: expected, linelength: 80)
+  }
+
   func testIgnoresDiscretionaryNewlineAfterColon() {
     let input =
       """
