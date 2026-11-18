@@ -41,7 +41,19 @@ elif command -v apt-get >/dev/null 2>&1 ; then # bookworm, noble, jammy
     apt-get install -y libc6-dbg
 
     if [[ "$INSTALL_CMAKE" == "1" ]] ; then
-        apt-get install -y cmake ninja-build
+        mkdir -p "$RUNNER_TOOL_CACHE"
+        if ! command -v cmake >/dev/null 2>&1 ; then
+            curl -fsSLO https://github.com/Kitware/CMake/releases/download/v4.1.2/cmake-4.1.2-linux-x86_64.tar.gz
+            echo '773cc679c3a7395413bd096523f8e5d6c39f8718af4e12eb4e4195f72f35e4ab cmake-4.1.2-linux-x86_64.tar.gz' > cmake-4.1.2-linux-x86_64.tar.gz.sha256
+            sha256sum -c cmake-4.1.2-linux-x86_64.tar.gz.sha256
+            tar -xf cmake-4.1.2-linux-x86_64.tar.gz
+            ln -s "$PWD/cmake-4.1.2-linux-x86_64/bin/cmake" "$RUNNER_TOOL_CACHE/cmake"
+            ln -s "$PWD/cmake-4.1.2-linux-x86_64/bin/ctest" "$RUNNER_TOOL_CACHE/ctest"
+            ln -s "$PWD/cmake-4.1.2-linux-x86_64/bin/cpack" "$RUNNER_TOOL_CACHE/cpack"
+        fi
+        if ! command -v ninja >/dev/null 2>&1 ; then
+            apt-get install -y ninja-build
+        fi
     fi
 elif command -v dnf >/dev/null 2>&1 ; then # rhel-ubi9
     dnf update -y
