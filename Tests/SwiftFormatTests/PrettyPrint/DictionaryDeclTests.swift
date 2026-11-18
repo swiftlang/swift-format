@@ -69,18 +69,9 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
         1: "a", 2: "b", 3: "c", 4: "d", 5: "e", 6: "f",
         7: "g", 8: "i",
       ]
+      let a = [10000: "abc", 20000: "def", 30000: "ghi"]
 
       """
-        // Ideally, this dictionary would be left on 1 line without a trailing comma. We don't know if
-        // the comma is required when calculating the length of elements, so the comma's length is
-        // always added to last element and that 1 character causes the newlines inside of the
-        // dictionary.
-        + """
-        let a = [
-          10000: "abc", 20000: "def", 30000: "ghi",
-        ]
-
-        """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 50)
   }
@@ -287,18 +278,9 @@ final class DictionaryDeclTests: PrettyPrintTestCase {
         key1: ("ab", "z"),
         key2: ("b ", "y"),
       ]
+      a = [k1: ("ab", "z"), k2: ("bc", "y")]
 
       """
-        // Ideally, this dictionary would be left on 1 line without a trailing comma. We don't know if
-        // the comma is required when calculating the length of elements, so the comma's length is
-        // always added to last element and that 1 character causes the newlines inside of the
-        // dictionary.
-        + """
-        a = [
-          k1: ("ab", "z"), k2: ("bc", "y"),
-        ]
-
-        """
 
     assertPrettyPrintEqual(input: input, expected: expected, linelength: 38)
   }
