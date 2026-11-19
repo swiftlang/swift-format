@@ -23,8 +23,8 @@ import SwiftSyntax
 public final class UseShorthandTypeNames: SyntaxFormatRule {
 
   public override func visit(_ node: IdentifierTypeSyntax) -> TypeSyntax {
-    // Ignore types that don't have generic arguments.
-    guard let genericArgumentClause = node.genericArgumentClause else {
+    // Ignore types that don't have generic arguments or have a module selector.
+    guard let genericArgumentClause = node.genericArgumentClause, node.moduleSelector == nil else {
       return super.visit(node)
     }
 
