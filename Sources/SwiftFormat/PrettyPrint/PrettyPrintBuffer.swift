@@ -37,10 +37,6 @@ struct PrettyPrintBuffer {
   /// Keeps track of the current line number being printed.
   private(set) var lineNumber: Int = 1
 
-  /// Keeps track of the current line number in the emitted `output` string, accounting for
-  /// verbatim unselected source text written when selection formatting is enabled.
-  private(set) var outputLineNumber: Int = 1
-
   /// Keeps track of the most recent number of spaces that should be printed before the next text
   /// token.
   private(set) var pendingSpaces: Int = 0
@@ -179,10 +175,6 @@ struct PrettyPrintBuffer {
   /// No further processing is performed on the string.
   private mutating func writeRaw<S: StringProtocol>(_ str: S) {
     guard isEnabled else { return }
-    let string = String(str)
-    for byte in string.utf8 where byte == UInt8(ascii: "\n") {
-      outputLineNumber += 1
-    }
-    output.append(string)
+    output.append(String(str))
   }
 }

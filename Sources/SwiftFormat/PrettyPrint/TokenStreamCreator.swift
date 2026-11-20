@@ -3182,7 +3182,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
         }
         appendToken(afterToken)
         if disableFormattingAfterMissingTrailingComma,
-          case .commaDelimitedRegionEnd(_, hasTrailingComma: false, _) = afterToken
+          case .commaDelimitedRegionEnd(_, hasTrailingComma: false, _, _) = afterToken
         {
           generateDisableFormattingIfNecessary(token.endPositionBeforeTrailingTrivia)
         }
@@ -3212,7 +3212,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     }
     return afterGroups.contains { group in
       group.contains { afterToken in
-        if case .commaDelimitedRegionEnd(_, hasTrailingComma: false, _) = afterToken {
+        if case .commaDelimitedRegionEnd(_, hasTrailingComma: false, _, _) = afterToken {
           return true
         }
         return false
@@ -3596,7 +3596,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
         true,
         [
           .space(size: config.spacesBeforeEndOfLineComments, flexible: true),
-          .comment(Comment(kind: .line, leadingIndent: nil, text: text), wasEndOfLine: true),
+          .comment(
+            Comment(kind: .line, leadingIndent: nil, text: text),
+            wasEndOfLine: true,
+            position: startPosition
+          ),
           // There must be a break with a soft newline after the comment, but it's impossible to
           // know which kind of break must be used. Adding this newline is deferred until the
           // comment is added to the token stream.
@@ -3609,7 +3613,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
         false,
         [
           .space(size: 1, flexible: true),
-          .comment(Comment(kind: .block, leadingIndent: nil, text: text), wasEndOfLine: false),
+          .comment(
+            Comment(kind: .block, leadingIndent: nil, text: text),
+            wasEndOfLine: false,
+            position: startPosition
+          ),
           // We place a size-0 break after the comment to allow a discretionary newline after
           // the comment if the user places one here but the comment is otherwise adjacent to a
           // text token.
@@ -3844,7 +3852,8 @@ private final class TokenStreamCreator: SyntaxVisitor {
         appendToken(
           .comment(
             Comment(kind: kind, leadingIndent: leadingIndent, text: text),
-            wasEndOfLine: false
+            wasEndOfLine: false,
+            position: position
           )
         )
         if let run = activeCommentRun {
@@ -3875,7 +3884,13 @@ private final class TokenStreamCreator: SyntaxVisitor {
         if index > 0 || isStartOfFile {
           let isStandaloneLeadingComment = leadingIndent != nil || isStartOfFile
           generateEnableFormattingIfNecessary(position..<position + piece.sourceLength)
-          appendToken(.comment(Comment(kind: .block, leadingIndent: leadingIndent, text: text), wasEndOfLine: false))
+          appendToken(
+            .comment(
+              Comment(kind: .block, leadingIndent: leadingIndent, text: text),
+              wasEndOfLine: false,
+              position: position
+            )
+          )
           generateDisableFormattingIfNecessary(position + piece.sourceLength)
           // There is always a break after the comment to allow a discretionary newline after it.
           var breakSize = 0
@@ -3904,7 +3919,13 @@ private final class TokenStreamCreator: SyntaxVisitor {
 
       case .docBlockComment(let text):
         generateEnableFormattingIfNecessary(position..<position + piece.sourceLength)
-        appendToken(.comment(Comment(kind: .docBlock, leadingIndent: leadingIndent, text: text), wasEndOfLine: false))
+        appendToken(
+          .comment(
+            Comment(kind: .docBlock, leadingIndent: leadingIndent, text: text),
+            wasEndOfLine: false,
+            position: position
+          )
+        )
         generateDisableFormattingIfNecessary(position + piece.sourceLength)
         appendNewlines(.soft)
         isStartOfFile = false
@@ -4109,12 +4130,12 @@ private final class TokenStreamCreator: SyntaxVisitor {
         canMergeNewlinesIntoLastBreak = false
         tokens.append(token)
         return
-      case (.break(let breakKind, _, .soft(1, _)), .comment(let c2, _))
+      case (.break(let breakKind, _, .soft(1, _)), .comment(let c2, _, _))
       where breakAllowsCommentMerge(breakKind) && (c2.kind == .docLine || c2.kind == .line):
         // we are search for the pattern of [line comment] - [soft break 1] - [line comment]
         // where the comment type is the same; these can be merged into a single comment
         if let nextToLast = tokens.dropLast().last,
-          case let .comment(c1, false) = nextToLast,
+          case let .comment(c1, false, position) = nextToLast,
           c1.kind == c2.kind,
           c1.leadingIndent != nil,
           c2.leadingIndent != nil
@@ -4123,7 +4144,11 @@ private final class TokenStreamCreator: SyntaxVisitor {
           mergedComment.addText(c2.text)
           tokens.removeLast()  // remove the soft break
           // replace the original comment with the merged one
-          tokens[tokens.count - 1] = .comment(mergedComment, wasEndOfLine: false)
+          tokens[tokens.count - 1] = .comment(
+            mergedComment,
+            wasEndOfLine: false,
+            position: position
+          )
 
           // need to fix lastBreakIndex because we just removed the last break
           lastBreakIndex = tokens.lastIndex(where: {
@@ -4729,13 +4754,19 @@ private final class TokenStreamCreator: SyntaxVisitor {
         ignoredTokens.insert(trailingComma)
       }
       before(node.first?.firstToken(viewMode: .sourceAccurate), tokens: .commaDelimitedRegionStart)
-      let endToken =
-        Token.commaDelimitedRegionEnd(
-          isCollection: isCollectionLiteral,
-          hasTrailingComma: lastElement.trailingComma != nil,
-          isSingleElement: node.first == lastElement
-        )
-      after(node.lastNodeForTrailingComma?.lastToken(viewMode: .sourceAccurate), tokens: [endToken])
+      if let lastToken = node.lastNodeForTrailingComma?.lastToken(viewMode: .sourceAccurate) {
+        let position =
+          lastElement.trailingComma?.positionAfterSkippingLeadingTrivia
+          ?? lastToken.endPositionBeforeTrailingTrivia
+        let endToken =
+          Token.commaDelimitedRegionEnd(
+            isCollection: isCollectionLiteral,
+            hasTrailingComma: lastElement.trailingComma != nil,
+            isSingleElement: node.first == lastElement,
+            position: position
+          )
+        after(lastToken, tokens: [endToken])
+      }
     }
   }
 }
