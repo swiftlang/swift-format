@@ -489,12 +489,12 @@ public class PrettyPrinter {
       lastBreak = false
       outputBuffer.write(text)
 
-    case .comment(let comment, let wasEndOfLine):
+    case .comment(let comment, let wasEndOfLine, let position):
       lastBreak = false
       shouldOverrideBreakSuppression = comment.kind == .docLine || comment.kind == .line
       if wasEndOfLine {
         if !(canFit(comment.length) || isBreakingSuppressed) {
-          diagnose(.moveEndOfLineComment, category: .endOfLineComment)
+          diagnose(.moveEndOfLineComment, category: .endOfLineComment, at: position)
         }
       }
       let unreflowed = comment.print(
@@ -521,7 +521,7 @@ public class PrettyPrinter {
           unreflowed: unreflowed
         )
         if reflowed != unreflowed {
-          diagnose(.reflowComment, category: .reflowComment)
+          diagnose(.reflowComment, category: .reflowComment, at: position)
         }
         outputBuffer.write(whitespaceOnly ? unreflowed : reflowed)
       } else {
@@ -549,7 +549,7 @@ public class PrettyPrinter {
     case .commaDelimitedRegionStart:
       commaDelimitedRegionStack.append(openCloseBreakCompensatingLineNumber)
 
-    case .commaDelimitedRegionEnd(let isCollection, let hasTrailingComma, let isSingleElement):
+    case .commaDelimitedRegionEnd(let isCollection, let hasTrailingComma, let isSingleElement, let position):
       guard let startLineNumber = commaDelimitedRegionStack.popLast() else {
         fatalError("Found trailing comma end with no corresponding start.")
       }
@@ -564,9 +564,9 @@ public class PrettyPrinter {
           startLineNumber != openCloseBreakCompensatingLineNumber && !isSingleElement
           && shouldHandleCommaDelimitedRegion
         if shouldHaveTrailingComma && !hasTrailingComma {
-          diagnose(.addTrailingComma, category: .trailingComma)
+          diagnose(.addTrailingComma, category: .trailingComma, at: position)
         } else if !shouldHaveTrailingComma && hasTrailingComma {
-          diagnose(.removeTrailingComma, category: .trailingComma)
+          diagnose(.removeTrailingComma, category: .trailingComma, at: position)
         }
 
         let shouldWriteComma = whitespaceOnly ? hasTrailingComma : shouldHaveTrailingComma
@@ -724,7 +724,7 @@ public class PrettyPrinter {
         lengths.append(text.count)
         total += text.count
 
-      case .comment(let comment, let wasEndOfLine):
+      case .comment(let comment, let wasEndOfLine, _):
         lengths.append(comment.length)
         total += wasEndOfLine ? 0 : comment.length
 
@@ -740,7 +740,7 @@ public class PrettyPrinter {
       case .commaDelimitedRegionStart:
         lengths.append(0)
 
-      case .commaDelimitedRegionEnd(let isCollection, _, let isSingleElement):
+      case .commaDelimitedRegionEnd(let isCollection, _, let isSingleElement, _):
         // The token's length is only necessary when a comma will be printed, but it's impossible to
         // know at this point whether the region-start token will be on the same line as this token.
         // Without adding this length to the total, it would be possible for this comma to be
@@ -833,7 +833,7 @@ public class PrettyPrinter {
       printDebugIndent()
       print("[SPACE Size: \(size) Flexible: \(flexible) Length: \(length) Idx: \(idx)]")
 
-    case .comment(let comment, let wasEndOfLine):
+    case .comment(let comment, let wasEndOfLine, _):
       printDebugIndent()
       switch comment.kind {
       case .line:
@@ -883,22 +883,19 @@ public class PrettyPrinter {
     }
   }
 
-  /// Emits a finding with the given message and category at the current location in `outputBuffer`.
-  private func diagnose(_ message: Finding.Message, category: PrettyPrintFindingCategory) {
+  /// Emits a finding with the given message and category at the given position in the original
+  /// source file.
+  private func diagnose(
+    _ message: Finding.Message,
+    category: PrettyPrintFindingCategory,
+    at position: AbsolutePosition
+  ) {
     guard outputBuffer.isEnabled else { return }
-    // Add 1 since columns uses 1-based indices.
-    let column =
-      (outputBuffer.isAtStartOfLine
-        ? currentIndentation.length(tabWidth: configuration.tabWidth)
-        : outputBuffer.column) + 1
+    let sourceLocation = context.sourceLocationConverter.location(for: position)
     context.findingEmitter.emit(
       message,
       category: category,
-      location: Finding.Location(
-        file: context.fileURL.relativePath,
-        line: outputBuffer.outputLineNumber,
-        column: column
-      )
+      location: Finding.Location(sourceLocation)
     )
   }
 }

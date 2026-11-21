@@ -810,6 +810,53 @@ final class SwiftLinterSelectionTests: DiagnosingTestCase {
     )
   }
 
+  func testPrettyPrintFindingLocationsWithEarlierLineChangesAndSelection() throws {
+    var config = Configuration.forTesting
+    config.lineLength = 40
+    config.lineBreakBeforeEachArgument = true
+    config.multiElementCollectionTrailingCommas = true
+    config.reflowComments.docComments = .always
+
+    // Line 1 is a selected leading blank line (removed during pretty-printing), line 2 is an
+    // unselected overlong line, and line 3 is a selected overlong call (wrapped across multiple
+    // lines). Subsequent pretty-printer findings in later selected ranges must still report their
+    // original input line and column locations.
+    let source = """
+      1️⃣
+      let unselectedLongLine = someFunctionCall(firstArgument: 1, secondArgument: 2)
+      2️⃣let wrapped = someCall(first: 1, second: 2, third: 3)
+      let eol = 1  3️⃣// this end-of-line comment is too long
+      4️⃣/// Short doc line 1
+      /// and doc line 2.
+      let single = [1, 25️⃣,]
+      let multi = [
+        1,
+        26️⃣
+      ]
+
+      """
+
+    try assertLint(
+      source,
+      selection: Selection(lineRanges: [1...1, 3...4, 6...10]),
+      configuration: config,
+      findings: [
+        FindingSpec("1️⃣", message: "remove line break"),
+        FindingSpec("2️⃣", message: "line is too long"),
+        FindingSpec("3️⃣", message: "move end-of-line comment that exceeds the line length"),
+        FindingSpec("4️⃣", message: "reflow comment"),
+        FindingSpec(
+          "5️⃣",
+          message: "remove trailing comma from the last element in single line collection literal"
+        ),
+        FindingSpec(
+          "6️⃣",
+          message: "add trailing comma to the last element in multiline collection literal"
+        ),
+      ]
+    )
+  }
+
   func testInfixOperatorTrailingCommentDoesNotDesynchronizeWhitespaceLinter() throws {
     let source = """
       func foo(a: Int, b: Int) -> Int {

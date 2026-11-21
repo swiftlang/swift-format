@@ -127,4 +127,126 @@ final class LineNumbersTests: PrettyPrintTestCase {
       findings: []
     )
   }
+
+  func testFindingsAfterRemovedLines() {
+    var config = Configuration.forTesting
+    config.reflowComments.docComments = .always
+
+    let input =
+      """
+
+      let x = 1 1️⃣// This end-of-line comment is too long
+
+
+
+      func foo() {
+          2️⃣/// Short doc line 1
+          /// and doc line 2.
+        let y = 2
+      }
+
+      let singleLine = [1, 2 3️⃣,]
+      let multiLine = [
+        1,
+        24️⃣
+      ]
+      """
+
+    let expected =
+      """
+      let x = 1  // This end-of-line comment is too long
+
+      func foo() {
+        /// Short doc line 1
+        /// and doc line 2.
+        let y = 2
+      }
+
+      let singleLine = [1, 2,]
+      let multiLine = [
+        1,
+        2
+      ]
+
+      """
+
+    assertPrettyPrintEqual(
+      input: input,
+      expected: expected,
+      linelength: 40,
+      configuration: config,
+      whitespaceOnly: true,
+      findings: [
+        FindingSpec("1️⃣", message: "move end-of-line comment that exceeds the line length"),
+        FindingSpec("2️⃣", message: "reflow comment"),
+        FindingSpec(
+          "3️⃣",
+          message: "remove trailing comma from the last element in single line collection literal"
+        ),
+        FindingSpec(
+          "4️⃣",
+          message: "add trailing comma to the last element in multiline collection literal"
+        ),
+      ]
+    )
+  }
+
+  func testFindingsAfterInsertedLines() {
+    var config = Configuration.forTesting
+    config.lineBreakBeforeEachArgument = true
+    config.reflowComments.docComments = .always
+
+    let input =
+      """
+      let a = myFunc(var1: 123, var2: "abc", var3: 456)
+      let x = 1  1️⃣// This end-of-line comment is too long
+
+      2️⃣/// Short doc line 1
+      /// and doc line 2.
+      let singleLine = [1, 23️⃣,]
+      let multiLine = [
+        1,
+        24️⃣
+      ]
+      """
+
+    let expected =
+      """
+      let a = myFunc(
+        var1: 123,
+        var2: "abc",
+        var3: 456
+      )
+      let x = 1  // This end-of-line comment is too long
+
+      /// Short doc line 1
+      /// and doc line 2.
+      let singleLine = [1, 2,]
+      let multiLine = [
+        1,
+        2
+      ]
+
+      """
+
+    assertPrettyPrintEqual(
+      input: input,
+      expected: expected,
+      linelength: 40,
+      configuration: config,
+      whitespaceOnly: true,
+      findings: [
+        FindingSpec("1️⃣", message: "move end-of-line comment that exceeds the line length"),
+        FindingSpec("2️⃣", message: "reflow comment"),
+        FindingSpec(
+          "3️⃣",
+          message: "remove trailing comma from the last element in single line collection literal"
+        ),
+        FindingSpec(
+          "4️⃣",
+          message: "add trailing comma to the last element in multiline collection literal"
+        ),
+      ]
+    )
+  }
 }

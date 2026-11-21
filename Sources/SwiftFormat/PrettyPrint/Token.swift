@@ -184,7 +184,7 @@ enum Token {
   case close
   case `break`(BreakKind, size: Int, newlines: NewlineBehavior)
   case space(size: Int, flexible: Bool)
-  case comment(Comment, wasEndOfLine: Bool)
+  case comment(Comment, wasEndOfLine: Bool, position: AbsolutePosition)
   case verbatim(Verbatim)
   case printerControl(kind: PrinterControlKind)
 
@@ -194,7 +194,12 @@ enum Token {
 
   /// Marks the end of a comma delimited collection, where a trailing comma should be inserted
   /// if and only if the collection spans multiple lines and has multiple elements.
-  case commaDelimitedRegionEnd(isCollection: Bool, hasTrailingComma: Bool, isSingleElement: Bool)
+  case commaDelimitedRegionEnd(
+    isCollection: Bool,
+    hasTrailingComma: Bool,
+    isSingleElement: Bool,
+    position: AbsolutePosition
+  )
 
   /// Starts a scope where `contextual` breaks have consistent behavior.
   case contextualBreakingStart
