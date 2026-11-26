@@ -2149,7 +2149,7 @@ private final class TokenStreamCreator: SyntaxVisitor {
     if node.name.tokenKind == .keyword(.async) {
       breakOrSpace = .space
     } else {
-      breakOrSpace = .break
+      breakOrSpace = .break(.same)
     }
     after(node.lastToken(viewMode: .sourceAccurate), tokens: breakOrSpace)
     return .visitChildren
