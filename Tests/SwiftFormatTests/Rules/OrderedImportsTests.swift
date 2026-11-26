@@ -541,6 +541,17 @@ final class OrderedImportsTests: LintOrFormatRuleTestCase {
     )
   }
 
+  func testImportsContainingCarriageReturnLineFeeds() {
+    assertFormatting(
+      OrderedImports.self,
+      input: "import Zeta\r\n1️⃣import Alpha\r\n\r\nfoo()",
+      expected: "import Alpha\nimport Zeta\n\nfoo()",
+      findings: [
+        FindingSpec("1️⃣", message: "sort import statements lexicographically")
+      ]
+    )
+  }
+
   func testRemovesDuplicateImports() {
     assertFormatting(
       OrderedImports.self,
